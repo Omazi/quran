@@ -26,8 +26,9 @@ restent ouverts :
 
 - Les quatre images du premier écran sont dans l'artefact `ios-first-screen`, mais la
   session de travail de l'assistant n'a pas le droit de joindre l'hôte où GitHub range les
-  artefacts (`*.blob.core.windows.net`). Personne ne les a donc encore regardées. Le
-  propriétaire peut les télécharger depuis la page de l'exécution.
+  artefacts (`*.blob.core.windows.net`). Le script `ios-screens.yml` les dépose donc sur la
+  branche [`ci-screens`](https://github.com/Omazi/quran/tree/ci-screens), où elles se
+  regardent depuis un téléphone (voir `SECURITY.md`, « Dépôt public »).
 - GitHub signale que `actions/upload-artifact` v4.6.2 vise Node 20, qui est déprécié : à
   remplacer par une version plus récente, épinglée de la même façon.
 
@@ -41,8 +42,12 @@ check › Run workflow). Aucun secret, rien n'est envoyé à Apple.
   embarqué, police du Coran présente). C'est lui qui décide du résultat.
 - **First screen** : compile pour le simulateur, ouvre l'appli et garde une image de son
   premier écran en français (clair et sombre), en anglais et en arabe. Les images sont dans
-  l'artefact `ios-first-screen` de l'exécution. Il ne bloque jamais : les images sont faites
-  pour être regardées.
+  l'artefact `ios-first-screen` de l'exécution, puis sur la branche `ci-screens`. Il ne
+  bloque jamais : les images sont faites pour être regardées.
+
+Un push ne lance les Mac que s'il touche à ce dont l'appli est faite (`src/`, `assets/`,
+`modules/`, `app.json`, les dépendances, le script lui-même). La documentation seule ne
+lance rien : une vérification prend environ 45 minutes de Mac.
 
 Le Xcode utilisé est le plus récent installé sur la machine, hors versions bêta
 (`tools/ci/select-xcode.sh`) ; le journal de chaque exécution dit lequel.

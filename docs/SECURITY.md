@@ -40,6 +40,17 @@ Le dépôt est public (D24). Tout ce qui y est poussé, historique compris, est 
   aucun secret. Un script qui lit un secret ne doit jamais se lancer sur une demande de fusion,
   ni publier son journal : les artefacts d'un dépôt public sont publics.
 - Les versions des étapes fournies par GitHub sont figées par leur empreinte.
+- Un seul script a le droit d'écrire dans le dépôt : `ios-screens.yml`, qui dépose les images
+  du premier écran sur la branche `ci-screens`. Décidé par le propriétaire le 24 novembre 2026,
+  pour que ces images se regardent depuis un téléphone. Ce qui le borne :
+  - il ne compile rien et n'installe aucune dépendance : la compilation reste dans
+    `ios-check.yml`, en lecture seule ;
+  - il ne lit que l'artefact d'une vérification réussie de `main`, et le traite comme une
+    donnée non sûre : seules les quatre images attendues sont gardées, après contrôle que ce
+    sont bien des images PNG (`tools/ci/publish-screens.py`) ; rien de ce qu'il contient n'est
+    exécuté ;
+  - il remplace une branche qui ne contient rien d'autre, jamais `main` ;
+  - son jeton d'écriture n'existe que le temps de cette tâche.
 - Les fichiers venus de tiers (texte et police du Coran) sont republiés tels quels, avec leur
   mention : voir `docs/DATA_SOURCES.md`. Leurs conditions de rediffusion restent à éclaircir.
 

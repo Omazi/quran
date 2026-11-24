@@ -7,13 +7,28 @@ name: iOS check
 # Two jobs:
 #  - "iPhone build" says whether the app compiles. It decides the result of the workflow.
 #  - "First screen" starts the app in the iPhone simulator and keeps pictures of what it shows.
-#    It is reported, never blocking: the pictures are there to be looked at.
+#    It is reported, never blocking: the pictures are there to be looked at. The workflow
+#    "iOS screens" then puts them on the branch `ci-screens`.
 #
 # There is deliberately no `pull_request` trigger: the repository is public, and a pull request
 # from a stranger must not start Mac jobs here.
+#
+# A push starts the Macs only when it touches what the app is built from. Documentation alone
+# does not: a check takes about 45 minutes of Mac.
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'assets/**'
+      - 'modules/**'
+      - 'app.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'tools/ci/select-xcode.sh'
+      - 'tools/ci/pick-simulator.py'
+      - '.github/workflows/ios-check.yml'
   workflow_dispatch:
 
 permissions:

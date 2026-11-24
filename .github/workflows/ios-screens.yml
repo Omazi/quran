@@ -1,0 +1,105 @@
+name: iOS screens
+
+# Puts the pictures taken by "iOS check" on the branch `ci-screens`, where they can be looked at
+# from a phone: https://github.com/Omazi/quran/tree/ci-screens
+#
+# Why a separate workflow: this is the only job of the repository that may write to it, and it
+# runs none of the app's build. "iOS check" builds the app with read-only rights and leaves the
+# pictures in an artifact; this workflow, taken from `main`, reads that artifact as untrusted
+# data, keeps the PNG pictures it expects (tools/ci/publish-screens.py) and replaces one branch
+# that holds nothing else. See docs/SECURITY.md, "Dépôt public".
+on:
+  workflow_run:
+    workflows: ['iOS check']
+    types: [completed]
+  # When the way of publishing changes, publish the pictures of the latest good check again.
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ios-screens.yml'
+      - 'tools/ci/publish-screens.py'
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Run of "iOS check" to take the pictures from (empty = the latest successful one)
+        required: false
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: ios-screens
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish the pictures
+    # Only checks of `main` that succeeded. "iOS check" has no pull_request trigger; the test stays
+    # here in case one is ever added.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.event != 'pull_request')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write # replaces the branch ci-screens, nothing else
+      actions: read # reads the artifact of the check
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Find the check whose pictures to publish
+        id: run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FROM_EVENT: ${{ github.event.workflow_run.id }}
+          FROM_INPUT: ${{ inputs.run_id }}
+        run: |
+          set -euo pipefail
+          RUN="${FROM_EVENT:-${FROM_INPUT:-}}"
+          if [ -z "$RUN" ]; then
+            RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ios-check.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
+          fi
+          case "$RUN" in
+            '' | *[!0-9]*) echo "::error::no run of iOS check to read"; exit 1 ;;
+          esac
+          # It must be a successful "iOS check" of main, whatever asked for it.
+          read -r WORKFLOW BRANCH SHA CONCLUSION EVENT < <(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN" --jq '"\(.path) \(.head_branch) \(.head_sha) \(.conclusion) \(.event)"')
+          if [ "$WORKFLOW" != ".github/workflows/ios-check.yml" ] || [ "$BRANCH" != "main" ] || [ "$CONCLUSION" != "success" ] || [ "$EVENT" = "pull_request" ]; then
+            echo "::error::run $RUN is not a successful iOS check of main"
+            exit 1
+          fi
+          echo "id=$RUN" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ios-first-screen
+          run-id: ${{ steps.run.outputs.id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/incoming
+      - name: Keep the pictures only, and check that they are pictures
+        env:
+          RUN: ${{ steps.run.outputs.id }}
+          SHA: ${{ steps.run.outputs.sha }}
+        run: python3 tools/ci/publish-screens.py "$RUNNER_TEMP/incoming" "$RUNNER_TEMP/screens" --run "$RUN" --sha "$SHA"
+      - name: Replace the branch ci-screens
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ steps.run.outputs.id }}
+          SHA: ${{ steps.run.outputs.sha }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/screens"
+          git init -q -b ci-screens
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "First screen of ${SHA:0:7} (iOS check, run $RUN)"
+          # One commit, no history: the branch is replaced each time.
+          BASIC=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')
+          echo "::add-mask::$BASIC"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $BASIC" \
+            push --force "https://github.com/$GITHUB_REPOSITORY.git" ci-screens
+          echo "Pictures: https://github.com/$GITHUB_REPOSITORY/tree/ci-screens" >> "$GITHUB_STEP_SUMMARY"
