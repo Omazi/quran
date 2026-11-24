@@ -53,7 +53,8 @@ mode enfants.
   dessèche pas tant que la khatma suivante n'a pas commencé.
 
 - Direction visuelle à choisir (trois directions dans `design/brand-spec.md`).
-- Provenance et style des modèles 3D du jardin.
+- Jardins : télécharger les packs à la source officielle ; choisir sept jardins parmi les
+  huit styles retenus et leur ordre (quel jardin pour quel niveau).
 - Premier lancement : 16 pages sans « Passer », ou 10 pages selon les règles d'Apple.
 - Design du premier lancement à retravailler (pages « lecture à voix haute » et
   « rappels » non validées).

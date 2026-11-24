@@ -74,3 +74,28 @@ chaque mot attendu : `read`, `current`, `upcoming`, `skipped`, `mistake`.
 Sur un tirage aléatoire reproductible de passages de 6 à 12 mots avec 0, 1, 2 et 3 erreurs
 simulées : taux de bon premier résultat, taux d'ambiguïté correctement signalée, taux de
 faux positifs sur des entrées sans rapport, temps de recherche.
+
+## Précisions (après les tests indépendants)
+
+- **Jamais sûr à tort, sans exception.** Quand les mots entendus se trouvent à
+  l'identique en plusieurs endroits, le résultat est `ambiguous` et les liste **tous**,
+  même quand l'un des endroits répète ces mots plusieurs fois, et même quand l'entrée est
+  bruitée : deux endroits que le bruit ne permet pas de départager sont à égalité. Aucune
+  liste n'est coupée en silence : si le nombre d'endroits dépasse ce qu'on renvoie, le
+  résultat le dit (`truncated`) et donne le nombre total.
+- **Formules d'ouverture.** L'isti'adha en tête est ignorée. La basmala en tête est
+  d'abord cherchée comme du texte : un endroit qui explique _tous_ les mots entendus
+  (1:1 suivi de 1:2, ou 27:30) l'emporte sur un endroit qui n'explique que la suite.
+  Si la suite est le début d'une sourate, le résultat est ce début de sourate.
+- **Entrées bornées.** Une recherche porte sur 300 mots au plus (les plus récents) et le
+  résultat dit quand l'entrée a été coupée ; un « mot » de plus de 30 lettres n'est pas
+  un mot du Coran et ne peut jamais compter comme lu. Le temps de calcul doit rester
+  proportionné : 300 mots sans rapport avec le Coran en moins d'une seconde sur la
+  machine de développement.
+- **Suivi.** Un mot remplacé par un autre est une `mistake`, quelle que soit sa position,
+  y compris le premier mot.
+- **Options invalides** (`null`, mauvais type) : erreur explicite du module.
+- **Caractères invisibles.** Toutes les espaces Unicode séparent les mots ; les
+  caractères de mise en forme (trait d'union conditionnel, liant de mots, marques de
+  sens d'écriture) sont ignorés à l'intérieur d'un mot ; un signe isolé (alef suscrit,
+  petit waw, petit ya) n'est pas un mot.

@@ -134,3 +134,28 @@ de la police ne correspondait exactement au texte d'origine (venu d'un tiers, il
 du texte du Complexe en 1 120 endroits). On prend donc le texte publié par le Complexe et
 sa police dans la **même version** (0.18) : ils correspondent par construction. Ne jamais
 mélanger les versions : l'encodage de certains signes a changé de l'une à l'autre.
+
+## D22 — Modèles du jardin : packs libres, plantes Quaternius stylisé et architecture Kenney
+
+Décision du propriétaire (24 novembre 2026), après comparaison de rendus : le mélange des
+plantes du Stylized Nature MegaKit de Quaternius et de l'architecture des kits de Kenney.
+Les deux sont annoncés en CC0 par leurs auteurs. Les copies utilisées pour les essais
+viennent de dépôts GitHub tiers : **avant toute sortie, les remplacer par les
+téléchargements officiels** et garder la preuve de leur licence. D12 reste vrai : aucun
+jardin n'est dessiné en code.
+
+## D23 — Un jardin par niveau
+
+Décisions du propriétaire (24 novembre 2026). Chaque khatma terminée fait passer au niveau
+suivant, et chaque niveau a son propre jardin, au style et à l'aménagement totalement
+différents. **Le jardin d'un niveau est le même pour tout le monde** : on reconnaît le
+niveau de quelqu'un à son jardin. Styles retenus : cour à fontaine, oasis, verger au bord
+de l'eau, jardin de montagne, cerisiers en fleurs, pinède et clairière, jardin de nuit,
+île sur un lac (huit styles pour sept jardins prévus à la première version : à trancher
+sur images). Au-delà du dernier jardin, les jardins reviennent en attendant que des mises
+à jour en ajoutent. Le niveau et le jardin sont visibles par les proches par défaut ; un
+réglage permet de les cacher.
+
+Conséquence pour le code : la variante du jardin ne dépend plus que du numéro de khatma
+(plus de graine propre à l'utilisateur), et chaque jardin a son propre catalogue de 60
+éléments.
