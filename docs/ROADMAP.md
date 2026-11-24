@@ -42,10 +42,6 @@ mode enfants.
 
 - **Édition du mushaf** : tranché, édition de 1441 H (D17). Reste à comparer les 25 pages
   qui diffèrent du mushaf classique à un exemplaire imprimé de cette édition.
-- **Police du Coran** : le texte uthmani emploie certains signes (tanwin, sajda) avec le
-  sens que leur donnent les polices du Complexe du roi Fahd. Une police standard comme
-  Amiri Quran en dessinera d'autres. Il faut la police qui correspond au texte
-  (autorisation à demander, D6) ou une correspondance au moment de l'affichage.
 - **Écriture simple** : aucune source établie dans le dépôt ; un fichier Tanzil Simple de
   provenance à confirmer sert seulement aux tests de la reconnaissance.
 - **Licences des textes** : à vérifier à la source avant publication (voir
@@ -53,12 +49,6 @@ mode enfants.
 - **Cinq mots collés** dans le texte uthmani (15:7, 27:20, 36:22, 37:164, 41:47) : gardés
   tels que publiés ; à faire confirmer par un enseignant.
 
-- Rythme minimal : avec les réglages actuels (un jour manqué = +1, un jour lu = −3), lire
-  un jour sur quatre suffit à garder le jardin en vie ; un jour sur cinq, il finit par
-  mourir. À ajuster si c'est trop indulgent (constante `droughtDaysRecoveredPerWateredDay`).
-
-- Nouvelle khatma : la première page lue après la 604e ouvre un nouveau jardin. Faut-il
-  demander une confirmation avant (« Commencer un nouveau jardin ? ») ? Proposé : oui.
 - Jardin complet entre deux khatmas : il ne peut plus être arrosé. Proposé : il ne se
   dessèche pas tant que la khatma suivante n'a pas commencé.
 

@@ -112,3 +112,17 @@ elles restent à comparer à un exemplaire imprimé de cette édition avant tout
 
 Le propriétaire a un compte développeur Apple et pas de Mac. Les compilations iOS se font
 par Expo EAS, l'installation sur son iPhone par TestFlight.
+
+## D19 — Police du Coran : Hafs du Complexe du roi Fahd, telle quelle
+
+Décision du propriétaire (24 novembre 2026). Le texte uthmani emploie des signes dont le
+dessin n'est juste que dans cette police. Elle est gratuite ; le Complexe interdit de la
+modifier et de la vendre, et ne dit rien de son intégration dans une appli. On l'intègre
+sans la modifier, dans une appli gratuite, avec la mention du Complexe dans les crédits.
+Amiri Quran (D6) n'est plus utilisée pour le texte uthmani.
+
+## D20 — Rythme du jardin et nouvelle khatma : confirmés
+
+Décisions du propriétaire (24 novembre 2026). Un jour de lecture retire trois jours de
+sécheresse : lire un jour sur quatre garde le jardin en vie. La première page lue après
+une khatma terminée lance le nouveau jardin, sans confirmation.
