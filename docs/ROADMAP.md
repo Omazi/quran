@@ -6,10 +6,10 @@
 indépendant_ → _validé_.
 
 - [ ] Données du mushaf : texte uthmani, 604 pages, structure, empreinte d'intégrité — **à faire**
-- [ ] Progression : journal de lecture, hizb terminés, objectif du jour, série — **rendu par
-      le développeur, pas encore testé indépendamment**
-- [ ] Jardin : 60 étapes, santé, dégradation, renaissance, pause — **en cours : code et tests
-      écrits, travail interrompu avant le rapport, non relu**
+- [ ] Progression : journal de lecture, hizb terminés, objectif du jour, série, badges —
+      **première version rendue ; à mettre à jour (décisions D8 à D10), puis à tester**
+- [ ] Jardin : 60 étapes, santé, dégradation, renaissance, pause, un jardin par khatma —
+      **première version écrite, non relue ; à mettre à jour (D9, D10), puis à tester**
 - [ ] Reconnaissance (cœur) : normalisation, recherche de versets, suivi mot à mot — **à faire**
 - [ ] Interface : accueil avec jardin, lecteur de mushaf, réglages
 - [ ] Jardin en 3D sur appareil (test Filament), style final du jardin
@@ -31,6 +31,5 @@ mode enfants.
 
 - Nom de l'application.
 - Style final du jardin.
-- Que devient le jardin après les 60 hizb (2ᵉ khatma) ?
 - Autorisation des polices du complexe du roi Fahd.
 - Validation des contenus religieux par un enseignant (versets associés au jardin, récits).

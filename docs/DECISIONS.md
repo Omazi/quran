@@ -42,3 +42,21 @@ dans le système de design.
 
 Le lot 1 fonctionne entièrement hors ligne, sans compte. Supabase arrive au lot 3, derrière
 des interfaces de dépôt, avec des règles d'accès par ligne (RLS) dès la première table.
+
+## D8 — Seules les nouvelles pages comptent
+
+Relire une page déjà lue dans la khatma en cours ne compte ni pour l'objectif, ni pour
+arroser le jardin, ni pour la série. Décision produit : sinon on entretient son jardin en
+relisant toujours la même page. Le lecteur n'enregistre une page qu'après un temps de
+lecture minimal (règle précisée avec l'interface).
+
+## D9 — Un jardin par khatma, un badge par khatma terminée
+
+Chaque khatma fait pousser un jardin différent (variante déterministe : thème et graine).
+Terminer une khatma donne un badge qui porte la vignette du jardin complet ; la khatma
+suivante repart d'une terre nue. Le profil montre les badges et le jardin en cours.
+
+## D10 — L'objectif du jour appartient à l'utilisateur ; le jardin avance au hizb
+
+L'utilisateur fixe librement son objectif quotidien. Le jardin gagne un élément à chaque
+hizb terminé ; entre deux hizb, l'élément suivant pousse au fil des pages lues.

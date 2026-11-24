@@ -37,8 +37,9 @@ l'ordre et de la longueur ; le contenu est une donnée dans `catalog.ts`.
 · 59 `waterfall` · 60 `full-bloom`.
 
 Les 30 autres hizb débloquent chacun un arbre (`tree-1` … `tree-30`, dans l'ordre). Espèce
-de l'arbre n : cycle `pomegranate, date-palm, olive, fig, cypress, orange` (arbre 1 =
-grenadier ; l'arbre 13, au hizb 25, est donc un grenadier).
+de l'arbre n : cycle `pomegranate, date-palm, olive, fig, cypress, orange`, décalé selon la
+variante (pour la variante de référence des tests, sans décalage : arbre 1 = grenadier,
+et l'arbre 13, au hizb 25, est donc un grenadier).
 
 Versets associés (facultatifs, **à valider par un enseignant avant affichage**) :
 `channels` 2:25 · `springs` 55:66 · `pomegranate` et `date-palm` 55:68 · `olive` et `fig`
