@@ -126,3 +126,11 @@ Amiri Quran (D6) n'est plus utilisée pour le texte uthmani.
 Décisions du propriétaire (24 novembre 2026). Un jour de lecture retire trois jours de
 sécheresse : lire un jour sur quatre garde le jardin en vie. La première page lue après
 une khatma terminée lance le nouveau jardin, sans confirmation.
+
+## D21 — Texte du Coran : celui du Complexe du roi Fahd, avec sa police
+
+Décision du propriétaire (24 novembre 2026), après comparaison des rendus. Aucune version
+de la police ne correspondait exactement au texte d'origine (venu d'un tiers, il différait
+du texte du Complexe en 1 120 endroits). On prend donc le texte publié par le Complexe et
+sa police dans la **même version** (0.18) : ils correspondent par construction. Ne jamais
+mélanger les versions : l'encodage de certains signes a changé de l'une à l'autre.
