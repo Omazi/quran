@@ -1,9 +1,9 @@
 import { SymbolView, type SymbolWeight } from 'expo-symbols';
 import { useWindowDimensions } from 'react-native';
 
-import { textStyles, type FontWeightToken } from '../tokens';
-import { useColors } from '../use-colors';
-import type { IconProps } from './types';
+import { textStyles, type FontWeightToken } from '../../tokens';
+import { useColors } from '../../use-colors';
+import type { IconProps } from '../types';
 
 /** The symbol weight that matches each font weight of the text styles. */
 const SYMBOL_WEIGHT: Record<FontWeightToken, SymbolWeight> = {
@@ -13,10 +13,9 @@ const SYMBOL_WEIGHT: Record<FontWeightToken, SymbolWeight> = {
 };
 
 /**
- * An icon from the platform's own set: an SF Symbol on iOS, a Material Symbol on Android and the
- * web (one file: `expo-symbols` draws the right one). It takes the size and, on iOS, the weight
- * of the neighbouring text (sf-symbols.md › Weights and scales) and grows with the text size
- * (typography.md › Supporting Dynamic Type). No emoji, no drawing.
+ * Default icon, for Android, the web and tests: a Material Symbol, drawn by `expo-symbols`. It
+ * takes the size of the neighbouring text and grows with the device's font scale, which Android
+ * applies to every text alike (typography.md › Supporting Dynamic Type). No emoji, no drawing.
  */
 export function Icon({
   symbol,

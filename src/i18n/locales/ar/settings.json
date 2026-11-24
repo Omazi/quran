@@ -1,1 +1,54 @@
-{}
+{
+  "title": "الإعدادات",
+  "language": {
+    "label": "اللغة",
+    "options": {
+      "fr": "Français",
+      "en": "English",
+      "ar": "العربية"
+    },
+    "restartNote": "سيتغيّر اتجاه الكتابة عند تشغيل التطبيق في المرة القادمة.",
+    "restart": "إعادة تشغيل التطبيق"
+  },
+  "goal": {
+    "title": "هدف اليوم",
+    "pagesPerDay": "الصفحات في اليوم",
+    "value": "{{pages}}",
+    "pace_zero": "{{count}} صفحة في اليوم",
+    "pace_one": "صفحة واحدة في اليوم",
+    "pace_two": "صفحتان في اليوم",
+    "pace_few": "{{count}} صفحات في اليوم",
+    "pace_many": "{{count}} صفحة في اليوم",
+    "pace_other": "{{count}} صفحة في اليوم",
+    "duration_zero": "ختمة في {{count}} يوم",
+    "duration_one": "ختمة في يوم واحد",
+    "duration_two": "ختمة في يومين",
+    "duration_few": "ختمة في {{count}} أيام",
+    "duration_many": "ختمة في {{count}} يومًا",
+    "duration_other": "ختمة في {{count}} يوم",
+    "landmark": {
+      "half-hizb": "أي نصف حزب",
+      "hizb": "أي حزب واحد",
+      "juz": "أي جزء واحد"
+    },
+    "note": "{{pace}}: {{duration}}.",
+    "noteWithLandmark": "{{pace}}، {{landmark}}: {{duration}}."
+  },
+  "reminders": {
+    "title": "التذكيرات",
+    "daily": "تذكير اليوم",
+    "dailyTime": "الوقت",
+    "fridayTime": "وقت الجمعة",
+    "thirstyGarden": "عندما تعطش الحديقة",
+    "fridayKahf": "الجمعة: سورة الكهف",
+    "openSystemSettings": "فتح إعدادات الهاتف",
+    "notice": {
+      "will-ask": "سيطلب منك هاتفك بعد ذلك السماح بالإشعارات.",
+      "denied": "إشعارات هذا التطبيق متوقفة. لتصلك تذكيراتك، اسمح بها من إعدادات الهاتف.",
+      "none-enabled": "بلا تذكير، لن يرسل إليك التطبيق أي إشعار."
+    }
+  },
+  "introduction": {
+    "replay": "مشاهدة التعريف من جديد"
+  }
+}

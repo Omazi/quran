@@ -3,7 +3,6 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { AppText } from '../../components/app-text';
 import { layout, radius, spacing } from '../../tokens';
 import { useColors } from '../../use-colors';
-import { Icon } from '../icon';
 import type {
   ContentUnavailableProps,
   GaugeProps,
@@ -11,6 +10,7 @@ import type {
   StatusTone,
 } from '../types';
 import { assertFraction } from '../validation';
+import { Icon } from './icon';
 
 const PERCENT = 100;
 

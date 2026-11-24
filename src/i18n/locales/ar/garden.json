@@ -1,1 +1,110 @@
-{}
+{
+  "scene": {
+    "name": {
+      "bare": "أرض جرداء",
+      "thriving": "الحديقة عند الحزب {{hizb}}",
+      "thirsty": "الحديقة عند الحزب {{hizb}}، عطشى",
+      "wilting": "الحديقة عند الحزب {{hizb}}، ذابلة",
+      "dying": "الحديقة عند الحزب {{hizb}}، تجفّ",
+      "dead": "أرض ميتة",
+      "complete": "الحديقة مكتملة"
+    },
+    "label": {
+      "bare": "أرض جرداء، لم يكتمل أي حزب بعد",
+      "thriving": "الحديقة، {{hizb}} من {{total}} حزبًا، {{water}}",
+      "thirsty": "حديقة عطشى، {{hizb}} من {{total}} حزبًا، {{water}}",
+      "wilting": "حديقة ذابلة، {{hizb}} من {{total}} حزبًا، {{water}}",
+      "dying": "حديقة تجفّ، {{hizb}} من {{total}} حزبًا، {{water}}",
+      "dead": "أرض ميتة، {{hizb}} من {{total}} حزبًا باقية لك، {{water}}",
+      "complete": "حديقة مكتملة، {{hizb}} من {{total}} حزبًا، {{water}}"
+    }
+  },
+  "water": {
+    "status": {
+      "flowing": "الماء يجري",
+      "still": "الماء راكد",
+      "dry": "جفّ الماء",
+      "none": "لا ماء بعد"
+    },
+    "clause": {
+      "flowing": "الماء يجري",
+      "still": "الماء راكد",
+      "dry": "جفّ الماء"
+    }
+  },
+  "phases": {
+    "bare": "أرض جرداء",
+    "thriving": "مزدهرة",
+    "thirsty": "عطشى",
+    "wilting": "ذابلة",
+    "dying": "تجفّ",
+    "dead": "أرض ميتة"
+  },
+  "kinds": {
+    "pomegranate": "شجرة رمان",
+    "date-palm": "نخلة",
+    "olive": "شجرة زيتون",
+    "fig": "شجرة تين",
+    "cypress": "شجرة سرو",
+    "orange": "شجرة برتقال",
+    "channels": "قنوات",
+    "paving": "بلاط",
+    "bed": "حوض زرع",
+    "stepping-stones": "ممشى حجري",
+    "flowers": "أزهار",
+    "fountain": "نافورة",
+    "springs": "عيون ماء",
+    "birds": "طيور",
+    "wall": "سور",
+    "trellis": "عريشة",
+    "gate": "بوابة",
+    "lanterns": "فوانيس",
+    "butterflies": "فراشات",
+    "pavilion": "جناح",
+    "carpets": "سجاد",
+    "cushions": "وسائد",
+    "lectern": "حامل المصحف",
+    "roses": "ورود",
+    "waterfall": "شلال",
+    "full-bloom": "إزهار كامل"
+  },
+  "readout": {
+    "state": {
+      "title": "حال الحديقة"
+    },
+    "hizb": {
+      "label": "الأحزاب المكتملة",
+      "value": "{{hizb}} من {{total}} حزبًا",
+      "minimum": "0",
+      "maximum": "{{total}}"
+    },
+    "health": {
+      "label": "الصحة",
+      "value": "{{phase}}، {{percent}}%",
+      "minimum": "0%",
+      "maximum": "100%"
+    },
+    "elements": {
+      "title": "العناصر"
+    },
+    "next": {
+      "label": "العنصر القادم",
+      "value": "{{element}}، {{percent}}%"
+    },
+    "last": {
+      "label": "آخر عنصر مكتسب"
+    },
+    "visible": {
+      "label": "العناصر الظاهرة",
+      "value": "{{visible}} من {{unlocked}}"
+    },
+    "pause": {
+      "label": "توقف مؤقت",
+      "value": "متوقفة اليوم"
+    },
+    "verse": {
+      "label": "الآية الملهِمة",
+      "value": "سورة {{surah}}، الآية {{ayah}}"
+    }
+  }
+}

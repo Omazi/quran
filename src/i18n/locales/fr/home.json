@@ -1,1 +1,62 @@
-{}
+{
+  "title": "Jardin",
+  "streak_one": "{{count}} jour de suite",
+  "streak_other": "{{count}} jours de suite",
+  "notice": {
+    "bare": {
+      "title": "Une terre nue",
+      "text": "Ton premier hizb fera naître ton jardin."
+    },
+    "thirsty": {
+      "title": "Ton jardin a soif",
+      "text": "Une page suffit pour faire revenir l’eau."
+    },
+    "wilting": {
+      "title": "Ton jardin fane",
+      "text": "Une page aujourd’hui, et il reprend des forces."
+    },
+    "dying": {
+      "title": "Ton jardin dépérit",
+      "text": "Une page fait déjà revenir des éléments."
+    },
+    "dead": {
+      "title": "Rien n’est perdu",
+      "text": "Tes hizb lus restent acquis. Une page fait revenir l’eau."
+    },
+    "recovering": {
+      "title": "L’eau est revenue",
+      "text": "Ton jardin reprend des forces. Continue demain."
+    },
+    "complete": {
+      "title": "Khatma terminée",
+      "text": "Ton jardin est complet. Lis une page pour commencer la suivante : un nouveau jardin t’attend."
+    }
+  },
+  "today": {
+    "title": "Aujourd’hui",
+    "pages": {
+      "label": "Pages lues",
+      "value": "{{read}} sur {{goal}}",
+      "valueReached": "{{read}} sur {{goal}}, objectif atteint"
+    },
+    "page": {
+      "resume": "Reprendre",
+      "start": "Commencer",
+      "value": "Page {{page}}"
+    },
+    "finish": {
+      "label": "Fin estimée de la khatma",
+      "labelNext": "Fin estimée de la prochaine khatma",
+      "today": "Aujourd’hui"
+    },
+    "footer_one": "Estimation au rythme de ton objectif : {{count}} page par jour.",
+    "footer_other": "Estimation au rythme de ton objectif : {{count}} pages par jour."
+  },
+  "actions": {
+    "read": "Lire et arroser"
+  },
+  "unavailable": {
+    "title": "Jardin indisponible",
+    "description": "Impossible de calculer l’état du jardin. Ferme l’appli, puis rouvre-la."
+  }
+}

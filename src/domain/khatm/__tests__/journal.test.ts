@@ -192,6 +192,61 @@ describe('Model — the reading journal', () => {
     },
   );
 
+  // Casts on purpose: values of the wrong shape are what a damaged storage would give.
+  const notLists: [string, unknown][] = [
+    ['null', null],
+    ['undefined', undefined],
+    ['an object', { khatm: 1, page: 1, date: MONDAY }],
+    ['a text', '[]'],
+    ['a number', 604],
+  ];
+
+  it.each(notLists)(
+    'invalid input: a journal that is not a list (%s) is named by the module, not by the engine',
+    (_label, value) => {
+      const journal = value as ReadingJournal;
+
+      expect(() => getCurrentKhatm(journal)).toThrow(TypeError);
+      expect(() => getCurrentKhatm(journal)).toThrow('Invalid journal: expected a list');
+      expect(() => getReadPages(journal, 1)).toThrow('Invalid journal: expected a list');
+      expect(() => getKhatmProgress(journal, 1, HIZB_PAGE_RANGES)).toThrow(
+        'Invalid journal: expected a list',
+      );
+      expect(() => recordPageRead(journal, { page: 1, date: MONDAY })).toThrow(
+        'Invalid journal: expected a list',
+      );
+    },
+  );
+
+  const notEntries: [string, unknown][] = [
+    ['null', null],
+    ['undefined', undefined],
+    ['a text', '1:5:2026-11-23'],
+    ['a number', 5],
+  ];
+
+  it.each(notEntries)(
+    'invalid input: a journal entry that is not an object (%s) is named by the module, not by the engine',
+    (_label, value) => {
+      const journal = [{ khatm: 1, page: 1, date: MONDAY }, value] as ReadingJournal;
+
+      expect(() => getCurrentKhatm(journal)).toThrow(TypeError);
+      expect(() => getCurrentKhatm(journal)).toThrow('Invalid journal entry: expected an object');
+      expect(() => recordPageRead(journal, { page: 2, date: MONDAY })).toThrow(
+        'Invalid journal entry: expected an object',
+      );
+    },
+  );
+
+  it('invalid input: a page read that is not an object is named by the module', () => {
+    // Cast on purpose: an untyped caller passing nothing.
+    const nothing = null as unknown as { page: number; date: LocalDate };
+
+    expect(() => recordPageRead(EMPTY_JOURNAL, nothing)).toThrow(
+      'Invalid page read: expected an object',
+    );
+  });
+
   it('a corrupted journal is rejected even when the page to record is already in it', () => {
     const duplicated: ReadingJournal = [
       { khatm: 1, page: 5, date: MONDAY },

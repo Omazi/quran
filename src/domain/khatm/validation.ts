@@ -1,12 +1,32 @@
 import { HIZB_COUNT, PAGE_COUNT } from '@/domain/quran/types';
 import { compareLocalDates, isLocalDate, type LocalDate } from '@/domain/shared/local-date';
-import { FIRST_KHATM, FIRST_PAGE } from './config';
+import { FIRST_KHATM, FIRST_PAGE, MAX_AVERAGE_PACE_WINDOW_DAYS } from './config';
 import type { HizbPageRange, KhatmConfig, Pause } from './types';
 
 /**
  * Guards of the module. Invalid input always raises an explicit error; nothing is silently
  * corrected (see docs/CONTRIBUTING.md).
+ *
+ * The types cannot be trusted at run time: the journal, the pauses and the settings come
+ * back from storage. A value of the wrong shape must be named by this module, not left to
+ * fail somewhere inside the engine ("x is not iterable").
  */
+
+function describeKind(value: unknown): string {
+  return value === null ? 'null' : typeof value;
+}
+
+export function assertList(value: unknown, label: string): asserts value is readonly unknown[] {
+  if (!Array.isArray(value)) {
+    throw new TypeError(`Invalid ${label}: expected a list, got ${describeKind(value)}`);
+  }
+}
+
+export function assertObject(value: unknown, label: string): asserts value is object {
+  if (typeof value !== 'object' || value === null) {
+    throw new TypeError(`Invalid ${label}: expected an object, got ${describeKind(value)}`);
+  }
+}
 
 export function assertPage(page: number): void {
   if (!Number.isInteger(page) || page < FIRST_PAGE || page > PAGE_COUNT) {
@@ -42,12 +62,20 @@ export function assertDailyGoalPages(dailyGoalPages: number): void {
 }
 
 export function assertConfig(config: KhatmConfig): void {
+  assertObject(config, 'configuration');
   assertPositiveInteger(config.minPagesPerWateredDay, 'minPagesPerWateredDay');
   assertPositiveInteger(config.averagePaceWindowDays, 'averagePaceWindowDays');
+  if (config.averagePaceWindowDays > MAX_AVERAGE_PACE_WINDOW_DAYS) {
+    throw new RangeError(
+      `Invalid averagePaceWindowDays: ${config.averagePaceWindowDays} (expected a whole number from 1 to ${MAX_AVERAGE_PACE_WINDOW_DAYS})`,
+    );
+  }
 }
 
 export function assertPauses(pauses: readonly Pause[]): void {
+  assertList(pauses, 'pauses');
   for (const pause of pauses) {
+    assertObject(pause, 'pause');
     assertLocalDate(pause.from, 'pause start');
     assertLocalDate(pause.to, 'pause end');
     if (compareLocalDates(pause.to, pause.from) < 0) {
@@ -63,12 +91,14 @@ export function assertPauses(pauses: readonly Pause[]): void {
  * completed" the same thing.
  */
 export function assertHizbPageRanges(ranges: readonly HizbPageRange[]): void {
+  assertList(ranges, 'hizb page ranges');
   if (ranges.length !== HIZB_COUNT) {
     throw new RangeError(`Expected ${HIZB_COUNT} hizb page ranges, got ${ranges.length}`);
   }
 
   let previousLastPage: number | null = null;
   for (const [index, range] of ranges.entries()) {
+    assertObject(range, 'hizb page range');
     const expectedHizb = index + 1;
     if (range.hizb !== expectedHizb) {
       throw new RangeError(

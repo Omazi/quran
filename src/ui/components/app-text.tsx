@@ -1,6 +1,6 @@
 import { Text, type StyleProp, type TextProps, type TextStyle } from 'react-native';
 
-import { appleTextStyles, textStyles, type ColorRole, type TextStyleName } from '../tokens';
+import { appleTextStyles, textStyles, type TextColorRole, type TextStyleName } from '../tokens';
 import { useColors } from '../use-colors';
 
 /** Alignment relative to the writing direction: `start` is the right edge in Arabic. */
@@ -16,8 +16,11 @@ export interface AppTextProps extends Omit<
 > {
   /** One of the charter's text styles. Defaults to body. */
   variant?: TextStyleName;
-  /** A colour role. Defaults to the primary label colour. */
-  color?: ColorRole;
+  /**
+   * A colour role meant for text. Defaults to the primary label colour. Backgrounds, separators,
+   * fills, `paper` and `warning` are refused: orange colours an icon, never a word.
+   */
+  color?: TextColorRole;
   /** Defaults to `start`, which follows the writing direction. */
   align?: TextAlignment;
   /** Layout only (flex, margins). Font, size, colour and alignment always come from the props. */

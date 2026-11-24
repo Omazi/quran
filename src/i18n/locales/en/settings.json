@@ -1,1 +1,46 @@
-{}
+{
+  "title": "Settings",
+  "language": {
+    "label": "Language",
+    "options": {
+      "fr": "Français",
+      "en": "English",
+      "ar": "العربية"
+    },
+    "restartNote": "The writing direction will change the next time the app starts.",
+    "restart": "Restart the App"
+  },
+  "goal": {
+    "title": "Daily Goal",
+    "pagesPerDay": "Pages per Day",
+    "value": "{{pages}}",
+    "pace_one": "{{count}} page a day",
+    "pace_other": "{{count}} pages a day",
+    "duration_one": "a khatma in {{count}} day",
+    "duration_other": "a khatma in {{count}} days",
+    "landmark": {
+      "half-hizb": "half a hizb",
+      "hizb": "one hizb",
+      "juz": "one juz"
+    },
+    "note": "{{pace}}: {{duration}}.",
+    "noteWithLandmark": "{{pace}}, {{landmark}}: {{duration}}."
+  },
+  "reminders": {
+    "title": "Reminders",
+    "daily": "Daily Reminder",
+    "dailyTime": "Time",
+    "fridayTime": "Friday Time",
+    "thirstyGarden": "When the Garden Is Thirsty",
+    "fridayKahf": "Fridays: Surah Al-Kahf",
+    "openSystemSettings": "Open Phone Settings",
+    "notice": {
+      "will-ask": "Your phone will then ask you to allow notifications.",
+      "denied": "Notifications are turned off for this app. To get your reminders, allow them in your phone’s settings.",
+      "none-enabled": "With no reminder on, the app sends you no notifications."
+    }
+  },
+  "introduction": {
+    "replay": "See the Introduction Again"
+  }
+}

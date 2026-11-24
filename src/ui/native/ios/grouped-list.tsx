@@ -10,6 +10,7 @@ import {
 import { accessibilityHidden, font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 
 import { appleTextStyles, spacing } from '../../tokens';
+import { GroupedListScope, useGroupedListGuard } from '../grouped-list-scope';
 import type { GroupedListProps, ListRowProps, ListSectionProps } from '../types';
 import { SwiftUIHost } from './swiftui-host';
 
@@ -24,12 +25,15 @@ const TERTIARY = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
 export function GroupedList({ children, testID }: GroupedListProps) {
   return (
     <SwiftUIHost size="fill">
-      <Form testID={testID}>{children}</Form>
+      <Form testID={testID}>
+        <GroupedListScope>{children}</GroupedListScope>
+      </Form>
     </SwiftUIHost>
   );
 }
 
 export function ListSection({ title, footer, children }: ListSectionProps) {
+  useGroupedListGuard('ListSection');
   return (
     <Section title={title} footer={footer === undefined ? undefined : <Text>{footer}</Text>}>
       {children}
@@ -38,10 +42,13 @@ export function ListSection({ title, footer, children }: ListSectionProps) {
 }
 
 /**
- * A row of text. With `onPress`, the row opens something and shows the disclosure indicator
- * (lists-and-tables.md › Mobile); `chevron.forward` points the other way in Arabic.
+ * A row of text. With `onPress`, the row opens something and shows a disclosure indicator
+ * (lists-and-tables.md › Mobile). The system draws that indicator only for its own navigation
+ * link, which needs a SwiftUI navigation stack the app does not have: the row is a button with
+ * the `chevron.forward` symbol, which points the other way in Arabic.
  */
 export function ListRow({ label, value, onPress, testID }: ListRowProps) {
+  useGroupedListGuard('ListRow');
   if (onPress === undefined) {
     return value === undefined ? (
       <Text testID={testID}>{label}</Text>

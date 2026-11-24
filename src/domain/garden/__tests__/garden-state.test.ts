@@ -1,6 +1,7 @@
 import { addDays, type LocalDate } from '@/domain/shared/local-date';
 
 import {
+  completedGardenState,
   computeGardenState,
   DEFAULT_GARDEN_CONFIG,
   GARDEN_CATALOG,
@@ -181,18 +182,20 @@ describe('visible elements', () => {
       expect(ids(gardenAtDrought(droughtDays).visibleElements)).toEqual(
         ids(GARDEN_CATALOG.slice(0, 24)),
       );
-      expect(gardenAtDrought(droughtDays, { hizbCompleted: 60 }).visibleElements).toEqual(
-        GARDEN_CATALOG,
+      expect(gardenAtDrought(droughtDays, { hizbCompleted: 59 }).visibleElements).toEqual(
+        GARDEN_CATALOG.slice(0, 59),
       );
     },
   );
 
   it.each([
     // unlocked, drought days, visible = ceil(unlocked * (14 - drought days) / 5)
-    [60, 10, 48],
-    [60, 11, 36],
-    [60, 12, 24],
-    [60, 13, 12],
+    [59, 10, 48],
+    [59, 13, 12],
+    [50, 10, 40],
+    [50, 11, 30],
+    [50, 12, 20],
+    [50, 13, 10],
     [24, 10, 20],
     [24, 11, 15],
     [24, 12, 10],
@@ -211,7 +214,8 @@ describe('visible elements', () => {
   });
 
   it('dying: rounds up, so a garden that is not dead always keeps at least one element', () => {
-    for (let unlocked = 1; unlocked <= 60; unlocked += 1) {
+    // Up to 59: a garden with its 60 hizb never dies.
+    for (let unlocked = 1; unlocked <= 59; unlocked += 1) {
       for (const droughtDays of [10, 11, 12, 13]) {
         const visible = gardenAtDrought(droughtDays, { hizbCompleted: unlocked }).visibleElements;
         expect(visible.length).toBeGreaterThanOrEqual(1);
@@ -222,7 +226,7 @@ describe('visible elements', () => {
   });
 
   it('the first reading after death always brings an element back, whatever the garden', () => {
-    for (let unlocked = 1; unlocked <= 60; unlocked += 1) {
+    for (let unlocked = 1; unlocked <= 59; unlocked += 1) {
       const dead = gardenInput('M'.repeat(14), 'unread', { hizbCompleted: unlocked });
       const readAgain = gardenInput('M'.repeat(14), 'read', { hizbCompleted: unlocked });
       expect(computeGardenState(dead).visibleElements).toHaveLength(0);
@@ -241,7 +245,7 @@ describe('visible elements', () => {
 
   it('dying: keeps 80 %, 60 %, 40 % then 20 % of the elements', () => {
     const shareAt = (droughtDays: number): number =>
-      gardenAtDrought(droughtDays, { hizbCompleted: 60 }).visibleElements.length / 60;
+      gardenAtDrought(droughtDays, { hizbCompleted: 50 }).visibleElements.length / 50;
     expect([10, 11, 12, 13].map(shareAt)).toEqual([0.8, 0.6, 0.4, 0.2]);
   });
 
@@ -252,7 +256,7 @@ describe('visible elements', () => {
 
   it('dead: shows nothing', () => {
     expect(gardenAtDrought(14).visibleElements).toEqual([]);
-    expect(gardenAtDrought(14, { hizbCompleted: 60 }).visibleElements).toEqual([]);
+    expect(gardenAtDrought(14, { hizbCompleted: 59 }).visibleElements).toEqual([]);
   });
 
   it('shows nothing while no hizb is finished', () => {
@@ -268,10 +272,10 @@ describe('visible elements', () => {
   });
 
   it('never shows more elements on a later day of the same absence', () => {
-    let previous = 60;
+    let previous = 59;
     for (let missedDays = 0; missedDays <= 20; missedDays += 1) {
       const state = computeGardenState(
-        gardenInput('M'.repeat(missedDays), 'unread', { hizbCompleted: 60 }),
+        gardenInput('M'.repeat(missedDays), 'unread', { hizbCompleted: 59 }),
       );
       expect(state.visibleElements.length).toBeLessThanOrEqual(previous);
       previous = state.visibleElements.length;
@@ -676,6 +680,32 @@ describe('bare earth (no hizb finished)', () => {
       growth: 0.7,
       isVisible: true,
     });
+  });
+});
+
+describe('a garden of 60 hizb is always the complete garden', () => {
+  const badge = completedGardenState(REFERENCE_GARDEN_VARIANT);
+
+  it('is exactly the garden of the badge, whatever the history and the dates', () => {
+    const histories = ['', 'WWW', 'M'.repeat(5), 'M'.repeat(14), `WW ${'M'.repeat(200)}`];
+    for (const history of histories) {
+      for (const today of ['unread', 'read', 'paused-unread', 'paused-read'] as const) {
+        const input = gardenInput(history, today, { hizbCompleted: 60 });
+        const dates = [null, input.today, addDays(input.today, -30), addDays(input.today, 2)];
+        for (const completedOn of dates) {
+          expect(computeGardenState({ ...input, completedOn })).toEqual(badge);
+        }
+      }
+    }
+  });
+
+  it('still checks its input: a malformed date is an error, complete garden or not', () => {
+    const input = gardenInput('WW', 'read', { hizbCompleted: 60 });
+    // `as` on purpose: a branded LocalDate cannot hold this value in typed code.
+    const notADate = '2026-02-30' as LocalDate;
+    expect(() => computeGardenState({ ...input, completedOn: notADate })).toThrow(RangeError);
+    expect(() => computeGardenState({ ...input, today: notADate })).toThrow(RangeError);
+    expect(() => computeGardenState({ ...input, firstHizbCompletedOn: null })).toThrow(RangeError);
   });
 });
 

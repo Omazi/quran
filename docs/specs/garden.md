@@ -65,9 +65,10 @@ On parcourt les jours de `firstHizbCompletedOn` à `today`, en partant de 0 :
   ignoré (il ne devient un jour manqué que le lendemain).
 - **Avant le premier hizb**, le jardin n'existe pas encore : rien ne peut sécher. Les
   jours d'avant `firstHizbCompletedOn` ne comptent pas.
-- **Jardin complet** : à partir de `completedOn`, le jardin est montré **en pleine santé**
-  (sécheresse 0, tous les éléments, l'eau coule) et plus rien ne change jusqu'à la khatma
-  suivante. Finir le Coran est une fête : on ne montre pas un jardin mourant à ce
+- **Jardin complet** : un jardin de 60 hizb est toujours montré **en pleine santé**
+  (sécheresse 0, tous les éléments, l'eau coule), quelles que soient les dates : ni
+  `today`, ni `completedOn` (même absent ou dans le futur après un changement de fuseau
+  horaire) n'y changent rien. Plus rien ne bouge jusqu'à la khatma suivante. Finir le Coran est une fête : on ne montre pas un jardin mourant à ce
   moment-là, et le badge de la même khatma montre lui aussi un jardin complet.
 
 Pourquoi ce modèle : lire ne doit **jamais** nuire. Avec un coût qui dépendait du rang du
@@ -149,3 +150,16 @@ jours-là sont simplement ignorés ; l'écran d'accueil ne doit pas planter pour
 - Jardin complet, puis un mois sans lecture : inchangé.
 - Khatma terminée après une absence : jardin complet en pleine santé, pas mourant.
 - Un seul élément, jardin mort, puis un jour de lecture : l'élément est de nouveau visible.
+
+## Précisions (après les tests indépendants)
+
+- Un jour à la fois en pause et lu compte comme un jour arrosé.
+- Le premier jour du jardin compte comme les autres : manqué s'il n'est pas dans
+  `wateredDays` (en pratique il y est, puisqu'un hizb vient d'être terminé ce jour-là).
+- Jardin complet : `daysSinceLastWatered` vaut 0, `missedDaysInARow` 0 et `isPausedToday`
+  faux. Une prévision de 0 jour est une liste vide.
+- La configuration refuse une récupération nulle et des seuils égaux.
+- Points laissés ouverts, à revoir quand le jardin aura ses vraies images : dans un tout
+  petit jardin (1 à 4 hizb), l'entrée dans la phase `dying` ne cache rien, pousse
+  comprise ; les pauses n'ont pas de durée maximale dans ce module (à borner dans les
+  réglages).

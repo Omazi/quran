@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Switch, View, type AccessibilityActionEvent } fr
 import { AppText } from '../../components/app-text';
 import { layout, spacing, stateOpacity } from '../../tokens';
 import { useColors } from '../../use-colors';
-import { Icon } from '../icon';
+import { useGroupedListGuard } from '../grouped-list-scope';
 import type {
   ChoiceRowProps,
   IconSymbol,
@@ -15,6 +15,7 @@ import type {
 } from '../types';
 import { assertStepperRange, dateToTimeOfDay, timeOfDayToDate } from '../validation';
 import { RowLayout } from './grouped-list';
+import { Icon } from './icon';
 
 const DECREMENT_SYMBOL: IconSymbol = { ios: 'minus', android: 'remove' };
 const INCREMENT_SYMBOL: IconSymbol = { ios: 'plus', android: 'add' };
@@ -29,6 +30,7 @@ const UNSELECTED_SYMBOL: IconSymbol = { ios: 'circle', android: 'radio_button_un
  * in a Material list, and it is one element for screen readers.
  */
 export function SwitchRow({ label, value, onChange, disabled = false, testID }: SwitchRowProps) {
+  useGroupedListGuard('SwitchRow');
   const colors = useColors();
   return (
     <Pressable
@@ -73,6 +75,7 @@ export function StepperRow({
   onChange,
   testID,
 }: StepperRowProps) {
+  useGroupedListGuard('StepperRow');
   assertStepperRange({ value, min, max, step });
   const decrement = () => onChange(Math.max(min, value - step));
   const increment = () => onChange(Math.min(max, value + step));
@@ -152,6 +155,7 @@ export function ChoiceRow<Value extends string>({
   onChange,
   testID,
 }: ChoiceRowProps<Value>) {
+  useGroupedListGuard('ChoiceRow');
   const colors = useColors();
   return (
     <View accessibilityRole="radiogroup" accessibilityLabel={label} testID={testID}>
@@ -191,6 +195,7 @@ function formatTime(date: Date): string {
  * shows the time.
  */
 export function TimePickerRow({ label, value, onChange, testID }: TimePickerRowProps) {
+  useGroupedListGuard('TimePickerRow');
   const colors = useColors();
   const [isPickerOpen, setPickerOpen] = useState(false);
   const date = timeOfDayToDate(value);

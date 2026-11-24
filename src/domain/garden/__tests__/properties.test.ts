@@ -63,7 +63,8 @@ function forEachRandomHistory(seed: number, check: (history: RandomHistory) => v
  * real engine.
  */
 function referenceDrought(input: GardenInput): number {
-  if (input.firstHizbCompletedOn === null) return 0;
+  // A bare earth cannot dry; a garden with its 60 hizb is always at full health.
+  if (input.firstHizbCompletedOn === null || input.hizbCompleted === 60) return 0;
   let drought = 0;
   for (let day = input.firstHizbCompletedOn; day <= input.today; day = addDays(day, 1)) {
     const currentDay = day;
@@ -146,7 +147,8 @@ describe('property: reading never harms', () => {
   function stateAfter(history: string): GardenState {
     const known = seenStates.get(history);
     if (known) return known;
-    const state = computeGardenState(gardenInput(history, 'unread', { hizbCompleted: 60 }));
+    // 59 hizb: the largest garden that still lives (with 60 it would always be at its best).
+    const state = computeGardenState(gardenInput(history, 'unread', { hizbCompleted: 59 }));
     seenStates.set(history, state);
     return state;
   }
@@ -243,6 +245,32 @@ describe('property: reading never harms', () => {
       expect(after.visibleElements.length).toBeGreaterThanOrEqual(before.visibleElements.length);
       expect(after.missedDaysInARow).toBe(0);
       if (hizbCompleted > 0) expect(after.water).toBe('flowing');
+    });
+  });
+});
+
+describe('property: a garden is never both complete and dying or dead', () => {
+  it('shows 60 hizb at full health on every history, with or without completion day', () => {
+    forEachRandomHistory(13, ({ past, today, input }) => {
+      const dates = [null, input.today, addDays(input.today, -7), addDays(input.today, 7)];
+      for (const completedOn of dates) {
+        const state = computeGardenState({
+          ...gardenInput(past, today, { hizbCompleted: 60 }),
+          completedOn,
+        });
+        expect(state).toMatchObject({
+          isComplete: true,
+          droughtDays: 0,
+          health: 1,
+          phase: 'thriving',
+          water: 'flowing',
+          missedDaysInARow: 0,
+          daysSinceLastWatered: 0,
+          isPausedToday: false,
+          nextElement: null,
+        });
+        expect(state.visibleElements).toHaveLength(60);
+      }
     });
   });
 });
@@ -377,7 +405,8 @@ describe('property: no date is ever "too late" (time-zone change)', () => {
       const state = computeGardenState(beforeEverything);
       expect(state.droughtDays).toBe(0);
       expect(state.missedDaysInARow).toBe(0);
-      expect(state.daysSinceLastWatered).toBeNull();
+      // Nothing is read yet on that day, except for a complete garden: always "just read".
+      expect(state.daysSinceLastWatered).toBe(input.hizbCompleted === 60 ? 0 : null);
     });
   });
 });

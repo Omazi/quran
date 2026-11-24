@@ -1,1 +1,110 @@
-{}
+{
+  "scene": {
+    "name": {
+      "bare": "Bare earth",
+      "thriving": "Garden at hizb {{hizb}}",
+      "thirsty": "Garden at hizb {{hizb}}, thirsty",
+      "wilting": "Garden at hizb {{hizb}}, wilting",
+      "dying": "Garden at hizb {{hizb}}, withering",
+      "dead": "Dead earth",
+      "complete": "Complete garden"
+    },
+    "label": {
+      "bare": "Bare earth, no hizb finished yet",
+      "thriving": "Garden, {{hizb}} of {{total}} hizb, {{water}}",
+      "thirsty": "Thirsty garden, {{hizb}} of {{total}} hizb, {{water}}",
+      "wilting": "Wilting garden, {{hizb}} of {{total}} hizb, {{water}}",
+      "dying": "Withering garden, {{hizb}} of {{total}} hizb, {{water}}",
+      "dead": "Dead earth, {{hizb}} of {{total}} hizb earned, {{water}}",
+      "complete": "Complete garden, {{hizb}} of {{total}} hizb, {{water}}"
+    }
+  },
+  "water": {
+    "status": {
+      "flowing": "The water is flowing",
+      "still": "The water is still",
+      "dry": "The water has run dry",
+      "none": "No water yet"
+    },
+    "clause": {
+      "flowing": "the water is flowing",
+      "still": "the water is still",
+      "dry": "the water has run dry"
+    }
+  },
+  "phases": {
+    "bare": "Bare earth",
+    "thriving": "Thriving",
+    "thirsty": "Thirsty",
+    "wilting": "Wilting",
+    "dying": "Withering",
+    "dead": "Dead earth"
+  },
+  "kinds": {
+    "pomegranate": "Pomegranate tree",
+    "date-palm": "Date palm",
+    "olive": "Olive tree",
+    "fig": "Fig tree",
+    "cypress": "Cypress",
+    "orange": "Orange tree",
+    "channels": "Channels",
+    "paving": "Paving",
+    "bed": "Flower bed",
+    "stepping-stones": "Stepping stones",
+    "flowers": "Flowers",
+    "fountain": "Fountain",
+    "springs": "Springs",
+    "birds": "Birds",
+    "wall": "Wall",
+    "trellis": "Trellis",
+    "gate": "Gate",
+    "lanterns": "Lanterns",
+    "butterflies": "Butterflies",
+    "pavilion": "Pavilion",
+    "carpets": "Carpets",
+    "cushions": "Cushions",
+    "lectern": "Lectern",
+    "roses": "Roses",
+    "waterfall": "Waterfall",
+    "full-bloom": "Full bloom"
+  },
+  "readout": {
+    "state": {
+      "title": "Garden Status"
+    },
+    "hizb": {
+      "label": "Hizb Finished",
+      "value": "{{hizb}} of {{total}} hizb",
+      "minimum": "0",
+      "maximum": "{{total}}"
+    },
+    "health": {
+      "label": "Health",
+      "value": "{{phase}}, {{percent}}%",
+      "minimum": "0%",
+      "maximum": "100%"
+    },
+    "elements": {
+      "title": "Elements"
+    },
+    "next": {
+      "label": "Next Element",
+      "value": "{{element}}, {{percent}}%"
+    },
+    "last": {
+      "label": "Last Element Earned"
+    },
+    "visible": {
+      "label": "Visible Elements",
+      "value": "{{visible}} of {{unlocked}}"
+    },
+    "pause": {
+      "label": "Pause",
+      "value": "Paused today"
+    },
+    "verse": {
+      "label": "Verse Behind It",
+      "value": "Surah {{surah}}, verse {{ayah}}"
+    }
+  }
+}

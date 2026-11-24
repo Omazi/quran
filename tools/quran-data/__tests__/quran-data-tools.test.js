@@ -265,6 +265,31 @@ describe('data:build — sources are checked before anything is generated', () =
     expectBuildToFail(sources, 'Source quran.json does not match its checksum');
   });
 
+  it('a source file that is not a gzip archive is refused with a clear message, by both tools', () => {
+    const sources = copyOfSources();
+    writeFileSync(join(sources, 'quran.json.gz'), 'not a gzip archive');
+
+    expectBuildToFail(sources, 'Source quran.json.gz is not a readable gzip archive');
+    const verification = verify(DATA_DIR, sources);
+    expect(verification.status).toBe(1);
+    expect(verification.stderr).toContain(
+      'data:verify failed: Source quran.json.gz is not a readable',
+    );
+    expect(verification.stderr).not.toContain('at ');
+  });
+
+  it('a source file that is not JSON is refused with a clear message', () => {
+    const sources = copyOfSources();
+    const content = Buffer.from('{ not json', 'utf8');
+    writeFileSync(join(sources, 'quran.json.gz'), gzipSync(content));
+    const checksums = readFileSync(join(sources, CHECKSUM_FILE), 'utf8')
+      .split('\n')
+      .map((line) => (line.endsWith('  quran.json') ? `${sha256(content)}  quran.json` : line));
+    writeFileSync(join(sources, CHECKSUM_FILE), checksums.join('\n'));
+
+    expectBuildToFail(sources, 'Source quran.json is not valid JSON');
+  });
+
   it('a missing source file is refused', () => {
     const sources = copyOfSources();
     rmSync(join(sources, 'qpages', '300.json.gz'));

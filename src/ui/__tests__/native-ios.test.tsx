@@ -5,7 +5,8 @@
  */
 
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import { DynamicColorIOS, Platform } from 'react-native';
+import type { ReactNode } from 'react';
+import { Platform, PlatformColor, Text as RNText } from 'react-native';
 
 import {
   Button,
@@ -13,27 +14,35 @@ import {
   ContentUnavailable,
   Gauge,
   GroupedList,
+  Icon,
   ListRow,
   ListSection,
+  Pager,
   ProgressIndicator,
   StepperRow,
   SwitchRow,
   TimePickerRow,
 } from '../native/ios';
+import * as pagerSettings from '../native/ios/pager-settings';
 import type { IconSymbol } from '../native/types';
 import {
   APPEARANCES_AND_DIRECTIONS,
+  iosAppColor,
+  LARGEST_FONT_SCALE,
   resetDeviceConditions,
   setDeviceConditions,
   styleOf,
+  swiftUIViewsWithoutHost,
   withDescendants,
   type RenderedElement,
 } from '../test-support/environment';
-import { appColors, touchTargets } from '../tokens';
+import { touchTargets } from '../tokens';
 
-const ACCENT = { type: 'color', color: DynamicColorIOS(appColors.accent) };
-const ON_ACCENT = { type: 'color', color: DynamicColorIOS(appColors.onAccent) };
+const ON_ACCENT = { type: 'color', color: iosAppColor('onAccent') };
 const BOOK: IconSymbol = { ios: 'book.closed', android: 'book_2' };
+const DROP: IconSymbol = { ios: 'drop.fill', android: 'water_drop' };
+/** A decorative icon is hidden from screen readers, and so from the default queries. */
+const HIDDEN = { includeHiddenElements: true };
 const LANGUAGES = [
   { value: 'fr', label: 'Français' },
   { value: 'ar', label: 'العربية' },
@@ -72,6 +81,15 @@ function firstChild(element: RenderedElement): RenderedElement {
   return child;
 }
 
+/** A row lives in a list: a test of one row puts it alone in one. */
+function InList({ children }: { children: ReactNode }) {
+  return (
+    <GroupedList>
+      <ListSection>{children}</ListSection>
+    </GroupedList>
+  );
+}
+
 afterEach(resetDeviceConditions);
 
 describe('iOS hosts', () => {
@@ -95,6 +113,8 @@ describe('iOS hosts', () => {
       for (const host of hosts()) {
         expect(host).toHaveProp('layoutDirection', rightToLeft ? 'rightToLeft' : 'leftToRight');
         expect(host.props.colorScheme).toBeUndefined();
+        // The accent is given once, to the host, as the tint of everything below.
+        expect(host).toHaveProp('seedColor', iosAppColor('accent'));
       }
     },
   );
@@ -119,14 +139,37 @@ describe('iOS Button', () => {
     ['primary', 'borderedProminent'],
     ['secondary', 'bordered'],
     ['plain', 'borderless'],
-  ] as const)('%s is the system %s style, tinted with the accent', async (variant, style) => {
+  ] as const)('%s is the system %s style, tinted by its host', async (variant, style) => {
     setDeviceConditions();
     await render(<Button label="Action" variant={variant} onPress={jest.fn()} testID="button" />);
     const button = screen.getByTestId('button');
     expect(modifierOf(button, 'buttonStyle')).toMatchObject({ style });
-    expect(modifierOf(button, 'tint')).toMatchObject({ tint: ACCENT });
+    expect(modifierOf(button, 'tint')).toBeUndefined();
+    expect(button.props.role).toBeUndefined();
+    expect(hosts()[0]).toHaveProp('seedColor', iosAppColor('accent'));
     expect(swiftUITexts(button)).toEqual(['Action']);
   });
+
+  it.each(['secondary', 'plain'] as const)(
+    'a destructive %s button has the system role and the system red',
+    async (variant) => {
+      setDeviceConditions();
+      await render(
+        <Button
+          label="Tout effacer"
+          variant={variant}
+          role="destructive"
+          onPress={jest.fn()}
+          testID="button"
+        />,
+      );
+      const button = screen.getByTestId('button');
+      expect(button).toHaveProp('role', 'destructive');
+      expect(modifierOf(button, 'tint')).toMatchObject({
+        tint: { type: 'color', color: PlatformColor('systemRed') },
+      });
+    },
+  );
 
   it('draws the label of the prominent style in the charter colour, readable in both appearances', async () => {
     setDeviceConditions();
@@ -169,7 +212,10 @@ describe('iOS Button', () => {
       size: 'large',
     });
     const plainLabel = firstChild(screen.getByTestId('plain'));
-    expect(modifierOf(plainLabel, 'frame')).toMatchObject({ minHeight: touchTargets.ios });
+    expect(modifierOf(plainLabel, 'frame')).toMatchObject({
+      minWidth: touchTargets.ios,
+      minHeight: touchTargets.ios,
+    });
     expect(modifierOf(plainLabel, 'contentShape')).toMatchObject({ shape: 'rectangle' });
   });
 
@@ -205,7 +251,8 @@ describe('iOS Button', () => {
     );
     const button = screen.getByTestId('button');
     expect(modifierOf(button, 'buttonStyle')).toBeUndefined();
-    expect(modifierOf(button, 'tint')).toMatchObject({ tint: ACCENT });
+    expect(modifierOf(button, 'controlSize')).toBeUndefined();
+    expect(modifierOf(firstChild(button), 'frame')).toBeUndefined();
   });
 });
 
@@ -263,14 +310,21 @@ describe('iOS GroupedList', () => {
 });
 
 describe('iOS rows', () => {
-  it('SwitchRow is the system toggle, labelled by the row, in the system colour', async () => {
+  it('SwitchRow is the system toggle, labelled by the row, kept in the system green', async () => {
     setDeviceConditions();
     const onChange = jest.fn();
-    await render(<SwitchRow label="Mon jardin a soif" value onChange={onChange} testID="row" />);
+    await render(
+      <InList>
+        <SwitchRow label="Mon jardin a soif" value onChange={onChange} testID="row" />
+      </InList>,
+    );
     const toggle = screen.getByTestId('row');
     expect(toggle).toHaveProp('label', 'Mon jardin a soif');
     expect(toggle).toHaveProp('isOn', true);
-    expect(modifierOf(toggle, 'tint')).toBeUndefined();
+    // Stated on the switch, because the host tints everything else with the accent.
+    expect(modifierOf(toggle, 'tint')).toMatchObject({
+      tint: { type: 'color', color: PlatformColor('systemGreen') },
+    });
     await fireEvent(toggle, 'isOnChange', { nativeEvent: { isOn: false } });
     expect(onChange).toHaveBeenCalledWith(false);
   });
@@ -278,7 +332,9 @@ describe('iOS rows', () => {
   it('SwitchRow can be disabled', async () => {
     setDeviceConditions();
     await render(
-      <SwitchRow label="Rappel" value={false} onChange={jest.fn()} disabled testID="row" />,
+      <InList>
+        <SwitchRow label="Rappel" value={false} onChange={jest.fn()} disabled testID="row" />
+      </InList>,
     );
     expect(modifierOf(screen.getByTestId('row'), 'disabled')).toMatchObject({ disabled: true });
   });
@@ -287,15 +343,17 @@ describe('iOS rows', () => {
     setDeviceConditions();
     const onChange = jest.fn();
     await render(
-      <StepperRow
-        label="Pages par jour"
-        value={5}
-        valueLabel="5 pages"
-        min={1}
-        max={60}
-        onChange={onChange}
-        testID="goal"
-      />,
+      <InList>
+        <StepperRow
+          label="Pages par jour"
+          value={5}
+          valueLabel="5 pages"
+          min={1}
+          max={60}
+          onChange={onChange}
+          testID="goal"
+        />
+      </InList>,
     );
     const stepper = screen.getByTestId('goal');
     expect(stepper.props).toMatchObject({ value: 5, min: 1, max: 60, step: 1 });
@@ -310,13 +368,15 @@ describe('iOS rows', () => {
     setDeviceConditions();
     const onChange = jest.fn();
     await render(
-      <ChoiceRow
-        label="Langue"
-        options={LANGUAGES}
-        value="fr"
-        onChange={onChange}
-        testID="language"
-      />,
+      <InList>
+        <ChoiceRow
+          label="Langue"
+          options={LANGUAGES}
+          value="fr"
+          onChange={onChange}
+          testID="language"
+        />
+      </InList>,
     );
     const picker = screen.getByTestId('language');
     expect(picker).toHaveProp('label', 'Langue');
@@ -329,22 +389,25 @@ describe('iOS rows', () => {
     expect(onChange).toHaveBeenCalledWith('ar');
   });
 
-  it('TimePickerRow is the system compact picker for hours and minutes, in the accent', async () => {
+  it('TimePickerRow is the system compact picker for hours and minutes, tinted by its host', async () => {
     setDeviceConditions();
     const onChange = jest.fn();
     await render(
-      <TimePickerRow
-        label="Heure du rappel"
-        value={{ hour: 20, minute: 30 }}
-        onChange={onChange}
-        testID="time"
-      />,
+      <InList>
+        <TimePickerRow
+          label="Heure du rappel"
+          value={{ hour: 20, minute: 30 }}
+          onChange={onChange}
+          testID="time"
+        />
+      </InList>,
     );
     const picker = screen.getByTestId('time');
     expect(picker).toHaveProp('title', 'Heure du rappel');
     expect(picker).toHaveProp('displayedComponents', ['hourAndMinute']);
     expect(modifierOf(picker, 'datePickerStyle')).toMatchObject({ style: 'compact' });
-    expect(modifierOf(picker, 'tint')).toMatchObject({ tint: ACCENT });
+    expect(modifierOf(picker, 'tint')).toBeUndefined();
+    expect(hosts()[0]).toHaveProp('seedColor', iosAppColor('accent'));
     const shown = new Date(picker.props.selection as string);
     expect([shown.getHours(), shown.getMinutes()]).toEqual([20, 30]);
     await fireEvent(picker, 'dateChange', {
@@ -355,7 +418,7 @@ describe('iOS rows', () => {
 });
 
 describe('iOS status', () => {
-  it('ProgressIndicator is the system linear bar, labelled, in the accent', async () => {
+  it('ProgressIndicator is the system linear bar, labelled, tinted by its host', async () => {
     setDeviceConditions();
     await render(
       <ProgressIndicator value={0.4} accessibilityLabel="Téléchargement" testID="bar" />,
@@ -363,7 +426,8 @@ describe('iOS status', () => {
     const bar = screen.getByTestId('bar');
     expect(bar).toHaveProp('value', 0.4);
     expect(modifierOf(bar, 'progressViewStyle')).toMatchObject({ style: 'linear' });
-    expect(modifierOf(bar, 'tint')).toMatchObject({ tint: ACCENT });
+    expect(modifierOf(bar, 'tint')).toBeUndefined();
+    expect(hosts()[0]).toHaveProp('seedColor', iosAppColor('accent'));
     expect(modifierOf(bar, 'accessibilityLabel')).toMatchObject({ label: 'Téléchargement' });
   });
 
@@ -394,11 +458,29 @@ describe('iOS status', () => {
     expect(gauge).toHaveProp('value', 0.25);
     expect(modifierOf(gauge, 'gaugeStyle')).toMatchObject({ style: 'linearCapacity' });
     expect(modifierOf(gauge, 'tint')).toMatchObject({
-      tint: { type: 'color', color: DynamicColorIOS(appColors.growth) },
+      tint: { type: 'color', color: iosAppColor('growth') },
     });
     expect(swiftUITexts(gauge).sort()).toEqual(
       ['A soif', 'Florissant', 'Santé du jardin', 'À sec'].sort(),
     );
+  });
+
+  it('Gauge takes the accent from its host unless a tone is given', async () => {
+    setDeviceConditions();
+    await render(
+      <>
+        <Gauge value={0.5} label="Lecture" valueLabel="Moitié" testID="accent" />
+        <Gauge value={0.2} label="Eau" valueLabel="A soif" tone="warning" testID="warning" />
+      </>,
+    );
+    expect(modifierOf(screen.getByTestId('accent'), 'tint')).toBeUndefined();
+    expect(modifierOf(screen.getByTestId('warning'), 'tint')).toMatchObject({
+      tint: { type: 'color', color: PlatformColor('systemOrange') },
+    });
+    // The tone tints the gauge; the words are plain SwiftUI texts, left to the system's colours.
+    for (const text of screen.getByTestId('warning').queryAll(({ props }) => 'text' in props)) {
+      expect(modifierOf(text, 'foregroundStyle')).toBeUndefined();
+    }
   });
 
   it('ContentUnavailable is the system empty state, with an SF Symbol', async () => {
@@ -431,16 +513,234 @@ describe('iOS status', () => {
   });
 });
 
+describe('iOS Icon', () => {
+  it('is an SF Symbol set in the text style and weight of the neighbouring text', async () => {
+    setDeviceConditions();
+    await render(
+      <>
+        <Icon symbol={DROP} testID="body" />
+        <Icon symbol={DROP} textStyle="headline" testID="headline" />
+        <Icon symbol={DROP} textStyle="largeTitle" testID="title" />
+      </>,
+    );
+    expect(screen.getByTestId('body', HIDDEN)).toHaveProp('systemName', 'drop.fill');
+    expect(modifierOf(screen.getByTestId('body', HIDDEN), 'font')).toMatchObject({
+      textStyle: 'body',
+      weight: 'regular',
+    });
+    expect(modifierOf(screen.getByTestId('headline', HIDDEN), 'font')).toMatchObject({
+      textStyle: 'headline',
+      weight: 'semibold',
+    });
+    expect(modifierOf(screen.getByTestId('title', HIDDEN), 'font')).toMatchObject({
+      textStyle: 'largeTitle',
+      weight: 'bold',
+    });
+  });
+
+  it('leaves its size to Dynamic Type: no fixed size, whatever the text size setting', async () => {
+    setDeviceConditions({ fontScale: LARGEST_FONT_SCALE });
+    await render(<Icon symbol={DROP} testID="icon" />);
+    const icon = screen.getByTestId('icon', HIDDEN);
+    expect(icon.props.size).toBeUndefined();
+    expect(modifierOf(icon, 'frame')).toBeUndefined();
+    expect(modifierOf(icon, 'font')?.size).toBeUndefined();
+  });
+
+  it('has a host of its size when alone, and none inside a list', async () => {
+    setDeviceConditions();
+    await render(<Icon symbol={DROP} testID="icon" />);
+    expect(hosts()).toHaveLength(1);
+    expect(hosts()[0]).toHaveProp('matchContentsHorizontal', true);
+    expect(hosts()[0]).toHaveProp('matchContentsVertical', true);
+    await screen.unmount();
+    await render(
+      <GroupedList>
+        <ListSection>
+          <Icon symbol={DROP} testID="icon" />
+        </ListSection>
+      </GroupedList>,
+    );
+    expect(hosts()).toHaveLength(1);
+  });
+
+  it('is coloured by a role and hidden from VoiceOver unless it has a label', async () => {
+    setDeviceConditions();
+    await render(
+      <>
+        <Icon symbol={DROP} testID="decorative" />
+        <Icon symbol={DROP} color="warning" accessibilityLabel="Le jardin a soif" testID="thirst" />
+      </>,
+    );
+    const decorative = screen.getByTestId('decorative', HIDDEN);
+    expect(modifierOf(decorative, 'foregroundStyle')).toMatchObject({
+      style: { type: 'color', color: PlatformColor('label') },
+    });
+    expect(modifierOf(decorative, 'accessibilityHidden')).toMatchObject({ hidden: true });
+    const thirst = screen.getByTestId('thirst', HIDDEN);
+    expect(modifierOf(thirst, 'foregroundStyle')).toMatchObject({
+      style: { type: 'color', color: PlatformColor('systemOrange') },
+    });
+    expect(modifierOf(thirst, 'accessibilityLabel')).toMatchObject({ label: 'Le jardin a soif' });
+    expect(modifierOf(thirst, 'accessibilityHidden')).toBeUndefined();
+  });
+});
+
+describe('iOS Pager', () => {
+  function renderPager(page: number, onPageChange = jest.fn(), pageCount = 3) {
+    return render(
+      <Pager
+        pageCount={pageCount}
+        page={page}
+        onPageChange={onPageChange}
+        renderPage={(index) => (
+          <>
+            <RNText>{`Page ${index + 1}`}</RNText>
+            <Icon symbol={DROP} testID={`drop-${index}`} />
+          </>
+        )}
+        accessibilityLabel="Page"
+        accessibilityValue={`Page ${page + 1} sur ${pageCount}`}
+        testID="pager"
+      />,
+    );
+  }
+
+  it.each(APPEARANCES_AND_DIRECTIONS)(
+    'is the system paged tab view with the system page indicator ($scheme, right to left: $rightToLeft)',
+    async (conditions) => {
+      setDeviceConditions(conditions);
+      await renderPager(1);
+      const pager = screen.getByTestId('pager');
+      expect(modifierOf(pager, 'tabViewStyle')).toMatchObject({
+        type: 'page',
+        indexDisplayMode: 'always',
+      });
+      expect(modifierOf(pager, 'indexViewStyle')).toMatchObject({
+        backgroundDisplayMode: 'always',
+      });
+      expect(pager).toHaveProp('selection', '1');
+      // One tab per page, and the system mirrors them from the direction of the host.
+      expect(
+        pager.children.map((tab) => (typeof tab === 'string' ? tab : tab.props.value)),
+      ).toEqual(['0', '1', '2']);
+      expect(hosts()[0]).toHaveProp(
+        'layoutDirection',
+        conditions.rightToLeft ? 'rightToLeft' : 'leftToRight',
+      );
+    },
+  );
+
+  it('does not colour the indicator and draws none of its own', async () => {
+    setDeviceConditions();
+    await renderPager(0);
+    const pager = screen.getByTestId('pager');
+    expect(modifierOf(pager, 'tint')).toBeUndefined();
+    expect(modifierOf(pager, 'foregroundStyle')).toBeUndefined();
+    expect(screen.queryByRole('adjustable')).not.toBeOnTheScreen();
+  });
+
+  it('fills its place and shows every page as React Native content', async () => {
+    setDeviceConditions();
+    await renderPager(0);
+    expect(styleOf(hosts()[0]!)).toEqual({ flex: 1 });
+    for (const text of ['Page 1', 'Page 2', 'Page 3']) {
+      expect(screen.getByText(text)).toBeOnTheScreen();
+    }
+  });
+
+  it('gives a control inside a page a host of its own', async () => {
+    setDeviceConditions();
+    await renderPager(0);
+    // One host for the pager, one for the icon of each of the three pages.
+    expect(hosts()).toHaveLength(4);
+    expect(swiftUIViewsWithoutHost()).toEqual([]);
+  });
+
+  it('reports the page the person swiped to', async () => {
+    setDeviceConditions();
+    const onPageChange = jest.fn();
+    await renderPager(0, onPageChange);
+    await fireEvent(screen.getByTestId('pager'), 'selectionChange', {
+      nativeEvent: { selection: '2' },
+    });
+    expect(onPageChange).toHaveBeenCalledWith(2);
+  });
+
+  it('falls back to the default pager when the system one is switched off', async () => {
+    setDeviceConditions();
+    jest.replaceProperty(pagerSettings, 'IOS_USES_SYSTEM_PAGER', false);
+    await renderPager(1);
+    expect(screen.getByRole('adjustable', { name: 'Page' })).toHaveAccessibilityValue({
+      text: 'Page 2 sur 3',
+    });
+    expect(modifierOf(screen.getByTestId('pager'), 'tabViewStyle')).toBeUndefined();
+  });
+
+  it('refuses a page that does not exist', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    await expect(renderPager(3)).rejects.toThrow(RangeError);
+  });
+});
+
+describe('iOS rows and sections outside a list', () => {
+  beforeEach(() => {
+    // React reports the error thrown by a component on the console; the test asserts on it.
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  it.each([
+    ['ListSection', <ListSection key="section">{null}</ListSection>],
+    ['ListRow', <ListRow key="row" label="Seule" />],
+    ['SwitchRow', <SwitchRow key="switch" label="Rappel" value onChange={jest.fn()} />],
+    [
+      'StepperRow',
+      <StepperRow
+        key="stepper"
+        label="Pages"
+        value={5}
+        valueLabel="5"
+        min={1}
+        max={60}
+        onChange={jest.fn()}
+      />,
+    ],
+    [
+      'ChoiceRow',
+      <ChoiceRow key="choice" label="Langue" options={LANGUAGES} value="fr" onChange={jest.fn()} />,
+    ],
+    [
+      'TimePickerRow',
+      <TimePickerRow
+        key="time"
+        label="Heure"
+        value={{ hour: 8, minute: 0 }}
+        onChange={jest.fn()}
+      />,
+    ],
+  ])('%s is refused: nothing would display it on an iPhone', async (name, element) => {
+    await expect(render(element)).rejects.toThrow(`${name} must be inside a GroupedList`);
+  });
+});
+
 describe('iOS invalid values', () => {
   beforeEach(() => {
     // React reports the error thrown by a component on the console; the test asserts on it.
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
+  it('refuses a destructive button in the prominent style', async () => {
+    await expect(
+      render(<Button label="Tout effacer" role="destructive" onPress={jest.fn()} />),
+    ).rejects.toThrow(TypeError);
+  });
+
   it('refuses a stepper range SwiftUI would crash on', async () => {
     await expect(
       render(
-        <StepperRow label="x" valueLabel="y" value={5} min={10} max={1} onChange={jest.fn()} />,
+        <InList>
+          <StepperRow label="x" valueLabel="y" value={5} min={10} max={1} onChange={jest.fn()} />
+        </InList>,
       ),
     ).rejects.toThrow(RangeError);
   });
@@ -451,7 +751,11 @@ describe('iOS invalid values', () => {
     );
     await expect(render(<Gauge value={-1} label="x" valueLabel="y" />)).rejects.toThrow(RangeError);
     await expect(
-      render(<TimePickerRow label="x" value={{ hour: 24, minute: 0 }} onChange={jest.fn()} />),
+      render(
+        <InList>
+          <TimePickerRow label="x" value={{ hour: 24, minute: 0 }} onChange={jest.fn()} />
+        </InList>,
+      ),
     ).rejects.toThrow(RangeError);
   });
 });

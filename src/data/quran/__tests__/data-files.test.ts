@@ -18,6 +18,8 @@ describe('readVersesFile — a verses file is checked before it is used', () => 
     ['null', null],
     ['an array', []],
     ['a missing surah', { ...uthmaniVerses, '114': undefined }],
+    ['a 115th surah', { ...uthmaniVerses, '115': ['extra'] }],
+    ['a key that is not a surah', { ...uthmaniVerses, notes: 'extra' }],
     ['a surah with a missing verse', { ...uthmaniVerses, '1': uthmaniVerses['1'].slice(0, 6) }],
     ['a surah with one verse too many', { ...uthmaniVerses, '1': [...uthmaniVerses['1'], 'x'] }],
     ['an empty verse', { ...uthmaniVerses, '108': ['', '', ''] }],

@@ -281,7 +281,7 @@ describe('before the first hizb, the garden does not exist yet: nothing can dry'
   });
 });
 
-describe('complete garden: from completedOn on, full health, and nothing changes', () => {
+describe('complete garden: always at full health, whatever the dates', () => {
   /** 60 hizb, finished on day 10 after reading every day. */
   const completed: GardenInput = {
     ...gardenInput(''),
@@ -315,16 +315,17 @@ describe('complete garden: from completedOn on, full health, and nothing changes
     expect(computeGardenState(later)).toEqual(computeGardenState(completed));
   });
 
-  it('dries normally until the completion day, then is shown at full health', () => {
-    // Read on days 0 to 3, away on days 4 to 9, last page on day 10. Only a time-zone
-    // change lets "today" fall before a completion day that is already known.
+  it('is at full health even when today falls before the completion day (time-zone change)', () => {
+    // Read on days 0 to 3, away on days 4 to 9, last page on day 10.
     const lateFinish: GardenInput = {
       ...completed,
       wateredDays: new Set([day(0), day(1), day(2), day(3), day(10)]),
     };
-    expect(computeGardenState({ ...lateFinish, today: day(9) }).droughtDays).toBe(5);
-    expect(computeGardenState({ ...lateFinish, today: day(10) }).droughtDays).toBe(0);
-    expect(computeGardenState({ ...lateFinish, today: day(400) }).droughtDays).toBe(0);
+    const onCompletionDay = computeGardenState(lateFinish);
+    expect(onCompletionDay).toMatchObject({ droughtDays: 0, phase: 'thriving', water: 'flowing' });
+    for (const today of [day(9), day(5), day(-3), day(400)]) {
+      expect(computeGardenState({ ...lateFinish, today })).toEqual(onCompletionDay);
+    }
   });
 
   it('khatma finished after an absence: a complete garden at full health, not a dying one', () => {
@@ -361,7 +362,7 @@ describe('complete garden: from completedOn on, full health, and nothing changes
     );
   });
 
-  it('is at full health from the completion day on even if that day is not a watered day', () => {
+  it('is at full health even if the completion day is not a watered day', () => {
     const state = computeGardenState({
       ...completed,
       wateredDays: new Set([day(0)]),
@@ -371,9 +372,35 @@ describe('complete garden: from completedOn on, full health, and nothing changes
     expect(state.visibleElements).toHaveLength(60);
   });
 
-  it('keeps living while no completion day is given, even with 60 hizb (previews)', () => {
-    const state = computeGardenState(gardenInput('M'.repeat(14), 'unread', { hizbCompleted: 60 }));
-    expect(state.isComplete).toBe(true);
+  it('is never both complete and dying or dead: 60 hizb without completion day are at full health too', () => {
+    for (const missedDays of [0, 3, 10, 14, 200]) {
+      const state = computeGardenState(
+        gardenInput('M'.repeat(missedDays), 'unread', { hizbCompleted: 60 }),
+      );
+      expect(state.isComplete).toBe(true);
+      expect(state).toMatchObject({
+        droughtDays: 0,
+        health: 1,
+        phase: 'thriving',
+        water: 'flowing',
+      });
+      expect(state.visibleElements).toHaveLength(60);
+    }
+  });
+
+  it('reports the complete garden as on a day just read: 0 day since watered, nothing missed, no pause', () => {
+    const state = computeGardenState({
+      ...gardenInput('M'.repeat(30), 'paused-unread', { hizbCompleted: 60 }),
+      completedOn: day(2),
+    });
+    expect(state.daysSinceLastWatered).toBe(0);
+    expect(state.missedDaysInARow).toBe(0);
+    expect(state.isPausedToday).toBe(false);
+  });
+
+  it('is one hizb away from an ordinary garden: at 59 hizb the same history is a dead earth', () => {
+    const state = computeGardenState(gardenInput('M'.repeat(14), 'unread', { hizbCompleted: 59 }));
+    expect(state.isComplete).toBe(false);
     expect(state.phase).toBe('dead');
   });
 });

@@ -1,1 +1,110 @@
-{}
+{
+  "scene": {
+    "name": {
+      "bare": "Terre nue",
+      "thriving": "Jardin au hizb {{hizb}}",
+      "thirsty": "Jardin au hizb {{hizb}}, assoiffé",
+      "wilting": "Jardin au hizb {{hizb}}, fané",
+      "dying": "Jardin au hizb {{hizb}}, qui dépérit",
+      "dead": "Terre morte",
+      "complete": "Jardin complet"
+    },
+    "label": {
+      "bare": "Terre nue, aucun hizb terminé",
+      "thriving": "Jardin, {{hizb}} hizb sur {{total}}, {{water}}",
+      "thirsty": "Jardin assoiffé, {{hizb}} hizb sur {{total}}, {{water}}",
+      "wilting": "Jardin fané, {{hizb}} hizb sur {{total}}, {{water}}",
+      "dying": "Jardin qui dépérit, {{hizb}} hizb sur {{total}}, {{water}}",
+      "dead": "Terre morte, {{hizb}} hizb sur {{total}} acquis, {{water}}",
+      "complete": "Jardin complet, {{hizb}} hizb sur {{total}}, {{water}}"
+    }
+  },
+  "water": {
+    "status": {
+      "flowing": "L’eau coule",
+      "still": "L’eau est immobile",
+      "dry": "L’eau est à sec",
+      "none": "Pas encore d’eau"
+    },
+    "clause": {
+      "flowing": "l’eau coule",
+      "still": "l’eau est immobile",
+      "dry": "l’eau est à sec"
+    }
+  },
+  "phases": {
+    "bare": "Terre nue",
+    "thriving": "Florissant",
+    "thirsty": "A soif",
+    "wilting": "Fane",
+    "dying": "Dépérit",
+    "dead": "Terre morte"
+  },
+  "kinds": {
+    "pomegranate": "Grenadier",
+    "date-palm": "Palmier-dattier",
+    "olive": "Olivier",
+    "fig": "Figuier",
+    "cypress": "Cyprès",
+    "orange": "Oranger",
+    "channels": "Canaux",
+    "paving": "Dallage",
+    "bed": "Parterre",
+    "stepping-stones": "Chemin de pierres",
+    "flowers": "Fleurs",
+    "fountain": "Fontaine",
+    "springs": "Sources",
+    "birds": "Oiseaux",
+    "wall": "Mur",
+    "trellis": "Treille",
+    "gate": "Porte",
+    "lanterns": "Lanternes",
+    "butterflies": "Papillons",
+    "pavilion": "Pavillon",
+    "carpets": "Tapis",
+    "cushions": "Coussins",
+    "lectern": "Pupitre",
+    "roses": "Roses",
+    "waterfall": "Cascade",
+    "full-bloom": "Pleine floraison"
+  },
+  "readout": {
+    "state": {
+      "title": "État du jardin"
+    },
+    "hizb": {
+      "label": "Hizb terminés",
+      "value": "{{hizb}} hizb sur {{total}}",
+      "minimum": "0",
+      "maximum": "{{total}}"
+    },
+    "health": {
+      "label": "Santé",
+      "value": "{{phase}}, {{percent}}\u00a0%",
+      "minimum": "0\u00a0%",
+      "maximum": "100\u00a0%"
+    },
+    "elements": {
+      "title": "Éléments"
+    },
+    "next": {
+      "label": "Prochain élément",
+      "value": "{{element}}, {{percent}}\u00a0%"
+    },
+    "last": {
+      "label": "Dernier élément acquis"
+    },
+    "visible": {
+      "label": "Éléments visibles",
+      "value": "{{visible}} sur {{unlocked}}"
+    },
+    "pause": {
+      "label": "Pause",
+      "value": "En pause aujourd’hui"
+    },
+    "verse": {
+      "label": "Verset qui l’inspire",
+      "value": "Sourate {{surah}}, verset {{ayah}}"
+    }
+  }
+}

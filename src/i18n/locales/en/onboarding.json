@@ -1,1 +1,84 @@
-{}
+{
+  "pager": {
+    "label": "Introduction",
+    "position": "Page {{page}} of {{total}}"
+  },
+  "replayTitle": "Introduction",
+  "finish": "Continue",
+  "scenes": {
+    "bareEarth": "Garden: bare earth",
+    "garden": "Garden at hizb {{hizb}}",
+    "drought_one": "Garden after {{count}} day without reading",
+    "drought_other": "Garden after {{count}} days without reading",
+    "revival": "Garden coming back to life after one page",
+    "voice": "Reading aloud, followed word by word",
+    "recognition": "A passage recognized by listening",
+    "friends": "Your loved ones’ gardens"
+  },
+  "pages": {
+    "bareEarth": {
+      "title": "A Bare Earth",
+      "text": "Sixty hizb to turn it into a garden. Swipe to continue."
+    },
+    "hizb8": {
+      "title": "Read, and the Water Flows",
+      "text": "Every new page you read waters your garden. The channels fill up and the first trees arrive."
+    },
+    "hizb20": {
+      "title": "One Hizb, One New Element",
+      "text": "A tree, flowers, a fountain: each hizb you finish adds something."
+    },
+    "hizb30": {
+      "title": "Halfway There, the Walls Rise",
+      "text": "Your garden takes shape, hizb after hizb."
+    },
+    "hizb40": {
+      "title": "The Gates Open",
+      "text": "The further you go, the more beautiful it becomes."
+    },
+    "hizb60": {
+      "title": "Your Garden Is Complete",
+      "text": "Sixty hizb: you have read the whole Quran."
+    },
+    "thirsty": {
+      "title": "Stop Reading, and It Gets Thirsty",
+      "text": "The water stops flowing and the grass turns pale."
+    },
+    "wilting": {
+      "title": "Then It Wilts",
+      "text": "The grass yellows, the trees take on autumn colors, the channels run dry."
+    },
+    "dying": {
+      "title": "The Trees Go Bare",
+      "text": "The flowers are gone and the earth cracks."
+    },
+    "dead": {
+      "title": "And It Turns Back Into Dead Earth",
+      "text": "Two weeks without reading, and nothing is left."
+    },
+    "revival": {
+      "title": "One Page Is Enough to Revive It",
+      "text": "The hizb you have read stay yours. Start again, and the water returns."
+    },
+    "voice": {
+      "title": "Read Aloud, the App Follows You",
+      "text": "Each word lights up as you recite it. A misread word turns red, so you can read it again."
+    },
+    "recognition": {
+      "title": "Where Is This Passage From?",
+      "text": "Hearing a recitation? Let the app listen: it tells you the surah and the verse."
+    },
+    "friends": {
+      "title": "With Your Loved Ones",
+      "text": "Visit their gardens, encourage each other, and read a khatma together."
+    },
+    "goal": {
+      "title": "Your Daily Goal",
+      "text": "It is up to you. You can change it whenever you like."
+    },
+    "reminders": {
+      "title": "Your Reminders",
+      "text": "So your garden never runs out of water."
+    }
+  }
+}

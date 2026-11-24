@@ -212,16 +212,20 @@ describe('forecastGardenWithoutReading: the garden on each coming day if nothing
       for (const day of forecast) expect(day.state).toEqual(today);
     });
 
-    it('lets a garden dry until its completion day when that day is still to come', () => {
-      // Possible after a time-zone change: the last page is dated three days from "today".
-      const base = gardenInput('WW', 'read', { hizbCompleted: 60 });
-      const completesInThreeDays: GardenInput = { ...base, completedOn: addDays(base.today, 3) };
-      const forecast = forecastGardenWithoutReading(completesInThreeDays, 6);
-      forecast.forEach((day, index) => {
-        expect(day.state).toEqual(stateOnLaterDay(completesInThreeDays, index + 1));
-      });
-      // Two days of drought, then the completion day: full health, for good.
-      expect(droughts(forecast)).toEqual([0, 1, 0, 0, 0, 0]);
+    it('keeps a complete garden at full health whatever the dates', () => {
+      // After a time-zone change the completion day can be dated after "today"; it can
+      // also be missing. Neither changes anything.
+      const base = gardenInput('WW MMMMMMMMMMMM', 'unread', { hizbCompleted: 60 });
+      const full = computeGardenState(base);
+      expect(full).toMatchObject({ droughtDays: 0, water: 'flowing', isComplete: true });
+      for (const completedOn of [null, addDays(base.today, 3), addDays(base.today, -3)]) {
+        const input: GardenInput = { ...base, completedOn };
+        const forecast = forecastGardenWithoutReading(input, 6);
+        forecast.forEach((day, index) => {
+          expect(day.state).toEqual(full);
+          expect(day.state).toEqual(stateOnLaterDay(input, index + 1));
+        });
+      }
     });
   });
 
@@ -288,9 +292,6 @@ describe('forecastGardenWithoutReading: the garden on each coming day if nothing
 
     it('never improves without reading: drought only rises, visible elements only go', () => {
       forEachRandomGarden(31, false, (input) => {
-        // The one exception is not a day without reading: a completion day still to come
-        // (time-zone change) brings the garden back to full health.
-        if (input.completedOn !== null && input.completedOn > input.today) return;
         let previous = computeGardenState(input);
         for (const { state } of forecastGardenWithoutReading(input, REMINDER_HORIZON_IN_DAYS)) {
           expect(state.droughtDays).toBeGreaterThanOrEqual(previous.droughtDays);

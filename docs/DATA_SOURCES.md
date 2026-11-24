@@ -9,12 +9,13 @@ Dernière vérification : 24 novembre 2026. Outil : `tools/quran-data`. Spécifi
 
 ## Résumé
 
-| Fichier source               | Sert à                                       | Origine établie                                                             | Licence annoncée par l'origine                               |
-| ---------------------------- | -------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `quran.json`                 | Texte uthmani, noms des sourates             | Paquet npm `quran-json@3.1.2`                                               | **Contradictoire** : CC BY 4.0 ou CC BY-SA 4.0               |
-| `tanzil_simple.json`         | Second texte, contrôle croisé                | Paquet npm `@muslims-community/quran@1.1.0`, qui reprend un texte de Tanzil | Texte : CC BY 3.0 et conditions de Tanzil, d'après le paquet |
-| `qpages/001.json`…`604.json` | Mise en page : pages, lignes, place des mots | Paquet npm `quran-qcf4@1.1.0`                                               | MIT pour les données, d'après le paquet                      |
-| paquet npm `quran-meta`      | Début des 60 hizb, contrôles croisés         | Registre npm, version 7.0.0, `devDependency`                                | MIT                                                          |
+| Fichier source               | Sert à                                          | Origine établie                                                             | Licence annoncée par l'origine                               |
+| ---------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `quran.json`                 | Texte uthmani, noms des sourates                | Paquet npm `quran-json@3.1.2`                                               | **Contradictoire** : CC BY 4.0 ou CC BY-SA 4.0               |
+| `tanzil_simple.json`         | Second texte, contrôle croisé                   | Paquet npm `@muslims-community/quran@1.1.0`, qui reprend un texte de Tanzil | Texte : CC BY 3.0 et conditions de Tanzil, d'après le paquet |
+| `qpages/001.json`…`604.json` | Mise en page : pages, lignes, place des mots    | Paquet npm `quran-qcf4@1.1.0`                                               | MIT pour les données, d'après le paquet                      |
+| paquet npm `quran-meta`      | Début des 60 hizb, contrôles croisés            | Registre npm, version 7.0.0, `devDependency`                                | MIT                                                          |
+| `ara-quransimple.json`       | Jeux d'essai de la reconnaissance, rien d'autre | **Non identifiée**                                                          | Inconnue                                                     |
 
 « Origine établie » veut dire : le fichier est identique, octet pour octet, à un fichier d'un
 paquet publié, téléchargé et comparé. Cela ne dit pas d'où le paquet tient lui-même ses
@@ -131,6 +132,28 @@ C'est le texte « Uthmani Minimal » de Tanzil. Il est livré sous son vrai nom,
   mushaf n'imprime le signe ۞ qu'à l'intérieur des sourates, et le champ `hizb` du fichier
   Tanzil est faux.
 
+### 5. `ara-quransimple.json` : utilisé dans des jeux d'essai seulement, provenance à confirmer
+
+- **Où** : sur la machine de développement, hors dépôt. Il n'est ni copié dans
+  `tools/quran-data/sources/`, ni lu par la génération, ni livré dans `assets/data`.
+- **Empreinte SHA-256** : `e430798cdda553f703b54f5601835bbbd8e9a81dce3db42c7e6f09314a4ec3cb`
+  (1 912 135 octets).
+- **Usage** : 80 versets en sont extraits dans
+  `src/domain/recognition/__fixtures__/imlaei-sample.ts`, comme substitut de sortie vocale
+  pour les tests du module de reconnaissance.
+- **Origine non identifiée.** Le fichier ne porte aucune mention de source ni de licence, et
+  il n'a pas pu être rattaché à un paquet publié (une seule piste essayée sur le registre
+  npm, sans résultat). Les jeux d'essai le disent tiré du texte
+  « Simple » de Tanzil (CC BY 3.0, copie conforme) : **non vérifié**.
+- **Constats** : forme `{ "quran": [{ "chapter", "verse", "text" }] }`, 6 236 versets,
+  orthographe courante (verset 2:3 mot 5 : `الصَّلَاةَ`, avec alif). Le premier verset de
+  chaque sourate, sauf la 9, y commence par la basmala (pour la sourate 1, c'est le verset
+  lui-même). Les fichiers voisins du même dossier, de
+  14 octets, contiennent « 404: Not Found » : il s'agit de téléchargements depuis une
+  adresse web qui n'est pas connue.
+- **À faire avant tout usage hors des tests** : retrouver l'origine, comparer avec le texte
+  publié par Tanzil et relire ses conditions.
+
 ## Incohérences entre sources
 
 Chacune est déclarée dans `tools/quran-data/lib/declared.mjs` et contrôlée à chaque
@@ -187,7 +210,9 @@ du texte placé au même endroit, pour les 77 428 mots.
   `quran-meta` ne font pas commencer 25 pages au même verset. Les pages de l'appli suivent
   la mise en page, puisque c'est elle qu'on affiche ; la liste de `quran-meta` n'est pas
   utilisée. Conséquence : sur ces pages, le numéro de page d'un verset peut différer de
-  celui d'autres applis.
+  celui d'autres applis et du mushaf de Médine classique. **Rien de cela n'a été comparé à
+  un mushaf imprimé.** Une personne doit le faire avant publication, pour ces 25 pages au
+  moins, et **le choix de l'édition à suivre revient au propriétaire**.
 
 | Page | Premier verset, mise en page | Premier verset, `quran-meta` |
 | ---- | ---------------------------- | ---------------------------- |
@@ -219,10 +244,52 @@ du texte placé au même endroit, pour les 77 428 mots.
 
 - **Index du paquet `quran-qcf4`.** Son fichier `index.json` donne, pour six sourates (80,
   84, 88, 90, 94, 96), une dernière page qui contredit ses propres fichiers de pages. Ce
-  fichier n'est pas utilisé.
+  fichier n'est pas utilisé, mais la contradiction montre que le paquet mêle deux éditions :
+  raison de plus pour la comparaison avec un mushaf imprimé.
 - **Substitution de caractère des maquettes.** Les maquettes remplaçaient le signe U+065E
   par U+064C pour la police Amiri Quran. Les données ne font aucune substitution : un
-  ajustement de police se fait au rendu.
+  ajustement de police se fait au rendu. Liste complète des signes concernés : voir
+  « Caractères du texte uthmani » plus bas.
+
+## Caractères du texte uthmani : la police doit correspondre au texte
+
+Le texte uthmani emploie des points de code avec le sens que leur donnent les polices
+« Uthmanic Hafs » du complexe du roi Fahd, qui n'est pas leur sens Unicode. Une police
+standard, comme Amiri Quran, dessinera d'autres signes à ces endroits. Comptes vérifiés sur
+`assets/data/verses/uthmani.json` :
+
+| Point de code | Nom Unicode                                 | Occurrences | Emploi constaté dans ce texte                                                                    |
+| ------------- | ------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------ |
+| U+0657        | ARABIC INVERTED DAMMA                       | 2 901       | Tanwin : le texte de Tanzil porte un tanwin fatha (U+064B) sur le même mot, 2 901 fois sur 2 901 |
+| U+065E        | ARABIC FATHA WITH TWO DOTS                  | 1 807       | Tanwin : Tanzil porte un tanwin damma (U+064C), 1 807 sur 1 807                                  |
+| U+0656        | ARABIC SUBSCRIPT ALEF                       | 1 935       | Tanwin : Tanzil porte un tanwin kasra (U+064D), 1 935 sur 1 935                                  |
+| U+065C        | ARABIC VOWEL SIGN DOT BELOW                 | 1           | 11:41 mot 6                                                                                      |
+| U+06EC        | ARABIC ROUNDED HIGH STOP WITH FILLED CENTRE | 2           | 12:11 mot 6 et 41:44 mot 9                                                                       |
+| U+06E4        | ARABIC SMALL HIGH MADDA                     | 26          | Sur les mots de prosternation, dans 15 versets                                                   |
+| U+2009        | THIN SPACE                                  | 1           | À l'intérieur du mot 4 de 2:72                                                                   |
+
+Les trois premiers font 6 643 signes de tanwin. Le texte porte aussi les tanwin habituels
+(U+064B 734 fois, U+064C 578, U+064D 599) : les deux séries coexistent, on ne peut donc pas
+les confondre par un simple remplacement global sans vérifier le rendu. Les versets qui
+portent U+06E4 sont 7:206, 13:15, 16:49, 17:107, 19:58, 22:18, 22:77, 25:60, 27:25, 32:15,
+38:24, 41:37, 53:62, 84:21 et 96:19 : onze portent aussi le signe ۩, quatre (16:49, 17:107,
+27:25, 41:37) précèdent le verset qui le porte.
+
+Ce qui est vérifié : les comptes, les emplacements et la correspondance avec les tanwin de
+Tanzil. Ce qui ne l'est pas : le dessin exact de chaque signe dans chaque police. Le sens
+« propre aux polices du complexe » de U+065C, U+06EC et U+06E4 est un constat du testeur
+indépendant, non contrôlé ici sur une police.
+
+**Risque ouvert pour le lecteur.** Soit la police correspond au texte (les polices du
+complexe du roi Fahd, soumises à autorisation : décision D6), soit l'affichage fait la
+correspondance au moment du rendu, signe par signe, et une personne compétente relit le
+résultat. Dans les deux cas **le texte stocké n'est jamais modifié**.
+
+**Le texte n'est pas en forme NFC et ne doit jamais être normalisé.** 5 722 des 6 236 versets
+du texte uthmani et 5 019 de ceux du texte de Tanzil changeraient sous
+`String.prototype.normalize('NFC')` : l'ordre des signes serait modifié, l'empreinte ne
+correspondrait plus et le texte ne serait plus celui de la source. Aucun module ne doit
+normaliser le texte affiché ; la comparaison de textes se fait sur des clés à part.
 
 ## Données générées
 
@@ -282,8 +349,17 @@ l'empreinte SHA-256 de ses fichiers avec `SHA256SUMS`.
    mushaf n'est pas établie. Voir aussi la décision D6 sur ses polices.
 5. **Cinq mots collés** dans le texte uthmani : décision ci-dessus à confirmer.
 6. **Édition du mushaf.** La mise en page suit l'édition 1441 H d'après le paquet. Sur
-   25 pages, le premier verset diffère de la liste de `quran-meta`.
-7. **Aucune relecture humaine du texte.** Les contrôles sont automatiques : empreintes,
+   25 pages (121 à 123, 145, 532 à 534, 565, 568, 570, 576, 584, 586, 588 à 590, 592 à 600),
+   le premier verset diffère de celui du mushaf de Médine classique, et l'index du paquet
+   contredit ses propres pages pour six sourates. À comparer avec un mushaf imprimé par une
+   personne avant publication. L'édition à suivre est une décision du propriétaire.
+7. **Police et texte.** Le texte uthmani emploie 6 643 signes de tanwin et quelques autres
+   signes avec le sens des polices du complexe du roi Fahd. Avec une autre police, il faut
+   une correspondance au rendu, relue par une personne. Le texte n'est pas en forme NFC et
+   ne doit jamais être normalisé.
+8. **Fichier `ara-quransimple.json`.** Origine non identifiée ; utilisé dans des jeux
+   d'essai seulement. À ne pas embarquer dans l'appli sans en avoir établi l'origine.
+9. **Aucune relecture humaine du texte.** Les contrôles sont automatiques : empreintes,
    comparaison de deux textes d'éditeurs différents, comparaison avec la mise en page. Ils
    ne remplacent pas la validation par une personne compétente.
 

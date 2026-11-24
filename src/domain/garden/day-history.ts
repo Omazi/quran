@@ -5,6 +5,7 @@
  *
  * No date is ever "too late" here: after a time-zone change, today can fall before the
  * day of the first hizb or before a watered day. Such days are simply not reached yet.
+ * The completion day plays no part: a complete garden does not depend on the calendar.
  */
 import { daysBetween, isLocalDate, type LocalDate } from '@/domain/shared/local-date';
 
@@ -22,8 +23,8 @@ export interface GardenDay {
 /** A day the garden is looked at: today, or one of the coming days. */
 export interface ViewDay {
   /**
-   * Position in `DayHistory.lifeDays` of the day the garden is seen on, or null when the
-   * garden cannot dry on that day: before its first hizb, and from its completion on.
+   * Position of that day in `DayHistory.lifeDays`, or null while the life of the garden
+   * has not begun (bare earth, or a day before the first hizb).
    */
   readonly lifeDayIndex: number | null;
   /** Calendar days since the last watered day (0 when read that day), or null. */
@@ -33,8 +34,8 @@ export interface ViewDay {
 
 export interface DayHistory {
   /**
-   * The days on which the garden can dry, one entry per day, from the day of its first
-   * hizb to the last day looked at (or the completion day). Empty for a bare earth.
+   * The life of the garden, one entry per day, from the day of its first hizb to the last
+   * day looked at. Empty for a bare earth.
    */
   readonly lifeDays: readonly GardenDay[];
   readonly today: ViewDay;
@@ -44,6 +45,7 @@ export interface DayHistory {
 
 export interface CalendarInput {
   readonly firstHizbCompletedOn: LocalDate | null;
+  /** Only checked: a complete garden is shown at full health whatever the dates. */
   readonly completedOn: LocalDate | null;
   readonly today: LocalDate;
   /** How many days after today to look at (0 for today only). */
@@ -75,16 +77,12 @@ export function buildDayHistory(calendar: CalendarInput): DayHistory {
     return daysBetween(today, day);
   };
   const firstHizbOffset = offsetOf(calendar.firstHizbCompletedOn, 'firstHizbCompletedOn');
-  const completionOffset = offsetOf(calendar.completedOn, 'completedOn');
+  if (calendar.completedOn !== null) assertLocalDate(calendar.completedOn, 'completedOn');
 
-  // From its completion day on, a complete garden no longer changes: later days look at
-  // that day, and see a garden at full health.
-  const seenOffset = (daysFromToday: number): number =>
-    completionOffset === null ? daysFromToday : Math.min(daysFromToday, completionOffset);
-  const firstSeenOffset = seenOffset(0);
-  const lastSeenOffset = seenOffset(daysAhead);
-  const firstUsefulOffset =
-    firstHizbOffset === null ? firstSeenOffset : Math.min(firstHizbOffset, firstSeenOffset);
+  // The days that matter: from the first hizb (or today, whichever comes first) to the
+  // last day looked at.
+  const lastOffset = daysAhead;
+  const firstOffset = firstHizbOffset === null ? 0 : Math.min(firstHizbOffset, 0);
 
   const pausedOffsets = new Set<number>();
   pauses.forEach((pause, position) => {
@@ -96,8 +94,8 @@ export function buildDayHistory(calendar: CalendarInput): DayHistory {
         `Garden: pauses[${position}] ends (${pause.to}) before it starts (${pause.from})`,
       );
     }
-    const firstPaused = Math.max(firstUsefulOffset, daysBetween(today, pause.from));
-    const lastPaused = Math.min(lastSeenOffset, daysBetween(today, pause.to));
+    const firstPaused = Math.max(firstOffset, daysBetween(today, pause.from));
+    const lastPaused = Math.min(lastOffset, daysBetween(today, pause.to));
     for (let offset = firstPaused; offset <= lastPaused; offset += 1) pausedOffsets.add(offset);
   });
 
@@ -118,13 +116,11 @@ export function buildDayHistory(calendar: CalendarInput): DayHistory {
     isWatered: wateredOffsets.has(offset),
     isPaused: pausedOffsets.has(offset),
   });
-  const viewFrom = (daysFromToday: number): ViewDay => {
-    const offset = seenOffset(daysFromToday);
+  const viewFrom = (offset: number): ViewDay => {
     const lastWateredOffset = lastWateredOffsetUpTo(offset);
-    const isComplete = completionOffset !== null && offset >= completionOffset;
-    const canDry = firstHizbOffset !== null && offset >= firstHizbOffset && !isComplete;
+    const hasLifeBegun = firstHizbOffset !== null && offset >= firstHizbOffset;
     return {
-      lifeDayIndex: canDry ? offset - firstHizbOffset : null,
+      lifeDayIndex: hasLifeBegun ? offset - firstHizbOffset : null,
       daysSinceLastWatered: lastWateredOffset === null ? null : offset - lastWateredOffset,
       isPaused: pausedOffsets.has(offset),
     };
@@ -132,7 +128,7 @@ export function buildDayHistory(calendar: CalendarInput): DayHistory {
 
   const lifeDays: GardenDay[] = [];
   if (firstHizbOffset !== null) {
-    for (let offset = firstHizbOffset; offset <= lastSeenOffset; offset += 1) {
+    for (let offset = firstHizbOffset; offset <= lastOffset; offset += 1) {
       lifeDays.push(dayAt(offset));
     }
   }

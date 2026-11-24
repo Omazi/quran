@@ -59,10 +59,12 @@ export function parseLocalDate(value: string): LocalDate {
 export function addDays(date: LocalDate, days: number): LocalDate {
   if (!Number.isInteger(days)) throw new RangeError(`addDays expects whole days, got ${days}`);
   const result = fromEpochDay(toEpochDay(date) + days);
-  // Beyond year 9999 the calendar no longer fits the YYYY-MM-DD shape: refuse rather than
+  // Outside the supported years the result no longer fits the YYYY-MM-DD shape: refuse rather than
   // return a string that only looks like a date.
   if (!isLocalDate(result)) {
-    throw new RangeError(`addDays(${date}, ${days}) falls outside the years 0001 to 9999`);
+    throw new RangeError(
+      `addDays(${date}, ${days}) falls outside the supported years (0100 to 9999)`,
+    );
   }
   return result;
 }

@@ -136,8 +136,8 @@ export interface GardenKhatmInput {
    */
   readonly firstHizbCompletedOn: LocalDate | null;
   /**
-   * Day this khatma was finished, `null` until then. From that day on the garden is shown
-   * at full health, and nothing changes until the next khatma.
+   * Day this khatma was finished, `null` until then; refused without the 60 hizb. It
+   * changes nothing to the garden: with 60 hizb it is always shown at full health.
    */
   readonly completedOn: LocalDate | null;
 }

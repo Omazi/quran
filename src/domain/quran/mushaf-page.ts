@@ -36,7 +36,8 @@ function buildTextLine(
     structure.assertVerse(ref);
     const verseKey = formatVerseKey(ref);
     const verseWords = wordsOfVerse(ref);
-    if (firstWord < 1 || lastWord < firstWord || lastWord > verseWords.length) {
+    const arePositions = Number.isInteger(firstWord) && Number.isInteger(lastWord);
+    if (!arePositions || firstWord < 1 || lastWord < firstWord || lastWord > verseWords.length) {
       throw new RangeError(
         `Invalid layout of page ${page}: words ${firstWord}..${lastWord} of ${verseKey} ` +
           `(the verse has ${verseWords.length} words)`,

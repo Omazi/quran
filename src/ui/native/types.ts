@@ -8,7 +8,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import type { AndroidSymbol, SFSymbol } from 'expo-symbols';
 
-import type { ColorRole, TextStyleName } from '../tokens';
+import type { ColorRole, IconColorRole, TextStyleName } from '../tokens';
 
 /** An icon by its name in each platform's own set: SF Symbols, Material Symbols. */
 export interface IconSymbol {
@@ -24,11 +24,19 @@ export interface IconSymbol {
  */
 export type ButtonVariant = 'primary' | 'secondary' | 'plain';
 
+/** A destructive button can destroy data: the system draws it in red (buttons.md › Role). */
+export type ButtonRole = 'destructive';
+
 export interface ButtonProps {
   /** Says what the button does, starting with a verb. */
   label: string;
   onPress: () => void;
   variant?: ButtonVariant;
+  /**
+   * Never on a `primary` button, which people may press without reading it (buttons.md › Role):
+   * that combination is refused.
+   */
+  role?: ButtonRole;
   disabled?: boolean;
   /** Spans the width of its container instead of hugging its label. */
   fullWidth?: boolean;
@@ -148,15 +156,15 @@ export interface GaugeProps {
 
 // --- Icon -------------------------------------------------------------------------------------
 
-/** The text styles an icon can sit next to. */
-export type IconTextStyle = Exclude<TextStyleName, 'largeTitle' | 'title2'>;
+/** The text styles an icon can sit next to: all of them. */
+export type IconTextStyle = TextStyleName;
 
 export interface IconProps {
   symbol: IconSymbol;
   /** The text style of the neighbouring text: the icon takes its size and weight. */
   textStyle?: IconTextStyle;
-  /** Defaults to the primary label colour. */
-  color?: ColorRole;
+  /** A foreground role. Defaults to the primary label colour. */
+  color?: IconColorRole;
   /** What the icon means. Omit it for an icon that only decorates a text that says the same. */
   accessibilityLabel?: string;
   testID?: string;
@@ -173,8 +181,26 @@ export interface PageIndicatorProps {
   onChange: (index: number) => void;
   /** Names the indicator for screen readers. */
   accessibilityLabel: string;
-  /** The position as people hear it: "Page 3 sur 16". */
-  accessibilityValue: string;
+  /** The position as people hear it: "Page 3 sur 16". Without it, they hear the page number. */
+  accessibilityValue?: string;
+  testID?: string;
+}
+
+// --- Pager ------------------------------------------------------------------------------------
+
+export interface PagerProps {
+  /** Number of pages. */
+  pageCount: number;
+  /** Zero-based index of the page shown. */
+  page: number;
+  /** Called when the person moves to another page, by a swipe or through the page indicator. */
+  onPageChange: (page: number) => void;
+  /** Draws the page of the given zero-based index. */
+  renderPage: (page: number) => ReactNode;
+  /** Names the page indicator for screen readers, where the system does not name it itself. */
+  accessibilityLabel: string;
+  /** The position as people hear it, where the system does not say it itself. */
+  accessibilityValue?: string;
   testID?: string;
 }
 
@@ -204,4 +230,6 @@ export interface NativeControls {
   ProgressIndicator: (props: ProgressIndicatorProps) => ReactElement;
   Gauge: (props: GaugeProps) => ReactElement;
   ContentUnavailable: (props: ContentUnavailableProps) => ReactElement;
+  Icon: (props: IconProps) => ReactElement;
+  Pager: (props: PagerProps) => ReactElement;
 }

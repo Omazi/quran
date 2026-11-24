@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText } from '../../components/app-text';
 import { layout, spacing, stateOpacity } from '../../tokens';
 import { useColors } from '../../use-colors';
+import { GroupedListScope, useGroupedListGuard } from '../grouped-list-scope';
 import type { GroupedListProps, ListRowProps, ListSectionProps } from '../types';
 
 /**
@@ -14,12 +15,13 @@ import type { GroupedListProps, ListRowProps, ListSectionProps } from '../types'
 export function GroupedList({ children, testID }: GroupedListProps) {
   return (
     <ScrollView style={styles.list} testID={testID}>
-      {children}
+      <GroupedListScope>{children}</GroupedListScope>
     </ScrollView>
   );
 }
 
 export function ListSection({ title, footer, children }: ListSectionProps) {
+  useGroupedListGuard('ListSection');
   const colors = useColors();
   return (
     <View style={[styles.section, { borderBottomColor: colors.separator }]}>
@@ -64,6 +66,7 @@ export function RowLayout({ label, trailing }: RowLayoutProps) {
 }
 
 export function ListRow({ label, value, onPress, testID }: ListRowProps) {
+  useGroupedListGuard('ListRow');
   const colors = useColors();
   const content = (
     <RowLayout

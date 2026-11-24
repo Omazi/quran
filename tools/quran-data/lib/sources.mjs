@@ -74,7 +74,12 @@ export function readSources(sourcesDir = SOURCES_DIR) {
   const readJson = (name) => {
     const path = join(sourcesDir, name + COMPRESSED_SUFFIX);
     if (!existsSync(path)) fail(`Missing source file: ${path}`);
-    const original = gunzipSync(readFileSync(path));
+    let original;
+    try {
+      original = gunzipSync(readFileSync(path));
+    } catch (error) {
+      fail(`Source ${name}${COMPRESSED_SUFFIX} is not a readable gzip archive (${error.message})`);
+    }
     const actual = sha256(original);
     if (actual !== expected.get(name)) {
       fail(
@@ -83,7 +88,11 @@ export function readSources(sourcesDir = SOURCES_DIR) {
           'A source is never edited: restore the original file.',
       );
     }
-    return JSON.parse(original.toString('utf8'));
+    try {
+      return JSON.parse(original.toString('utf8'));
+    } catch (error) {
+      return fail(`Source ${name} is not valid JSON (${error.message})`);
+    }
   };
 
   const pages = [];

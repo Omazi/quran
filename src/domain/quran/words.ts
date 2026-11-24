@@ -7,6 +7,19 @@
  */
 export const WORD_SEPARATOR = ' ';
 
+/**
+ * Never returns an empty word: an empty text, or a text with a leading, trailing or double
+ * space, is refused. An empty word would shift the position of every word after it.
+ */
 export function splitVerseWords(text: string): string[] {
-  return text.split(WORD_SEPARATOR);
+  if (typeof text !== 'string') {
+    throw new TypeError(`Invalid verse text: expected a string, got ${typeof text}`);
+  }
+  const words = text.split(WORD_SEPARATOR);
+  if (words.includes('')) {
+    throw new RangeError(
+      `Invalid verse text: ${JSON.stringify(text)} (empty, or with a leading, trailing or double space)`,
+    );
+  }
+  return words;
 }

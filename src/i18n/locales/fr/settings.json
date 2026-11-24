@@ -1,1 +1,46 @@
-{}
+{
+  "title": "Réglages",
+  "language": {
+    "label": "Langue",
+    "options": {
+      "fr": "Français",
+      "en": "English",
+      "ar": "العربية"
+    },
+    "restartNote": "Le sens d’écriture changera au prochain démarrage de l’appli.",
+    "restart": "Redémarrer l’appli"
+  },
+  "goal": {
+    "title": "Objectif du jour",
+    "pagesPerDay": "Pages par jour",
+    "value": "{{pages}}",
+    "pace_one": "{{count}} page par jour",
+    "pace_other": "{{count}} pages par jour",
+    "duration_one": "une khatma en {{count}} jour",
+    "duration_other": "une khatma en {{count}} jours",
+    "landmark": {
+      "half-hizb": "soit un demi-hizb",
+      "hizb": "soit un hizb",
+      "juz": "soit un juz"
+    },
+    "note": "{{pace}} : {{duration}}.",
+    "noteWithLandmark": "{{pace}}, {{landmark}} : {{duration}}."
+  },
+  "reminders": {
+    "title": "Rappels",
+    "daily": "Rappel du jour",
+    "dailyTime": "Heure",
+    "fridayTime": "Heure du vendredi",
+    "thirstyGarden": "Quand le jardin a soif",
+    "fridayKahf": "Le vendredi : sourate Al-Kahf",
+    "openSystemSettings": "Ouvrir les réglages du téléphone",
+    "notice": {
+      "will-ask": "Ton téléphone te demandera ensuite d’autoriser les notifications.",
+      "denied": "Les notifications de l’appli sont désactivées. Pour recevoir tes rappels, autorise-les dans les réglages du téléphone.",
+      "none-enabled": "Sans rappel, l’appli ne t’envoie aucune notification."
+    }
+  },
+  "introduction": {
+    "replay": "Revoir la présentation"
+  }
+}

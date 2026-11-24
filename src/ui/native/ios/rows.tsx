@@ -18,24 +18,27 @@ import {
   tag,
   tint,
 } from '@expo/ui/swift-ui/modifiers';
+import { PlatformColor } from 'react-native';
 
-import { spacing } from '../../tokens';
-import { useColors } from '../../use-colors';
+import { iosSwitchColorName, spacing } from '../../tokens';
+import { useGroupedListGuard } from '../grouped-list-scope';
 import type { ChoiceRowProps, StepperRowProps, SwitchRowProps, TimePickerRowProps } from '../types';
 import { assertStepperRange, dateToTimeOfDay, timeOfDayToDate } from '../validation';
 
 /**
- * The system switch, in a list row, with the row's text as its label and the system's own
- * colour (toggles.md › Mobile).
+ * The system switch, in a list row, with the row's text as its label. It keeps the system's own
+ * green, stated here because the host tints everything else with the accent
+ * (toggles.md › Mobile: change the default colour of a switch only if necessary).
  */
 export function SwitchRow({ label, value, onChange, disabled = false, testID }: SwitchRowProps) {
+  useGroupedListGuard('SwitchRow');
   return (
     <Toggle
       label={label}
       isOn={value}
       onIsOnChange={onChange}
       testID={testID}
-      modifiers={[disabledModifier(disabled)]}
+      modifiers={[tint(PlatformColor(iosSwitchColorName)), disabledModifier(disabled)]}
     />
   );
 }
@@ -55,6 +58,7 @@ export function StepperRow({
   onChange,
   testID,
 }: StepperRowProps) {
+  useGroupedListGuard('StepperRow');
   assertStepperRange({ value, min, max, step });
   return (
     <LabeledContent label={label}>
@@ -86,6 +90,7 @@ export function ChoiceRow<Value extends string>({
   onChange,
   testID,
 }: ChoiceRowProps<Value>) {
+  useGroupedListGuard('ChoiceRow');
   return (
     <Picker<Value>
       label={label}
@@ -104,11 +109,11 @@ export function ChoiceRow<Value extends string>({
 }
 
 /**
- * The system's compact time picker: a button that shows the time in the app's accent colour and
- * opens the editor in place (pickers.md › Mobile).
+ * The system's compact time picker: a button that shows the time in the app's accent colour,
+ * which comes from the host, and opens the editor in place (pickers.md › Mobile).
  */
 export function TimePickerRow({ label, value, onChange, testID }: TimePickerRowProps) {
-  const colors = useColors();
+  useGroupedListGuard('TimePickerRow');
   return (
     <DatePicker
       title={label}
@@ -116,7 +121,7 @@ export function TimePickerRow({ label, value, onChange, testID }: TimePickerRowP
       displayedComponents={['hourAndMinute']}
       onDateChange={(date) => onChange(dateToTimeOfDay(date))}
       testID={testID}
-      modifiers={[datePickerStyle('compact'), tint(colors.accent)]}
+      modifiers={[datePickerStyle('compact')]}
     />
   );
 }

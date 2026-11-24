@@ -1,34 +1,48 @@
-import { fireEvent, render, screen, userEvent } from '@testing-library/react-native';
-import { DynamicColorIOS, PlatformColor, processColor } from 'react-native';
+import { Host, RNHostView, Text as SwiftUIText } from '@expo/ui/swift-ui';
+import { render, screen, userEvent } from '@testing-library/react-native';
+import { PlatformColor, processColor, View } from 'react-native';
 
 import * as ui from '..';
 import * as entry from '../native';
 import * as defaultControls from '../native/default';
-import { Icon } from '../native/icon';
+import { Icon } from '../native/default/icon';
 import * as iosControls from '../native/ios';
-import { PageIndicator } from '../native/page-indicator';
 import type { IconSymbol } from '../native/types';
 import { dateToTimeOfDay, timeOfDayToDate } from '../native/validation';
 import {
   APPEARANCES_AND_DIRECTIONS,
   directionDependentStyles,
+  iosAppColor,
+  isSwiftUIHost,
   LARGEST_FONT_SCALE,
+  renderOnIOS,
   resetDeviceConditions,
   setDeviceConditions,
   styleOf,
-  touchTargetHeight,
+  swiftUIViewsWithoutHost,
 } from '../test-support/environment';
-import { appColors, fallbackSystemColors, textStyles, touchTargets } from '../tokens';
+import { textStyles } from '../tokens';
 
 const DROP: IconSymbol = { ios: 'drop.fill', android: 'water_drop' };
 
 afterEach(resetDeviceConditions);
 
 describe('entry of the native controls', () => {
-  it('gives tests the default implementation, which they can query', () => {
-    expect(entry.Button).toBe(defaultControls.Button);
-    expect(entry.GroupedList).toBe(defaultControls.GroupedList);
-    expect(entry.Button).not.toBe(iosControls.Button);
+  it('gives tests the default implementation, which they can query', async () => {
+    setDeviceConditions();
+    const onPress = jest.fn();
+    await render(<entry.Button label="Lire et arroser" onPress={onPress} />);
+    await userEvent.press(screen.getByRole('button', { name: 'Lire et arroser' }));
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(screen.container.queryAll(isSwiftUIHost)).toHaveLength(0);
+  });
+
+  it('gives a test the SwiftUI implementation when it asks for what an iPhone receives', async () => {
+    setDeviceConditions();
+    await renderOnIOS(<entry.Button label="Lire et arroser" onPress={jest.fn()} testID="button" />);
+    expect(screen.container.queryAll(isSwiftUIHost)).toHaveLength(1);
+    expect(screen.queryByRole('button')).not.toBeOnTheScreen();
+    expect(screen.getByTestId('button').type).toBe('ViewManagerAdapter_ExpoUI');
   });
 
   it('is the iOS file for Jest as for an iPhone: outside tests it gives the SwiftUI controls', () => {
@@ -47,8 +61,8 @@ describe('entry of the native controls', () => {
     expect(Object.keys(iosControls).sort()).toEqual(Object.keys(defaultControls).sort());
   });
 
-  it('exports every control, the icon and the page indicator', () => {
-    for (const name of [...Object.keys(defaultControls), 'Icon', 'PageIndicator']) {
+  it('exports every control and the page indicator', () => {
+    for (const name of [...Object.keys(defaultControls), 'PageIndicator']) {
       expect(entry).toHaveProperty(name);
       expect(ui).toHaveProperty(name);
     }
@@ -68,7 +82,95 @@ describe('entry of the native controls', () => {
   });
 });
 
-describe('Icon', () => {
+describe('renderOnIOS', () => {
+  const settings = (
+    <ui.Screen background="groupedBackground">
+      <ui.GroupedList>
+        <ui.ListSection title="Rappels" footer="Tu peux les changer plus tard.">
+          <ui.SwitchRow label="Rappel du jour" value onChange={jest.fn()} />
+          <ui.TimePickerRow label="Heure" value={{ hour: 20, minute: 30 }} onChange={jest.fn()} />
+          <ui.StepperRow
+            label="Pages par jour"
+            value={5}
+            valueLabel="5"
+            min={1}
+            max={60}
+            onChange={jest.fn()}
+          />
+          <ui.ChoiceRow
+            label="Langue"
+            options={[{ value: 'fr', label: 'Français' }]}
+            value="fr"
+            onChange={jest.fn()}
+          />
+          <ui.ListRow label="Revoir la présentation" onPress={jest.fn()} />
+          <ui.Gauge value={0.5} label="Santé" valueLabel="Bonne" />
+          <ui.Icon symbol={DROP} />
+        </ui.ListSection>
+      </ui.GroupedList>
+      <ui.Button label="Lire et arroser" onPress={jest.fn()} />
+      <ui.ProgressIndicator accessibilityLabel="Préparation" />
+      <ui.Icon symbol={DROP} accessibilityLabel="L’eau coule" />
+      <ui.ContentUnavailable title="Bientôt" symbol={DROP} />
+    </ui.Screen>
+  );
+
+  it('accepts a screen made of the controls: every SwiftUI view has a host', async () => {
+    setDeviceConditions();
+    await renderOnIOS(settings);
+    // The list, the button, the spinner, the icon and the empty state: one host each.
+    expect(screen.container.queryAll(isSwiftUIHost)).toHaveLength(5);
+  });
+
+  it('accepts a pager whose pages hold controls: each gets a host inside its page', async () => {
+    setDeviceConditions();
+    await renderOnIOS(
+      <ui.Pager
+        pageCount={2}
+        page={0}
+        onPageChange={jest.fn()}
+        renderPage={() => <ui.Button label="Autoriser les rappels" onPress={jest.fn()} />}
+        accessibilityLabel="Page"
+      />,
+    );
+    expect(screen.container.queryAll(isSwiftUIHost)).toHaveLength(3);
+  });
+
+  it('renders the same tree with the default implementation otherwise', async () => {
+    setDeviceConditions();
+    await render(settings);
+    expect(screen.container.queryAll(isSwiftUIHost)).toHaveLength(0);
+    expect(screen.getByRole('switch', { name: 'Rappel du jour' })).toBeOnTheScreen();
+  });
+
+  it('reports a SwiftUI view that nothing hosts', async () => {
+    setDeviceConditions();
+    await render(<SwiftUIText testID="lost">Sans hôte</SwiftUIText>);
+    expect(swiftUIViewsWithoutHost()).toHaveLength(1);
+    expect(swiftUIViewsWithoutHost()[0]).toContain('Sans hôte');
+  });
+
+  it('reports a SwiftUI view placed in React Native content without a host of its own', async () => {
+    setDeviceConditions();
+    await render(
+      <Host>
+        <RNHostView>
+          <View>
+            <SwiftUIText>Sans hôte</SwiftUIText>
+          </View>
+        </RNHostView>
+      </Host>,
+    );
+    expect(swiftUIViewsWithoutHost()).toHaveLength(1);
+  });
+
+  it('fails when the tree it renders has such a view', async () => {
+    setDeviceConditions();
+    await expect(renderOnIOS(<SwiftUIText>Sans hôte</SwiftUIText>)).rejects.toThrow();
+  });
+});
+
+describe('default Icon', () => {
   /** A decorative icon is hidden from screen readers, and so from the default queries. */
   function icon(testID: string) {
     return screen.getByTestId(testID, { includeHiddenElements: true });
@@ -118,7 +220,7 @@ describe('Icon', () => {
     );
     // expo-symbols hands the colour to the native view in React Native's processed form.
     expect(icon('default')).toHaveProp('tint', processColor(PlatformColor('label')));
-    expect(icon('accent')).toHaveProp('tint', processColor(DynamicColorIOS(appColors.accent)));
+    expect(icon('accent')).toHaveProp('tint', processColor(iosAppColor('accent')));
   });
 
   it('is hidden from screen readers when it only decorates', async () => {
@@ -129,135 +231,33 @@ describe('Icon', () => {
     expect(icon('icon')).toHaveProp('importantForAccessibility', 'no-hide-descendants');
   });
 
+  it('accepts the roles meant for a foreground, orange included, and no surface', async () => {
+    setDeviceConditions();
+    await render(
+      <>
+        <Icon symbol={DROP} color="warning" testID="thirst" accessibilityLabel="Soif" />
+        {/* @ts-expect-error A background is not a colour for an icon. */}
+        <Icon symbol={DROP} color="secondaryBackground" />
+        {/* @ts-expect-error A separator is not a colour for an icon. */}
+        <Icon symbol={DROP} color="separator" />
+        {/* @ts-expect-error Paper is a surface. */}
+        <Icon symbol={DROP} color="paper" />
+      </>,
+    );
+    expect(icon('thirst')).toHaveProp('tint', processColor(PlatformColor('systemOrange')));
+  });
+
+  it('can sit next to a title as well', async () => {
+    setDeviceConditions();
+    await render(<Icon symbol={DROP} textStyle="largeTitle" testID="icon" />);
+    expect(styleOf(icon('icon'))).toMatchObject({ width: 34, height: 34 });
+    expect(icon('icon')).toHaveProp('weight', 'bold');
+  });
+
   it('is an image with a name when it carries meaning', async () => {
     setDeviceConditions();
     await render(<Icon symbol={DROP} accessibilityLabel="L’eau coule" />);
     expect(screen.getByRole('image', { name: 'L’eau coule' })).toBeOnTheScreen();
-  });
-});
-
-describe('PageIndicator', () => {
-  function renderIndicator(index: number, onChange = jest.fn(), count = 16) {
-    return render(
-      <PageIndicator
-        count={count}
-        index={index}
-        onChange={onChange}
-        accessibilityLabel="Page"
-        accessibilityValue={`Page ${index + 1} sur ${count}`}
-        testID="pages"
-      />,
-    );
-  }
-
-  /** The dots: the views that have a size and a colour of their own. */
-  function dots() {
-    return screen
-      .getByTestId('pages')
-      .queryAll((element) => typeof styleOf(element).borderRadius === 'number');
-  }
-
-  it.each(APPEARANCES_AND_DIRECTIONS)(
-    'shows one dot per page, the current one solid, in neutral colours ($scheme, right to left: $rightToLeft)',
-    async (conditions) => {
-      setDeviceConditions(conditions);
-      await renderIndicator(2);
-      expect(dots()).toHaveLength(16);
-      const colors = dots().map((dot) => styleOf(dot).backgroundColor);
-      expect(colors[2]).toEqual(PlatformColor('label'));
-      expect(colors.filter((color) => color !== colors[2])).toHaveLength(15);
-      expect(new Set(colors.map((color) => JSON.stringify(color))).size).toBe(2);
-      expect(directionDependentStyles(screen.container)).toEqual([]);
-    },
-  );
-
-  it('lays its dots out in a row, which the platform mirrors in a right-to-left interface', async () => {
-    setDeviceConditions({ rightToLeft: true });
-    await renderIndicator(0);
-    const row = dots()[0]?.parent;
-    expect(row && styleOf(row).flexDirection).toBe('row');
-  });
-
-  it('is centred and never coloured with the accent', async () => {
-    setDeviceConditions({ os: 'android', scheme: 'dark' });
-    await renderIndicator(0);
-    expect(styleOf(screen.getByTestId('pages')).alignSelf).toBe('center');
-    const colors = dots().map((dot) => styleOf(dot).backgroundColor);
-    expect(colors[0]).toBe(fallbackSystemColors.label.dark);
-    expect(colors[1]).toBe(fallbackSystemColors.tertiaryLabel.dark);
-    expect(colors).not.toContain(appColors.accent.dark);
-  });
-
-  it('is one adjustable element that says where the person is', async () => {
-    setDeviceConditions();
-    const onChange = jest.fn();
-    await renderIndicator(2, onChange);
-    const indicator = screen.getByRole('adjustable', { name: 'Page' });
-    expect(indicator).toHaveAccessibilityValue({ text: 'Page 3 sur 16' });
-    await fireEvent(indicator, 'accessibilityAction', {
-      nativeEvent: { actionName: 'increment' },
-    });
-    expect(onChange).toHaveBeenLastCalledWith(3);
-    await fireEvent(indicator, 'accessibilityAction', {
-      nativeEvent: { actionName: 'decrement' },
-    });
-    expect(onChange).toHaveBeenLastCalledWith(1);
-  });
-
-  it('shows the previous or next page when one of its halves is pressed', async () => {
-    setDeviceConditions();
-    const onChange = jest.fn();
-    await renderIndicator(2, onChange);
-    await userEvent.press(screen.getByTestId('pages-next'));
-    expect(onChange).toHaveBeenLastCalledWith(3);
-    await userEvent.press(screen.getByTestId('pages-previous'));
-    expect(onChange).toHaveBeenLastCalledWith(1);
-  });
-
-  it('does not go before the first page or past the last one', async () => {
-    setDeviceConditions();
-    const onChange = jest.fn();
-    await renderIndicator(0, onChange, 3);
-    await userEvent.press(screen.getByTestId('pages-previous'));
-    await fireEvent(screen.getByTestId('pages'), 'accessibilityAction', {
-      nativeEvent: { actionName: 'decrement' },
-    });
-    await screen.unmount();
-    await renderIndicator(2, onChange, 3);
-    await userEvent.press(screen.getByTestId('pages-next'));
-    await fireEvent(screen.getByTestId('pages'), 'accessibilityAction', {
-      nativeEvent: { actionName: 'increment' },
-    });
-    expect(onChange).not.toHaveBeenCalled();
-  });
-
-  it('is a touch target of 44 points, twice as wide so that each half is one too', async () => {
-    setDeviceConditions();
-    await renderIndicator(0, jest.fn(), 2);
-    expect(touchTargetHeight(screen.getByTestId('pages'))).toBeGreaterThanOrEqual(touchTargets.ios);
-    expect(styleOf(screen.getByTestId('pages')).minWidth).toBeGreaterThanOrEqual(
-      2 * touchTargets.ios,
-    );
-  });
-
-  it.each([
-    { count: 0, index: 0 },
-    { count: 3, index: 3 },
-    { count: 3, index: -1 },
-    { count: 2.5, index: 0 },
-  ])('refuses the position $index of $count', async ({ count, index }) => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-    await expect(
-      render(
-        <PageIndicator
-          count={count}
-          index={index}
-          onChange={jest.fn()}
-          accessibilityLabel="Page"
-          accessibilityValue="Page"
-        />,
-      ),
-    ).rejects.toThrow(RangeError);
   });
 });
 

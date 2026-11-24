@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, userEvent } from '@testing-library/react-native';
+import type { ReactNode } from 'react';
 
 import {
   Button,
@@ -87,6 +88,15 @@ function EveryControl() {
         testID="empty"
       />
     </>
+  );
+}
+
+/** A row lives in a list: a test of one row puts it alone in one. */
+function InList({ children }: { children: ReactNode }) {
+  return (
+    <GroupedList>
+      <ListSection>{children}</ListSection>
+    </GroupedList>
   );
 }
 
@@ -198,6 +208,47 @@ describe('default Button', () => {
     expect(screen.getByTestId('button').parent?.props.style).toEqual({ alignSelf: 'stretch' });
   });
 
+  it.each(['secondary', 'plain'] as const)(
+    'draws a destructive %s button in red, in both themes',
+    async (variant) => {
+      setDeviceConditions({ os: 'android', scheme: 'dark' });
+      await render(
+        <Button
+          label="Tout effacer"
+          variant={variant}
+          role="destructive"
+          onPress={jest.fn()}
+          testID="button"
+        />,
+      );
+      expect(styleOf(screen.getByText('Tout effacer')).color).toBe(
+        fallbackSystemColors.destructive.dark,
+      );
+      expect(styleOf(screen.getByTestId('button')).backgroundColor).toBeUndefined();
+      if (variant === 'secondary') {
+        expect(styleOf(screen.getByTestId('button')).borderColor).toBe(
+          fallbackSystemColors.destructive.dark,
+        );
+      }
+    },
+  );
+
+  it('gives every variant a target of 44 points in both directions', async () => {
+    setDeviceConditions();
+    await render(
+      <>
+        <Button label="A" onPress={jest.fn()} testID="primary" />
+        <Button label="B" variant="secondary" onPress={jest.fn()} testID="secondary" />
+        <Button label="C" variant="plain" onPress={jest.fn()} testID="plain" />
+      </>,
+    );
+    for (const testID of ['primary', 'secondary', 'plain']) {
+      const { minWidth, minHeight } = styleOf(screen.getByTestId(testID));
+      expect(minWidth).toBeGreaterThanOrEqual(touchTargets.ios);
+      expect(minHeight).toBeGreaterThanOrEqual(touchTargets.ios);
+    }
+  });
+
   it('uses the larger Material target on Android', () => {
     expect(touchTargets.android).toBe(48);
   });
@@ -222,9 +273,11 @@ describe('default GroupedList', () => {
   it('shows a section without header or footer', async () => {
     setDeviceConditions();
     await render(
-      <ListSection>
-        <ListRow label="Seule" />
-      </ListSection>,
+      <GroupedList>
+        <ListSection>
+          <ListRow label="Seule" />
+        </ListSection>
+      </GroupedList>,
     );
     expect(screen.queryByRole('header')).not.toBeOnTheScreen();
     expect(screen.getByText('Seule')).toBeOnTheScreen();
@@ -232,7 +285,11 @@ describe('default GroupedList', () => {
 
   it('reads a row and its value as one element', async () => {
     setDeviceConditions();
-    await render(<ListRow label="Aujourd’hui" value="3 pages sur 5" testID="row" />);
+    await render(
+      <InList>
+        <ListRow label="Aujourd’hui" value="3 pages sur 5" testID="row" />
+      </InList>,
+    );
     expect(screen.getByTestId('row')).toHaveProp('accessible', true);
     expect(screen.getByTestId('row')).toHaveTextContent('Aujourd’hui3 pages sur 5');
   });
@@ -240,7 +297,11 @@ describe('default GroupedList', () => {
   it('makes a row with an action a button', async () => {
     setDeviceConditions();
     const onPress = jest.fn();
-    await render(<ListRow label="Revoir la présentation" onPress={onPress} />);
+    await render(
+      <InList>
+        <ListRow label="Revoir la présentation" onPress={onPress} />
+      </InList>,
+    );
     await userEvent.press(screen.getByRole('button', { name: 'Revoir la présentation' }));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
@@ -250,7 +311,11 @@ describe('default SwitchRow', () => {
   it('is one switch named by the row, which the whole row toggles', async () => {
     setDeviceConditions();
     const onChange = jest.fn();
-    await render(<SwitchRow label="Mon jardin a soif" value={false} onChange={onChange} />);
+    await render(
+      <InList>
+        <SwitchRow label="Mon jardin a soif" value={false} onChange={onChange} />
+      </InList>,
+    );
     const row = screen.getByRole('switch', { name: 'Mon jardin a soif' });
     expect(row).not.toBeChecked();
     await userEvent.press(row);
@@ -260,7 +325,11 @@ describe('default SwitchRow', () => {
   it('reports its state and passes on a change made on the switch itself', async () => {
     setDeviceConditions();
     const onChange = jest.fn();
-    await render(<SwitchRow label="Rappel du jour" value onChange={onChange} />);
+    await render(
+      <InList>
+        <SwitchRow label="Rappel du jour" value onChange={onChange} />
+      </InList>,
+    );
     expect(screen.getByRole('switch', { name: 'Rappel du jour' })).toBeChecked();
     const platformSwitch = screen.container.queryAll(({ type }) => type === 'RCTSwitch')[0];
     expect(platformSwitch).toBeDefined();
@@ -271,7 +340,11 @@ describe('default SwitchRow', () => {
   it('does nothing when disabled', async () => {
     setDeviceConditions();
     const onChange = jest.fn();
-    await render(<SwitchRow label="Rappel du jour" value onChange={onChange} disabled />);
+    await render(
+      <InList>
+        <SwitchRow label="Rappel du jour" value onChange={onChange} disabled />
+      </InList>,
+    );
     const row = screen.getByRole('switch', { name: 'Rappel du jour' });
     expect(row).toBeDisabled();
     await userEvent.press(row);
@@ -282,15 +355,17 @@ describe('default SwitchRow', () => {
 describe('default StepperRow', () => {
   function renderStepper(value: number, onChange = jest.fn()) {
     return render(
-      <StepperRow
-        label="Pages par jour"
-        value={value}
-        valueLabel={`${value} pages`}
-        min={1}
-        max={60}
-        onChange={onChange}
-        testID="goal"
-      />,
+      <InList>
+        <StepperRow
+          label="Pages par jour"
+          value={value}
+          valueLabel={`${value} pages`}
+          min={1}
+          max={60}
+          onChange={onChange}
+          testID="goal"
+        />
+      </InList>,
     );
   }
 
@@ -330,15 +405,17 @@ describe('default StepperRow', () => {
     await userEvent.press(screen.getByTestId('goal-decrement'));
     expect(onChange).not.toHaveBeenCalled();
     await screen.rerender(
-      <StepperRow
-        label="Pages par jour"
-        value={60}
-        valueLabel="60 pages"
-        min={1}
-        max={60}
-        onChange={onChange}
-        testID="goal"
-      />,
+      <InList>
+        <StepperRow
+          label="Pages par jour"
+          value={60}
+          valueLabel="60 pages"
+          min={1}
+          max={60}
+          onChange={onChange}
+          testID="goal"
+        />
+      </InList>,
     );
     await userEvent.press(screen.getByTestId('goal-increment'));
     expect(onChange).not.toHaveBeenCalled();
@@ -348,7 +425,11 @@ describe('default StepperRow', () => {
 describe('default ChoiceRow', () => {
   it('offers the options as a named radio group and marks the current one', async () => {
     setDeviceConditions();
-    await render(<ChoiceRow label="Langue" options={LANGUAGES} value="en" onChange={jest.fn()} />);
+    await render(
+      <InList>
+        <ChoiceRow label="Langue" options={LANGUAGES} value="en" onChange={jest.fn()} />
+      </InList>,
+    );
     // The group is a container, not an element of its own: its options stay reachable.
     expect(screen.getByLabelText('Langue')).toHaveProp('accessibilityRole', 'radiogroup');
     expect(screen.getAllByRole('radio')).toHaveLength(3);
@@ -359,14 +440,22 @@ describe('default ChoiceRow', () => {
   it('calls back with the chosen value', async () => {
     setDeviceConditions();
     const onChange = jest.fn();
-    await render(<ChoiceRow label="Langue" options={LANGUAGES} value="fr" onChange={onChange} />);
+    await render(
+      <InList>
+        <ChoiceRow label="Langue" options={LANGUAGES} value="fr" onChange={onChange} />
+      </InList>,
+    );
     await userEvent.press(screen.getByRole('radio', { name: 'العربية' }));
     expect(onChange).toHaveBeenCalledWith('ar');
   });
 
   it('tells the options apart by shape as well as colour', async () => {
     setDeviceConditions();
-    await render(<ChoiceRow label="Langue" options={LANGUAGES} value="fr" onChange={jest.fn()} />);
+    await render(
+      <InList>
+        <ChoiceRow label="Langue" options={LANGUAGES} value="fr" onChange={jest.fn()} />
+      </InList>,
+    );
     const symbolNames = screen.container
       .queryAll(({ props }) => typeof props.name === 'string')
       .map(({ props }) => props.name);
@@ -383,7 +472,11 @@ describe('default TimePickerRow', () => {
 
   it('shows the time the way the device writes it', async () => {
     setDeviceConditions();
-    await render(<TimePickerRow label="Heure du rappel" value={evening} onChange={jest.fn()} />);
+    await render(
+      <InList>
+        <TimePickerRow label="Heure du rappel" value={evening} onChange={jest.fn()} />
+      </InList>,
+    );
     expect(screen.getByText(eveningAsWritten)).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Heure du rappel' })).toHaveAccessibilityValue({
       text: eveningAsWritten,
@@ -394,7 +487,9 @@ describe('default TimePickerRow', () => {
     setDeviceConditions();
     const onChange = jest.fn();
     await render(
-      <TimePickerRow label="Heure du rappel" value={evening} onChange={onChange} testID="time" />,
+      <InList>
+        <TimePickerRow label="Heure du rappel" value={evening} onChange={onChange} testID="time" />
+      </InList>,
     );
     expect(screen.queryByTestId('time-picker')).not.toBeOnTheScreen();
     await userEvent.press(screen.getByTestId('time'));
@@ -478,10 +573,68 @@ describe('default ContentUnavailable', () => {
   });
 });
 
+describe('default rows and sections outside a list', () => {
+  beforeEach(() => {
+    // React reports the error thrown by a component on the console; the test asserts on it.
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  it.each([
+    ['ListSection', <ListSection key="section">{null}</ListSection>],
+    ['ListRow', <ListRow key="row" label="Seule" />],
+    ['SwitchRow', <SwitchRow key="switch" label="Rappel" value onChange={jest.fn()} />],
+    [
+      'StepperRow',
+      <StepperRow
+        key="stepper"
+        label="Pages"
+        value={5}
+        valueLabel="5"
+        min={1}
+        max={60}
+        onChange={jest.fn()}
+      />,
+    ],
+    [
+      'ChoiceRow',
+      <ChoiceRow key="choice" label="Langue" options={LANGUAGES} value="fr" onChange={jest.fn()} />,
+    ],
+    [
+      'TimePickerRow',
+      <TimePickerRow
+        key="time"
+        label="Heure"
+        value={{ hour: 8, minute: 0 }}
+        onChange={jest.fn()}
+      />,
+    ],
+  ])('%s is refused, as on iOS where nothing would display it', async (name, element) => {
+    await expect(render(element)).rejects.toThrow(`${name} must be inside a GroupedList`);
+  });
+
+  it('accepts the other controls anywhere', async () => {
+    setDeviceConditions();
+    await render(
+      <>
+        <Button label="Lire" onPress={jest.fn()} />
+        <Gauge value={0.5} label="Santé" valueLabel="Bonne" />
+        <ProgressIndicator accessibilityLabel="Préparation" />
+      </>,
+    );
+    expect(screen.getByRole('button', { name: 'Lire' })).toBeOnTheScreen();
+  });
+});
+
 describe('invalid values', () => {
   beforeEach(() => {
     // React reports the error thrown by a component on the console; the test asserts on it.
     jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  it('a destructive button in the filled style is refused', async () => {
+    await expect(
+      render(<Button label="Tout effacer" role="destructive" onPress={jest.fn()} />),
+    ).rejects.toThrow(TypeError);
   });
 
   it.each([-0.1, 1.1, Number.NaN])('a progress of %p is refused', async (value) => {
@@ -502,14 +655,20 @@ describe('invalid values', () => {
     { value: 5, min: 10, max: 1 },
   ])('a stepper at $value in $min..$max is refused', async (range) => {
     await expect(
-      render(<StepperRow label="x" valueLabel="y" onChange={jest.fn()} {...range} />),
+      render(
+        <InList>
+          <StepperRow label="x" valueLabel="y" onChange={jest.fn()} {...range} />
+        </InList>,
+      ),
     ).rejects.toThrow(RangeError);
   });
 
   it('a stepper with a fractional value is refused', async () => {
     await expect(
       render(
-        <StepperRow label="x" valueLabel="y" onChange={jest.fn()} value={1.5} min={1} max={60} />,
+        <InList>
+          <StepperRow label="x" valueLabel="y" onChange={jest.fn()} value={1.5} min={1} max={60} />
+        </InList>,
       ),
     ).rejects.toThrow(TypeError);
   });
@@ -521,7 +680,11 @@ describe('invalid values', () => {
     { hour: 8.5, minute: 0 },
   ])('the time $hour:$minute is refused', async (time) => {
     await expect(
-      render(<TimePickerRow label="x" value={time} onChange={jest.fn()} />),
+      render(
+        <InList>
+          <TimePickerRow label="x" value={time} onChange={jest.fn()} />
+        </InList>,
+      ),
     ).rejects.toThrow(RangeError);
   });
 });

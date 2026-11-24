@@ -8,6 +8,7 @@ import {
   assertDailyGoalPages,
   assertKhatmNumber,
   assertLocalDate,
+  assertObject,
 } from './validation';
 
 /** A pace kept as "pages over days": the daily goal is "n pages over 1 day". */
@@ -38,6 +39,7 @@ function measurePace(
   pace: ReadingPace,
   config: KhatmConfig,
 ): PagesOverDays {
+  assertObject(pace, 'reading pace');
   switch (pace.kind) {
     case 'daily-goal':
       assertDailyGoalPages(pace.dailyGoalPages);
@@ -83,7 +85,8 @@ function countDaysAfterToday(
  * Pauses are ignored.
  *
  * Returns null when there is nothing to estimate: the pace is zero (no new page in the
- * recent complete days), or the khatma is already complete.
+ * recent complete days), or the khatma is already complete. A date beyond the year 9999
+ * cannot be written as a LocalDate: `addDays` then throws a RangeError, left to propagate.
  */
 export function estimateFinishDate(
   journal: ReadingJournal,

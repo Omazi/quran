@@ -11,6 +11,17 @@ export type VersesBySurah = Readonly<Record<string, readonly string[]>>;
  * is left to the caller: the domain has no access to a crypto library.
  */
 export function canonicalQuranText(verses: VersesBySurah): string {
+  if (typeof verses !== 'object' || verses === null || Array.isArray(verses)) {
+    throw new TypeError('Verses must be an object of the form { "<surah>": [verses] }');
+  }
+  // A surah outside 1..114 would be left out of the fingerprint without a word: refuse it.
+  for (const key of Object.keys(verses)) {
+    const surah = Number(key);
+    if (String(surah) !== key || !Number.isInteger(surah) || surah < 1 || surah > SURAH_COUNT) {
+      throw new RangeError(`Surah "${key}" does not exist (expected 1 to ${SURAH_COUNT})`);
+    }
+  }
+
   const lines: string[] = [];
   for (let surah = 1; surah <= SURAH_COUNT; surah += 1) {
     const surahVerses = verses[String(surah)];

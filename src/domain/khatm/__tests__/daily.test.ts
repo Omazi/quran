@@ -449,6 +449,33 @@ describe('Rule 7 — streak (série)', () => {
     expect(getStreak(journal, TODAY)).toBe(3);
   });
 
+  it('the walk stops on the first day ever read: it never asks for a day before the calendar', () => {
+    // The earliest day the shared LocalDate helper accepts.
+    const firstDayOfCalendar = day('0100-01-01');
+    const journal = readPages(EMPTY_JOURNAL, 1, [1], firstDayOfCalendar);
+
+    expect(getStreak(journal, firstDayOfCalendar)).toBe(1);
+    expect(getStreak(journal, day('0100-01-02'))).toBe(1);
+  });
+
+  it('invalid input: pauses, a pause or a configuration of the wrong shape are named by the module', () => {
+    // Casts on purpose: values of the wrong shape are what a damaged storage would give.
+    const notAList = null as unknown as Pause[];
+    const listWithAHole = [null] as unknown as Pause[];
+    const notAConfig = null as unknown as KhatmConfig;
+
+    expect(() => getStreak(EMPTY_JOURNAL, TODAY, notAList)).toThrow(
+      'Invalid pauses: expected a list',
+    );
+    expect(() => getStreak(EMPTY_JOURNAL, TODAY, listWithAHole)).toThrow(
+      'Invalid pause: expected an object',
+    );
+    expect(() => getStreak(EMPTY_JOURNAL, TODAY, [], notAConfig)).toThrow(
+      'Invalid configuration: expected an object',
+    );
+    expect(() => getWateredDays(EMPTY_JOURNAL, notAConfig)).toThrow(TypeError);
+  });
+
   it('invalid input: rejects a pause that ends before it starts', () => {
     const pause: Pause = { from: TODAY, to: YESTERDAY };
 

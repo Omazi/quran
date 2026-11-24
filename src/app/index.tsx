@@ -1,15 +1,12 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Redirect } from 'expo-router';
 
-/** Placeholder screen. The real home screen is delivered with the UI lot. */
-export default function HomeScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Quran App</Text>
-    </View>
-  );
+import { useAppStore } from '@/store';
+
+/**
+ * Where the app opens: the introduction at the first launch, the tabs afterwards. The tabs open
+ * on their first one, the garden.
+ */
+export default function StartRoute() {
+  const hasFinishedIntroduction = useAppStore((state) => state.settings.onboardingCompleted);
+  return <Redirect href={hasFinishedIntroduction ? '/(tabs)' : '/onboarding'} />;
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 24, fontWeight: '600' },
-});

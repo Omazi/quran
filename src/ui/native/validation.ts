@@ -3,7 +3,7 @@
  * programming error: it is reported, never silently corrected (docs/CONTRIBUTING.md).
  */
 
-import type { PageIndicatorProps, StepperRowProps, TimeOfDay } from './types';
+import type { ButtonProps, PageIndicatorProps, StepperRowProps, TimeOfDay } from './types';
 
 const LAST_HOUR = 23;
 const LAST_MINUTE = 59;
@@ -12,6 +12,21 @@ const LAST_MINUTE = 59;
 const REFERENCE_YEAR = 2001;
 const REFERENCE_MONTH_INDEX = 0;
 const REFERENCE_DAY = 1;
+
+/**
+ * A destructive action is never the prominent button: people sometimes press that one without
+ * reading it (buttons.md › Role).
+ */
+export function assertButtonRole({
+  variant = 'primary',
+  role,
+}: Pick<ButtonProps, 'variant' | 'role'>) {
+  if (role === 'destructive' && variant === 'primary') {
+    throw new TypeError(
+      'A destructive button cannot be primary: give it the secondary or plain variant.',
+    );
+  }
+}
 
 /** Progress and gauge values are fractions of the whole. */
 export function assertFraction(value: number, name: string): void {

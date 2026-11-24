@@ -1,6 +1,6 @@
 import { summarizeJournal } from './journal-summary';
 import type { PageRead, ReadingJournal } from './types';
-import { assertKhatmNumber, assertLocalDate, assertPage } from './validation';
+import { assertKhatmNumber, assertLocalDate, assertObject, assertPage } from './validation';
 
 /** The journal of a user who has not read anything yet. */
 export const EMPTY_JOURNAL: ReadingJournal = Object.freeze([]);
@@ -17,6 +17,7 @@ export const EMPTY_JOURNAL: ReadingJournal = Object.freeze([]);
  * The entry keeps the date of the first read.
  */
 export function recordPageRead(journal: ReadingJournal, pageRead: PageRead): ReadingJournal {
+  assertObject(pageRead, 'page read');
   assertPage(pageRead.page);
   assertLocalDate(pageRead.date, 'reading date');
   const { khatmas, currentKhatm } = summarizeJournal(journal);

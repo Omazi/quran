@@ -104,6 +104,8 @@ export function getStreak(
     } else if (!isPaused(day, pauses) && !isDayInProgress) {
       break;
     }
+    // Stop on the earliest day itself: the day before it may not exist in the calendar.
+    if (day === earliestWateredDay) break;
     day = addDays(day, -1);
   }
   return streak;

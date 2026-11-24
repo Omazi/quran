@@ -105,6 +105,16 @@ describe('buildMushafPage — an invalid layout raises an explicit error', () =>
     expect(() => build([{ surah: 2, words: [[2, 0, 1]] }])).toThrow(RangeError);
   });
 
+  it.each([[[2, 1.5, 3]], [[2, 1, 2.5]], [[2, Number.NaN, 2]]])(
+    'a word position that is not a whole number: %p',
+    (segment) => {
+      const [verse = 0, firstWord = 0, lastWord = 0] = segment;
+      expect(() => build([{ surah: 2, words: [[verse, firstWord, lastWord]] }])).toThrow(
+        RangeError,
+      );
+    },
+  );
+
   it('a range that ends before it starts', () => {
     expect(() => build([{ surah: 2, words: [[2, 3, 2]] }])).toThrow(RangeError);
   });

@@ -311,6 +311,65 @@ describe('Rule 8 — estimated finish date (date de fin estimée)', () => {
       );
     });
 
+    it.each([1, 7, 366])('averagePaceWindowDays: accepts a window of %p days', (windowDays) => {
+      const journal = readPages(EMPTY_JOURNAL, 1, pageRange(1, 7), day('2026-11-22'));
+      const config = configWith({ averagePaceWindowDays: windowDays });
+
+      expect(estimateFinishDate(journal, 1, TODAY, RECENT_AVERAGE, config)).not.toBeNull();
+    });
+
+    it.each([367, 1000, 1e9, Number.POSITIVE_INFINITY, 0, -1, 1.5, Number.NaN])(
+      'averagePaceWindowDays: rejects %p (whole number from 1 to 366)',
+      (windowDays) => {
+        const config = configWith({ averagePaceWindowDays: windowDays });
+
+        expect(() => estimateFinishDate(EMPTY_JOURNAL, 1, TODAY, RECENT_AVERAGE, config)).toThrow(
+          RangeError,
+        );
+        // The whole configuration is checked wherever it is given, whatever the pace.
+        expect(() => estimateFinishDate(EMPTY_JOURNAL, 1, TODAY, dailyGoal(20), config)).toThrow(
+          RangeError,
+        );
+      },
+    );
+
+    it('a window of 366 days reaches 366 days back and no further', () => {
+      const yearWindow = configWith({ averagePaceWindowDays: 366 });
+      const inWindow = readPages(EMPTY_JOURNAL, 1, [1], day('2025-11-22'));
+      const tooOld = readPages(EMPTY_JOURNAL, 1, [1], day('2025-11-21'));
+
+      expect(estimateFinishDate(inWindow, 1, TODAY, RECENT_AVERAGE, yearWindow)).not.toBeNull();
+      expect(estimateFinishDate(tooOld, 1, TODAY, RECENT_AVERAGE, yearWindow)).toBeNull();
+    });
+
+    it('a date beyond the year 9999 is an explicit error, not a malformed date', () => {
+      const lastDay = day('9999-12-31');
+
+      // 604 pages at 1 page a day would end 603 days later, in the year 10001.
+      expect(() => estimateFinishDate(EMPTY_JOURNAL, 1, lastDay, dailyGoal(1))).toThrow(RangeError);
+      expect(() => estimateFinishDate(EMPTY_JOURNAL, 1, lastDay, dailyGoal(1))).toThrow(
+        'outside the years',
+      );
+      // The last day itself can still be the answer: 604 pages in one day.
+      expect(estimateFinishDate(EMPTY_JOURNAL, 1, lastDay, dailyGoal(604))).toBe('9999-12-31');
+      expect(estimateFinishDate(EMPTY_JOURNAL, 1, day('9999-12-30'), dailyGoal(302))).toBe(
+        '9999-12-31',
+      );
+    });
+
+    it('a pace or a configuration that is not an object is named by the module', () => {
+      // Casts on purpose: an untyped caller passing nothing.
+      const noPace = null as unknown as ReadingPace;
+      const noConfig = null as unknown as KhatmConfig;
+
+      expect(() => estimateFinishDate(EMPTY_JOURNAL, 1, TODAY, noPace)).toThrow(
+        'Invalid reading pace: expected an object',
+      );
+      expect(() => estimateFinishDate(EMPTY_JOURNAL, 1, TODAY, dailyGoal(20), noConfig)).toThrow(
+        'Invalid configuration: expected an object',
+      );
+    });
+
     it('rejects an impossible date', () => {
       // Cast on purpose: a forged LocalDate is what the runtime check must catch.
       const impossible = '2026-02-30' as LocalDate;

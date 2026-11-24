@@ -24,10 +24,9 @@ const CONTENT_UNAVAILABLE_MINIMUM_IOS = 17;
 /**
  * The system's progress indicators: a bar when the progress is known, the activity indicator when
  * it is not, and no switching between the two shapes (progress-indicators.md › Best practices).
- * The bar takes the accent; the activity indicator keeps the system's colour.
+ * Their colour is the accent, which comes from the host.
  */
 export function ProgressIndicator({ value, accessibilityLabel, testID }: ProgressIndicatorProps) {
-  const colors = useColors();
   const label = accessibilityLabelModifier(accessibilityLabel);
   if (value === undefined) {
     return (
@@ -42,7 +41,7 @@ export function ProgressIndicator({ value, accessibilityLabel, testID }: Progres
       <ProgressView
         value={value}
         testID={testID}
-        modifiers={[progressViewStyle('linear'), tint(colors.accent), label]}
+        modifiers={[progressViewStyle('linear'), label]}
       />
     </SwiftUIHost>
   );
@@ -51,7 +50,8 @@ export function ProgressIndicator({ value, accessibilityLabel, testID }: Progres
 /**
  * The system gauge in its linear capacity style: a fill that stops at the current value
  * (gauges.md › Anatomy). Its labels describe the value and the ends of the range; VoiceOver reads
- * them (gauges.md › Best practices).
+ * them (gauges.md › Best practices). Its fill is the accent of the host unless a tone is given:
+ * a tone tints the gauge, never a word written by the app.
  */
 export function Gauge({
   value,
@@ -72,7 +72,10 @@ export function Gauge({
         minimumValueLabel={minimumLabel === undefined ? undefined : <Text>{minimumLabel}</Text>}
         maximumValueLabel={maximumLabel === undefined ? undefined : <Text>{maximumLabel}</Text>}
         testID={testID}
-        modifiers={[gaugeStyle('linearCapacity'), tint(colors[tone])]}
+        modifiers={[
+          gaugeStyle('linearCapacity'),
+          ...(tone === 'accent' ? [] : [tint(colors[tone])]),
+        ]}
       >
         <Text>{label}</Text>
       </SwiftUIGauge>

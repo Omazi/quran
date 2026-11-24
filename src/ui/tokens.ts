@@ -21,9 +21,6 @@ export interface ColorPair {
 /**
  * The colours that belong to the app. One colour, one meaning (color.md › Best practices).
  * `onAccent` is the label drawn on an accent background, `ink` the text drawn on `paper`.
- *
- * The charter gives no increased-contrast variants yet (color.md › Best practices asks for one
- * per custom colour): `DynamicColorIOS` accepts them when the charter does.
  */
 export const appColors = {
   /** Water: the main action of a screen, the selected tab, "watered". */
@@ -37,6 +34,18 @@ export const appColors = {
   /** Ornaments of the mushaf, in content only. */
   ornament: { light: '#8F611A', dark: '#D9A441' },
 } as const satisfies Record<string, ColorPair>;
+
+/**
+ * The values some app colours take when the person asks the device for more contrast (charter,
+ * "Contraste élevé"; color.md › Best practices asks for one per custom colour). The colours the
+ * charter does not list keep their standard value: `onAccent` on the stronger accent, and ink on
+ * paper, are already far above the minimum.
+ */
+export const highContrastAppColors = {
+  accent: { light: '#0A4F59', dark: '#8FE0EA' },
+  growth: { light: '#164F36', dark: '#8FE0B4' },
+  ornament: { light: '#6A470F', dark: '#EBC272' },
+} as const satisfies Partial<Record<keyof typeof appColors, ColorPair>>;
 
 /**
  * System roles on iOS: names of UIKit's dynamic colours, resolved by the system. Their values are
@@ -59,7 +68,7 @@ export const iosSystemColorNames = {
   separator: 'separator',
   /** Thin shapes such as the track of a bar. */
   fill: 'systemFill',
-  /** Thirst and alerts. Graphics and large or bold text, always with an icon and a word. */
+  /** Thirst and alerts: an icon or the fill of a gauge, never a word, always beside a word. */
   warning: 'systemOrange',
   /** Destructive actions. Graphics and large or bold text. */
   destructive: 'systemRed',
@@ -70,13 +79,41 @@ export type AppColorRole = keyof typeof appColors;
 export type ColorRole = SystemColorRole | AppColorRole;
 
 /**
+ * The roles an icon may take. A dynamic system colour keeps its meaning (color.md › System
+ * colors): backgrounds, separators and fills never colour a foreground, and `paper` is a surface.
+ */
+export type IconColorRole = Exclude<
+  ColorRole,
+  | 'background'
+  | 'secondaryBackground'
+  | 'groupedBackground'
+  | 'secondaryGroupedBackground'
+  | 'separator'
+  | 'fill'
+  | 'paper'
+>;
+
+/**
+ * The roles a text may take: those of an icon, without `warning`. Orange colours an icon or the
+ * fill of a gauge; the word beside it stays in a label colour, where it is readable.
+ */
+export type TextColorRole = Exclude<IconColorRole, 'warning'>;
+
+/**
+ * The colour of a switch that is on, on iOS: the system's own green, kept on purpose while the
+ * other controls take the accent (toggles.md › Mobile (iOS, iPadOS)).
+ */
+export const iosSwitchColorName = 'systemGreen';
+
+/**
  * System roles outside iOS (Android, web): equivalents chosen in JavaScript from the device
  * theme. Provisional until the Android lot.
  *
  * Sources: backgrounds are the surfaces the charter measures its contrasts against; labels and
  * separators are the neutral palette of the SwiftUI Design skill (typography-color.md › Color
  * Palette Structure), as are orange and red. The light orange of that palette reaches only
- * 2.2:1 on white, so it is darkened (same hue, 80 %) to the first value above 3:1.
+ * 2.2:1 on white, so it is darkened, hue unchanged, in steps of 1 %: 80 % is the first value
+ * above 3:1 on the grouped background #F2F2F7 (3.03:1; 3.38:1 on white).
  */
 export const fallbackSystemColors = {
   background: { light: '#FFFFFF', dark: '#000000' },

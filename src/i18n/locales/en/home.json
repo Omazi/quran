@@ -1,1 +1,62 @@
-{}
+{
+  "title": "Garden",
+  "streak_one": "{{count}} day in a row",
+  "streak_other": "{{count}} days in a row",
+  "notice": {
+    "bare": {
+      "title": "Bare earth",
+      "text": "Your first hizb will bring your garden to life."
+    },
+    "thirsty": {
+      "title": "Your garden is thirsty",
+      "text": "One page is enough to bring the water back."
+    },
+    "wilting": {
+      "title": "Your garden is wilting",
+      "text": "A page today, and it regains its strength."
+    },
+    "dying": {
+      "title": "Your garden is withering",
+      "text": "One page already brings some elements back."
+    },
+    "dead": {
+      "title": "Nothing is lost",
+      "text": "The hizb you have read stay yours. One page brings the water back."
+    },
+    "recovering": {
+      "title": "The water is back",
+      "text": "Your garden is regaining its strength. Keep going tomorrow."
+    },
+    "complete": {
+      "title": "Khatma complete",
+      "text": "Your garden is complete. Read a page to start the next one: a new garden awaits you."
+    }
+  },
+  "today": {
+    "title": "Today",
+    "pages": {
+      "label": "Pages Read",
+      "value": "{{read}} of {{goal}}",
+      "valueReached": "{{read}} of {{goal}}, goal reached"
+    },
+    "page": {
+      "resume": "Resume",
+      "start": "Start",
+      "value": "Page {{page}}"
+    },
+    "finish": {
+      "label": "Estimated End of the Khatma",
+      "labelNext": "Estimated End of the Next Khatma",
+      "today": "Today"
+    },
+    "footer_one": "Estimate based on your goal: {{count}} page a day.",
+    "footer_other": "Estimate based on your goal: {{count}} pages a day."
+  },
+  "actions": {
+    "read": "Read and Water"
+  },
+  "unavailable": {
+    "title": "Garden Unavailable",
+    "description": "The garden’s state can’t be worked out. Close the app, then open it again."
+  }
+}

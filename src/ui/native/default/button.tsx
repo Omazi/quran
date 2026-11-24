@@ -1,31 +1,36 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '../../components/app-text';
-import { layout, radius, spacing, stateOpacity, type ColorRole } from '../../tokens';
+import { layout, radius, spacing, stateOpacity, type TextColorRole } from '../../tokens';
 import { useColors } from '../../use-colors';
 import type { ButtonProps, ButtonVariant } from '../types';
+import { assertButtonRole } from '../validation';
 
 /** Material's three emphases: filled, outlined and text buttons. */
 const LABEL_COLOR = {
   primary: 'onAccent',
   secondary: 'accent',
   plain: 'accent',
-} as const satisfies Record<ButtonVariant, ColorRole>;
+} as const satisfies Record<ButtonVariant, TextColorRole>;
 
 /**
  * Default button, for Android, the web and tests. It follows Material's conventions rather than
  * imitating iOS: a filled container for the main action, an outline or bare text for the others,
- * the platform's ripple as press state, and a target of 48 dp on Android.
+ * the platform's ripple as press state, and a target of 48 dp on Android. A destructive button
+ * is outlined or bare, in red.
  */
 export function Button({
   label,
   onPress,
   variant = 'primary',
+  role,
   disabled = false,
   fullWidth = false,
   testID,
 }: ButtonProps) {
+  assertButtonRole({ variant, role });
   const colors = useColors();
+  const labelColor = role === 'destructive' ? 'destructive' : LABEL_COLOR[variant];
   return (
     <View style={fullWidth ? styles.fullWidth : styles.hugging}>
       <Pressable
@@ -38,12 +43,12 @@ export function Button({
         style={({ pressed }) => [
           styles.button,
           variant === 'primary' && { backgroundColor: colors.accent },
-          variant === 'secondary' && [styles.outlined, { borderColor: colors.accent }],
+          variant === 'secondary' && [styles.outlined, { borderColor: colors[labelColor] }],
           pressed && styles.pressed,
           disabled && styles.disabled,
         ]}
       >
-        <AppText variant="headline" color={LABEL_COLOR[variant]} align="center">
+        <AppText variant="headline" color={labelColor} align="center">
           {label}
         </AppText>
       </Pressable>

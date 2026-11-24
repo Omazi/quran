@@ -15,14 +15,15 @@ export const {
   ContentUnavailable,
   Gauge,
   GroupedList,
+  Icon,
   ListRow,
   ListSection,
+  Pager,
   ProgressIndicator,
   StepperRow,
   SwitchRow,
   TimePickerRow,
 } = controls;
 
-export { Icon } from './icon';
 export { PageIndicator } from './page-indicator';
 export type * from './types';

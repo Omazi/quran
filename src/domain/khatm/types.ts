@@ -68,7 +68,7 @@ export interface KhatmConfig {
   readonly minPagesPerWateredDay: number;
   /**
    * Number of complete days, ending yesterday, averaged by the "recent average" pace. Whole
-   * number, at least 1.
+   * number from 1 to 366.
    */
   readonly averagePaceWindowDays: number;
 }

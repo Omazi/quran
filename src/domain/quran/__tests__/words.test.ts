@@ -13,6 +13,19 @@ describe('splitVerseWords — words are separated by one space (U+0020)', () => 
     expect(splitVerseWords(text).join(WORD_SEPARATOR)).toBe(text);
   });
 
+  it.each(['', ' ', '  ', 'a  b', ' a b', 'a b '])(
+    'never returns an empty word: %p is refused',
+    (malformed) => {
+      expect(() => splitVerseWords(malformed)).toThrow(RangeError);
+      expect(() => splitVerseWords(malformed)).toThrow(/Invalid verse text/);
+    },
+  );
+
+  it('a text that is not a string is refused', () => {
+    // Cast on purpose: verses also come from files at run time.
+    expect(() => splitVerseWords(undefined as unknown as string)).toThrow(TypeError);
+  });
+
   it('keeps the thin space that the source writes inside a word of 2:72', () => {
     const text = verseText(uthmaniVerses, '2:72');
     const words = splitVerseWords(text);

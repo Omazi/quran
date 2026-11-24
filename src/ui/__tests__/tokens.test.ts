@@ -5,6 +5,7 @@ import {
   contrastThresholds,
   fallbackSystemColors,
   fontFamily,
+  highContrastAppColors,
   iosSystemColorNames,
   layout,
   MINIMUM_FONT_SIZE,
@@ -30,8 +31,11 @@ const charter = readFileSync(
 
 type Appearance = keyof ColorPair;
 type Usage = keyof typeof contrastThresholds;
+/** The charter has two colour tables: the standard values, then the high-contrast ones. */
+type CharterTable = 'standard' | 'highContrast';
 
 interface CharterContrast {
+  table: CharterTable;
   name: string;
   foreground: string;
   background: string;
@@ -40,13 +44,16 @@ interface CharterContrast {
   usage: Usage;
 }
 
+const APPEARANCES: readonly Appearance[] = ['light', 'dark'];
+
 /** The surfaces the charter measures against: white, #F2F2F7, black and #1C1C1E. */
 const surface = fallbackSystemColors.background;
 const groupedSurface = fallbackSystemColors.secondaryBackground;
 
-/** Every contrast ratio written in the colour table of the charter, in reading order. */
+/** Every contrast ratio written in the two colour tables of the charter, in reading order. */
 const CHARTER_CONTRASTS: readonly CharterContrast[] = [
   {
+    table: 'standard',
     name: 'accent on white',
     foreground: appColors.accent.light,
     background: surface.light,
@@ -54,6 +61,7 @@ const CHARTER_CONTRASTS: readonly CharterContrast[] = [
     usage: 'text',
   },
   {
+    table: 'standard',
     name: 'accent on the light grouped background',
     foreground: appColors.accent.light,
     background: groupedSurface.light,
@@ -61,6 +69,7 @@ const CHARTER_CONTRASTS: readonly CharterContrast[] = [
     usage: 'text',
   },
   {
+    table: 'standard',
     name: 'white label on accent',
     foreground: appColors.onAccent.light,
     background: appColors.accent.light,
@@ -68,6 +77,7 @@ const CHARTER_CONTRASTS: readonly CharterContrast[] = [
     usage: 'text',
   },
   {
+    table: 'standard',
     name: 'dark accent on black',
     foreground: appColors.accent.dark,
     background: surface.dark,
@@ -75,6 +85,7 @@ const CHARTER_CONTRASTS: readonly CharterContrast[] = [
     usage: 'text',
   },
   {
+    table: 'standard',
     name: 'dark accent on the dark grouped background',
     foreground: appColors.accent.dark,
     background: groupedSurface.dark,
@@ -82,6 +93,7 @@ const CHARTER_CONTRASTS: readonly CharterContrast[] = [
     usage: 'text',
   },
   {
+    table: 'standard',
     name: 'black label on dark accent',
     foreground: appColors.onAccent.dark,
     background: appColors.accent.dark,
@@ -89,6 +101,7 @@ const CHARTER_CONTRASTS: readonly CharterContrast[] = [
     usage: 'text',
   },
   {
+    table: 'standard',
     name: 'growth on white',
     foreground: appColors.growth.light,
     background: surface.light,
@@ -96,6 +109,7 @@ const CHARTER_CONTRASTS: readonly CharterContrast[] = [
     usage: 'text',
   },
   {
+    table: 'standard',
     name: 'dark growth on black',
     foreground: appColors.growth.dark,
     background: surface.dark,
@@ -103,6 +117,7 @@ const CHARTER_CONTRASTS: readonly CharterContrast[] = [
     usage: 'text',
   },
   {
+    table: 'standard',
     name: 'ink on paper',
     foreground: appColors.ink.light,
     background: appColors.paper.light,
@@ -110,6 +125,7 @@ const CHARTER_CONTRASTS: readonly CharterContrast[] = [
     usage: 'text',
   },
   {
+    table: 'standard',
     name: 'dark ink on dark paper',
     foreground: appColors.ink.dark,
     background: appColors.paper.dark,
@@ -117,6 +133,7 @@ const CHARTER_CONTRASTS: readonly CharterContrast[] = [
     usage: 'text',
   },
   {
+    table: 'standard',
     name: 'ornament on paper',
     foreground: appColors.ornament.light,
     background: appColors.paper.light,
@@ -124,31 +141,102 @@ const CHARTER_CONTRASTS: readonly CharterContrast[] = [
     usage: 'largeTextAndGraphics',
   },
   {
+    table: 'standard',
     name: 'dark ornament on dark paper',
     foreground: appColors.ornament.dark,
     background: appColors.paper.dark,
     written: 7.8,
     usage: 'largeTextAndGraphics',
   },
+  {
+    table: 'highContrast',
+    name: 'high-contrast accent on white',
+    foreground: highContrastAppColors.accent.light,
+    background: surface.light,
+    written: 9.23,
+    usage: 'text',
+  },
+  {
+    table: 'highContrast',
+    name: 'high-contrast dark accent on black',
+    foreground: highContrastAppColors.accent.dark,
+    background: surface.dark,
+    written: 14.02,
+    usage: 'text',
+  },
+  {
+    table: 'highContrast',
+    name: 'high-contrast growth on white',
+    foreground: highContrastAppColors.growth.light,
+    background: surface.light,
+    written: 9.52,
+    usage: 'text',
+  },
+  {
+    table: 'highContrast',
+    name: 'high-contrast dark growth on black',
+    foreground: highContrastAppColors.growth.dark,
+    background: surface.dark,
+    written: 13.49,
+    usage: 'text',
+  },
+  {
+    table: 'highContrast',
+    name: 'high-contrast ornament on paper',
+    foreground: highContrastAppColors.ornament.light,
+    background: appColors.paper.light,
+    written: 7.78,
+    usage: 'largeTextAndGraphics',
+  },
+  {
+    table: 'highContrast',
+    name: 'high-contrast dark ornament on dark paper',
+    foreground: highContrastAppColors.ornament.dark,
+    background: appColors.paper.dark,
+    written: 10.44,
+    usage: 'largeTextAndGraphics',
+  },
 ];
 
-/** The rows of the charter's colour table: they start with a role name in backticks. */
-const charterColorRows = charter.split('\n').filter((line) => line.startsWith('| `'));
+/** The rows of a colour table of the charter: they start with a role name in backticks. */
+function colorTableRows(text: string): string[] {
+  return text.split('\n').filter((line) => line.startsWith('| `'));
+}
+
+/** The colour section of the charter; a paragraph that starts with these words opens its second table. */
+const colorSection = charter.slice(
+  charter.indexOf('### Couleurs'),
+  charter.indexOf('### Typographie'),
+);
+const [standardText = '', highContrastText = ''] = colorSection.split(/^Contraste élevé/m);
+const CHARTER_ROWS: Record<CharterTable, string[]> = {
+  standard: colorTableRows(standardText),
+  highContrast: colorTableRows(highContrastText),
+};
+const TABLES: readonly CharterTable[] = ['standard', 'highContrast'];
 
 function roundToCharterPrecision(ratio: number): number {
   return Math.round(ratio * 100) / 100;
 }
 
+/** The surface a role is measured against in the charter: paper for the ornament, else the screen. */
+function charterBackground(role: keyof typeof highContrastAppColors, appearance: Appearance) {
+  return role === 'ornament' ? appColors.paper[appearance] : surface[appearance];
+}
+
 describe('colours of the charter', () => {
-  it('finds the colour table of the charter', () => {
-    expect(charterColorRows).toHaveLength(4);
+  it('finds both colour tables of the charter, and no third one', () => {
+    expect(CHARTER_ROWS.standard).toHaveLength(4);
+    expect(CHARTER_ROWS.highContrast).toHaveLength(3);
+    expect(colorTableRows(colorSection)).toHaveLength(7);
   });
 
-  it('recomputes every contrast ratio the charter writes, and no other', () => {
-    const writtenInCharter = charterColorRows
+  it.each(TABLES)('recomputes every contrast ratio of the %s table, and no other', (table) => {
+    const writtenInCharter = CHARTER_ROWS[table]
       .flatMap((row) => [...row.matchAll(/(\d+,\d+):1/g)])
       .map((match) => Number(match[1]?.replace(',', '.')));
-    expect(CHARTER_CONTRASTS.map(({ written }) => written)).toEqual(writtenInCharter);
+    const recomputed = CHARTER_CONTRASTS.filter((contrast) => contrast.table === table);
+    expect(recomputed.map(({ written }) => written)).toEqual(writtenInCharter);
   });
 
   it.each(CHARTER_CONTRASTS)('$name is $written:1 as written', (contrast) => {
@@ -166,7 +254,7 @@ describe('colours of the charter', () => {
   });
 
   it.each(Object.entries(appColors))('%s has the values of the charter', (_role, pair) => {
-    const table = charterColorRows.join('\n');
+    const table = CHARTER_ROWS.standard.join('\n');
     // The label drawn on the accent is written in words in the charter: white, then black.
     if (pair === appColors.onAccent) {
       expect(pair).toEqual({ light: '#FFFFFF', dark: '#000000' });
@@ -174,6 +262,38 @@ describe('colours of the charter', () => {
     }
     expect(table).toContain(`\`${pair.light}\``);
     expect(table).toContain(`\`${pair.dark}\``);
+  });
+});
+
+describe('high-contrast colours of the charter', () => {
+  const roles = Object.keys(highContrastAppColors) as (keyof typeof highContrastAppColors)[];
+
+  it('has a variant for every role of the high-contrast table, and for no other', () => {
+    const rolesInCharter = CHARTER_ROWS.highContrast.map((row) => /^\| `(\w+)`/.exec(row)?.[1]);
+    expect(roles).toEqual(rolesInCharter);
+  });
+
+  it.each(roles)('%s has the high-contrast values of the charter', (role) => {
+    const row = CHARTER_ROWS.highContrast.find((line) => line.startsWith(`| \`${role}\``));
+    expect(row).toContain(`\`${highContrastAppColors[role].light}\``);
+    expect(row).toContain(`\`${highContrastAppColors[role].dark}\``);
+  });
+
+  describe.each(APPEARANCES)('%s', (appearance) => {
+    it.each(roles)('%s stands out more than its standard value', (role) => {
+      const background = charterBackground(role, appearance);
+      const standard = contrastRatio(appColors[role][appearance], background);
+      const high = contrastRatio(highContrastAppColors[role][appearance], background);
+      expect(high).toBeGreaterThan(standard);
+    });
+
+    it('keeps the label of the main button readable on the stronger accent', () => {
+      const ratio = contrastRatio(
+        appColors.onAccent[appearance],
+        highContrastAppColors.accent[appearance],
+      );
+      expect(ratio).toBeGreaterThanOrEqual(contrastThresholds.text);
+    });
   });
 });
 
@@ -190,34 +310,42 @@ describe('system colours', () => {
     );
   });
 
-  const appearances: readonly Appearance[] = ['light', 'dark'];
   const backgrounds = [
     'background',
     'secondaryBackground',
     'groupedBackground',
     'secondaryGroupedBackground',
   ] as const;
-  const fallbackColors = { ...fallbackSystemColors, ...appColors };
+  const fallbackColors = {
+    standard: { ...fallbackSystemColors, ...appColors },
+    highContrast: { ...fallbackSystemColors, ...appColors, ...highContrastAppColors },
+  };
 
-  describe.each(appearances)('fallback palette, %s', (appearance) => {
-    describe.each(backgrounds)('on %s', (background) => {
-      const backgroundColor = fallbackSystemColors[background][appearance];
+  describe.each(TABLES)('fallback palette, %s values', (contrast) => {
+    describe.each(APPEARANCES)('%s', (appearance) => {
+      describe.each(backgrounds)('on %s', (background) => {
+        const backgroundColor = fallbackSystemColors[background][appearance];
 
-      it.each(['label', 'secondaryLabel', 'accent', 'growth'] as const)(
-        '%s is readable as text',
-        (role) => {
-          const ratio = contrastRatio(fallbackColors[role][appearance], backgroundColor);
-          expect(ratio).toBeGreaterThanOrEqual(contrastThresholds.text);
-        },
-      );
+        it.each(['label', 'secondaryLabel', 'accent', 'growth'] as const)(
+          '%s is readable as text',
+          (role) => {
+            const color = fallbackColors[contrast][role][appearance];
+            expect(contrastRatio(color, backgroundColor)).toBeGreaterThanOrEqual(
+              contrastThresholds.text,
+            );
+          },
+        );
 
-      it.each(['warning', 'destructive'] as const)(
-        '%s is visible as a graphic or as bold text',
-        (role) => {
-          const ratio = contrastRatio(fallbackColors[role][appearance], backgroundColor);
-          expect(ratio).toBeGreaterThanOrEqual(contrastThresholds.largeTextAndGraphics);
-        },
-      );
+        it.each(['warning', 'destructive'] as const)(
+          '%s is visible as a graphic or as bold text',
+          (role) => {
+            const color = fallbackColors[contrast][role][appearance];
+            expect(contrastRatio(color, backgroundColor)).toBeGreaterThanOrEqual(
+              contrastThresholds.largeTextAndGraphics,
+            );
+          },
+        );
+      });
     });
   });
 });

@@ -72,6 +72,21 @@ describe('Rule 2 — completed hizb (hizb terminé)', () => {
     expect(progress.currentHizbProgress).toBe(0);
   });
 
+  it('a page shared by three hizb is accepted and counts for the three', () => {
+    // Hand-made edge: hizb 1 = pages 1..11, hizb 2 = page 11 only, hizb 3 = pages 11..31.
+    const ranges = withHizbRange({ hizb: 2, firstPage: 11, lastPage: 11 }).map((range) =>
+      range.hizb === 3 ? { hizb: 3, firstPage: 11, lastPage: 31 } : range,
+    );
+    const withoutSharedPage = readPages(EMPTY_JOURNAL, 1, pageRange(1, 10), MONDAY);
+    const withSharedPage = readPages(withoutSharedPage, 1, [11], MONDAY);
+
+    expect(getKhatmProgress(withoutSharedPage, 1, ranges).hizbCompleted).toBe(0);
+    const progress = getKhatmProgress(withSharedPage, 1, ranges);
+    expect(progress.hizbCompleted).toBe(2);
+    expect(progress.currentHizb).toBe(3);
+    expect(progress.currentHizbProgress).toBeCloseTo(1 / 21);
+  });
+
   it('a one-page hizb is completed by its single page', () => {
     // Hand-made edge: hizb 1 = page 1 only, hizb 2 = pages 1..21.
     const ranges = withHizbRange({ hizb: 1, firstPage: 1, lastPage: 1 }).map((range) =>
@@ -296,6 +311,21 @@ describe('Invalid input — khatma number and hizb page ranges', () => {
     ['a hizb ending before it starts', withHizbRange({ hizb: 2, firstPage: 11, lastPage: 10 })],
     ['a fractional page', withHizbRange({ hizb: 1, firstPage: 1, lastPage: 10.5 })],
   ];
+
+  it('hizb ranges of the wrong shape are named by the module, not by the engine', () => {
+    // Casts on purpose: an untyped caller, or data that was not loaded.
+    const notAList = null as unknown as HizbPageRange[];
+    const listWithAHole = HIZB_PAGE_RANGES.map((range) =>
+      range.hizb === 30 ? null : range,
+    ) as HizbPageRange[];
+
+    expect(() => getKhatmProgress(EMPTY_JOURNAL, 1, notAList)).toThrow(
+      'Invalid hizb page ranges: expected a list',
+    );
+    expect(() => getKhatmProgress(EMPTY_JOURNAL, 1, listWithAHole)).toThrow(
+      'Invalid hizb page range: expected an object',
+    );
+  });
 
   it.each(invalidRanges)('incomplete hizb ranges: rejects %s', (_label, ranges) => {
     expect(() => getKhatmProgress(EMPTY_JOURNAL, 1, ranges)).toThrow(RangeError);

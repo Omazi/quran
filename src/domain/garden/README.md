@@ -29,7 +29,7 @@ const state = computeGardenState({
   currentHizbProgress, // 0..1, pages lues du hizb en cours
   wateredDays, // Set<LocalDate> des jours où une nouvelle page a été lue
   firstHizbCompletedOn, // jour du premier hizb terminé, null tant qu'aucun ne l'est
-  completedOn, // jour où la khatma a été terminée, null sinon
+  completedOn, // jour où la khatma a été terminée, null sinon (vérifié, sans effet)
   today,
   pauses, // [{ from, to }], bornes incluses
   variant,
@@ -80,8 +80,8 @@ test.
    haut : un jardin qui n'est pas mort montre toujours au moins un élément.
 2. **Lire pendant une pause compte.** Un jour à la fois en pause et arrosé est un jour
    arrosé : la pause pardonne un jour sans lecture, elle n'efface pas une lecture.
-3. **Aucune date n'est « trop tard ».** Un jour arrosé, une pause, `firstHizbCompletedOn`
-   ou `completedOn` postérieurs au jour décrit ne sont pas encore atteints : ils sont
+3. **Aucune date n'est « trop tard ».** Un jour arrosé, une pause ou
+   `firstHizbCompletedOn` postérieurs au jour décrit ne sont pas encore atteints : ils sont
    ignorés, sans erreur. Si `today` tombe avant le premier hizb, le jardin est décrit comme
    à sa naissance. Seules les dates mal formées lèvent une `RangeError`.
 4. **Terre nue** (`hizbCompleted` = 0) : sécheresse 0, aucun jour manqué, eau `dry`, que
@@ -89,12 +89,13 @@ test.
    pas le jardin.
 5. **Le jour du premier hizb est un jour comme un autre** : il compte s'il est arrosé (cas
    normal), et devient un jour manqué s'il ne figure pas dans `wateredDays`.
-6. **Jardin complet.** À partir de `completedOn`, le jardin est montré en pleine santé
-   (sécheresse 0, aucun jour manqué, les 60 éléments, l'eau coule) et ne change plus : c'est
-   exactement le jardin du badge. `daysSinceLastWatered` et `isPausedToday` restent ceux du
-   jour de fin. Avant ce jour (possible seulement après un changement de fuseau), il sèche
-   normalement. Un jardin de 60 hizb **sans** `completedOn` est accepté et continue de
-   vivre : les aperçus en ont besoin.
+6. **Jardin complet.** Un jardin de 60 hizb est **toujours** montré en pleine santé
+   (sécheresse 0, les 60 éléments, l'eau coule, `daysSinceLastWatered` 0, aucun jour manqué,
+   `isPausedToday` faux), quelles que soient les dates : `completedOn` absent, passé ou à
+   venir, `today` avant ou après, rien n'y change. C'est exactement
+   `completedGardenState(variant)`, le jardin du badge. Un jardin n'est donc jamais à la
+   fois complet et mourant. `completedOn` reste dans l'entrée : il est vérifié (date bien
+   formée, refusé sans les 60 hizb) mais ne sert à aucun calcul.
 7. **Champ oublié.** `firstHizbCompletedOn` ou `completedOn` absents (`undefined`) : erreur.
    Seul `null` veut dire « pas encore ».
 8. **Élément en cours de pousse.** `nextElement.isVisible` est vrai tant que tous les
@@ -126,16 +127,19 @@ test.
 Points contestés pendant le développement, tranchés par l'architecte. Un test fige chacun.
 
 1. **Khatma terminée après une absence.** Elle laissait un jardin complet mais mourant,
-   impossible à arroser. Désormais, terminer la khatma montre le jardin en pleine santé
-   (décision 6).
+   impossible à arroser. Désormais un jardin de 60 hizb est toujours en pleine santé
+   (décision 6), y compris sans `completedOn` ou si `today` tombe avant cette date.
 2. **Un jardin qui existe peut mourir.** Terminer son premier hizb plus tôt expose le
    jardin plus tôt : deux personnes lisent le jour 0, s'absentent trois semaines et relisent
    le jour 22 ; celle qui avait fini son premier hizb le jour 0 retrouve un jardin mourant,
    celle à qui il manquait une page le voit naître en pleine santé. C'est voulu. En
    revanche le retour doit se **voir** : l'arrondi vers le haut fait toujours revenir au
    moins un élément à la première lecture après la mort.
-3. **60 hizb sans `completedOn`**, champ oublié, état gelé d'un jardin complet : lectures
-   acceptées (décisions 6 et 7).
+3. **Champ oublié** (`undefined`) : erreur, seul `null` veut dire « pas encore »
+   (décision 7).
+4. **Laissé ouvert jusqu'aux vraies images** : dans un tout petit jardin (1 à 4 hizb),
+   l'entrée dans la phase `dying` ne cache rien, pousse comprise (décision 8) ; les pauses
+   n'ont pas de durée maximale dans ce module.
 
 ## Question ouverte, pour le propriétaire
 

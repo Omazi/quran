@@ -32,6 +32,21 @@ mode enfants.
 
 ## Questions ouvertes
 
+- **Édition du mushaf** : la mise en page suivie est celle de l'édition de 1441 H. 25 pages
+  n'y commencent pas au même verset que dans le mushaf de Médine classique (pages 121-123,
+  145, 532-534, 565, 568, 570, 576, 584, 586, 588-590, 592-600). Quelle édition suivre ?
+  Dans tous les cas, ces pages sont à comparer à un mushaf imprimé avant toute sortie.
+- **Police du Coran** : le texte uthmani emploie certains signes (tanwin, sajda) avec le
+  sens que leur donnent les polices du Complexe du roi Fahd. Une police standard comme
+  Amiri Quran en dessinera d'autres. Il faut la police qui correspond au texte
+  (autorisation à demander, D6) ou une correspondance au moment de l'affichage.
+- **Écriture simple** : aucune source établie dans le dépôt ; un fichier Tanzil Simple de
+  provenance à confirmer sert seulement aux tests de la reconnaissance.
+- **Licences des textes** : à vérifier à la source avant publication (voir
+  `DATA_SOURCES.md`). Un écran de crédits est nécessaire.
+- **Cinq mots collés** dans le texte uthmani (15:7, 27:20, 36:22, 37:164, 41:47) : gardés
+  tels que publiés ; à faire confirmer par un enseignant.
+
 - Rythme minimal : avec les réglages actuels (un jour manqué = +1, un jour lu = −3), lire
   un jour sur quatre suffit à garder le jardin en vie ; un jour sur cinq, il finit par
   mourir. À ajuster si c'est trop indulgent (constante `droughtDaysRecoveredPerWateredDay`).

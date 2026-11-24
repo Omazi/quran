@@ -1,4 +1,20 @@
 {
   "appName": "Quran App",
-  "actions": { "continue": "Continue", "back": "Back", "cancel": "Cancel", "done": "Done" }
+  "actions": {
+    "continue": "Continue",
+    "back": "Back",
+    "cancel": "Cancel",
+    "done": "Done"
+  },
+  "tabs": {
+    "garden": "Garden",
+    "quran": "Quran",
+    "settings": "Settings"
+  },
+  "quran": {
+    "unavailable": {
+      "title": "Reading Is Coming Soon",
+      "description": "You will read the Quran here, page after page, and every new page will water your garden."
+    }
+  }
 }

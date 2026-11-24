@@ -169,6 +169,19 @@ function describeGarden(garden: CheckedGarden, day: DayFacts): GardenState {
   };
 }
 
+/**
+ * A garden with its 60 hizb is always shown at full health, whatever the dates: finishing
+ * the Quran is a celebration, never a dying garden. It is described as on the day the
+ * last page was read, and it is the picture carried by the badge of the khatma.
+ */
+function describeCompleteGarden(garden: CheckedGarden): GardenState {
+  return describeGarden(garden, {
+    vitals: NEW_GARDEN_VITALS,
+    daysSinceLastWatered: 0,
+    isPaused: false,
+  });
+}
+
 /** The garden today, then on each of the following days if nothing more is read. */
 interface GardenOutlook {
   readonly today: GardenState;
@@ -186,12 +199,18 @@ function describeFromToday(input: GardenInput, daysAhead: number): GardenOutlook
     pauses: input.pauses,
   });
 
+  // The calendar was still checked above, but a complete garden does not depend on it.
+  if (garden.hizbCompleted === HIZB_COUNT) {
+    const complete = describeCompleteGarden(garden);
+    return { today: complete, comingDays: history.comingDays.map(() => complete) };
+  }
+
   // One pass over the life of the garden, whatever the number of days described.
   const vitalsSeen = vitalsSeenEachDay(history.lifeDays, garden.config);
   const describe = (viewDay: ViewDay): GardenState => {
     const lifeVitals = viewDay.lifeDayIndex === null ? undefined : vitalsSeen[viewDay.lifeDayIndex];
     return describeGarden(garden, {
-      // Outside its life (before its first hizb, or once complete) the garden is intact.
+      // Before its first hizb the garden has no life yet: nothing dried, nothing was missed.
       vitals: lifeVitals ?? NEW_GARDEN_VITALS,
       daysSinceLastWatered: viewDay.daysSinceLastWatered,
       isPaused: viewDay.isPaused,
@@ -238,21 +257,15 @@ export function forecastGardenWithoutReading(
 /**
  * The garden of a finished khatma: the 60 elements, no drought, flowing water. It is the
  * picture carried by the badge of that khatma, so it needs no history and never changes
- * afterwards. It is also what `computeGardenState` shows from the completion day on.
+ * afterwards. It is also what `computeGardenState` shows for a garden of 60 hizb.
  */
 export function completedGardenState(variant: GardenVariant): GardenState {
-  const garden: CheckedGarden = {
+  return describeCompleteGarden({
     hizbCompleted: HIZB_COUNT,
     currentHizbProgress: 0,
     variant,
     // Checks the variant too.
     catalog: catalogForVariant(variant),
     config: DEFAULT_GARDEN_CONFIG,
-  };
-  // As on a day the user has read: the last page was read on the day the khatma ended.
-  return describeGarden(garden, {
-    vitals: NEW_GARDEN_VITALS,
-    daysSinceLastWatered: 0,
-    isPaused: false,
   });
 }

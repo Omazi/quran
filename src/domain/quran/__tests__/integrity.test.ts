@@ -40,6 +40,22 @@ describe('canonicalQuranText — the text that is fingerprinted', () => {
     expect(canonicalQuranText(reversed)).toBe(canonicalQuranText(oneVersePerSurah()));
   });
 
+  it.each(['115', '0', '-1', '1.5', '01', 'fatiha'])(
+    'a surah that does not exist is refused, never left out in silence: "%s"',
+    (key) => {
+      const verses = oneVersePerSurah();
+      verses[key] = ['extra'];
+
+      expect(() => canonicalQuranText(verses)).toThrow(RangeError);
+      expect(() => canonicalQuranText(verses)).toThrow('does not exist');
+    },
+  );
+
+  it.each<unknown>([undefined, null, 'text', 42, []])('%p is not a set of verses', (value) => {
+    // Cast on purpose: simulates a file that is not what the type promises.
+    expect(() => canonicalQuranText(value as VersesBySurah)).toThrow(TypeError);
+  });
+
   it('a missing surah raises an explicit error', () => {
     const verses = oneVersePerSurah();
     delete verses['57'];

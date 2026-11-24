@@ -40,6 +40,11 @@ function corrupted(what: string): Error {
 /** Checks a verses file against the structure: 114 surahs, the right number of verses each. */
 export function readVersesFile(raw: unknown, structure: QuranStructure): VersesBySurah {
   if (!isRecord(raw)) throw corrupted('the verses file is not an object');
+  const knownSurahs = new Set(structure.surahs.map(({ surah }) => String(surah)));
+  const unknownKey = Object.keys(raw).find((key) => !knownSurahs.has(key));
+  if (unknownKey !== undefined)
+    throw corrupted(`the verses file holds an unknown surah "${unknownKey}"`);
+
   const verses: Record<string, readonly string[]> = {};
   for (const { surah, verseCount } of structure.surahs) {
     const surahVerses = raw[String(surah)];

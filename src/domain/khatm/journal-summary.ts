@@ -2,7 +2,13 @@ import { PAGE_COUNT } from '@/domain/quran/types';
 import { compareLocalDates, type LocalDate } from '@/domain/shared/local-date';
 import { FIRST_KHATM } from './config';
 import type { ReadingEntry, ReadingJournal } from './types';
-import { assertKhatmNumber, assertLocalDate, assertPage } from './validation';
+import {
+  assertKhatmNumber,
+  assertList,
+  assertLocalDate,
+  assertObject,
+  assertPage,
+} from './validation';
 
 /** What the journal says about one khatma. */
 export interface KhatmSummary {
@@ -91,15 +97,18 @@ function assertNoEntryAfterCurrentKhatm(
 }
 
 /**
- * Reads the whole journal in one pass. Throws a RangeError unless the journal has:
+ * Reads the whole journal in one pass. Throws a TypeError when the journal is not a list of
+ * objects, and a RangeError unless it has:
  * - valid entries (khatma from 1, page 1..604, real date);
  * - at most one entry per (khatm, page);
  * - one khatma in progress at a time.
  */
 export function summarizeJournal(journal: ReadingJournal): JournalSummary {
+  assertList(journal, 'journal');
   const khatmas = new Map<number, KhatmSummaryInProgress>();
   const newPagesByDay = new Map<LocalDate, number>();
   for (const entry of journal) {
+    assertObject(entry, 'journal entry');
     assertKhatmNumber(entry.khatm);
     assertPage(entry.page);
     // A journal holds far fewer days than entries, and checking a date is the costly part

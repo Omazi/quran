@@ -1,8 +1,9 @@
-import { Host } from '@expo/ui/swift-ui';
+import { Host, RNHostView } from '@expo/ui/swift-ui';
 import { createContext, useContext, type ReactNode } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { getWritingDirection } from '../../direction';
+import { useColors } from '../../use-colors';
 
 /** True below a SwiftUI host: a control found there is drawn as it is, without a host of its own. */
 const InsideSwiftUI = createContext(false);
@@ -27,11 +28,16 @@ interface SwiftUIHostProps {
 /**
  * The boundary between React Native and SwiftUI. Every control of this folder goes through it,
  * so the same control works alone on a screen and inside a `GroupedList`, where the list is
- * already the host. The system gives the content its appearance, text size and contrast; the
- * writing direction is passed on from React Native.
+ * already the host.
+ *
+ * The host is also the one place where the app's accent is given to SwiftUI, as the tint of
+ * everything below: the system then applies it where it uses an accent, such as the background
+ * of a prominent button (color.md › Liquid Glass color). The system gives the content its
+ * appearance, text size and contrast; the writing direction is passed on from React Native.
  */
 export function SwiftUIHost({ size, children }: SwiftUIHostProps) {
   const insideSwiftUI = useIsInsideSwiftUI();
+  const colors = useColors();
   if (insideSwiftUI) return <>{children}</>;
   return (
     <Host
@@ -39,10 +45,25 @@ export function SwiftUIHost({ size, children }: SwiftUIHostProps) {
         size === 'content' ? true : size === 'contentHeight' ? { vertical: true } : false
       }
       layoutDirection={getWritingDirection() === 'rtl' ? 'rightToLeft' : 'leftToRight'}
+      seedColor={colors.accent}
       style={size === 'content' ? undefined : size === 'fill' ? styles.fill : styles.stretch}
     >
       <InsideSwiftUI.Provider value>{children}</InsideSwiftUI.Provider>
     </Host>
+  );
+}
+
+/**
+ * React Native content placed inside a SwiftUI view, at the size SwiftUI gives it. Below it the
+ * tree is React Native again: a control found there needs a host of its own.
+ */
+export function ReactNativeContent({ children }: { children: ReactNode }) {
+  return (
+    <RNHostView>
+      <View style={styles.fill}>
+        <InsideSwiftUI.Provider value={false}>{children}</InsideSwiftUI.Provider>
+      </View>
+    </RNHostView>
   );
 }
 
