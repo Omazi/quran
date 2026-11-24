@@ -217,11 +217,10 @@ règle 6.
 
 ## D29 — L'écran d'écoute en sombre : le même dessin, aux valeurs de nuit
 
-Proposition de l'architecte, montrée au propriétaire le 24 novembre 2026 après la revue
-de design indépendante (8, 8, 7, 7, 7 sur 10 ; un premier passage avait échoué à 6 sur la
-finition : or trop fort, voile laiteux, points lumineux aux jointures). En attente de son
-avis. La
-rosace en clair est validée (D27, feuille de route). Sa première version sombre (fond vert
+**Validé par le propriétaire le 24 novembre 2026** (« Oui »). Proposition de l'architecte,
+montrée après la revue de design indépendante (8, 8, 7, 7, 7 sur 10 ; un premier passage
+avait échoué à 6 sur la finition : or trop fort, voile laiteux, points lumineux aux
+jointures). La rosace en clair est validée (D27, feuille de route). Sa première version sombre (fond vert
 sombre, étoile dorée, forte lueur) n'a pas plu. Deux palettes inventées ensuite, « Encre »
 et « Lapis », sont retirées : elles sortaient de la charte.
 

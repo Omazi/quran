@@ -31,8 +31,10 @@ Micro, modèle sur l'appareil, lecture suivie, reconnaissance d'un passage (« S
     autour d'une étoile, des pétales qui partent à chaque souffle de la voix.
   - Mode sombre : la version vert sombre et or n'a pas plu (« peut-être les couleurs »).
     Remplacée par le même dessin aux valeurs de nuit des couleurs de l'appli (D29) : papier
-    sombre, eau et or. Montrée au propriétaire le 24 novembre 2026, **en attente de son
-    avis**. Les essais « Encre » et « Lapis » sont retirés.
+    sombre, eau et or. **Validée par le propriétaire le 24 novembre 2026.** Les essais
+    « Encre » et « Lapis » sont retirés.
+  - Reste à dessiner : le moment où le passage est reconnu, les cas « rien trouvé » et
+    « micro refusé », la bannière en haut de l'écran et l'île dynamique.
   - Les ondes restent une seconde piste aboutie ; la sphère de particules n'est pas au
     niveau et n'a pas été montrée.
   - Prototype web de référence : hors dépôt pour l'instant (`gen/ecoute/styles/`). À refaire
