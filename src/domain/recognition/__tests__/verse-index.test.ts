@@ -110,7 +110,7 @@ describe('Rule 2.1 — the input may start and end in the middle of a verse and 
     expect(tiedSpans(index.search([imlaeiText(94, 1, 3)]))).toEqual(['94:1.1-94:3.3']);
   });
 
-  describe("imla'i sample (Tanzil Simple) as a stand-in for speech output", () => {
+  describe("imla'i sample as a stand-in for speech output", () => {
     const versesLongEnough = IMLAEI_SAMPLE.filter(
       (verse) => normalizeArabic(verse.text).length >= 3,
     );
@@ -224,6 +224,22 @@ describe('Rule 2.2 — tolerates wrong, missing and extra words', () => {
     expect(result.status).toBe('found');
     expect(tiedSpans(result)).toEqual(['112:1.1-112:2.2']);
     expect(result.candidates[0]?.score).toBe(1);
+  });
+
+  it('matches a glued word whose second half starts with the article (ربالعالمين)', () => {
+    const result = search('الحمد لله ربالعالمين الرحمن الرحيم');
+
+    expect(result.status).toBe('found');
+    expect(tiedSpans(result)).toEqual(['1:2.1-1:3.2']);
+    expect(result.candidates[0]?.score).toBe(1);
+  });
+
+  it('keeps the places of a repeated passage tied when two of its words are glued', () => {
+    // 95:6 and 103:3 share these words; آمنوا وعملوا heard as one word.
+    const result = search('إلا الذين آمنواوعملوا الصالحات');
+
+    expect(result.status).toBe('ambiguous');
+    expect(tiedSpans(result)).toEqual(['95:6.1-95:6.5', '103:3.1-103:3.5']);
   });
 });
 
@@ -478,6 +494,130 @@ describe('Rule 2.5 — below the minimal score or the minimal number of words, t
     expect(() => index.search('قل هو الله أحد')).toThrow(TypeError);
     // @ts-expect-error invalid input on purpose
     expect(() => index.search(['قل', 3])).toThrow(TypeError);
+  });
+});
+
+describe('Précisions — never sure by mistake', () => {
+  it('ties the places that noise cannot tell apart (113:1 and 114:1 heard with an accent)', () => {
+    const result = search('كل اعوز برب');
+
+    expect(result.status).toBe('ambiguous');
+    expect(tiedSpans(result)).toEqual(['113:1.1-113:1.3', '114:1.1-114:1.3']);
+    expect(result.candidates[0]?.confidence).toBe(result.candidates[1]?.confidence);
+  });
+
+  it('ties the places that hold the same words when one word is wrong (95:6 and 103:3)', () => {
+    const result = search('إلا الذين آمنوا وعملوا الطيبات');
+
+    expect(result.status).toBe('ambiguous');
+    expect(tiedSpans(result)).toEqual(['95:6.1-95:6.4', '103:3.1-103:3.4']);
+  });
+
+  it('lists every tied place, whatever `maxAlternatives` says', () => {
+    const result = search('فبأي آلاء ربكما تكذبان', { maxAlternatives: 0 });
+
+    expect(result.tiedCount).toBe(6);
+    expect(result.candidates).toHaveLength(6);
+  });
+
+  it('says nothing about truncation when the list is complete and the input was searched whole', () => {
+    expect(Object.keys(search('فبأي آلاء ربكما تكذبان')).sort()).toEqual([
+      'candidates',
+      'status',
+      'tiedCount',
+    ]);
+  });
+});
+
+describe('Précisions — bounded input', () => {
+  const tooLong = 'قل'.repeat(16); // 32 letters
+
+  it('says when an input of more than 300 words was cut, even when nothing is found', () => {
+    const words = (count: number): string[] => new Array<string>(count).fill('مدرسة');
+
+    expect(index.search(words(300))).toEqual({
+      status: 'not-found',
+      reason: 'no-match',
+      candidates: [],
+      tiedCount: 0,
+    });
+    expect(index.search(words(301))).toEqual({
+      status: 'not-found',
+      reason: 'no-match',
+      candidates: [],
+      tiedCount: 0,
+      inputTruncated: true,
+    });
+  });
+
+  it('searches the most recent words of an input of more than 300 words', () => {
+    const before = new Array<string>(300).fill('مدرسة');
+
+    const result = index.search([...before, ...FATIHA_2_TO_5.split(' ')], { minScore: 0.01 });
+
+    expect(result.inputTruncated).toBe(true);
+    expect(result.candidates[0]).toMatchObject({
+      start: wordRef(1, 2, 1),
+      end: wordRef(1, 5, 4),
+    });
+  });
+
+  it('never counts a heard "word" of more than 30 letters as a word of a passage', () => {
+    const result = search(`قل هو الله أحد ${tooLong}`, { minScore: 0.5 });
+
+    expect(tiedSpans(result)).toEqual(['112:1.1-112:1.4']);
+    expect(result.candidates[0]?.score).toBeCloseTo(4 / 5);
+  });
+
+  it('answers quickly to a single "word" of 65,536 letters', () => {
+    const before = performance.now();
+    const result = index.search(['قل', 'هو', 'ب'.repeat(65_536)]);
+
+    expect(result.status).toBe('not-found');
+    expect(performance.now() - before).toBeLessThan(1000);
+  });
+
+  it('refuses a corpus that holds a "word" of more than 30 letters', () => {
+    expect(() => createVerseIndex([{ surah: 1, verse: 1, text: `قل ${tooLong}` }])).toThrow(
+      RangeError,
+    );
+  });
+});
+
+describe('Précisions — invalid options give an explicit error of the module', () => {
+  const words = FATIHA_2_TO_5.split(' ');
+
+  it.each([
+    ['null', null],
+    ['a string', 'fast'],
+    ['a number', 3],
+    ['a list', [{ minWords: 3 }]],
+  ])('throws a TypeError when the options are %s', (_case, options) => {
+    // @ts-expect-error invalid input on purpose
+    expect(() => index.search(words, options)).toThrow(TypeError);
+    // @ts-expect-error invalid input on purpose
+    expect(() => index.search(words, options)).toThrow(/options/);
+  });
+
+  it.each([
+    ['minScore as text', { minScore: '0.5' }, /minScore/],
+    ['minWords as text', { minWords: '3' }, /minWords/],
+    ['maxAlternatives as text', { maxAlternatives: '2' }, /maxAlternatives/],
+    ['minWords null', { minWords: null }, /minWords/],
+    ['minScore infinite', { minScore: Number.POSITIVE_INFINITY }, /minScore/],
+  ])('throws a RangeError naming the option on %s', (_case, options, message) => {
+    // @ts-expect-error invalid input on purpose
+    expect(() => index.search(words, options)).toThrow(RangeError);
+    // @ts-expect-error invalid input on purpose
+    expect(() => index.search(words, options)).toThrow(message);
+  });
+
+  it('accepts no options, undefined, an empty object and undefined values', () => {
+    const expected = index.search(words);
+
+    expect(index.search(words, undefined)).toEqual(expected);
+    expect(index.search(words, {})).toEqual(expected);
+    expect(index.search(words, { minWords: undefined, minScore: undefined })).toEqual(expected);
   });
 });
 

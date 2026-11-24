@@ -50,31 +50,53 @@ export interface SearchOptions {
 export type NotFoundReason = 'too-few-words' | 'no-match';
 
 /**
+ * What a result left out. Each flag is present (and true) only when it applies: a result
+ * without flags is complete.
+ */
+export interface SearchLimits {
+  /**
+   * The list of candidates is not complete: either more places are tied than are listed
+   * (`tiedCount` is their total), or the search had to leave some places unexamined
+   * (an input made of very common words). Nothing is ever cut silently.
+   */
+  readonly truncated?: true;
+  /**
+   * The input was longer than `RECOGNITION_CONFIG.maxHeardWords`: only its most recent
+   * words were searched, and the candidates are the place of those words.
+   */
+  readonly inputTruncated?: true;
+}
+
+/**
  * Result of a search. Candidates are ranked, best first.
  *
  * - `found`: one passage explains the input better than every other.
- * - `ambiguous`: the first `tiedCount` candidates explain the input equally well (a passage
- *   repeated in several places). All of them are listed; more words will tell them apart.
+ * - `ambiguous`: `tiedCount` places explain the input equally well (a passage repeated in
+ *   several places). They come first in `candidates`, in mushaf order, all of them unless
+ *   `truncated` says otherwise; more words will tell them apart.
  * - `not-found`: too few words, or no passage reaches the minimal score. No candidate is
  *   returned rather than a wrong one.
  */
-export type SearchResult =
-  | {
-      readonly status: 'found';
-      readonly candidates: readonly PassageCandidate[];
-      readonly tiedCount: 1;
-    }
-  | {
-      readonly status: 'ambiguous';
-      readonly candidates: readonly PassageCandidate[];
-      readonly tiedCount: number;
-    }
-  | {
-      readonly status: 'not-found';
-      readonly reason: NotFoundReason;
-      readonly candidates: readonly [];
-      readonly tiedCount: 0;
-    };
+export type SearchResult = SearchLimits &
+  (
+    | {
+        readonly status: 'found';
+        readonly candidates: readonly PassageCandidate[];
+        readonly tiedCount: 1;
+      }
+    | {
+        readonly status: 'ambiguous';
+        readonly candidates: readonly PassageCandidate[];
+        /** Total number of tied places; more than are listed when `truncated`. */
+        readonly tiedCount: number;
+      }
+    | {
+        readonly status: 'not-found';
+        readonly reason: NotFoundReason;
+        readonly candidates: readonly [];
+        readonly tiedCount: 0;
+      }
+  );
 
 export interface VerseIndex {
   readonly verseCount: number;
@@ -82,7 +104,8 @@ export interface VerseIndex {
   /**
    * Finds the passages that the heard words may come from.
    * `words` are the words of the transcript, raw or already normalised: each entry goes
-   * through `normalizeArabic`, so an entry may also hold several words.
+   * through `normalizeArabic`, so an entry may also hold several words. Only the most
+   * recent `RECOGNITION_CONFIG.maxHeardWords` words are searched.
    */
   search(words: readonly string[], options?: SearchOptions): SearchResult;
 }

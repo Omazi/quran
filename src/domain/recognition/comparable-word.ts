@@ -64,19 +64,28 @@ export function toComparableWords(
 }
 
 /**
- * The two rows of the `editDistance` table. A search compares tens of thousands of word
- * pairs: reusing the rows instead of allocating them at each call makes it about ten times
- * faster. They grow when a longer word comes (Quran words have at most 11 letters here).
+ * True for a "word" longer than any word of the Quran (the longest has 11 comparable
+ * letters): a stuck engine, or junk. Such a word is never the same as another word, not
+ * even as itself, so it can never count as read; and it is never compared letter by letter.
  */
-let previousRow = new Uint16Array(16);
-let currentRow = new Uint16Array(16);
+export function isTooLongToBeAWord(word: ComparableWord): boolean {
+  return word.key.length > RECOGNITION_CONFIG.maxWordLetters;
+}
+
+/**
+ * The two rows of the `editDistance` table, reused between calls: a search compares tens
+ * of thousands of word pairs, and allocating two rows per pair makes it several times
+ * slower. They fit every real word (`maxWordLetters`); longer strings get rows of their own.
+ */
+const SHARED_ROW_LENGTH = RECOGNITION_CONFIG.maxWordLetters + 1;
+const sharedPreviousRow = new Uint32Array(SHARED_ROW_LENGTH);
+const sharedCurrentRow = new Uint32Array(SHARED_ROW_LENGTH);
 
 /** Number of single-letter edits (insert, delete, replace) that turn `first` into `second`. */
 export function editDistance(first: string, second: string): number {
-  if (second.length >= previousRow.length) {
-    previousRow = new Uint16Array(second.length + 1);
-    currentRow = new Uint16Array(second.length + 1);
-  }
+  const fitsSharedRows = second.length < SHARED_ROW_LENGTH;
+  let previousRow = fitsSharedRows ? sharedPreviousRow : new Uint32Array(second.length + 1);
+  let currentRow = fitsSharedRows ? sharedCurrentRow : new Uint32Array(second.length + 1);
   // Classic two-row dynamic programming: `previousRow[j]` is the distance between the
   // letters of `first` read so far and the first j letters of `second`.
   for (let column = 0; column <= second.length; column += 1) previousRow[column] = column;
@@ -117,6 +126,7 @@ export function isClearlyDifferent(similarity: number): boolean {
  * keys that agree (never above `accentMatchSimilarity`).
  */
 export function wordSimilarity(word: ComparableWord, other: ComparableWord): number {
+  if (isTooLongToBeAWord(word) || isTooLongToBeAWord(other)) return 0;
   if (word.key === other.key) return 1;
   if (word.accentKey === other.accentKey) return RECOGNITION_CONFIG.accentMatchSimilarity;
   const longest = Math.max(word.accentKey.length, other.accentKey.length);
@@ -133,6 +143,7 @@ export function similarityUnlessClearlyDifferent(
   word: ComparableWord,
   other: ComparableWord,
 ): number {
+  if (isTooLongToBeAWord(word) || isTooLongToBeAWord(other)) return 0;
   if (word.key === other.key) return 1;
   if (word.accentKey === other.accentKey) return RECOGNITION_CONFIG.accentMatchSimilarity;
   const longest = Math.max(word.accentKey.length, other.accentKey.length);
@@ -160,6 +171,7 @@ export function joinedWordsSimilarity(
   secondHalf: ComparableWord,
   whole: ComparableWord,
 ): number {
+  if (isTooLongToBeAWord(whole)) return 0;
   if (!isJoinedSpelling(firstHalf.accentKey, secondHalf.accentKey, whole.accentKey)) return 0;
   return isJoinedSpelling(firstHalf.key, secondHalf.key, whole.key)
     ? 1
@@ -172,5 +184,7 @@ export function joinedWordsSimilarity(
  * The word was then not heard in full, which is not the same as misread.
  */
 export function isPartOfWord(heard: ComparableWord, expected: ComparableWord): boolean {
+  // A run of letters too long to be a word is not a part of a word either.
+  if (isTooLongToBeAWord(heard) || isTooLongToBeAWord(expected)) return false;
   return isPartOfSpelling(heard.accentKey, expected.accentKey);
 }

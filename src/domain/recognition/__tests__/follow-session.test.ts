@@ -377,6 +377,10 @@ describe('Rule 3 — a wrongly red word is worse than a missed mistake', () => {
       'RRRRRRR',
     );
     expect(letters(follow(SURAH_112, 'قلهو الله أحد الله'))).toBe('RRRRRCUUUUUUUUU');
+    // "رب العالمين" heard as one word: the alef of the article is inside the glued word.
+    expect(letters(follow(uthmaniWords(1, 2, 3), 'الحمد لله ربالعالمين الرحمن الرحيم'))).toBe(
+      'RRRRRR',
+    );
   });
 
   it('shows no mistake when words are missing from the transcript: they are skipped', () => {
@@ -399,6 +403,100 @@ describe('unmatchedStreak — how long the reader has been off the expected word
     expect(session.feed(['قل', 'هو']).unmatchedStreak).toBe(0);
     expect(session.feed(['ذهبت', 'إلى', 'السوق']).unmatchedStreak).toBe(3);
     expect(session.feed(['الله']).unmatchedStreak).toBe(0);
+  });
+});
+
+describe('Précisions — a replaced word is a mistake whatever its place, the first word included', () => {
+  it('marks a replaced first word as a mistake once two following words match', () => {
+    const snapshot = follow(SURAH_112, 'كتاب هو الله');
+
+    expect(letters(snapshot)).toBe('MRRCUUUUUUUUUUU');
+  });
+
+  it('does not decide on the first word while a single following word matches', () => {
+    const snapshot = follow(SURAH_112, 'كتاب هو');
+
+    expect(letters(snapshot)).toBe('CUUUUUUUUUUUUUU');
+  });
+
+  it('marks a first word that was not heard as skipped, not as a mistake', () => {
+    const snapshot = follow(SURAH_112, 'هو الله أحد');
+
+    expect(letters(snapshot)).toBe('SRRRCUUUUUUUUUU');
+  });
+
+  it('marks two replaced words at the start as two mistakes', () => {
+    const snapshot = follow(SURAH_112, 'كتاب مدرسة الله أحد');
+
+    expect(letters(snapshot)).toBe('MMRRCUUUUUUUUUU');
+  });
+
+  it('reads a first word heard with an accent, like any other word', () => {
+    const snapshot = follow(SURAH_112, 'كل هو الله');
+
+    expect(letters(snapshot)).toBe('RRRCUUUUUUUUUUU');
+  });
+});
+
+describe("Rule 3 — the isti'adha and the basmala said before the passage are not mistakes", () => {
+  const ISTIADHA = 'أعوذ بالله من الشيطان الرجيم';
+  const BASMALA = 'بسم الله الرحمن الرحيم';
+
+  it('reads the passage from its first word after an opening formula', () => {
+    expect(letters(follow(SURAH_112, `${ISTIADHA} ${BASMALA} قل هو الله`))).toBe('RRRCUUUUUUUUUUU');
+  });
+
+  it.each([
+    ["the isti'adha", ISTIADHA],
+    ['the basmala', BASMALA],
+    ["the isti'adha then the basmala", `${ISTIADHA} ${BASMALA}`],
+    ["the isti'adha heard with an accent", 'اعوز بالله من الشيتان الرجيم'],
+  ])(
+    'marks a first word that was not heard after %s as skipped, not as a mistake',
+    (_case, formula) => {
+      const snapshot = follow(SURAH_112, `${formula} هو الله أحد`);
+
+      expect(letters(snapshot)).toBe('SRRRCUUUUUUUUUU');
+    },
+  );
+
+  it('still marks a first word replaced after the formula as a mistake', () => {
+    const snapshot = follow(SURAH_112, `${ISTIADHA} كتاب هو الله`);
+
+    expect(letters(snapshot)).toBe('MRRCUUUUUUUUUUU');
+  });
+
+  it('does not excuse the end of a formula alone: one word is not a formula', () => {
+    const snapshot = follow(SURAH_112, 'الرجيم هو الله');
+
+    expect(letters(snapshot)).toBe('MRRCUUUUUUUUUUU');
+  });
+});
+
+describe('Précisions — a "word" of more than 30 letters is not a word of the Quran', () => {
+  const tooLong = 'قل'.repeat(16); // 32 letters
+
+  it('never counts as read, even where the expected word is part of it', () => {
+    const snapshot = follow(SURAH_112, `${tooLong} هو الله`);
+
+    expect(snapshot.statuses[0]).not.toBe('read');
+    expect(letters(snapshot)).toBe('MRRCUUUUUUUUUUU');
+  });
+
+  it('never moves the position, however long it is', () => {
+    const session = createFollowSession(SURAH_112);
+    const start = session.snapshot();
+
+    const snapshot = session.feed(['ب'.repeat(65_536)]);
+
+    expect(snapshot.statuses).toEqual(start.statuses);
+    expect(snapshot.currentIndex).toBe(0);
+    expect(snapshot.unmatchedStreak).toBe(1);
+  });
+
+  it('is refused as an expected word', () => {
+    expect(() => createFollowSession(['قل', tooLong])).toThrow(RangeError);
+    expect(() => createFollowSession(['قل', tooLong])).toThrow(/expectedWords\[1\]/);
   });
 });
 

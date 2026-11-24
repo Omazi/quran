@@ -13,8 +13,20 @@ function word(text: string): string {
 const TATWEEL = String.fromCharCode(0x0640);
 const HAMZA_ABOVE = String.fromCharCode(0x0654);
 const HAMZA_BELOW = String.fromCharCode(0x0655);
+const SUPERSCRIPT_ALEF = String.fromCharCode(0x0670);
+const SMALL_WAW = String.fromCharCode(0x06e5);
+const SMALL_YA = String.fromCharCode(0x06e6);
 const ZERO_WIDTH_JOINER = String.fromCharCode(0x200d);
+const SOFT_HYPHEN = String.fromCharCode(0x00ad);
+const WORD_JOINER = String.fromCharCode(0x2060);
+const RIGHT_TO_LEFT_MARK = String.fromCharCode(0x200f);
+const RIGHT_TO_LEFT_EMBEDDING = String.fromCharCode(0x202b);
+const BYTE_ORDER_MARK = String.fromCharCode(0xfeff);
+const NO_BREAK_SPACE = String.fromCharCode(0x00a0);
 const THIN_SPACE = String.fromCharCode(0x2009);
+const HAIR_SPACE = String.fromCharCode(0x200a);
+const NARROW_NO_BREAK_SPACE = String.fromCharCode(0x202f);
+const IDEOGRAPHIC_SPACE = String.fromCharCode(0x3000);
 
 describe('Rule 1 — normalizeArabic returns comparable words', () => {
   it("gives the same words for a verse in Uthmani, in imla'i and without any mark", () => {
@@ -151,6 +163,52 @@ describe("Rule 1.3 — superscript alef and other Uthmani / imla'i differences g
     expect(word('ٱلسَّمَٰوَٰتِ')).toBe('ءلسموت');
   });
 
+  // The second text shipped with the app (Uthmani Minimal) leaves out the vowel that tells
+  // a consonant from a seat: each word below is written as in that text, as in the King
+  // Fahd Complex text, and in imla'i.
+  it.each([
+    ['السَّمٰوٰتِ', 'ٱلسَّمَٰوَٰتِ', 'السَّمَاوَاتِ'],
+    ['أَزوٰجٌ', 'أَزۡوَٰجٞ', 'أَزْوَاجٌ'],
+    ['وٰحِدٍ', 'وَٰحِدٖ', 'وَاحِدٍ'],
+    ['وَبِالوٰلِدَينِ', 'وَبِٱلۡوَٰلِدَيۡنِ', 'وَبِالْوَالِدَيْنِ'],
+  ])('keeps the consonant waw of %s, as in %s and %s', (minimal, uthmani, imlaei) => {
+    expect(word(minimal)).toBe(word(uthmani));
+    expect(word(minimal)).toBe(word(imlaei));
+  });
+
+  it.each([
+    ['الصَّلوٰةَ', 'ٱلصَّلَوٰةَ', 'الصَّلَاةَ'],
+    ['الرِّبوٰا۟', 'ٱلرِّبَوٰاْ', 'الرِّبَا'],
+    ['صَلوٰتَكَ', 'صَلَوٰتَكَ', 'صَلَاتَكَ'],
+  ])('reads the waw of %s as the seat of a long a, as in %s and %s', (minimal, uthmani, imlaei) => {
+    expect(word(minimal)).toBe(word(uthmani));
+    expect(word(minimal)).toBe(word(imlaei));
+  });
+
+  it.each([
+    ['بِـٔايٰتِنا', 'بِـَٔايَٰتِنَآ', 'بِآيَاتِنَا'],
+    ['فَأَحيٰكُم', 'فَأَحۡيَٰكُمۡۖ', 'فَأَحْيَاكُمْ'],
+    ['يٰأَيُّهَا', 'يَٰٓأَيُّهَا', 'يَاأَيُّهَا'],
+  ])('keeps the dotted ya of %s, a consonant, as in %s and %s', (minimal, uthmani, imlaei) => {
+    expect(word(minimal)).toBe(word(uthmani));
+    expect(word(minimal)).toBe(word(imlaei));
+  });
+
+  it.each([['التَّورىٰةَ', 'ٱلتَّوۡرَىٰةَ', 'التَّوْرَاةَ']])(
+    'reads the dotless ya of %s as the seat of a long a, as in %s and %s',
+    (minimal, uthmani, imlaei) => {
+      expect(word(minimal)).toBe(word(uthmani));
+      expect(word(minimal)).toBe(word(imlaei));
+    },
+  );
+
+  it('keeps the waw of a word that only looks like one of the seats (known limit: 5 plurals)', () => {
+    // صَلَوٰتٌ (prayers, 2:157) is written like صَلَوٰتَكَ (your prayer, 9:103) once its vowels are
+    // left out: the second text loses this waw. The words stay close enough to match.
+    expect(word('صَلَوٰتٌ')).toBe('صلت');
+    expect(word('صَلَوَٰتٞ')).toBe('صلوت');
+  });
+
   it('drops the silent alef after a final waw', () => {
     expect(word('ءَامَنُواْ')).toBe('ءمنو');
     expect(word('قَالُوا')).toBe('قلو');
@@ -214,9 +272,35 @@ describe('Rule 1.4 — never merges nor cuts words', () => {
     expect(normalizeArabic('قل ١٢ هو (الله) أحد.')).toEqual(['قل', 'هو', 'ءلله', 'ءحد']);
   });
 
-  it('does not cut a word on an invisible character or on the thin space of 2:72', () => {
-    expect(normalizeArabic(`الح${ZERO_WIDTH_JOINER}مد`)).toEqual(['ءلحمد']);
-    expect(normalizeArabic(`فَٱدَّٰرَ${THIN_SPACE}ٰٔتُمۡ`)).toHaveLength(1);
+  it('separates words on every Unicode space, the narrow ones included', () => {
+    for (const space of [
+      NO_BREAK_SPACE,
+      THIN_SPACE,
+      HAIR_SPACE,
+      NARROW_NO_BREAK_SPACE,
+      IDEOGRAPHIC_SPACE,
+    ]) {
+      expect(normalizeArabic(`الحمد${space}لله`)).toEqual(['ءلحمد', 'لله']);
+    }
+  });
+
+  it('ignores formatting characters inside a word: they neither cut it nor change it', () => {
+    for (const invisible of [
+      ZERO_WIDTH_JOINER,
+      SOFT_HYPHEN,
+      WORD_JOINER,
+      RIGHT_TO_LEFT_MARK,
+      RIGHT_TO_LEFT_EMBEDDING,
+      BYTE_ORDER_MARK,
+    ]) {
+      expect(normalizeArabic(`الح${invisible}مد`)).toEqual(['ءلحمد']);
+    }
+  });
+
+  it('does not make a word of a sign standing alone (small alef, small waw, small ya, vowel)', () => {
+    for (const sign of [SUPERSCRIPT_ALEF, SMALL_WAW, SMALL_YA, HAMZA_ABOVE, 'َ', 'ّ', TATWEEL]) {
+      expect(normalizeArabic(`قل ${sign} هو`)).toEqual(['قل', 'هو']);
+    }
   });
 
   it('keeps a letter of another language inside its word', () => {

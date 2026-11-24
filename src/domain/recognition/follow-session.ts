@@ -11,8 +11,8 @@
  * The guiding rule: a word wrongly shown as a mistake is worse than a missed mistake.
  * - A word is declared passed (`skipped` or `mistake`) only once enough following words
  *   were recognised after it.
- * - `mistake` needs a clearly different word heard at that very place, between words that
- *   were recognised on both sides. In every other case the passed word is `skipped`.
+ * - `mistake` needs a clearly different word heard at that very place, whatever the place
+ *   (the first word included). A passed word with nothing heard at its place is `skipped`.
  * - Repeating or going back never creates an error: repeated words are just extra words.
  * - A status never gets worse: `read` stays `read`; a `skipped` or `mistake` word that is
  *   read again correctly becomes `read`.
@@ -22,11 +22,13 @@ import {
   isClearlyDifferent,
   isCloseEnough,
   isPartOfWord,
+  isTooLongToBeAWord,
   toComparableWords,
   wordSimilarity,
   type ComparableWord,
 } from './comparable-word';
 import { RECOGNITION_CONFIG } from './config';
+import { endsOpeningFormula } from './opening-formulas';
 import type { FollowSession, FollowSnapshot, WordStatus } from './types';
 
 /** Status of a word the reader has gone past. */
@@ -83,15 +85,47 @@ export function createFollowSession(expectedWords: readonly string[]): FollowSes
       return;
     }
     // Otherwise: where does the new word fall, given the words heard just before it?
-    const pairs = alignWords(recentHeard, expected, from, to, 'chain-of-last-heard-word');
+    const pairs = alignWords(recentHeard, expected, from, to, { goal: 'chain-of-last-heard-word' });
     const places = pairs.flatMap((pair) => placesOf(pair, recentHeard, expected));
     repairWordsReadAgain(places);
     const firstFreshIndex = recentHeard.length - freshHeardCount;
-    moveForward(
-      places.filter(
-        (place) => place.expectedIndex >= position && place.heardIndex >= firstFreshIndex,
-      ),
+    const freshPlacesAhead = places.filter(
+      (place) => place.expectedIndex >= position && place.heardIndex >= firstFreshIndex,
     );
+    moveForward([...placesHeardJustBefore(pairs[0], firstFreshIndex), ...freshPlacesAhead]);
+  }
+
+  /**
+   * The words heard right before the first recognised word, when nothing recognised comes
+   * before them: they were said in the place of the expected words right before it, the
+   * last heard one against the last expected one. This is how a wrong first word is seen:
+   * the alignment only starts at the first word it recognises.
+   *
+   * The isti'adha and the basmala are the exception: a reader says them before a passage,
+   * not in the place of its first words. An expected word with only such a formula heard
+   * before it was not heard (skipped), not misread.
+   */
+  function placesHeardJustBefore(
+    firstPair: AlignedPair | undefined,
+    firstFreshIndex: number,
+  ): HeardAtPlace[] {
+    const places: HeardAtPlace[] = [];
+    if (firstPair === undefined) return places;
+    let heardIndex = firstPair.heardIndex - 1;
+    let expectedIndex = firstPair.referenceIndex - 1;
+    while (heardIndex >= firstFreshIndex && expectedIndex >= position) {
+      if (endsOpeningFormula(recentHeard, heardIndex)) break;
+      places.unshift({
+        expectedIndex,
+        heardIndex,
+        lastHeardIndex: heardIndex,
+        matched: false,
+        statusIfPassed: statusOfReplacedWord(recentHeard[heardIndex], expected[expectedIndex]),
+      });
+      heardIndex -= 1;
+      expectedIndex -= 1;
+    }
+    return places;
   }
 
   /**
@@ -189,6 +223,12 @@ function readExpectedWords(expectedWords: readonly string[]): ComparableWord[] {
         `expectedWords[${index}] must be exactly one Arabic word, found ${words.length}`,
       );
     }
+    if (isTooLongToBeAWord(word)) {
+      throw new RangeError(
+        `expectedWords[${index}] has ${word.key.length} letters: more than ` +
+          `${RECOGNITION_CONFIG.maxWordLetters}, not a word of the Quran`,
+      );
+    }
     return word;
   });
 }
@@ -213,15 +253,23 @@ function placesOf(
   return places;
 }
 
-/** Status of an expected word that the reader went past, given the word heard at its place. */
+/** Status of an expected word that the reader went past, given the pair that covers it. */
 function statusIfPassed(
   pair: AlignedPair,
   heardWord: ComparableWord | undefined,
   expectedWord: ComparableWord | undefined,
 ): SettledStatus {
-  if (pair.matched || heardWord === undefined || expectedWord === undefined) return 'read';
+  return pair.matched ? 'read' : statusOfReplacedWord(heardWord, expectedWord);
+}
+
+/** Status of an expected word that the reader went past, another word being heard at its place. */
+function statusOfReplacedWord(
+  heardWord: ComparableWord | undefined,
+  expectedWord: ComparableWord | undefined,
+): SettledStatus {
+  if (heardWord === undefined || expectedWord === undefined) return 'skipped';
   // Something close to the word was heard: the reader gets the benefit of the doubt.
-  if (!isClearlyDifferent(pair.similarity)) return 'read';
+  if (!isClearlyDifferent(wordSimilarity(heardWord, expectedWord))) return 'read';
   // Only a part of the word was heard: not heard in full, which is not a misreading.
   return isPartOfWord(heardWord, expectedWord) ? 'skipped' : 'mistake';
 }

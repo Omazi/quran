@@ -55,6 +55,17 @@ export type AlignmentGoal =
   /** The best chain that ends with the last heard word: "where does the newest word fall?". */
   | 'chain-of-last-heard-word';
 
+export interface AlignmentOptions {
+  /** Default: 'best-chain'. */
+  readonly goal?: AlignmentGoal;
+  /**
+   * Looks only at the reference words within `reach` words of where each heard word is
+   * expected when the first heard word stands at reference index `firstHeardAt`. The work
+   * is then proportional to the number of heard words instead of its square.
+   */
+  readonly band?: { readonly firstHeardAt: number; readonly reach: number };
+}
+
 /**
  * Aligns `heard` with `reference[referenceFrom .. referenceTo)`.
  *
@@ -68,8 +79,10 @@ export function alignWords(
   reference: readonly ComparableWord[],
   referenceFrom: number,
   referenceTo: number,
-  goal: AlignmentGoal = 'best-chain',
+  options: AlignmentOptions = {},
 ): AlignedPair[] {
+  const goal = options.goal ?? 'best-chain';
+  const { band } = options;
   const rowCount = heard.length + 1;
   const columnCount = Math.max(0, referenceTo - referenceFrom) + 1;
   // scores[row * columnCount + column]: score of the best chain that ends with heard word
@@ -91,7 +104,13 @@ export function alignWords(
     const rowAbove = thisRow - columnCount;
     const twoRowsAbove = rowAbove - columnCount;
 
-    for (let column = 1; column < columnCount; column += 1) {
+    // Column where this heard word is expected, when the search is limited to a band.
+    const expectedColumn = band === undefined ? 0 : band.firstHeardAt - referenceFrom + row;
+    const firstColumn = band === undefined ? 1 : Math.max(1, expectedColumn - band.reach);
+    const lastColumn =
+      band === undefined ? columnCount - 1 : Math.min(columnCount - 1, expectedColumn + band.reach);
+
+    for (let column = firstColumn; column <= lastColumn; column += 1) {
       const referenceWord = reference[referenceFrom + column - 1];
       if (referenceWord === undefined) continue;
       const previousReference = column >= 2 ? reference[referenceFrom + column - 2] : undefined;

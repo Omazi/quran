@@ -23,7 +23,7 @@ export function uthmaniWords(surah: number, from: number, to: number = from): st
   return versesOf(UTHMANI_SAMPLE, surah, from, to).flatMap((verse) => verse.text.split(' '));
 }
 
-/** Imla'i text (Tanzil Simple, with vowel marks) of verses `from`..`to`, as one string. */
+/** Imla'i text (with vowel marks) of verses `from`..`to` of the sample, as one string. */
 export function imlaeiText(surah: number, from: number, to: number = from): string {
   return versesOf(IMLAEI_SAMPLE, surah, from, to)
     .map((verse) => verse.text)

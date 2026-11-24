@@ -59,6 +59,17 @@ export function findOpeningFormulas(
   };
 }
 
+/**
+ * True when the heard words up to `lastIndex` end with a whole isti'adha or a whole basmala:
+ * the reader has just said an opening formula, not a word of the passage.
+ */
+export function endsOpeningFormula(heard: readonly ComparableWord[], lastIndex: number): boolean {
+  return [ISTIADHA, BASMALA].some((formula) => {
+    const from = lastIndex - formula.length + 1;
+    return from >= 0 && saysFormula(heard, from, formula);
+  });
+}
+
 /** True when the corpus words just before `position` are a basmala (1:1, or inside 27:30). */
 export function isRightAfterBasmala(
   corpusWords: readonly ComparableWord[],

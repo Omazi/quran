@@ -4,6 +4,8 @@ import {
   editDistance,
   isClearlyDifferent,
   isCloseEnough,
+  isPartOfWord,
+  isTooLongToBeAWord,
   joinedWordsSimilarity,
   similarityUnlessClearlyDifferent,
   toComparableWords,
@@ -69,6 +71,31 @@ describe('wordSimilarity', () => {
   });
 });
 
+describe('Précisions — a "word" of more than 30 letters is not a word of the Quran', () => {
+  const longest = comparable('ب'.repeat(RECOGNITION_CONFIG.maxWordLetters));
+  const tooLong = comparable('ب'.repeat(RECOGNITION_CONFIG.maxWordLetters + 1));
+
+  it('compares a word of exactly 30 letters like any other word', () => {
+    expect(isTooLongToBeAWord(longest)).toBe(false);
+    expect(wordSimilarity(longest, longest)).toBe(1);
+  });
+
+  it('matches nothing from 31 letters up, not even itself', () => {
+    expect(isTooLongToBeAWord(tooLong)).toBe(true);
+    expect(wordSimilarity(tooLong, tooLong)).toBe(0);
+    expect(wordSimilarity(tooLong, longest)).toBe(0);
+    expect(similarityUnlessClearlyDifferent(tooLong, tooLong)).toBe(0);
+    expect(isClearlyDifferent(wordSimilarity(tooLong, tooLong))).toBe(true);
+  });
+
+  it('is never the joined spelling of two words, nor a word of which another is a part', () => {
+    const half = comparable('ب'.repeat(16));
+
+    expect(joinedWordsSimilarity(half, half, comparable('ب'.repeat(32)))).toBe(0);
+    expect(isPartOfWord(half, tooLong)).toBe(false);
+  });
+});
+
 describe('similarityUnlessClearlyDifferent — the quick comparison used by the alignment', () => {
   it('agrees with wordSimilarity on every pair of words of the sample', () => {
     const texts = [...UTHMANI_SAMPLE, ...IMLAEI_SAMPLE].map((verse) => verse.text);
@@ -99,6 +126,26 @@ describe('joinedWordsSimilarity — two words for one', () => {
   it('recognises a word cut in two, or two words glued, by a speech engine', () => {
     expect(joinedWordsSimilarity(comparable('في'), comparable('ها'), comparable('فيها'))).toBe(1);
     expect(joinedWordsSimilarity(comparable('قل'), comparable('هو'), comparable('قلهو'))).toBe(1);
+  });
+
+  it('recognises two glued words when the second starts with an alef, which the glued word drops', () => {
+    // لغير الله glued as لغيرالله: the alef of the article is now inside a word.
+    expect(
+      joinedWordsSimilarity(comparable('لغير'), comparable('الله'), comparable('لغيرالله')),
+    ).toBe(1);
+    expect(
+      joinedWordsSimilarity(comparable('رَبِّ'), comparable('ٱلۡعَٰلَمِينَ'), comparable('ربالعالمين')),
+    ).toBe(1);
+    // With its hamza written, the second word keeps it once glued.
+    expect(
+      joinedWordsSimilarity(comparable('من'), comparable('أنفسهم'), comparable('منأنفسهم')),
+    ).toBe(1);
+  });
+
+  it('does not drop any other first letter of the second word', () => {
+    expect(
+      joinedWordsSimilarity(comparable('لغير'), comparable('بالله'), comparable('لغيرالله')),
+    ).toBe(0);
   });
 
   it('tolerates confused letters but no other noise', () => {

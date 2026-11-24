@@ -11,6 +11,7 @@ export type {
   FollowSnapshot,
   NotFoundReason,
   PassageCandidate,
+  SearchLimits,
   SearchOptions,
   SearchResult,
   VerseIndex,

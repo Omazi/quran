@@ -22,6 +22,7 @@ interface FileSystem {
 const fileSystem = jest.requireActual<FileSystem>('fs');
 
 const GENERATED_UTHMANI_PATH = 'assets/data/verses/uthmani.json';
+const GENERATED_SECOND_TEXT_PATH = 'assets/data/verses/uthmani-minimal.json';
 
 /** True when Jest runs from the repository root, where relative data paths make sense. */
 export function runsFromRepositoryRoot(): boolean {
@@ -33,6 +34,14 @@ export function runsFromRepositoryRoot(): boolean {
 /** The generated Uthmani text of the whole Quran, or null when it has not been generated. */
 export function loadUthmaniCorpus(): VerseText[] | null {
   return loadVerses(process.env.RECOGNITION_UTHMANI_CORPUS ?? GENERATED_UTHMANI_PATH);
+}
+
+/**
+ * The second text shipped with the app (the same verses with fewer signs, see
+ * docs/DATA_SOURCES.md), or null when it has not been generated.
+ */
+export function loadSecondTextCorpus(): VerseText[] | null {
+  return loadVerses(GENERATED_SECOND_TEXT_PATH);
 }
 
 /** A full imla'i text, when RECOGNITION_IMLAEI_CORPUS points to one; null otherwise. */

@@ -2,8 +2,8 @@
  * The measures that the spec asks to report, as plain functions. Not part of the module.
  *
  * `uthmani` is the reference text. `spoken` plays the speech engine: ideally an imla'i
- * text of the same verses (Tanzil Simple); failing that, the Uthmani text itself, which
- * then says nothing about how well the two scripts are brought together.
+ * text of the same verses; failing that, the Uthmani text itself, which then says nothing
+ * about how well the two scripts are brought together.
  * Everything is drawn from a seed: same inputs, same numbers.
  */
 import { createFollowSession, normalizeArabic } from '../index';

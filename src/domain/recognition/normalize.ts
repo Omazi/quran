@@ -14,11 +14,14 @@
  *    tell which. It is dropped in both. An alef that ends a word is kept (ما, فيها), except
  *    the silent one after a final waw (قالوا).
  * 4. In Uthmani a waw or a ya may only be the seat of a long "a" (ٱلصَّلَوٰةَ for الصلاة,
- *    هُدَىٰهُمۡ for هداهم): such a seat is treated as the long "a" it stands for.
+ *    هُدَىٰهُمۡ for هداهم): such a seat is treated as the long "a" it stands for. A waw or a
+ *    ya that is a consonant before a long "a" is kept (ٱلسَّمَٰوَٰتِ, ءَايَٰتِنَا), also in the texts
+ *    that leave out the vowel which tells the two apart (السَّمٰوٰتِ, ءايٰتِنا).
  * 5. Final ى becomes ي, ة becomes ه, Persian and Urdu letter shapes become Arabic ones.
  *
  * Words are never merged nor cut: a word is a run of Arabic letters and signs; anything
- * else (space, punctuation, digit, Latin letter) separates words.
+ * else (any space, punctuation, digit, Latin letter) separates words. Invisible formatting
+ * characters inside a word are ignored, and signs standing alone are not a word.
  *
  * The result is idempotent: normalising normalised words changes nothing.
  */
@@ -29,6 +32,10 @@ const WAW = 'و';
 const YA = 'ي';
 const HA = 'ه';
 const NOON = 'ن';
+const TA = 'ت';
+const TA_MARBUTA = 'ة';
+const SAD = 'ص';
+const LAM = 'ل';
 
 /** What a character is, for the rules above. */
 type CharacterKind =
@@ -110,16 +117,24 @@ const SPECIAL_CODE_POINTS: readonly (readonly [codePoint: number, kind: Characte
   [0x06e7, 'small-high-ya'],
   [0x06e8, 'small-high-noon'],
   [0x0640, 'tatweel'],
+  // Formatting characters that may sit inside a word without being part of it.
+  [0x00ad, 'invisible'], // soft hyphen
+  [0x061c, 'invisible'], // Arabic letter mark
   [0x200c, 'invisible'], // zero-width non-joiner
   [0x200d, 'invisible'], // zero-width joiner
   [0x200e, 'invisible'], // left-to-right mark
   [0x200f, 'invisible'], // right-to-left mark
-  [0x061c, 'invisible'], // Arabic letter mark
-  [0xfeff, 'invisible'], // byte order mark
-  // Thin spaces that some Quran editions use to place a sign inside a word (as in 2:72).
-  [0x2009, 'invisible'],
-  [0x200a, 'invisible'],
-  [0x202f, 'invisible'],
+  [0x202a, 'invisible'], // direction embeddings and overrides: U+202A to U+202E
+  [0x202b, 'invisible'],
+  [0x202c, 'invisible'],
+  [0x202d, 'invisible'],
+  [0x202e, 'invisible'],
+  [0x2060, 'invisible'], // word joiner
+  [0x2066, 'invisible'], // direction isolates: U+2066 to U+2069
+  [0x2067, 'invisible'],
+  [0x2068, 'invisible'],
+  [0x2069, 'invisible'],
+  [0xfeff, 'invisible'], // byte order mark, zero-width no-break space
 ];
 
 /** Letters written differently for the same sound, mapped to one shape. */
@@ -164,6 +179,15 @@ type Unit =
   /** Small waw or small ya of the Uthmani script. */
   | { readonly kind: 'small-vowel'; readonly letter: string };
 
+/** The kinds of character that are letters written on the line (the others are signs). */
+const LETTER_KINDS: ReadonlySet<CharacterKind> = new Set<CharacterKind>([
+  'letter',
+  'hamza',
+  'hamza-on-waw',
+  'hamza-then-long-a',
+  'alef',
+]);
+
 const HAMZA_UNIT: Unit = { kind: 'hamza', onWaw: false };
 const HAMZA_ON_WAW_UNIT: Unit = { kind: 'hamza', onWaw: true };
 const LONG_A_UNIT: Unit = { kind: 'long-a' };
@@ -177,14 +201,54 @@ function isLetterUnit(unit: Unit | undefined, letter: string): boolean {
   return unit !== undefined && unit.kind === 'letter' && unit.letter === letter;
 }
 
-/** Reads the characters `text[from .. to)` of one word into units (rules 1, 2, 4 and 5). */
+/** The first letter written on the line in `text[from .. to)`, or '' when there is none. */
+function firstLetterIn(text: string, from: number, to: number): string {
+  for (let index = from; index < to; index += 1) {
+    const kind = KIND_OF_CHARACTER.get(text.charCodeAt(index));
+    if (kind !== undefined && LETTER_KINDS.has(kind)) return text.charAt(index);
+  }
+  return '';
+}
+
+/**
+ * Rule 4 for a waw directly followed by a small alef: is the waw only the seat of a long "a"?
+ *
+ * Uthmani writes a long "a" with a waw in a handful of words, where the waw ends the stem:
+ * before a ta marbuta (ٱلصَّلَوٰةَ, ٱلزَّكَوٰةَ, ٱلۡحَيَوٰةِ, ٱلنَّجَوٰةِ, كَمِشۡكَوٰةٖ, بِٱلۡغَدَوٰةِ, وَمَنَوٰةَ), before the
+ * silent alef of ٱلرِّبَوٰاْ, and in صَلَوٰتَكَ (the word for prayer with a pronoun). Anywhere else
+ * the waw is a consonant whose vowel the text left out: سَمٰوٰتٍ, أَزوٰجٌ, وٰحِدٍ.
+ *
+ * `units` are the units read so far, the waw last; `text[from .. to)` is the rest of the word.
+ */
+function isWawWrittenForLongA(
+  units: readonly Unit[],
+  text: string,
+  from: number,
+  to: number,
+): boolean {
+  const nextLetter = firstLetterIn(text, from, to);
+  if (nextLetter === TA_MARBUTA) return true;
+  if (KIND_OF_CHARACTER.get(nextLetter.charCodeAt(0)) === 'alef') return true;
+  const followsSadLam =
+    isLetterUnit(units[units.length - 3], SAD) && isLetterUnit(units[units.length - 2], LAM);
+  return nextLetter === TA && followsSadLam;
+}
+
+/**
+ * Reads the characters `text[from .. to)` of one word into units (rules 1, 2, 4 and 5).
+ * Returns no unit when the run holds no letter: signs standing alone (a pause mark, a
+ * small alef, a small waw) are not a word.
+ */
 function readUnits(text: string, from: number, to: number): Unit[] {
   const units: Unit[] = [];
+  let hasLetter = false;
   // What came after the last unit. A tatweel means that a following sign sits on the
   // tatweel, not on the letter before it. A vowel sign means that a following small alef
   // is a real long "a" after a consonant (ٱلسَّمَٰوَٰتِ), not the mark of a seat (ٱلصَّلَوٰةَ).
   let tatweelSinceUnit = false;
   let signSinceUnit = false;
+  // The character the last unit was read from, before any change of shape.
+  let lastCharacter = '';
 
   for (let index = from; index < to; index += 1) {
     const character = text.charAt(index);
@@ -201,9 +265,14 @@ function readUnits(text: string, from: number, to: number): Unit[] {
 
     const last = units[units.length - 1];
     const lastIsBare = !tatweelSinceUnit && !signSinceUnit;
+    hasLetter ||= LETTER_KINDS.has(kind ?? 'separator');
     if (kind === 'dagger-alef') {
-      if (lastIsBare && isLetterUnit(last, WAW)) units[units.length - 1] = LONG_A_UNIT;
-      else if (lastIsBare && isLetterUnit(last, YA)) units[units.length - 1] = YA_SEAT_UNIT;
+      // The seat of a long "a" is a ya written without its dots (هُدَىٰهُمۡ). With its dots the
+      // ya is a consonant, whose vowel the text left out: ءايٰتِنا for ءَايَٰتِنَا.
+      const yaIsSeat = isLetterUnit(last, YA) && lastCharacter !== YA;
+      const wawIsSeat = isLetterUnit(last, WAW) && isWawWrittenForLongA(units, text, index + 1, to);
+      if (lastIsBare && wawIsSeat) units[units.length - 1] = LONG_A_UNIT;
+      else if (lastIsBare && yaIsSeat) units[units.length - 1] = YA_SEAT_UNIT;
       else units.push(LONG_A_UNIT);
     } else if (kind === 'hamza-sign') {
       // A hamza sign turns the alef, waw or ya under it into a hamza (decomposed أ ؤ ئ);
@@ -236,8 +305,9 @@ function readUnits(text: string, from: number, to: number): Unit[] {
     }
     tatweelSinceUnit = false;
     signSinceUnit = false;
+    lastCharacter = character;
   }
-  return units;
+  return hasLetter ? units : [];
 }
 
 /**
@@ -347,23 +417,26 @@ export function toAccentKey(word: string): string {
 
 /**
  * True when two normalised words, read as one, spell `whole`. Used to compare words that
- * the two scripts cut differently: يَـٰٓأَيُّهَا is one word in Uthmani and two (يا أيها) in
- * imla'i. Once joined, the alef that ended the first word is inside the word, where rule 3
- * drops it, and a hamza met twice at the junction is written once (rule 2).
+ * the two scripts cut differently (يَـٰٓأَيُّهَا is one word in Uthmani and two, يا أيها, in
+ * imla'i) and words that a speech engine glues or cuts.
+ *
+ * Once joined, the alef that ended the first word is inside the word, where rule 3 drops
+ * it. The ء that starts the second word may be gone as well: it is written once when the
+ * first word ends with a hamza (rule 2), and when it was only a plain alef (لغير الله glued
+ * as لغيرالله) it is now an alef inside a word, dropped too.
  */
 export function isJoinedSpelling(first: string, second: string, whole: string): boolean {
   // Cheap way out for the usual case: the joined word starts like the first one.
   if (first.charCodeAt(0) !== whole.charCodeAt(0)) return false;
   const head = spellingInsideWord(first);
-  const tail = head.endsWith(HAMZA) && second.startsWith(HAMZA) ? second.slice(1) : second;
-  // Each half must bring letters of its own: a lone ء followed by أن is not "أن in two words".
-  const bothHalvesCount = tail.length > 0 && head.length + tail.length > second.length;
-  return (
-    bothHalvesCount &&
-    head.length + tail.length === whole.length &&
-    whole.startsWith(head) &&
-    whole.endsWith(tail)
-  );
+  if (!whole.startsWith(head)) return false;
+  const rest = whole.slice(head.length);
+  const tails = second.startsWith(HAMZA) ? [second, second.slice(1)] : [second];
+  return tails.some((tail) => {
+    // Each half must bring letters of its own: a lone ء followed by أن is not "أن in two words".
+    const bothHalvesCount = tail.length > 0 && head.length + tail.length > second.length;
+    return bothHalvesCount && rest === tail;
+  });
 }
 
 /** True when `part` spells only the beginning or the end of `whole`. */
