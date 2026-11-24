@@ -21,10 +21,21 @@ indépendant_ → _validé_.
 
 Micro, modèle sur l'appareil, lecture suivie, reconnaissance d'un passage (« Shazam »).
 
-- **Écran d'écoute** : au niveau de celui de Shazam (D27). Trois directions montrées le
-  24 novembre 2026 (l'onde, la page, le jardin qui écoute) : **aucune retenue** ; « le jardin
-  qui écoute » est la moins écartée. Avant un nouvel essai, savoir ce qui déplaît ; le
-  montrer en mouvement plutôt qu'en image fixe.
+- **Écran d'écoute** : au niveau de celui de Shazam (D27). État au 24 novembre 2026 :
+  - Trois directions dessinées à la main (l'onde, la page, le jardin qui écoute) puis un
+    prototype d'eau en mouvement : **refusés**, jugés moches.
+  - Six styles générés en images ; le propriétaire a aimé les particules, les ondes et la
+    rosace. Les trois ont été animés.
+  - **Retenu : la rosace, en thème clair** (« il est beau »). C'est l'étoile à huit branches
+    qui marque les quarts de hizb dans le mushaf : deux carrés superposés, huit carrés égaux
+    autour d'une étoile, des pétales qui partent à chaque souffle de la voix.
+  - Thème sombre : la version vert sombre et or n'a pas plu (« peut-être les couleurs »).
+    Deux remplacements proposés, à choisir : « Encre » (noir chaud, lignes ivoire et or) et
+    « Lapis » (bleu profond et or).
+  - Les ondes restent une seconde piste aboutie ; la sphère de particules n'est pas au
+    niveau et n'a pas été montrée.
+  - Prototype web de référence : hors dépôt pour l'instant (`gen/ecoute/styles/`). À refaire
+    en natif dans l'appli, piloté par le vrai niveau de la voix.
 - **Mémoriser (« le prof »)**, demande du propriétaire (24 novembre 2026). On choisit une
   sourate à apprendre, puis des exercices de difficulté croissante :
   1. les versets sont affichés ;
