@@ -214,3 +214,34 @@ refusées et que nous avions nous-mêmes jugées insuffisantes une fois la quest
 Tant qu'un design est moche ou seulement correct, on ne le lui montre pas et on ne lui
 demande pas son avis : on se corrige d'abord. Le détail est dans `design/SKILLS.md`,
 règle 6.
+
+## D29 — L'écran d'écoute en sombre : le même dessin, aux valeurs de nuit
+
+Proposition de l'architecte, montrée au propriétaire le 24 novembre 2026 après la revue
+de design indépendante (8, 8, 7, 7, 7 sur 10 ; un premier passage avait échoué à 6 sur la
+finition : or trop fort, voile laiteux, points lumineux aux jointures). En attente de son
+avis. La
+rosace en clair est validée (D27, feuille de route). Sa première version sombre (fond vert
+sombre, étoile dorée, forte lueur) n'a pas plu. Deux palettes inventées ensuite, « Encre »
+et « Lapis », sont retirées : elles sortaient de la charte.
+
+Le mode sombre n'est pas un second thème à choisir. C'est le même dessin, avec la valeur
+de nuit de chacune des quatre couleurs de l'appli (`design/brand-spec.md`, section 3) :
+papier `#1B1915`, encre `#EFE8D8`, eau `#5CC8D6` (l'étoile du cœur prend la valeur de
+contraste élevé `#8FE0EA`), or `#D9A441`. La lumière reste sur les lignes et grandit avec
+la voix ; l'intérieur des cases reste net.
+
+- Pas de réglage d'apparence dans l'appli : l'écran suit le réglage du téléphone
+  (`dark-mode.md › Best practices`).
+- Chaque couleur a sa valeur claire et sa valeur sombre, qui n'est pas une inversion
+  (`dark-mode.md › Dark Mode colors`).
+- Les lignes gardent le rang qu'elles ont en clair : l'étoile du cœur d'abord, l'étoile
+  extérieure ensuite, l'or en filigrane. Contrastes sur le papier sombre, en silence puis
+  avec la voix : cœur 7,70:1 puis 10,46:1 ; étoile extérieure 4,52:1 puis 5,89:1 ; or
+  2,67:1 puis 3,25:1. L'or est un ornement, pas une information : en clair il est à
+  1,9:1. Titre 14,38:1 ; bord du bouton « Arrêter » 3,13:1 (`accessibility.md › Vision`).
+- En silence, un pétale discret part toutes les deux secondes environ : l'écran dit qu'il
+  écoute même quand personne ne récite. Avec « réduire les animations », il ne part pas.
+- Reste à faire en natif (revue de design) : une branche « augmenter le contraste » avec
+  les valeurs prévues par la charte (`#8FE0EA`, `#EBC272`) ; avec « réduire les
+  animations », aucun pétale ne grandit, la voix n'agit que sur la lumière des lignes.

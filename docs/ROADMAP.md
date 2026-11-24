@@ -29,9 +29,10 @@ Micro, modèle sur l'appareil, lecture suivie, reconnaissance d'un passage (« S
   - **Retenu : la rosace, en thème clair** (« il est beau »). C'est l'étoile à huit branches
     qui marque les quarts de hizb dans le mushaf : deux carrés superposés, huit carrés égaux
     autour d'une étoile, des pétales qui partent à chaque souffle de la voix.
-  - Thème sombre : la version vert sombre et or n'a pas plu (« peut-être les couleurs »).
-    Deux remplacements proposés, à choisir : « Encre » (noir chaud, lignes ivoire et or) et
-    « Lapis » (bleu profond et or).
+  - Mode sombre : la version vert sombre et or n'a pas plu (« peut-être les couleurs »).
+    Remplacée par le même dessin aux valeurs de nuit des couleurs de l'appli (D29) : papier
+    sombre, eau et or. Montrée au propriétaire le 24 novembre 2026, **en attente de son
+    avis**. Les essais « Encre » et « Lapis » sont retirés.
   - Les ondes restent une seconde piste aboutie ; la sphère de particules n'est pas au
     niveau et n'a pas été montrée.
   - Prototype web de référence : hors dépôt pour l'instant (`gen/ecoute/styles/`). À refaire
