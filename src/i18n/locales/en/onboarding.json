@@ -4,7 +4,12 @@
     "position": "Page {{page}} of {{total}}"
   },
   "replayTitle": "Introduction",
-  "finish": "Continue",
+  "finish": {
+    "ask-permission": "Continue",
+    "start": "Get Started",
+    "done": "Done"
+  },
+  "permissionNotice": "Your phone will then ask you to allow notifications.",
   "scenes": {
     "bareEarth": "Garden: bare earth",
     "garden": "Garden at hizb {{hizb}}",
@@ -17,7 +22,7 @@
   },
   "pages": {
     "bareEarth": {
-      "title": "A Bare Earth",
+      "title": "Bare Earth",
       "text": "Sixty hizb to turn it into a garden. Swipe to continue."
     },
     "hizb8": {
@@ -37,8 +42,8 @@
       "text": "The further you go, the more beautiful it becomes."
     },
     "hizb60": {
-      "title": "Your Garden Is Complete",
-      "text": "Sixty hizb: you have read the whole Quran."
+      "title": "At the Sixtieth Hizb, Your Garden Is Complete",
+      "text": "You have read the whole Quran, and this garden no longer dries."
     },
     "thirsty": {
       "title": "Stop Reading, and It Gets Thirsty",
@@ -53,7 +58,7 @@
       "text": "The flowers are gone and the earth cracks."
     },
     "dead": {
-      "title": "And It Turns Back Into Dead Earth",
+      "title": "And It Turns Back into Dead Earth",
       "text": "Two weeks without reading, and nothing is left."
     },
     "revival": {

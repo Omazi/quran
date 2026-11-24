@@ -15,20 +15,30 @@ export interface RemindersSectionProps {
    * then appears when the system blocks the notifications (settings.md › System settings).
    */
   onOpenSystemSettings?: () => void;
+  /**
+   * Makes the system ask for the permission to notify. Given where the person may not have been
+   * asked yet: the row then appears while reminders are on and the system was never asked.
+   */
+  onRequestPermission?: () => void;
 }
 
 /**
  * The reminders: one switch each, in list rows (toggles.md › Mobile), and their times as compact
  * pickers (pickers.md › Mobile). A time is shown only while a reminder uses it: the daily
  * reminder and the garden's share one, Friday has its own. The note under the rows says what the
- * person cannot guess: that the system is about to ask, or that it blocks the notifications.
- * Place it in a `GroupedList`.
+ * person cannot guess: that the system blocks the notifications or was never asked, or that
+ * nothing will be sent. The switches never promise a notification that cannot come: the right
+ * action sits under them, in context (managing-notifications.md › Sending marketing
+ * notifications: settings managed within the app; privacy.md › Requesting permission). The row
+ * that makes the system ask is not named "Allow": it says that it asks (privacy.md › Pre-alert
+ * screens, windows, or views). Place it in a `GroupedList`.
  */
 export function RemindersSection({
   model,
   onChange,
   title,
   onOpenSystemSettings,
+  onRequestPermission,
 }: RemindersSectionProps) {
   const { t } = useTranslation('settings');
   const footer = model.notice === null ? undefined : t(`reminders.notice.${model.notice}`);
@@ -66,6 +76,14 @@ export function RemindersSection({
           value={model.fridayTime}
           onChange={(fridayTime) => onChange({ fridayTime })}
           testID="reminder-friday-time"
+        />
+      ) : null}
+      {model.notice === 'not-asked' && onRequestPermission !== undefined ? (
+        <Button
+          label={t('reminders.requestPermission')}
+          variant="plain"
+          onPress={onRequestPermission}
+          testID="request-notification-permission"
         />
       ) : null}
       {model.notice === 'denied' && onOpenSystemSettings !== undefined ? (

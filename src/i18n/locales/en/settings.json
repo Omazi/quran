@@ -1,5 +1,12 @@
 {
   "title": "Settings",
+  "dataResetNotice": {
+    "title": "Good to Know",
+    "journal": "The app could not read your reading journal. Your garden starts again from bare earth; your settings have not changed.",
+    "settings": "The app could not read your settings. They are back to their starting values; your reading journal has not changed.",
+    "everything": "The app could not read what it had saved. It starts again from scratch: starting settings and bare earth.",
+    "dismiss": "OK"
+  },
   "language": {
     "label": "Language",
     "options": {
@@ -29,14 +36,15 @@
   "reminders": {
     "title": "Reminders",
     "daily": "Daily Reminder",
-    "dailyTime": "Time",
+    "dailyTime": "Reminder Time",
     "fridayTime": "Friday Time",
     "thirstyGarden": "When the Garden Is Thirsty",
     "fridayKahf": "Fridays: Surah Al-Kahf",
+    "requestPermission": "Ask for Permission",
     "openSystemSettings": "Open Phone Settings",
     "notice": {
-      "will-ask": "Your phone will then ask you to allow notifications.",
       "denied": "Notifications are turned off for this app. To get your reminders, allow them in your phone’s settings.",
+      "not-asked": "Your phone has not asked yet whether this app may send you notifications. Until it does, your reminders cannot arrive.",
       "none-enabled": "With no reminder on, the app sends you no notifications."
     }
   },

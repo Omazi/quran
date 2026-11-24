@@ -1,12 +1,15 @@
 import { createMemoryStorage } from '@/data/storage';
 import { gardenVariant } from '@/domain/garden';
-import { EMPTY_JOURNAL, getCurrentKhatm, getReadPages } from '@/domain/khatm';
+import { EMPTY_JOURNAL, getCurrentKhatm, getReadPages, type Pause } from '@/domain/khatm';
 import { parseLocalDate } from '@/domain/shared/local-date';
 
 import { loadAppStore } from '../app-store';
 import {
   DEFAULT_DAILY_GOAL_PAGES,
   DEFAULT_REMINDERS,
+  MAX_PAUSES,
+  REJECTED_DATA_KEY,
+  RESET_NOTICE_KEY,
   STORED_DATA_KEY,
   STORED_DATA_VERSION,
 } from '../config';
@@ -48,6 +51,18 @@ describe('first launch', () => {
       reminders: DEFAULT_REMINDERS,
     });
     expect(store.getState().journal).toBe(EMPTY_JOURNAL);
+  });
+
+  it('proposes the two reminders about reading, and leaves the Friday one to the person', async () => {
+    const { store } = await load(createMemoryStorage());
+    expect(store.getState().settings.reminders).toEqual({
+      dailyEnabled: true,
+      dailyTime: { hour: 20, minute: 30 },
+      thirstyGardenEnabled: true,
+      fridayKahfEnabled: false,
+      fridayTime: { hour: 9, minute: 0 },
+      quietHours: null,
+    });
   });
 
   it('writes the fresh start at once, so the next launch finds the same seed', async () => {
@@ -302,5 +317,229 @@ describe('storage that cannot be trusted', () => {
     await store.whenSaved();
     expect(warn).toHaveBeenCalledTimes(1);
     warn.mockRestore();
+  });
+});
+
+describe('pauses and dates the store accepts', () => {
+  const pause = (from: string, to: string) => ({
+    from: parseLocalDate(from),
+    to: parseLocalDate(to),
+  });
+
+  it('adds a pause, saves it, and a returning person finds it', async () => {
+    const storage = createMemoryStorage();
+    const { store } = await load(storage);
+    store.getState().addPause(pause('2026-03-01', '2026-03-04'));
+    store.getState().addPause(pause('2026-06-10', '2026-06-10'));
+    expect(store.getState().settings.pauses).toEqual([
+      pause('2026-03-01', '2026-03-04'),
+      pause('2026-06-10', '2026-06-10'),
+    ]);
+
+    await store.whenSaved();
+    const again = await load(storage);
+    expect(again.discarded).toEqual([]);
+    expect(again.store.getState().settings.pauses).toHaveLength(2);
+  });
+
+  it.each([
+    ['starts before the window', pause('2019-12-31', '2026-01-01')],
+    ['ends after the window', pause('2026-01-01', '2100-01-01')],
+    ['starts in year 100', pause('0100-01-01', '2026-01-01')],
+    ['ends before it starts', pause('2026-03-04', '2026-03-01')],
+  ])('refuses a pause that %s', async (_name, refused) => {
+    const { store } = await load(createMemoryStorage());
+    expect(() => store.getState().addPause(refused)).toThrow(RangeError);
+    expect(store.getState().settings.pauses).toEqual([]);
+  });
+
+  it('refuses a pause that is not two days', async () => {
+    const { store } = await load(createMemoryStorage());
+    // An untyped caller could pass anything.
+    const notAPause = { from: '2026-02-30', to: 7 } as unknown as Pause;
+    expect(() => store.getState().addPause(notAPause)).toThrow(RangeError);
+  });
+
+  it('keeps no more pauses than it accepts back, so what it writes is never rejected', async () => {
+    const storage = createMemoryStorage();
+    const { store } = await load(storage);
+    for (let index = 0; index < MAX_PAUSES; index += 1) {
+      store.getState().addPause(pause('2026-03-01', '2026-03-04'));
+    }
+    expect(() => store.getState().addPause(pause('2026-03-01', '2026-03-04'))).toThrow(RangeError);
+    expect(store.getState().settings.pauses).toHaveLength(MAX_PAUSES);
+
+    await store.whenSaved();
+    expect(stored(storage).discarded).toEqual([]);
+  });
+
+  it.each(['2019-12-31', '2100-01-01', '0100-01-01'])(
+    'refuses a page read on %s, outside the window',
+    async (date) => {
+      const { store } = await load(createMemoryStorage());
+      expect(() =>
+        store.getState().recordPageRead({ page: 1, date: parseLocalDate(date) }),
+      ).toThrow(RangeError);
+      expect(store.getState().journal).toBe(EMPTY_JOURNAL);
+    },
+  );
+
+  it('accepts a page read on the first and on the last day of the window', async () => {
+    const { store } = await load(createMemoryStorage());
+    store.getState().recordPageRead({ page: 1, date: parseLocalDate('2020-01-01') });
+    store.getState().recordPageRead({ page: 2, date: parseLocalDate('2099-12-31') });
+    expect(store.getState().journal).toHaveLength(2);
+  });
+});
+
+describe('rejected text kept aside', () => {
+  it('keeps the text that could not be trusted under its own key, untouched', async () => {
+    const raw = '{"version":2,"settings":{"dailyGoalPages":900},"journal":3}';
+    const storage = createMemoryStorage({ [STORED_DATA_KEY]: raw });
+    const { store } = await load(storage);
+    await store.whenSaved();
+    expect(storage.peek(REJECTED_DATA_KEY)).toBe(raw);
+    // The document itself is sound again.
+    expect(stored(storage).discarded).toEqual([]);
+  });
+
+  it('keeps one generation only: the next rejected text takes its place', async () => {
+    const storage = createMemoryStorage({
+      [STORED_DATA_KEY]: 'second damaged text',
+      [REJECTED_DATA_KEY]: 'first damaged text',
+    });
+    const { store } = await load(storage);
+    await store.whenSaved();
+    expect(storage.peek(REJECTED_DATA_KEY)).toBe('second damaged text');
+  });
+
+  it('never reads the kept text back, and leaves it alone on a sound launch', async () => {
+    const storage = createMemoryStorage({ [REJECTED_DATA_KEY]: 'an old damaged text' });
+    const getItem = jest.spyOn(storage, 'getItem');
+    const { store, discarded } = await load(storage);
+    store.getState().setDailyGoalPages(9);
+    await store.whenSaved();
+    expect(discarded).toEqual([]);
+    expect(getItem).not.toHaveBeenCalledWith(REJECTED_DATA_KEY);
+    expect(storage.peek(REJECTED_DATA_KEY)).toBe('an old damaged text');
+  });
+
+  it('keeps nothing aside at the first launch, nor for a document upgraded from version 1', async () => {
+    const first = createMemoryStorage();
+    await (await load(first)).store.whenSaved();
+    expect(first.peek(REJECTED_DATA_KEY)).toBeNull();
+
+    const { fridayTime: _fridayTime, quietHours: _quietHours, ...reminders } = DEFAULT_REMINDERS;
+    const settings = {
+      language: null,
+      dailyGoalPages: 5,
+      onboardingCompleted: true,
+      userSeed: 1,
+      pauses: [],
+      reminders,
+    };
+    const upgraded = createMemoryStorage({
+      [STORED_DATA_KEY]: JSON.stringify({ version: 1, settings, journal: [] }),
+    });
+    const { store } = await load(upgraded);
+    await store.whenSaved();
+    expect(upgraded.peek(REJECTED_DATA_KEY)).toBeNull();
+    expect(store.getState().dataResetNotice).toBeNull();
+  });
+});
+
+describe('telling the person, once, that something was lost', () => {
+  const SOUND_SETTINGS = {
+    language: 'fr',
+    dailyGoalPages: 5,
+    onboardingCompleted: true,
+    userSeed: 1,
+    pauses: [],
+    reminders: DEFAULT_REMINDERS,
+  };
+  const document = (change: Record<string, unknown>) =>
+    JSON.stringify({
+      version: STORED_DATA_VERSION,
+      settings: SOUND_SETTINGS,
+      journal: [],
+      ...change,
+    });
+
+  it.each([
+    ['the journal', document({ journal: 3 }), 'journal'],
+    ['the settings', document({ settings: null }), 'settings'],
+    ['both', document({ settings: null, journal: 3 }), 'everything'],
+    ['the whole document', 'not json', 'everything'],
+  ])('has a notice when %s could not be kept', async (_name, raw, notice) => {
+    const storage = createMemoryStorage({ [STORED_DATA_KEY]: raw });
+    const { store } = await load(storage);
+    expect(store.getState().dataResetNotice).toBe(notice);
+  });
+
+  it('has none at the first launch and on a sound launch', async () => {
+    const storage = createMemoryStorage();
+    const first = await load(storage);
+    expect(first.store.getState().dataResetNotice).toBeNull();
+    await first.store.whenSaved();
+    expect((await load(storage)).store.getState().dataResetNotice).toBeNull();
+    expect(storage.peek(RESET_NOTICE_KEY)).toBeNull();
+  });
+
+  it('still has it at the next launch if the app was closed before it was read', async () => {
+    const storage = createMemoryStorage({ [STORED_DATA_KEY]: document({ journal: 3 }) });
+    await (await load(storage)).store.whenSaved();
+
+    // The document is sound now: only the remembered notice says what happened.
+    const again = await load(storage);
+    expect(again.discarded).toEqual([]);
+    expect(again.store.getState().dataResetNotice).toBe('journal');
+  });
+
+  it('is forgotten for good once the person has dismissed it', async () => {
+    const storage = createMemoryStorage({ [STORED_DATA_KEY]: document({ journal: 3 }) });
+    const { store } = await load(storage);
+    await store.whenSaved();
+    expect(storage.peek(RESET_NOTICE_KEY)).toBe('journal');
+
+    store.getState().dismissDataResetNotice();
+    expect(store.getState().dataResetNotice).toBeNull();
+    await store.whenSaved();
+    expect(storage.peek(RESET_NOTICE_KEY)).toBeNull();
+    expect((await load(storage)).store.getState().dataResetNotice).toBeNull();
+
+    // Dismissing again changes nothing, and does not touch the device.
+    const removeItem = jest.spyOn(storage, 'removeItem');
+    store.getState().dismissDataResetNotice();
+    await store.whenSaved();
+    expect(removeItem).not.toHaveBeenCalled();
+  });
+
+  it('covers both losses when a second one happens before the first was read', async () => {
+    const storage = createMemoryStorage({
+      [STORED_DATA_KEY]: document({ settings: null }),
+      [RESET_NOTICE_KEY]: 'journal',
+    });
+    const { store } = await load(storage);
+    expect(store.getState().dataResetNotice).toBe('everything');
+    await store.whenSaved();
+    expect(storage.peek(RESET_NOTICE_KEY)).toBe('everything');
+  });
+
+  it('ignores anything else found under the key of the notice', async () => {
+    const storage = createMemoryStorage({ [RESET_NOTICE_KEY]: '<script>' });
+    expect((await load(storage)).store.getState().dataResetNotice).toBeNull();
+  });
+
+  it('does not change what the device stores as the document', async () => {
+    const storage = createMemoryStorage({ [STORED_DATA_KEY]: document({ journal: 3 }) });
+    const { store } = await load(storage);
+    store.getState().dismissDataResetNotice();
+    await store.whenSaved();
+    const rewritten: unknown = JSON.parse(storage.peek(STORED_DATA_KEY) ?? '');
+    expect(rewritten).toEqual({
+      version: STORED_DATA_VERSION,
+      settings: SOUND_SETTINGS,
+      journal: [],
+    });
   });
 });

@@ -86,6 +86,24 @@ describe('renderOnIOS', () => {
   const settings = (
     <ui.Screen background="groupedBackground">
       <ui.GroupedList>
+        <ui.ListSection>
+          <ui.ContentRow accessibilityLabel="Ton jardin">
+            <ui.AppText variant="largeTitle">Jardin</ui.AppText>
+            <ui.Icon symbol={DROP} />
+          </ui.ContentRow>
+        </ui.ListSection>
+        <ui.ListSection>
+          <ui.LabelRow
+            label="Le jardin a soif"
+            detail="Une page suffit."
+            symbol={DROP}
+            tone="warning"
+          />
+          <ui.ButtonRow label="Plus tard" variant="plain" onPress={jest.fn()} />
+        </ui.ListSection>
+        <ui.ListSection>
+          <ui.ButtonRow label="Commencer la lecture" onPress={jest.fn()} />
+        </ui.ListSection>
         <ui.ListSection title="Rappels" footer="Tu peux les changer plus tard.">
           <ui.SwitchRow label="Rappel du jour" value onChange={jest.fn()} />
           <ui.TimePickerRow label="Heure" value={{ hour: 20, minute: 30 }} onChange={jest.fn()} />
@@ -118,8 +136,9 @@ describe('renderOnIOS', () => {
   it('accepts a screen made of the controls: every SwiftUI view has a host', async () => {
     setDeviceConditions();
     await renderOnIOS(settings);
-    // The list, the button, the spinner, the icon and the empty state: one host each.
-    expect(screen.container.queryAll(isSwiftUIHost)).toHaveLength(5);
+    // The list, the icon inside its content row, the button, the spinner, the icon and the empty
+    // state: one host each.
+    expect(screen.container.queryAll(isSwiftUIHost)).toHaveLength(6);
   });
 
   it('accepts a pager whose pages hold controls: each gets a host inside its page', async () => {

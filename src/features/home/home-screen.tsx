@@ -1,17 +1,21 @@
+import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import {
   GardenElementsSection,
   GardenScene,
   GardenStateSection,
-  GardenWaterStatus,
+  GardenWaterRow,
 } from '@/features/garden';
 import {
   AppText,
   Button,
+  ButtonRow,
+  ContentRow,
   ContentUnavailable,
   GroupedList,
+  ListSection,
   Screen,
   layout,
   spacing,
@@ -19,11 +23,20 @@ import {
 } from '@/ui';
 
 import type { HomeActions, HomeModel, HomeReadyModel } from './home-model';
-import { HomeNoticeBanner } from './home-notice';
+import { HomeNoticeRow } from './home-notice';
 import { TodaySection } from './today-section';
 
-/** The smallest height left to the list: about three rows at the default text size. */
-const LIST_MIN_HEIGHT = layout.touchTarget * 3;
+/**
+ * In development, the last section of the list lets a developer choose which state the screen
+ * shows (`dev-preview/`). The module is required only when `__DEV__` is true: the bundler drops
+ * the whole branch, and the module with it, from a production bundle.
+ */
+const DevPreviewSection: ComponentType | null = __DEV__
+  ? // A conditional `require` is the only form the bundler can leave out; it has no type of its own.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    (require('./dev-preview/dev-preview') as typeof import('./dev-preview/dev-preview'))
+      .DevPreviewSection
+  : null;
 
 const UNAVAILABLE_SYMBOL: IconSymbol = { ios: 'leaf', android: 'eco' };
 
@@ -35,11 +48,12 @@ export interface HomeScreenProps {
 /**
  * The home screen, the "Jardin" tab: where is my garden, and what do I read now?
  *
- * It only shows the model it receives. The scene is its one signature; everything around it is
- * the system's (SwiftUI Design, step 4). Reading order follows importance (layout.md › Visual
- * hierarchy): the title and the streak, the scene, the water and the message of the day, then
- * the gauges, today's reading and the elements, and the one coloured button, kept within reach
- * at the bottom (buttons.md › Style: one prominent button for the most likely action).
+ * It only shows the model it receives. The whole screen is one list of the system
+ * (lists-and-tables.md › Style), so it scrolls as one and nothing is cut at the largest text
+ * sizes (layout.md › Adaptability). Its order is the order of importance (layout.md › Visual
+ * hierarchy): the title and the streak, the scene, the state of the day, then what to read today
+ * with the one coloured button right under it (buttons.md › Style), then the gauges and the
+ * elements. The scene is its one signature; everything around it is the system's.
  *
  * Nothing here moves by itself, so there is nothing to switch off for Reduce Motion.
  */
@@ -47,7 +61,7 @@ export function HomeScreen({ model, actions }: HomeScreenProps) {
   return model.status === 'ready' ? (
     <ReadyHome model={model} actions={actions} />
   ) : (
-    <UnavailableHome />
+    <UnavailableHome actions={actions} />
   );
 }
 
@@ -71,49 +85,49 @@ function HomeTitle({ streakDays }: { streakDays: number }) {
 
 function ReadyHome({ model, actions }: { model: HomeReadyModel; actions: HomeActions }) {
   const { t } = useTranslation('home');
+  const { garden, notice } = model;
   return (
     <Screen background="groupedBackground" testID="home">
-      {/*
-        The list scrolls by itself, so it cannot sit in a screen that scrolls too. What is above
-        it takes its own height and, at the largest text sizes, gives way and scrolls, while the
-        list keeps a minimum height: no word is cut and nothing is out of reach
-        (layout.md › Adaptability; typography.md › Supporting Dynamic Type).
-      */}
-      <ScrollView
-        alwaysBounceVertical={false}
-        style={styles.top}
-        contentContainerStyle={styles.topContent}
-        testID="home-top"
-      >
-        <HomeTitle streakDays={model.streakDays} />
-        <GardenScene state={model.garden} size="band" />
-        <GardenWaterStatus state={model.garden} />
-        {model.notice === null ? null : <HomeNoticeBanner notice={model.notice} />}
-      </ScrollView>
-      <View style={styles.list}>
-        <GroupedList testID="home-list">
-          <GardenStateSection state={model.garden} />
-          <TodaySection model={model} />
-          <GardenElementsSection state={model.garden} />
-        </GroupedList>
-      </View>
-      <View style={styles.action}>
-        <Button
-          label={t('actions.read')}
-          onPress={actions.readAndWater}
-          fullWidth
-          testID="home-read"
-        />
-      </View>
+      <GroupedList testID="home-list">
+        <ListSection>
+          <ContentRow>
+            <HomeTitle streakDays={model.streakDays} />
+          </ContentRow>
+        </ListSection>
+        <ListSection>
+          <ContentRow>
+            <GardenScene state={garden} size="band" />
+          </ContentRow>
+        </ListSection>
+        <ListSection>
+          {
+            // The state of the day is said once: the message when there is one, which names
+            // the state and the water with it; otherwise the water alone.
+            notice === null ? (
+              <GardenWaterRow state={garden} />
+            ) : (
+              <HomeNoticeRow notice={notice} garden={garden} />
+            )
+          }
+        </ListSection>
+        <TodaySection model={model} />
+        <ListSection>
+          <ButtonRow label={t('actions.read')} onPress={actions.readAndWater} testID="home-read" />
+        </ListSection>
+        <GardenStateSection state={garden} />
+        <GardenElementsSection state={garden} />
+        {DevPreviewSection === null ? null : <DevPreviewSection />}
+      </GroupedList>
     </Screen>
   );
 }
 
 /**
  * The garden could not be computed: the system's empty state says what happened and what to do,
- * without blame and without "we" (writing.md › Best practices).
+ * without blame and without "we", and a button lets the person try again (writing.md › Best
+ * practices: clear next steps, and a button to take them).
  */
-function UnavailableHome() {
+function UnavailableHome({ actions }: { actions: HomeActions }) {
   const { t } = useTranslation('home');
   return (
     <Screen testID="home">
@@ -126,19 +140,19 @@ function UnavailableHome() {
         symbol={UNAVAILABLE_SYMBOL}
         testID="home-unavailable"
       />
+      <View style={styles.unavailableAction}>
+        <Button
+          label={t('unavailable.retry')}
+          onPress={actions.retry}
+          fullWidth
+          testID="home-retry"
+        />
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  // Takes the height of its content, and gives way to the list when the two do not fit.
-  top: { flexGrow: 0, flexShrink: 1 },
-  topContent: {
-    paddingHorizontal: layout.screenMargin,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-    gap: spacing.md,
-  },
   titleRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -148,13 +162,12 @@ const styles = StyleSheet.create({
     rowGap: spacing.xs,
   },
   title: { flexShrink: 1 },
-  list: { flex: 1, minHeight: LIST_MIN_HEIGHT },
-  action: {
-    paddingHorizontal: layout.screenMargin,
-    paddingVertical: spacing.sm,
-  },
   unavailableTitle: {
     paddingHorizontal: layout.screenMargin,
     paddingTop: spacing.sm,
+  },
+  unavailableAction: {
+    paddingHorizontal: layout.screenMargin,
+    paddingVertical: spacing.md,
   },
 });

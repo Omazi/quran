@@ -10,7 +10,7 @@ import {
   type ReadingEntry,
   type ReadingJournal,
 } from '@/domain/khatm';
-import { compareLocalDates, isLocalDate } from '@/domain/shared/local-date';
+import { compareLocalDates, isLocalDate, type LocalDate } from '@/domain/shared/local-date';
 import { isSupportedLanguage } from '@/i18n';
 
 import {
@@ -18,7 +18,9 @@ import {
   DEFAULT_REMINDERS,
   LAST_HOUR,
   LAST_MINUTE,
+  MAX_PAUSES,
   STORED_DATA_VERSION,
+  STORED_DATE_RANGE,
 } from './config';
 import type { AppData, AppSettings, QuietHours, ReminderSettings, ReminderTime } from './types';
 
@@ -99,17 +101,30 @@ function readReminders(value: unknown): ReminderSettings | null {
   };
 }
 
-function readPause(value: unknown): Pause | null {
+/**
+ * A real calendar day inside `STORED_DATE_RANGE`. `YYYY-MM-DD` texts compare like the days they
+ * name.
+ */
+export function isStorableDate(value: unknown): value is LocalDate {
+  return (
+    typeof value === 'string' &&
+    isLocalDate(value) &&
+    value >= STORED_DATE_RANGE.earliest &&
+    value <= STORED_DATE_RANGE.latest
+  );
+}
+
+/** A pause the store can keep: two storable days, the end not before the start. */
+export function readPause(value: unknown): Pause | null {
   if (!isRecord(value)) return null;
   const { from, to } = value;
-  if (typeof from !== 'string' || typeof to !== 'string') return null;
-  if (!isLocalDate(from) || !isLocalDate(to)) return null;
+  if (!isStorableDate(from) || !isStorableDate(to)) return null;
   if (compareLocalDates(to, from) < 0) return null;
   return { from, to };
 }
 
 function readPauses(value: unknown): readonly Pause[] | null {
-  if (!Array.isArray(value)) return null;
+  if (!Array.isArray(value) || value.length > MAX_PAUSES) return null;
   const pauses: Pause[] = [];
   for (const item of value) {
     const pause = readPause(item);
@@ -139,10 +154,9 @@ function readSettings(value: unknown): AppSettings | null {
 function readJournalEntry(value: unknown): ReadingEntry | null {
   if (!isRecord(value)) return null;
   const { khatm, page, date } = value;
-  if (typeof khatm !== 'number' || typeof page !== 'number' || typeof date !== 'string') {
+  if (typeof khatm !== 'number' || typeof page !== 'number' || !isStorableDate(date)) {
     return null;
   }
-  if (!isLocalDate(date)) return null;
   return { khatm, page, date };
 }
 
@@ -201,6 +215,11 @@ export function readStoredData(raw: string | null): StoredDataReading {
   } catch {
     return { ...NOTHING_USABLE, discarded: ['document'] };
   }
+  return readStoredDocument(parsed);
+}
+
+/** Checks a stored document already turned from text into a value. */
+export function readStoredDocument(parsed: unknown): StoredDataReading {
   const document = isRecord(parsed) ? upgradeDocument(parsed) : null;
   if (document === null) return { ...NOTHING_USABLE, discarded: ['document'] };
 

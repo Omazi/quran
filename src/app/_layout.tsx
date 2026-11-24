@@ -5,20 +5,22 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { deviceStorage } from '@/data/storage';
+import { createDeviceProgressBackup, deviceStorage } from '@/data/storage';
 import {
   deviceWritingDirection,
   useAppStartup,
   type StartupDependencies,
 } from '@/features/settings';
 import { AppStoreProvider } from '@/store';
-import { appFonts } from '@/ui';
+import { appFonts, useColors } from '@/ui';
 
 // The launch screen stays until the first screen is ready to replace it (launching.md).
 void SplashScreen.preventAutoHideAsync();
 
 const STARTUP: StartupDependencies = {
   storage: deviceStorage,
+  // The copy of the progress in the person's iCloud, where the app was built with it.
+  backup: createDeviceProgressBackup(),
   direction: deviceWritingDirection,
   getDeviceLanguageCodes: () => getLocales().map((locale) => locale.languageCode),
 };
@@ -48,13 +50,18 @@ export default function RootLayout() {
 
 function RootStack() {
   const { t } = useTranslation('onboarding');
+  const colors = useColors();
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="+not-found" />
       {/* Its header, with the system's back button, is only shown when the introduction is
           opened again from the settings (see onboarding/index.tsx). */}
-      <Stack.Screen name="onboarding/index" options={{ title: t('replayTitle') }} />
+      <Stack.Screen
+        name="onboarding/index"
+        options={{ title: t('replayTitle'), headerTintColor: colors.accent }}
+      />
     </Stack>
   );
 }

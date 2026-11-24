@@ -1,9 +1,13 @@
 /**
- * Test support for the home screen: reading histories that put the garden in each of its states.
+ * DEVELOPMENT ONLY: made-up reading histories that put the garden in each of its states.
+ *
+ * Used by the tests and by the developer preview of the home screen (`dev-preview.tsx`). The
+ * app itself only shows what the store holds: this folder is loaded only when `__DEV__` is true
+ * and is absent from a production bundle.
  *
  * Each history is a real reading journal, written page by page through the khatm module
  * (`recordPageRead`): the garden and the numbers on screen are then computed by the same code as
- * for a real person. Nothing here is used by the app, which only shows what the store holds.
+ * for a real person. Nothing here is saved anywhere.
  */
 
 import { DEFAULT_GARDEN_CONFIG } from '@/domain/garden';
@@ -30,6 +34,8 @@ export const READING_HISTORIES = [
   'dying',
   /** After 14 days. */
   'dead',
+  /** After 14 days, on the day one page is read again. */
+  'recovering',
   /** The 604 pages read, the last ones today. */
   'khatma-complete',
 ] as const;
@@ -136,6 +142,11 @@ function buildJournal(
     case 'dying':
     case 'dead':
       return gardenJournal(DAYS_WITHOUT_READING[name], today, hizbPageRanges);
+    case 'recovering': {
+      const dead = gardenJournal(DAYS_WITHOUT_READING.dead, today, hizbPageRanges);
+      const nextPage = lastPageOfHizb(READING_HISTORY_CONFIG.gardenHizb, hizbPageRanges) + 1;
+      return recordPageRead(dead, { page: nextPage, date: today });
+    }
     case 'khatma-complete': {
       const firstPage = hizbPageRanges[0]?.firstPage;
       const lastPage = hizbPageRanges[hizbPageRanges.length - 1]?.lastPage;

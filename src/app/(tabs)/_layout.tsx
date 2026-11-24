@@ -15,6 +15,9 @@ export default function TabsLayout() {
   const { t } = useTranslation('common');
   const colors = useColors();
   const hasFinishedIntroduction = useAppStore((state) => state.settings.onboardingCompleted);
+  // Stored data that could not be read back is explained in the settings: the badge leads there
+  // (tab-bars.md › Best practices: a badge for critical information).
+  const hasNoticeInSettings = useAppStore((state) => state.dataResetNotice !== null);
 
   // A link that opens the app on a tab must not skip the introduction.
   if (!hasFinishedIntroduction) return <Redirect href="/onboarding" />;
@@ -36,6 +39,11 @@ export default function TabsLayout() {
       <NativeTabs.Trigger name="settings">
         <NativeTabs.Trigger.Icon sf="gearshape.fill" md="settings" />
         <NativeTabs.Trigger.Label>{t('tabs.settings')}</NativeTabs.Trigger.Label>
+        {/* Left out rather than `hidden`: a badge that has a text is shown whatever `hidden` says
+            (expo-router, NativeTabTrigger › appendBadgeOptions). */}
+        {hasNoticeInSettings ? (
+          <NativeTabs.Trigger.Badge>{t('tabs.attentionBadge')}</NativeTabs.Trigger.Badge>
+        ) : null}
       </NativeTabs.Trigger>
     </NativeTabs>
   );

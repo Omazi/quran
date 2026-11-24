@@ -1,14 +1,33 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { quranStructure } from '@/data/quran';
+import type { LocalDate } from '@/domain/shared/local-date';
 
-import { buildHomeModel, type HomeModel, type HomeModelInput } from './home-model';
+import { buildHomeModel, type HomeModel, type HomeModelInput, type HomeSource } from './home-model';
 import { useHomeSource } from './home-source';
 import { useToday, type Clock } from './use-today';
+
+/**
+ * In development, a developer can replace what the screen shows by a made-up reading history
+ * (`dev-preview/`). The module is required only when `__DEV__` is true: the bundler drops the
+ * whole branch from a production bundle, where the person's data is always shown as it is.
+ */
+const usePreviewedSource: (source: HomeSource, today: LocalDate) => HomeSource = __DEV__
+  ? // A conditional `require` is the only form the bundler can leave out; it has no type of its own.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    (require('./dev-preview/dev-preview') as typeof import('./dev-preview/dev-preview'))
+      .usePreviewedSource
+  : (source) => source;
 
 export interface HomeModelDependencies {
   /** Gives the present instant. Defaults to the device clock. */
   readonly clock?: Clock;
+}
+
+export interface HomeModelResult {
+  readonly model: HomeModel;
+  /** Builds the model again from the data as it is now: the action of the unavailable state. */
+  readonly retry: () => void;
 }
 
 /**
@@ -26,15 +45,18 @@ export function buildHomeModelOrUnavailable(input: HomeModelInput): HomeModel {
 }
 
 /**
- * The model of the home screen, rebuilt only when the data or the day changes: each build reads
- * the whole journal (see the khatm module's README, "Coût").
+ * The model of the home screen, rebuilt only when the data or the day changes, or when the
+ * person asks to try again: each build reads the whole journal (see the khatm module's README,
+ * "Coût").
  */
-export function useHomeModel({ clock }: HomeModelDependencies = {}): HomeModel {
+export function useHomeModel({ clock }: HomeModelDependencies = {}): HomeModelResult {
   const today = useToday(clock);
-  const { journal, settings } = useHomeSource(today);
+  const { journal, settings } = usePreviewedSource(useHomeSource(), today);
   // The settings are compared one by one: a source may return a new object at every render.
   const { dailyGoalPages, userSeed, pauses } = settings;
-  return useMemo(
+  const [attempt, setAttempt] = useState(0);
+  const retry = useCallback(() => setAttempt((count) => count + 1), []);
+  const model = useMemo(
     () =>
       buildHomeModelOrUnavailable({
         journal,
@@ -42,6 +64,9 @@ export function useHomeModel({ clock }: HomeModelDependencies = {}): HomeModel {
         today,
         hizbPageRanges: quranStructure.hizbPageRanges(),
       }),
-    [journal, dailyGoalPages, userSeed, pauses, today],
+    // `attempt` is not read: a new attempt is what asks for a new build.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [journal, dailyGoalPages, userSeed, pauses, today, attempt],
   );
+  return { model, retry };
 }

@@ -1,49 +1,45 @@
 /**
  * The garden in plain words and gauges, so that its rules stay visible while no image exists
  * (docs/specs/ui-lot1.md, B.2). Everything shown is read from the `GardenState`: nothing is
- * computed again here.
- *
- * Three pieces, because of where each can live on iOS. The two sections are rows of the system's
- * grouped list and must be inside a `GroupedList`. The water status is an icon beside words,
- * which a list row cannot hold: it is a React Native line and stays outside the list.
+ * computed again here. All three pieces are rows of the system's grouped list: place them in a
+ * `GroupedList`.
  */
 
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
 
 import { displayableVerse, type GardenState } from '@/domain/garden';
 import { parseVerseKey } from '@/domain/quran';
-import { AppText, Gauge, Icon, ListRow, ListSection, spacing } from '@/ui';
+import { Gauge, LabelRow, ListRow, ListSection } from '@/ui';
 
 import {
   GARDEN_STEP_COUNT,
   HEALTH_TONES,
-  NO_WATER_YET_ICON_COLOR,
-  WATER_ICON_COLORS,
+  HIZB_TONE,
+  NO_WATER_YET_TONE,
   WATER_SYMBOLS,
+  WATER_TONES,
 } from './config';
-import { gardenElementName, gardenPhaseName, gardenWaterStatus, toPercent } from './garden-words';
+import { gardenElementName, gardenStateWord, gardenWaterStatus, toPercent } from './garden-words';
 
 export interface GardenReadoutProps {
   state: GardenState;
 }
 
 /**
- * The water: a symbol and a short sentence (flowing, still, dry). The symbol changes shape with
- * the state and the sentence says it, so colour is never the only signal (accessibility.md ›
- * Vision). One element for screen readers; the symbol is decorative, the sentence says it all.
+ * The water: a symbol and a short sentence (flowing, still, dry), as a row of the list
+ * (labels.md › Best practices). The symbol changes shape with the state and the sentence says
+ * it, so colour is never the only signal (accessibility.md › Vision). Its own row, alone in a
+ * section or with other rows of status.
  */
-export function GardenWaterStatus({ state }: GardenReadoutProps) {
+export function GardenWaterRow({ state }: GardenReadoutProps) {
   const { t } = useTranslation('garden');
-  const hasNoWaterYet = state.phase === 'bare';
   return (
-    <View accessible style={styles.waterStatus} testID="garden-water">
-      <Icon
-        symbol={WATER_SYMBOLS[state.water]}
-        color={hasNoWaterYet ? NO_WATER_YET_ICON_COLOR : WATER_ICON_COLORS[state.water]}
-      />
-      <AppText style={styles.waterWords}>{gardenWaterStatus(state, t)}</AppText>
-    </View>
+    <LabelRow
+      label={gardenWaterStatus(state, t)}
+      symbol={WATER_SYMBOLS[state.water]}
+      tone={state.phase === 'bare' ? NO_WATER_YET_TONE : WATER_TONES[state.water]}
+      testID="garden-water"
+    />
   );
 }
 
@@ -65,6 +61,7 @@ export function GardenStateSection({ state }: GardenReadoutProps) {
         })}
         minimumLabel={t('readout.hizb.minimum')}
         maximumLabel={t('readout.hizb.maximum', { total: GARDEN_STEP_COUNT })}
+        tone={HIZB_TONE}
         testID="garden-hizb-gauge"
       />
       {
@@ -75,7 +72,7 @@ export function GardenStateSection({ state }: GardenReadoutProps) {
             value={state.health}
             label={t('readout.health.label')}
             valueLabel={t('readout.health.value', {
-              phase: gardenPhaseName(state.phase, t),
+              state: gardenStateWord(state, t),
               percent: toPercent(state.health),
             })}
             minimumLabel={t('readout.health.minimum')}
@@ -146,13 +143,3 @@ export function GardenElementsSection({ state }: GardenReadoutProps) {
     </ListSection>
   );
 }
-
-const styles = StyleSheet.create({
-  waterStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  // The words wrap beside the symbol instead of being cut at large text sizes.
-  waterWords: { flexShrink: 1 },
-});

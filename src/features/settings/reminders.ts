@@ -8,11 +8,13 @@ import { useAppStore, type ReminderSettings } from '@/store';
 export type NotificationPermissionState = NotificationPermissionStatus | 'unknown';
 
 /**
- * What the person must be told under the reminders.
- * `will-ask`: the next step shows the system's alert. `denied`: reminders are on but the system
- * blocks them. `none-enabled`: every reminder is off.
+ * What the person must be told under the reminders, so that the switches never promise a
+ * notification that cannot come. `denied`: reminders are on but the system blocks them.
+ * `not-asked`: reminders are on but the system was never asked (the introduction was skipped
+ * because the progress came back from its copy, or its request was never shown).
+ * `none-enabled`: every reminder is off.
  */
-export type ReminderNotice = 'will-ask' | 'denied' | 'none-enabled';
+export type ReminderNotice = 'denied' | 'not-asked' | 'none-enabled';
 
 /** What the reminders section shows. */
 export interface RemindersModel extends ReminderSettings {
@@ -23,22 +25,13 @@ export function hasReminderEnabled(reminders: ReminderSettings): boolean {
   return reminders.dailyEnabled || reminders.thirstyGardenEnabled || reminders.fridayKahfEnabled;
 }
 
-export interface ReminderNoticeOptions {
-  /**
-   * True on a screen whose next step asks for the permission (the last page of the first-launch
-   * flow): it must then say so before the system's alert appears.
-   */
-  readonly announcesRequest: boolean;
-}
-
 export function reminderNotice(
   reminders: ReminderSettings,
   permission: NotificationPermissionState,
-  { announcesRequest }: ReminderNoticeOptions,
 ): ReminderNotice | null {
   if (!hasReminderEnabled(reminders)) return 'none-enabled';
   if (permission === 'denied') return 'denied';
-  if (permission === 'undetermined' && announcesRequest) return 'will-ask';
+  if (permission === 'undetermined') return 'not-asked';
   return null;
 }
 
@@ -64,7 +57,15 @@ export interface UseRemindersOptions {
 export interface UseRemindersResult {
   readonly model: RemindersModel;
   readonly change: (change: Partial<ReminderSettings>) => void;
-  /** Asks for the permission if a reminder is on. Resolves once the person has answered. */
+  /**
+   * True when `requestPermission` would show the system's alert: the screen asks later, a
+   * reminder is on, and the person has not been asked yet. The screen must then announce it.
+   */
+  readonly willAskPermission: boolean;
+  /**
+   * Shows the system's alert when the person has not been asked yet and a reminder is on.
+   * Resolves once the person has answered.
+   */
   readonly requestPermission: () => Promise<void>;
 }
 
@@ -73,6 +74,7 @@ export function useReminders({ notifications, asks }: UseRemindersOptions): UseR
   const reminders = useAppStore((state) => state.settings.reminders);
   const updateReminders = useAppStore((state) => state.updateReminders);
   const [permission, setPermission] = useState<NotificationPermissionState>('unknown');
+  const [isAsking, setIsAsking] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -95,25 +97,33 @@ export function useReminders({ notifications, asks }: UseRemindersOptions): UseR
   }, [notifications]);
 
   const ask = async () => {
+    if (isAsking) return;
+    setIsAsking(true);
     try {
       setPermission(await notifications.request());
     } catch {
       setPermission('unknown');
+    } finally {
+      setIsAsking(false);
     }
   };
 
+  const canAsk = permission === 'undetermined' && hasReminderEnabled(reminders);
+  const willAskPermission = asks === 'on-request' && canAsk;
+  const notice = reminderNotice(reminders, permission);
+  // Nothing to say about a request that is being shown, or that the screen itself announces.
+  const isRequestExpected = isAsking || asks === 'on-request';
+
   return {
-    model: {
-      ...reminders,
-      notice: reminderNotice(reminders, permission, { announcesRequest: asks === 'on-request' }),
-    },
+    model: { ...reminders, notice: notice === 'not-asked' && isRequestExpected ? null : notice },
     change: (reminderChange) => {
       const turnsOn = turnsReminderOn(reminders, reminderChange);
       updateReminders(reminderChange);
       if (asks === 'on-enable' && turnsOn && permission === 'undetermined') void ask();
     },
+    willAskPermission,
     requestPermission: async () => {
-      if (hasReminderEnabled(reminders)) await ask();
+      if (canAsk) await ask();
     },
   };
 }

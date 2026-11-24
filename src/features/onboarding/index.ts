@@ -9,6 +9,9 @@ export {
   ONBOARDING_PAGES,
   ONBOARDING_PAGES_FULL,
   ONBOARDING_PAGES_SHORT,
+  SHIPPED_FEATURES,
+  onboardingPages,
+  type OnboardingFeature,
   type OnboardingLength,
   type OnboardingPage,
   type OnboardingPageKind,
@@ -25,5 +28,6 @@ export {
   useOnboarding,
   type OnboardingActions,
   type OnboardingDependencies,
+  type OnboardingEnding,
   type OnboardingModel,
 } from './use-onboarding';

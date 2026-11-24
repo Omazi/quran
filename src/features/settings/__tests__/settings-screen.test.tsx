@@ -108,11 +108,13 @@ describe('settings screen', () => {
 
       expect(screen.getByRole('header', { name: 'Rappels' })).toBeOnTheScreen();
       expect(screen.getByRole('switch', { name: 'Rappel du jour' })).toBeChecked();
-      expect(screen.getByRole('button', { name: 'Heure' })).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Heure des rappels' })).toBeOnTheScreen();
       expect(screen.getByRole('switch', { name: 'Quand le jardin a soif' })).toBeChecked();
+      // The Friday reminder names a surah on the lock screen: it is the person's own choice.
       expect(
         screen.getByRole('switch', { name: `Le vendredi${NO_BREAK_SPACE}: sourate Al-Kahf` }),
-      ).toBeChecked();
+      ).not.toBeChecked();
+      expect(screen.queryByRole('button', { name: 'Heure du vendredi' })).toBeNull();
 
       expect(screen.getByRole('button', { name: 'Revoir la présentation' })).toBeOnTheScreen();
       expect(directionDependentStyles(screen.getByTestId('settings'))).toEqual([]);
@@ -126,7 +128,7 @@ describe('settings screen', () => {
     expect(screen.getByRole('radio', { name: 'العربية' })).toBeChecked();
     expect(screen.getByRole('adjustable', { name: 'الصفحات في اليوم' })).toBeOnTheScreen();
     expect(screen.getByText('5 صفحات في اليوم، أي نصف حزب: ختمة في 121 يومًا.')).toBeOnTheScreen();
-    expect(screen.getByRole('switch', { name: 'تذكير اليوم' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'التذكير اليومي' })).toBeChecked();
     expect(screen.getByRole('button', { name: 'مشاهدة التعريف من جديد' })).toBeOnTheScreen();
     // The app runs right to left, as Arabic is written: nothing to restart.
     expect(screen.queryByTestId('restart-app')).toBeNull();
@@ -140,7 +142,7 @@ describe('settings screen', () => {
     for (const control of [
       screen.getByRole('radio', { name: 'English' }),
       screen.getByRole('switch', { name: 'Rappel du jour' }),
-      screen.getByRole('button', { name: 'Heure' }),
+      screen.getByRole('button', { name: 'Heure des rappels' }),
       screen.getByRole('button', { name: 'Revoir la présentation' }),
       stepper(),
     ]) {
@@ -269,7 +271,7 @@ describe('reminder settings', () => {
     // The garden's reminders come at the same time as the daily one: the time stays.
     await fireEvent.press(screen.getByRole('switch', { name: 'Rappel du jour' }));
     expect(store.getState().settings.reminders.dailyEnabled).toBe(false);
-    expect(screen.getByRole('button', { name: 'Heure' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Heure des rappels' })).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('switch', { name: 'Quand le jardin a soif' }));
     expect(store.getState().settings.reminders).toEqual({
@@ -277,16 +279,18 @@ describe('reminder settings', () => {
       dailyEnabled: false,
       thirstyGardenEnabled: false,
     });
-    expect(screen.queryByRole('button', { name: 'Heure' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Heure des rappels' })).toBeNull();
 
-    expect(screen.getByRole('button', { name: 'Heure du vendredi' })).toBeOnTheScreen();
+    // Friday has its own time, shown once the person switches that reminder on.
+    expect(screen.queryByRole('button', { name: 'Heure du vendredi' })).toBeNull();
     await fireEvent.press(
       screen.getByRole('switch', { name: `Le vendredi${NO_BREAK_SPACE}: sourate Al-Kahf` }),
     );
-    expect(screen.queryByRole('button', { name: 'Heure du vendredi' })).toBeNull();
+    expect(store.getState().settings.reminders.fridayKahfEnabled).toBe(true);
+    expect(screen.getByRole('button', { name: 'Heure du vendredi' })).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('switch', { name: 'Rappel du jour' }));
-    expect(screen.getByRole('button', { name: 'Heure' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Heure des rappels' })).toBeOnTheScreen();
   });
 
   it('shows each time as the person set it', async () => {
@@ -295,13 +299,14 @@ describe('reminder settings', () => {
         reminders: {
           ...DEFAULT_REMINDERS,
           dailyTime: { hour: 6, minute: 15 },
+          fridayKahfEnabled: true,
           fridayTime: { hour: 11, minute: 40 },
         },
       },
     });
     const shownTime = (name: string) =>
       String(screen.getByRole('button', { name }).props.accessibilityValue?.text);
-    expect(shownTime('Heure')).toMatch(/6.15/);
+    expect(shownTime('Heure des rappels')).toMatch(/6.15/);
     expect(shownTime('Heure du vendredi')).toMatch(/11.40/);
   });
 
@@ -382,6 +387,82 @@ describe('reminder settings', () => {
     },
   );
 
+  const NOT_ASKED =
+    'Ton téléphone ne t’a pas encore demandé si l’appli peut t’envoyer des notifications. D’ici là, tes rappels n’arrivent pas.';
+
+  it.each(['granted', 'denied'] as const)(
+    'tells the truth when reminders are on but the phone was never asked, and asks from there: %s',
+    async (answer) => {
+      // As after the progress came back from its copy: the introduction, which asks, was skipped.
+      const notifications = createInertNotificationPermissions({ status: 'undetermined', answer });
+      const request = jest.spyOn(notifications, 'request');
+      const { openSystemSettings } = await renderSettings({ notifications });
+
+      expect(await screen.findByText(NOT_ASKED)).toBeOnTheScreen();
+      expect(screen.getByRole('switch', { name: 'Rappel du jour' })).toBeChecked();
+      expect(screen.queryByTestId('open-system-settings')).toBeNull();
+      // Nothing is asked until the person asks for it; the row says that it asks, not "allow".
+      expect(request).not.toHaveBeenCalled();
+      const ask = screen.getByRole('button', { name: 'Demander l’autorisation' });
+      expect(touchTargetHeight(ask)).toBeGreaterThanOrEqual(44);
+
+      await fireEvent.press(ask);
+      await waitFor(() => expect(screen.queryByText(NOT_ASKED)).toBeNull());
+      expect(request).toHaveBeenCalledTimes(1);
+      expect(screen.queryByTestId('request-notification-permission')).toBeNull();
+      if (answer === 'denied') {
+        // Refused: the only way left is the phone's settings.
+        await fireEvent.press(await screen.findByTestId('open-system-settings'));
+        expect(openSystemSettings).toHaveBeenCalledTimes(1);
+      } else {
+        expect(screen.queryByTestId('open-system-settings')).toBeNull();
+        expect(screen.queryByText(/notification/i)).toBeNull();
+      }
+    },
+  );
+
+  it('does not offer to ask while every reminder is off', async () => {
+    await renderSettings({
+      notifications: createInertNotificationPermissions({ status: 'undetermined' }),
+      settings: {
+        reminders: {
+          ...DEFAULT_REMINDERS,
+          dailyEnabled: false,
+          thirstyGardenEnabled: false,
+          fridayKahfEnabled: false,
+        },
+      },
+    });
+    expect(
+      await screen.findByText('Sans rappel, l’appli ne t’envoie aucune notification.'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByTestId('request-notification-permission')).toBeNull();
+  });
+
+  it.each([
+    ['en', 'Ask for Permission'],
+    ['ar', 'طلب الإذن'],
+  ] as const)('offers to ask in the language of the person (%s)', async (language, label) => {
+    setDeviceConditions({ rightToLeft: language === 'ar', fontScale: LARGEST_FONT_SCALE });
+    await renderSettings({
+      language,
+      rightToLeft: language === 'ar',
+      settings: { language },
+      notifications: createInertNotificationPermissions({ status: 'undetermined' }),
+    });
+    expect(await screen.findByRole('button', { name: label })).toBeOnTheScreen();
+    expect(fixedHeightsAroundText(screen.getByTestId('settings'))).toEqual([]);
+    expect(directionDependentStyles(screen.getByTestId('settings'))).toEqual([]);
+  });
+
+  it('asks an iPhone for system components only when the phone was never asked', async () => {
+    await renderSettings({
+      onIOS: true,
+      notifications: createInertNotificationPermissions({ status: 'undetermined' }),
+    });
+    expect(await screen.findByTestId('request-notification-permission')).toBeOnTheScreen();
+  });
+
   it('does not ask when a reminder is switched off, or once the person has answered', async () => {
     const notifications = createInertNotificationPermissions({ status: 'granted' });
     const request = jest.spyOn(notifications, 'request');
@@ -406,6 +487,74 @@ describe('reminder settings', () => {
     );
     expect(screen.queryByText(/notification/i)).toBeNull();
     expect(screen.getByRole('switch', { name: 'Rappel du jour' })).toBeChecked();
+  });
+});
+
+describe('notice about stored data that could not be read back', () => {
+  it('says nothing when all is well', async () => {
+    await renderSettings();
+    expect(screen.queryByRole('header', { name: 'À savoir' })).toBeNull();
+    expect(screen.queryByTestId('dismiss-data-reset-notice')).toBeNull();
+  });
+
+  it.each([
+    [
+      'journal',
+      `L’appli n’a pas pu relire ton journal de lecture. Ton jardin repart d’une terre nue${NO_BREAK_SPACE}; tes réglages n’ont pas changé.`,
+    ],
+    [
+      'settings',
+      `L’appli n’a pas pu relire tes réglages. Ils reprennent leurs valeurs de départ${NO_BREAK_SPACE}; ton journal de lecture n’a pas changé.`,
+    ],
+    [
+      'everything',
+      `L’appli n’a pas pu relire ce qu’elle avait enregistré. Elle repart de zéro${NO_BREAK_SPACE}: réglages de départ et jardin en terre nue.`,
+    ],
+  ] as const)(
+    'says in plain words what started again (%s), above the settings, until it is read',
+    async (dataResetNotice, wording) => {
+      const { store } = await renderSettings({ dataResetNotice });
+      expect(screen.getByRole('header', { name: 'À savoir' })).toBeOnTheScreen();
+      expect(screen.getByText(wording)).toBeOnTheScreen();
+      // No jargon and no blame: nothing about files, errors or what the person did.
+      expect(wording).not.toMatch(/erreur|corromp|fichier|JSON|données|tu as/i);
+
+      const dismiss = screen.getByRole('button', { name: 'D’accord' });
+      expect(touchTargetHeight(dismiss)).toBeGreaterThanOrEqual(44);
+      await fireEvent.press(dismiss);
+      expect(store.getState().dataResetNotice).toBeNull();
+      expect(screen.queryByRole('header', { name: 'À savoir' })).toBeNull();
+      expect(screen.queryByText(wording)).toBeNull();
+      // The settings themselves are still there.
+      expect(screen.getByRole('radio', { name: 'Français' })).toBeOnTheScreen();
+    },
+  );
+
+  it.each([
+    ['en', 'Good to Know', 'OK'],
+    ['ar', 'للعلم', 'حسنًا'],
+  ] as const)('is written in the language of the person (%s)', async (language, title, dismiss) => {
+    setDeviceConditions({ rightToLeft: language === 'ar' });
+    await renderSettings({
+      language,
+      rightToLeft: language === 'ar',
+      settings: { language },
+      dataResetNotice: 'journal',
+    });
+    expect(screen.getByRole('header', { name: title })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: dismiss })).toBeOnTheScreen();
+    expect(directionDependentStyles(screen.getByTestId('settings'))).toEqual([]);
+  });
+
+  it('cuts no text of the notice at the largest text size', async () => {
+    setDeviceConditions({ fontScale: LARGEST_FONT_SCALE });
+    await renderSettings({ dataResetNotice: 'everything' });
+    expect(fixedHeightsAroundText(screen.getByTestId('settings'))).toEqual([]);
+  });
+
+  it('asks an iPhone for system components only, with the notice shown', async () => {
+    await renderSettings({ onIOS: true, dataResetNotice: 'everything' });
+    expect(screen.getByTestId('settings')).toBeOnTheScreen();
   });
 });
 

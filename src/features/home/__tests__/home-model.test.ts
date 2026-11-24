@@ -8,7 +8,7 @@ import {
   READING_HISTORY_CONFIG,
   READING_HISTORIES,
   type ReadingHistoryName,
-} from '../test-support/reading-histories';
+} from '../dev-preview/reading-histories';
 import { buildHomeModel, type HomeModelInput, type HomeNotice } from '../home-model';
 import { buildHomeModelOrUnavailable } from '../use-home-model';
 

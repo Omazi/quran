@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { AppText } from '../../components/app-text';
 import { layout, radius, spacing } from '../../tokens';
 import { useColors } from '../../use-colors';
+import { useIsInsideGroupedList } from '../grouped-list-scope';
 import type {
   ContentUnavailableProps,
   GaugeProps,
@@ -70,6 +71,7 @@ export function ProgressIndicator({ value, accessibilityLabel, testID }: Progres
 /**
  * Default gauge: what it measures and the current value in words, a filled bar, and the meaning
  * of both ends when given. One element for screen readers, which hear the label and the value.
+ * As a row of a list it takes the inset of the other rows; elsewhere its parent places it.
  */
 export function Gauge({
   value,
@@ -81,6 +83,7 @@ export function Gauge({
   testID,
 }: GaugeProps) {
   assertFraction(value, 'value');
+  const isListRow = useIsInsideGroupedList();
   return (
     <View
       accessible
@@ -88,7 +91,7 @@ export function Gauge({
       accessibilityLabel={label}
       accessibilityValue={{ text: valueLabel }}
       testID={testID}
-      style={styles.gauge}
+      style={[styles.gauge, isListRow && styles.listRow]}
     >
       <View style={styles.labels}>
         <AppText style={styles.grow}>{label}</AppText>
@@ -143,6 +146,7 @@ const styles = StyleSheet.create({
   },
   fill: { borderRadius: radius.sm },
   gauge: { alignSelf: 'stretch', gap: spacing.sm },
+  listRow: { paddingHorizontal: layout.screenMargin, paddingVertical: spacing.sm },
   labels: {
     flexDirection: 'row',
     flexWrap: 'wrap',

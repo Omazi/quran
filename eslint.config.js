@@ -10,7 +10,20 @@ const FORBIDDEN_IN_DOMAIN = [
     message: 'The domain layer must stay pure TypeScript.',
   },
   {
-    group: ['@/data/*', '@/features/*', '@/ui/*', '@/app/*'],
+    group: [
+      '@/data',
+      '@/data/*',
+      '@/features',
+      '@/features/*',
+      '@/ui',
+      '@/ui/*',
+      '@/app',
+      '@/app/*',
+      '@/store',
+      '@/store/*',
+      '@/i18n',
+      '@/i18n/*',
+    ],
     message: 'The domain layer must not depend on outer layers.',
   },
 ];

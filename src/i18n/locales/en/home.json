@@ -4,31 +4,31 @@
   "streak_other": "{{count}} days in a row",
   "notice": {
     "bare": {
-      "title": "Bare earth",
+      "title": "Bare Earth",
       "text": "Your first hizb will bring your garden to life."
     },
     "thirsty": {
-      "title": "Your garden is thirsty",
+      "title": "Thirsty Garden",
       "text": "One page is enough to bring the water back."
     },
     "wilting": {
-      "title": "Your garden is wilting",
+      "title": "Wilted Garden",
       "text": "A page today, and it regains its strength."
     },
     "dying": {
-      "title": "Your garden is withering",
+      "title": "Withered Garden",
       "text": "One page already brings some elements back."
     },
     "dead": {
-      "title": "Nothing is lost",
+      "title": "Dead Earth",
       "text": "The hizb you have read stay yours. One page brings the water back."
     },
     "recovering": {
-      "title": "The water is back",
+      "title": "The Water Is Back",
       "text": "Your garden is regaining its strength. Keep going tomorrow."
     },
     "complete": {
-      "title": "Khatma complete",
+      "title": "Khatma Complete",
       "text": "Your garden is complete. Read a page to start the next one: a new garden awaits you."
     }
   },
@@ -45,8 +45,8 @@
       "value": "Page {{page}}"
     },
     "finish": {
-      "label": "Estimated End of the Khatma",
-      "labelNext": "Estimated End of the Next Khatma",
+      "label": "Estimated End",
+      "labelNext": "End of the Next One",
       "today": "Today"
     },
     "footer_one": "Estimate based on your goal: {{count}} page a day.",
@@ -57,6 +57,7 @@
   },
   "unavailable": {
     "title": "Garden Unavailable",
-    "description": "The garden’s state can’t be worked out. Close the app, then open it again."
+    "description": "The garden’s state can’t be worked out. Try again, or close the app and open it again.",
+    "retry": "Try Again"
   }
 }

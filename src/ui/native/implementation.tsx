@@ -36,6 +36,9 @@ export function switchableControls(
     GroupedList: switchable((controls) => controls.GroupedList),
     ListSection: switchable((controls) => controls.ListSection),
     ListRow: switchable((controls) => controls.ListRow),
+    LabelRow: switchable((controls) => controls.LabelRow),
+    ButtonRow: switchable((controls) => controls.ButtonRow),
+    ContentRow: switchable((controls) => controls.ContentRow),
     SwitchRow: switchable((controls) => controls.SwitchRow),
     StepperRow: switchable((controls) => controls.StepperRow),
     // Written out because it is generic in the type of its values.

@@ -4,7 +4,7 @@
  */
 
 import { GARDEN_CATALOG, type GardenPhase, type WaterState } from '@/domain/garden';
-import { spacing, type IconColorRole, type IconSymbol, type StatusTone } from '@/ui';
+import { spacing, type IconSymbol, type LabelRowTone, type StatusTone } from '@/ui';
 
 /** How many steps a garden has: one element per hizb. The catalogue is the garden's own count. */
 export const GARDEN_STEP_COUNT = GARDEN_CATALOG.length;
@@ -31,22 +31,26 @@ export const WATER_SYMBOLS: Readonly<Record<WaterState, IconSymbol>> = {
  * Colour of the water symbol. The accent is the colour of water ("watered"); orange is thirst,
  * on the symbol only: the words beside it stay in the label colour (charter, section 3).
  */
-export const WATER_ICON_COLORS: Readonly<Record<WaterState, IconColorRole>> = {
+export const WATER_TONES: Readonly<Record<WaterState, LabelRowTone>> = {
   flowing: 'accent',
   still: 'secondaryLabel',
   dry: 'warning',
 };
 
 /** On the bare earth there is no water yet: nothing went dry, so nothing is orange. */
-export const NO_WATER_YET_ICON_COLOR: IconColorRole = 'secondaryLabel';
+export const NO_WATER_YET_TONE: LabelRowTone = 'secondaryLabel';
 
 /**
- * Fill of the health gauge: green while the garden is well, orange from thirst on. The phase is
- * always written beside it. The bare earth shows no health gauge.
+ * One colour, one meaning (color.md › Best practices). Green is what has grown: the hizb
+ * finished. The health gauge is the water the garden has: the accent while it is fine, orange
+ * from thirst on. The value is always written beside each gauge.
  */
+export const HIZB_TONE: StatusTone = 'growth';
+
+/** The bare earth shows no health gauge. */
 export const HEALTH_TONES: Readonly<Record<GardenPhase, StatusTone>> = {
-  bare: 'growth',
-  thriving: 'growth',
+  bare: 'accent',
+  thriving: 'accent',
   thirsty: 'warning',
   wilting: 'warning',
   dying: 'warning',

@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Pager, Screen, type ScreenBackground } from '@/ui';
+import { Pager, Screen } from '@/ui';
 
 import type { OnboardingPageKind } from './pages';
 import { GoalPage } from './pages/goal-page';
@@ -18,14 +18,6 @@ const PAGE_COMPONENTS: Readonly<Record<OnboardingPageKind, ComponentType<Onboard
   voice: VoicePage,
   goal: GoalPage,
   reminders: RemindersPage,
-};
-
-/** A page that shows a grouped list sits on the grouped background (color.md › Mobile). */
-const PAGE_BACKGROUNDS: Readonly<Record<OnboardingPageKind, ScreenBackground>> = {
-  story: 'background',
-  voice: 'background',
-  goal: 'groupedBackground',
-  reminders: 'groupedBackground',
 };
 
 export interface OnboardingScreenProps {
@@ -50,12 +42,12 @@ export function OnboardingScreen({
 }: OnboardingScreenProps) {
   const { t } = useTranslation('onboarding');
   const { pages, pageIndex } = model;
-  const shownPage = pages[pageIndex];
-  if (shownPage === undefined) {
+  if (pages[pageIndex] === undefined) {
     throw new RangeError(`There is no page ${pageIndex} in a flow of ${pages.length} pages.`);
   }
+  // Each page paints its own background: the screen's never changes while pages slide.
   return (
-    <Screen background={PAGE_BACKGROUNDS[shownPage.kind]} testID="onboarding">
+    <Screen testID="onboarding">
       <Pager
         pageCount={pages.length}
         page={pageIndex}

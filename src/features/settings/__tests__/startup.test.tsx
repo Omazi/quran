@@ -2,9 +2,17 @@ import { render, screen } from '@testing-library/react-native';
 import { StrictMode } from 'react';
 import { Text } from 'react-native';
 
-import { createMemoryStorage } from '@/data/storage';
+import { createMemoryProgressBackup, createMemoryStorage } from '@/data/storage';
+import { parseLocalDate } from '@/domain/shared/local-date';
 import { getDisplayedLanguage } from '@/i18n';
-import { STORED_DATA_KEY, STORED_DATA_VERSION, type KeyValueStorage } from '@/store';
+import {
+  STORED_DATA_KEY,
+  STORED_DATA_VERSION,
+  readBackupDocument,
+  writeBackupDocument,
+  type KeyValueStorage,
+  type ProgressBackup,
+} from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
 
 import { startApp, useAppStartup, type StartupDependencies } from '../startup';
@@ -27,13 +35,20 @@ function storedData(settings: Record<string, unknown>): Record<string, string> {
   };
 }
 
+interface DeviceOptions {
+  deviceLanguages?: string[];
+  rightToLeft?: boolean;
+  backup?: ProgressBackup;
+}
+
 function dependencies(
   storage: KeyValueStorage,
-  { deviceLanguages = ['fr'], rightToLeft = false } = {},
+  { deviceLanguages = ['fr'], rightToLeft = false, backup }: DeviceOptions = {},
 ) {
   const direction = createFixedDirection(rightToLeft);
   const startup: StartupDependencies = {
     storage,
+    backup,
     direction: direction.platform,
     getDeviceLanguageCodes: () => deviceLanguages,
     wait: jest.fn(async () => {}),
@@ -87,6 +102,76 @@ describe('start of the app', () => {
     expect(app.discardedStoredData).toEqual(['document']);
     expect(app.store.getState().settings.onboardingCompleted).toBe(false);
     expect(app.language).toBe('fr');
+  });
+
+  it('brings a person back where they were after a reinstallation, in their language', async () => {
+    const settings = {
+      ...createTestAppStore().getState().settings,
+      language: 'en' as const,
+      onboardingCompleted: true,
+      dailyGoalPages: 12,
+    };
+    const journal = [{ khatm: 1, page: 1, date: parseLocalDate('2026-11-20') }];
+    const backup = createMemoryProgressBackup(writeBackupDocument({ settings, journal }));
+    const storage = createMemoryStorage();
+    const { startup } = dependencies(storage, { deviceLanguages: ['fr'], backup });
+    const app = await startApp(startup);
+
+    expect(app.restoredFromBackup).toBe(true);
+    expect(app.discardedStoredData).toEqual([]);
+    // The introduction is skipped, and the app speaks the language they had chosen.
+    expect(app.store.getState().settings).toEqual(settings);
+    expect(app.store.getState().journal).toEqual(journal);
+    expect(app.language).toBe('en');
+    expect(getDisplayedLanguage()).toBe('en');
+  });
+
+  it('is a first launch when the copy is damaged, and when there is none', async () => {
+    for (const copy of ['{"f":1,"v":', null]) {
+      const backup = createMemoryProgressBackup(copy);
+      const { startup } = dependencies(createMemoryStorage(), { backup });
+      const app = await startApp(startup);
+      expect(app.restoredFromBackup).toBe(false);
+      expect(app.store.getState().settings.onboardingCompleted).toBe(false);
+    }
+  });
+
+  it('keeps what the device holds when a copy exists too, and renews the copy', async () => {
+    const other = { ...createTestAppStore().getState().settings, onboardingCompleted: true };
+    const backup = createMemoryProgressBackup(
+      writeBackupDocument({ settings: other, journal: [] }),
+    );
+    const storage = createMemoryStorage(
+      storedData({ onboardingCompleted: true, dailyGoalPages: 12 }),
+    );
+    const { startup } = dependencies(storage, { backup });
+    const app = await startApp(startup);
+
+    expect(app.restoredFromBackup).toBe(false);
+    expect(app.store.getState().settings.dailyGoalPages).toBe(12);
+    await app.store.whenBackedUp();
+    expect(readBackupDocument(backup.peek())?.settings.dailyGoalPages).toBe(12);
+  });
+
+  it('shows the language of a copy adopted while the app runs', async () => {
+    // The copy arrives after the start, as iCloud may deliver it late after a reinstallation.
+    const backup = createMemoryProgressBackup();
+    const { startup } = dependencies(createMemoryStorage(), { deviceLanguages: ['fr'], backup });
+    const app = await startApp(startup);
+    expect(getDisplayedLanguage()).toBe('fr');
+
+    const settings = {
+      ...createTestAppStore().getState().settings,
+      language: 'en' as const,
+      onboardingCompleted: true,
+    };
+    const journal = [{ khatm: 1, page: 1, date: parseLocalDate('2026-11-20') }];
+    await backup.write(writeBackupDocument({ settings, journal }) ?? '');
+    app.store.getState().completeOnboarding();
+    await app.store.whenBackedUp();
+
+    expect(app.store.getState().journal).toEqual(journal);
+    expect(getDisplayedLanguage()).toBe('en');
   });
 
   it('restarts once to mirror the layout when Arabic starts in a left-to-right app', async () => {

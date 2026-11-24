@@ -39,6 +39,21 @@ export function SettingsScreen({ model, actions }: SettingsScreenProps) {
         {t('title')}
       </AppText>
       <GroupedList testID="settings-list">
+        {/* Said in the interface, not in an alert at launch (alerts.md › Best practices), and
+            only until the person has read it. */}
+        {model.dataResetNotice === null ? null : (
+          <ListSection
+            title={t('dataResetNotice.title')}
+            footer={t(`dataResetNotice.${model.dataResetNotice}`)}
+          >
+            <Button
+              label={t('dataResetNotice.dismiss')}
+              variant="plain"
+              onPress={actions.dismissDataResetNotice}
+              testID="dismiss-data-reset-notice"
+            />
+          </ListSection>
+        )}
         <ListSection footer={model.language.needsRestart ? t('language.restartNote') : undefined}>
           <ChoiceRow
             label={t('language.label')}
@@ -66,6 +81,7 @@ export function SettingsScreen({ model, actions }: SettingsScreenProps) {
           model={model.reminders}
           onChange={actions.changeReminders}
           onOpenSystemSettings={actions.openSystemSettings}
+          onRequestPermission={actions.requestNotificationPermission}
         />
         <ListSection>
           <ListRow

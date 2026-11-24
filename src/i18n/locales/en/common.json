@@ -9,12 +9,18 @@
   "tabs": {
     "garden": "Garden",
     "quran": "Quran",
-    "settings": "Settings"
+    "settings": "Settings",
+    "attentionBadge": "!"
   },
   "quran": {
     "unavailable": {
       "title": "Reading Is Coming Soon",
       "description": "You will read the Quran here, page after page, and every new page will water your garden."
     }
+  },
+  "notFound": {
+    "title": "This Page Does Not Exist",
+    "description": "The link you followed leads nowhere in the app.",
+    "back": "Back to the Garden"
   }
 }

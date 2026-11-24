@@ -72,5 +72,12 @@
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
     }
+  },
+  "expo": {
+    "autolinking": {
+      "exclude": [
+        "progress-backup"
+      ]
+    }
   }
 }

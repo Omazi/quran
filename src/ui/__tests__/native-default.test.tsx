@@ -1,12 +1,16 @@
 import { fireEvent, render, screen, userEvent } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
+import { processColor, Text as RNText } from 'react-native';
 
 import {
   Button,
+  ButtonRow,
   ChoiceRow,
+  ContentRow,
   ContentUnavailable,
   Gauge,
   GroupedList,
+  LabelRow,
   ListRow,
   ListSection,
   ProgressIndicator,
@@ -25,7 +29,7 @@ import {
   styleOf,
   touchTargetHeight,
 } from '../test-support/environment';
-import { appColors, fallbackSystemColors, stateOpacity, touchTargets } from '../tokens';
+import { appColors, fallbackSystemColors, layout, stateOpacity, touchTargets } from '../tokens';
 
 const LANGUAGES = [
   { value: 'fr', label: 'Français' },
@@ -34,12 +38,30 @@ const LANGUAGES = [
 ] as const;
 
 const BOOK: IconSymbol = { ios: 'book.closed', android: 'book_2' };
+const DROP: IconSymbol = { ios: 'drop.fill', android: 'water_drop' };
 
 /** One of each control, as a settings screen would compose them. */
 function EveryControl() {
   return (
     <>
       <GroupedList testID="list">
+        <ListSection>
+          <ContentRow accessibilityLabel="Ton jardin" testID="scene">
+            <RNText>Scène</RNText>
+          </ContentRow>
+        </ListSection>
+        <ListSection>
+          <LabelRow
+            label="Le jardin a soif"
+            detail="Une page suffit à l’arroser."
+            symbol={DROP}
+            tone="warning"
+            testID="notice"
+          />
+        </ListSection>
+        <ListSection>
+          <ButtonRow label="Commencer la lecture" onPress={jest.fn()} testID="row-button" />
+        </ListSection>
         <ListSection title="Lecture" footer="5 pages par jour : une khatma en 121 jours.">
           <ListRow label="Aujourd’hui" value="3 pages sur 5" testID="today" />
           <ListRow label="Reprendre page 212" onPress={jest.fn()} testID="resume" />
@@ -144,16 +166,20 @@ describe('default controls, together', () => {
     expect(row && styleOf(row)).toMatchObject({ flexDirection: 'row', flexWrap: 'wrap' });
   });
 
-  it.each(['resume', 'goal-decrement', 'goal-increment', 'reminder', 'time', 'primary', 'plain'])(
-    'give %s a touch target of 44 points at least',
-    async (testID) => {
-      setDeviceConditions({ os: 'android' });
-      await render(<EveryControl />);
-      expect(touchTargetHeight(screen.getByTestId(testID))).toBeGreaterThanOrEqual(
-        touchTargets.ios,
-      );
-    },
-  );
+  it.each([
+    'resume',
+    'goal-decrement',
+    'goal-increment',
+    'reminder',
+    'time',
+    'primary',
+    'plain',
+    'row-button',
+  ])('give %s a touch target of 44 points at least', async (testID) => {
+    setDeviceConditions({ os: 'android' });
+    await render(<EveryControl />);
+    expect(touchTargetHeight(screen.getByTestId(testID))).toBeGreaterThanOrEqual(touchTargets.ios);
+  });
 
   it('give every radio option a touch target of 44 points at least', async () => {
     setDeviceConditions({ os: 'android' });
@@ -553,6 +579,182 @@ describe('default Gauge', () => {
     expect(fills).toHaveLength(1);
     expect(styleOf(fills[0]!).backgroundColor).toBe(fallbackSystemColors.warning.light);
   });
+
+  it.each(['accent', 'growth'] as const)(
+    'takes the colour of the %s tone as well',
+    async (tone) => {
+      setDeviceConditions({ os: 'android' });
+      await render(<Gauge value={0.25} label="Lecture" valueLabel="15 sur 60" tone={tone} />);
+      const fills = screen.container.queryAll((element) => styleOf(element).width === '25%');
+      expect(styleOf(fills[0]!).backgroundColor).toBe(appColors[tone].light);
+    },
+  );
+
+  it('has the inset of the other rows as a row of a list, and none elsewhere', async () => {
+    setDeviceConditions({ os: 'android' });
+    await render(
+      <>
+        <InList>
+          <ListRow label="Aujourd’hui" value="3 pages" />
+          <Gauge value={0.5} label="Santé" valueLabel="Bonne" testID="row" />
+        </InList>
+        <Gauge value={0.5} label="Eau" valueLabel="Moitié" testID="alone" />
+      </>,
+    );
+    const otherRow = screen.getByText('Aujourd’hui').parent;
+    expect(styleOf(screen.getByTestId('row')).paddingHorizontal).toBe(
+      otherRow && styleOf(otherRow).paddingHorizontal,
+    );
+    expect(styleOf(screen.getByTestId('row')).paddingHorizontal).toBe(layout.screenMargin);
+    expect(styleOf(screen.getByTestId('alone')).paddingHorizontal).toBeUndefined();
+  });
+});
+
+describe('default LabelRow', () => {
+  function renderNotice(scheme: 'light' | 'dark' = 'light') {
+    setDeviceConditions({ os: 'android', scheme });
+    return render(
+      <InList>
+        <LabelRow
+          label="Le jardin a soif"
+          detail="Une page suffit à l’arroser."
+          symbol={DROP}
+          tone="warning"
+          testID="notice"
+        />
+      </InList>,
+    );
+  }
+
+  it('is one element for screen readers, which hear the words and not the icon', async () => {
+    await renderNotice();
+    expect(screen.getByTestId('notice')).toHaveProp('accessible', true);
+    expect(screen.queryByRole('image')).not.toBeOnTheScreen();
+    expect(screen.getByText('Le jardin a soif')).toBeOnTheScreen();
+    expect(screen.getByText('Une page suffit à l’arroser.')).toBeOnTheScreen();
+  });
+
+  it.each(['light', 'dark'] as const)(
+    'colours the icon with the tone and never the words (%s)',
+    async (scheme) => {
+      await renderNotice(scheme);
+      const icons = screen.getByTestId('notice').queryAll(({ props }) => props.tint !== undefined);
+      expect(icons).toHaveLength(1);
+      expect(icons[0]).toHaveProp('tint', processColor(fallbackSystemColors.warning[scheme]));
+      expect(styleOf(screen.getByText('Le jardin a soif')).color).toBe(
+        fallbackSystemColors.label[scheme],
+      );
+      expect(styleOf(screen.getByText('Une page suffit à l’arroser.')).color).toBe(
+        fallbackSystemColors.secondaryLabel[scheme],
+      );
+    },
+  );
+
+  it('takes the accent by default, has the inset of the rows and a full touch target', async () => {
+    setDeviceConditions({ os: 'android' });
+    await render(
+      <InList>
+        <LabelRow label="Lecture du jour" symbol={BOOK} testID="row" />
+      </InList>,
+    );
+    const row = screen.getByTestId('row');
+    const icons = row.queryAll(({ props }) => props.tint !== undefined);
+    expect(icons[0]).toHaveProp('tint', processColor(appColors.accent.light));
+    expect(styleOf(row)).toMatchObject({
+      paddingHorizontal: layout.screenMargin,
+      minHeight: layout.touchTarget,
+    });
+  });
+});
+
+describe('default ButtonRow', () => {
+  it('is the button, as wide as the row, inside the inset of the rows', async () => {
+    setDeviceConditions({ os: 'android' });
+    const onPress = jest.fn();
+    await render(
+      <InList>
+        <ButtonRow label="Lire et arroser" onPress={onPress} testID="button" />
+      </InList>,
+    );
+    const button = screen.getByRole('button', { name: 'Lire et arroser' });
+    expect(styleOf(button).backgroundColor).toBe(appColors.accent.light);
+    expect(button.parent && styleOf(button.parent)).toEqual({ alignSelf: 'stretch' });
+    expect(button.parent?.parent && styleOf(button.parent.parent)).toMatchObject({
+      paddingHorizontal: layout.screenMargin,
+    });
+    expect(touchTargetHeight(button)).toBeGreaterThanOrEqual(touchTargets.ios);
+    await fireEvent.press(button);
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['secondary', 'plain'] as const)(
+    'keeps the roles and states of the button: destructive %s, disabled',
+    async (variant) => {
+      setDeviceConditions({ os: 'android' });
+      await render(
+        <InList>
+          <ButtonRow
+            label="Tout effacer"
+            variant={variant}
+            role="destructive"
+            disabled
+            onPress={jest.fn()}
+          />
+        </InList>,
+      );
+      expect(screen.getByRole('button', { name: 'Tout effacer' })).toBeDisabled();
+      expect(styleOf(screen.getByText('Tout effacer')).color).toBe(
+        fallbackSystemColors.destructive.light,
+      );
+    },
+  );
+});
+
+describe('default ContentRow', () => {
+  it('is a block as wide as the list, with the side inset of the rows', async () => {
+    setDeviceConditions({ os: 'android' });
+    await render(
+      <InList>
+        <ContentRow testID="content">
+          <RNText>Scène du jardin</RNText>
+        </ContentRow>
+      </InList>,
+    );
+    expect(screen.getByText('Scène du jardin')).toBeOnTheScreen();
+    expect(styleOf(screen.getByTestId('content'))).toEqual({
+      alignSelf: 'stretch',
+      paddingHorizontal: layout.screenMargin,
+    });
+    expect(screen.getByTestId('content')).toHaveProp('accessible', false);
+  });
+
+  it('is one element for screen readers when it is given a label', async () => {
+    setDeviceConditions();
+    await render(
+      <InList>
+        <ContentRow accessibilityLabel="Ton jardin : trois arbres en fleurs" testID="content">
+          <RNText>Scène du jardin</RNText>
+        </ContentRow>
+      </InList>,
+    );
+    expect(screen.getByLabelText('Ton jardin : trois arbres en fleurs')).toBe(
+      screen.getByTestId('content'),
+    );
+  });
+
+  it('holds controls, which are no longer rows: a gauge keeps the inset of the block only', async () => {
+    setDeviceConditions();
+    await render(
+      <InList>
+        <ContentRow>
+          <Gauge value={0.5} label="Santé" valueLabel="Bonne" testID="gauge" />
+          <Button label="Lire" onPress={jest.fn()} />
+        </ContentRow>
+      </InList>,
+    );
+    expect(screen.getByRole('button', { name: 'Lire' })).toBeOnTheScreen();
+    expect(styleOf(screen.getByTestId('gauge')).paddingHorizontal).toBeUndefined();
+  });
 });
 
 describe('default ContentUnavailable', () => {
@@ -608,8 +810,23 @@ describe('default rows and sections outside a list', () => {
         onChange={jest.fn()}
       />,
     ],
+    ['LabelRow', <LabelRow key="label" label="Seule" symbol={BOOK} />],
+    ['ButtonRow', <ButtonRow key="button" label="Lire" onPress={jest.fn()} />],
+    ['ContentRow', <ContentRow key="content">{null}</ContentRow>],
   ])('%s is refused, as on iOS where nothing would display it', async (name, element) => {
     await expect(render(element)).rejects.toThrow(`${name} must be inside a GroupedList`);
+  });
+
+  it('a row inside a ContentRow is refused, as on iOS where it is React Native again', async () => {
+    await expect(
+      render(
+        <InList>
+          <ContentRow>
+            <ListRow label="Perdue" />
+          </ContentRow>
+        </InList>,
+      ),
+    ).rejects.toThrow('ListRow must be inside a GroupedList');
   });
 
   it('accepts the other controls anywhere', async () => {

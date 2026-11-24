@@ -64,12 +64,15 @@ les tests, selon les usages de Material, sans imiter iOS.
 | `Button` `role="destructive"` | rôle destructif du système, en rouge ; refusé sur `primary`               | `buttons.md › Role`                                                                       |
 | `GroupedList`, `ListSection`  | `Form` et `Section`, avec titre et note de bas de section                 | `lists-and-tables.md › Style`                                                             |
 | `ListRow`                     | ligne de texte ; avec `onPress`, indicateur de navigation                 | `lists-and-tables.md › Mobile (iOS, iPadOS, visionOS)`                                    |
+| `LabelRow`                    | `Label` : un symbole puis des mots, une seconde ligne au besoin           | `lists-and-tables.md › Style`, `labels.md › Best practices`                               |
+| `ButtonRow`                   | le `Button` comme ligne : la ligne entière, à la largeur de la ligne      | `buttons.md › Style`, `› Best practices`                                                  |
+| `ContentRow`                  | contenu React Native dans une ligne nue, à la hauteur du contenu          | aucune (voir l'écart 15)                                                                  |
 | `SwitchRow`                   | `Toggle` dans une ligne, gardé dans le vert du système                    | `toggles.md › Mobile (iOS, iPadOS)`                                                       |
 | `StepperRow`                  | `Stepper` à côté de sa valeur écrite (`valueLabel`)                       | `steppers.md › Best practices`                                                            |
 | `ChoiceRow`                   | `Picker` en menu : le bouton à choix du système                           | `pop-up-buttons.md › Best practices`                                                      |
 | `TimePickerRow`               | `DatePicker` compact, heures et minutes                                   | `pickers.md › Mobile (iOS, iPadOS)`                                                       |
 | `ProgressIndicator`           | `ProgressView` : barre si `value`, indicateur d'activité sinon            | `progress-indicators.md › Best practices`                                                 |
-| `Gauge`                       | `Gauge` linéaire de capacité, libellés de valeur et de bornes             | `gauges.md › Anatomy`, `› Best practices`                                                 |
+| `Gauge`                       | `Gauge` linéaire de capacité, libellés de valeur et de bornes, `tone`     | `gauges.md › Anatomy`, `› Best practices`, `color.md › Best practices`                    |
 | `ContentUnavailable`          | `ContentUnavailableView` (iOS 17) ; réalisation par défaut sur iOS 16     | SwiftUI Pro, `design.md › Standard system styling`                                        |
 | `Icon`                        | SF Symbol dessiné par SwiftUI dans le style et la graisse du texte voisin | `sf-symbols.md › Weights and scales`, `typography.md › Supporting Dynamic Type`           |
 | `Pager`                       | `TabView` paginé de SwiftUI, avec l'indicateur de pages du système        | `page-controls.md › Best practices`, `› Customizing indicators`, `› Mobile`               |
@@ -82,10 +85,30 @@ les tests, selon les usages de Material, sans imiter iOS.
   valeur d'un choix ou d'une heure, progression). Seul l'interrupteur garde, exprès, le vert du
   système.
 - **Les lignes et les sections vivent dans `GroupedList`.** Hors d'une liste, `ListSection`,
-  `ListRow`, `SwitchRow`, `StepperRow`, `ChoiceRow` et `TimePickerRow` lèvent une erreur, dans
-  les deux réalisations : sur iOS rien d'autre ne pourrait les afficher. Un `Button`, une
-  `Gauge`, un `ProgressIndicator` ou une `Icon` vont partout, dans une liste aussi. La liste
-  défile seule et remplit la place donnée.
+  `ListRow`, `LabelRow`, `ButtonRow`, `ContentRow`, `SwitchRow`, `StepperRow`, `ChoiceRow` et
+  `TimePickerRow` lèvent une erreur, dans les deux réalisations : sur iOS rien d'autre ne
+  pourrait les afficher. Un `Button`, une `Gauge`, un `ProgressIndicator` ou une `Icon` vont
+  partout, dans une liste aussi. La liste défile seule et remplit la place donnée : un écran
+  qui a une liste n'a pas d'autre zone qui défile, ce qui précède les lignes entre dans la
+  liste par `ContentRow`.
+- **`ContentRow`** met du contenu React Native (une scène, un titre de page) dans la liste. Il
+  reçoit la largeur de la ligne et prend la hauteur qu'il lui faut ; la ligne n'a ni marge, ni
+  fond, ni séparateur. À placer **seul dans sa `ListSection`** (une ligne sans fond casserait le
+  bloc arrondi d'une section qui a d'autres lignes) et **sans marge latérale propre** : sur iOS
+  la liste en donne déjà une, la réalisation par défaut donne celle des autres lignes. Dedans,
+  on n'est plus dans la liste : une ligne y est refusée, un contrôle y reçoit son propre hôte.
+  `accessibilityLabel` sert au contenu que le lecteur d'écran ne sait pas lire (une scène
+  dessinée) : la ligne devient un seul élément, son contenu n'est plus lu morceau par morceau.
+- **`LabelRow`** : `tone` colore le symbole seul (`accent` par défaut, `growth`, `warning`,
+  `secondaryLabel`), jamais les mots, qui disent toujours ce que la couleur dit
+  (`color.md › Inclusive color`). Le symbole est décoratif, le lecteur d'écran lit les mots.
+- **`ButtonRow`** a les props de `Button` sauf `fullWidth` : il occupe toujours la ligne. Le
+  bouton `plain` est la ligne de la liste, parmi les autres. `primary` et `secondary`
+  remplacent la ligne (ni marge ni fond) et gardent la grande taille du système, au-dessus de
+  44 points : comme `ContentRow`, à placer seuls dans leur `ListSection`.
+- **`Gauge` et `tone`** (`accent`, `growth`, `warning`) : deux jauges d'un même écran qui ne
+  mesurent pas la même chose ne portent pas la même couleur (`color.md › Best practices`).
+  Dans une liste, la jauge de la réalisation par défaut prend la marge des autres lignes.
 - **`Pager`** remplit la place donnée ; `renderPage(i)` dessine la page `i` en React Native.
   Sur iOS, l'indicateur du système recouvre le bas des pages : chaque page réserve 44 points en
   bas. Ailleurs, c'est la liste paginée de la plateforme avec `PageIndicator` dessous.
@@ -120,6 +143,26 @@ et par texte (`getByRole('switch', { name })`).
 disponible ; les tests vérifient quel composant système est demandé, avec quel style, pas ce
 qu'iOS dessine.
 
+### À essayer d'abord sur un iPhone
+
+Du plus risqué au moins risqué :
+
+1. **`ContentRow` : du contenu React Native dans une ligne de liste SwiftUI.** À regarder : la
+   ligne suit-elle la hauteur du contenu, au premier affichage puis quand elle change (taille
+   du texte, rotation) ; le contenu reçoit-il bien la largeur de la ligne ; les touches
+   arrivent-elles aux contrôles placés dedans ; le défilement reste-t-il fluide ; la ligne
+   est-elle bien sans fond ni séparateur ; un contenu de moins de 44 points de haut (la hauteur
+   minimale d'une ligne) est-il bien placé ; VoiceOver lit-il le contenu, ou le libellé donné.
+2. **`Pager`** : pages React Native dans le `TabView`, indicateur visible, 44 points réservés.
+   Repli : `IOS_USES_SYSTEM_PAGER`.
+3. **`ButtonRow` `primary` et `secondary`** : le bouton couvre-t-il la largeur de la ligne nue,
+   sans fond de ligne visible autour, et l'espace avec les sections voisines est-il juste.
+4. **`LabelRow` avec `tone`** : le symbole coloré a-t-il la taille et la colonne du symbole que
+   le système dessine lui-même (`tone` par défaut), et sa couleur remplace-t-elle bien l'accent
+   de la liste ; la seconde ligne s'aligne-t-elle sous la première.
+5. Le reste : teinte de l'hôte, vert de l'interrupteur, rouge du bouton destructif, alignement
+   de `Icon` à côté d'un texte React Native, chevron de `ListRow`, lecture de `StepperRow`.
+
 ## Écarts aux skills
 
 Tout ce qui, dans `src/ui`, ne fait pas ce qu'un skill décrit.
@@ -135,8 +178,9 @@ Tout ce qui, dans `src/ui`, ne fait pas ce qu'un skill décrit.
 3. **L'accent sur tous les contrôles teintés.** `branding.md › Best practices` et
    `liquid-glass.md › Color on glass` : garder la couleur de marque hors de la plupart des
    contrôles. L'accent est la teinte de l'hôte : le système le pose aussi sur le libellé des
-   boutons secondaires et simples, la valeur d'un choix ou d'une heure, les progressions. C'est
-   le mécanisme d'accent d'iOS (`pickers.md › Mobile`, `color.md › Liquid Glass color`).
+   boutons secondaires et simples, la valeur d'un choix ou d'une heure, les progressions, le
+   symbole d'une `LabelRow`. C'est le mécanisme d'accent d'iOS (`pickers.md › Mobile`,
+   `color.md › Liquid Glass color`).
 4. **Tout teinter, interrupteur compris.** SwiftUI Design, `anti-ai-slop.md › Rule 9` : teinter
    toute l'appli, interrupteurs compris. L'interrupteur garde le vert du système
    (`toggles.md › Mobile` ; pour les contrôles, la règle d'Apple l'emporte).
@@ -180,6 +224,12 @@ check` : décider, par composant, entre l'usage de chaque plateforme et un dessi
 14. **Contraste élevé incomplet.** `color.md › Best practices` : une variante de contraste
     élevé par couleur. `onAccent`, `paper`, `ink` et les équivalents système hors iOS n'en ont
     pas (déjà au-dessus de 9:1 pour les trois premiers).
+15. **Contenu autre que du texte dans une liste.** `lists-and-tables.md › Best practices` :
+    préférer du texte dans une liste, et une collection quand les éléments sont de tailles très
+    différentes. `ContentRow` met une scène ou un titre de page dans une ligne nue de la liste.
+    Sans cela, l'écran empile deux zones qui défilent (ce qui précède la liste, puis la liste) :
+    une seule zone de défilement vaut mieux, et une ligne nue ne se présente pas comme une
+    ligne. Décision de l'architecte après la revue de design des écrans.
 
 Relèvent de la charte, pas de ce dossier : l'interligne d'Apple au lieu de 1,4 et 1,2 (SwiftUI
 Design, `typography-color.md › Typography Rules`), et des couleurs d'appli entre 5,04:1 et
@@ -188,4 +238,7 @@ Design, `typography-color.md › Typography Rules`), et des couleurs d'appli ent
 Jugements sans source dans les skills : le rôle `fill` (le remplissage système le plus
 marqué), les valeurs de repli hors iOS, les états pressé et désactivé et le rouge du bouton
 destructif de la réalisation par défaut (usages de Material), les 44 points réservés en bas des
-pages du pageur d'iOS.
+pages du pageur d'iOS, la seconde ligne d'une `LabelRow` en `subheadline` (`labels.md` ne donne
+que sa couleur), le bouton bordé qui remplace sa ligne dans `ButtonRow` (les skills ne disent
+rien d'un bouton dans une liste), la marge latérale de `ContentRow` dans la réalisation par
+défaut.

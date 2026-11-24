@@ -53,14 +53,36 @@ export function SwiftUIHost({ size, children }: SwiftUIHostProps) {
   );
 }
 
+interface ReactNativeContentProps {
+  /**
+   * `fill` (default): the content takes the size SwiftUI gives it. `content`: it takes the width
+   * SwiftUI gives it and the height it needs, which SwiftUI then follows.
+   */
+  height?: 'fill' | 'content';
+  /** Makes the content one element for VoiceOver, with this label. */
+  accessibilityLabel?: string;
+  testID?: string;
+  children: ReactNode;
+}
+
 /**
- * React Native content placed inside a SwiftUI view, at the size SwiftUI gives it. Below it the
- * tree is React Native again: a control found there needs a host of its own.
+ * React Native content placed inside a SwiftUI view. Below it the tree is React Native again: a
+ * control found there needs a host of its own.
  */
-export function ReactNativeContent({ children }: { children: ReactNode }) {
+export function ReactNativeContent({
+  height = 'fill',
+  accessibilityLabel,
+  testID,
+  children,
+}: ReactNativeContentProps) {
   return (
-    <RNHostView>
-      <View style={styles.fill}>
+    <RNHostView matchContents={height === 'content' ? { vertical: true } : false}>
+      <View
+        accessible={accessibilityLabel !== undefined}
+        accessibilityLabel={accessibilityLabel}
+        testID={testID}
+        style={height === 'content' ? undefined : styles.fill}
+      >
         <InsideSwiftUI.Provider value={false}>{children}</InsideSwiftUI.Provider>
       </View>
     </RNHostView>

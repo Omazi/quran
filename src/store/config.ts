@@ -10,6 +10,31 @@ export const STORED_DATA_VERSION = 2;
 /** The key of the stored document. */
 export const STORED_DATA_KEY = 'app-data';
 
+/**
+ * The key under which a stored text that could not be trusted is kept before it is replaced, so
+ * that it is not lost for a later repair. One generation only: the next rejected text takes its
+ * place. The app never reads it back by itself.
+ */
+export const REJECTED_DATA_KEY = 'app-data-rejected';
+
+/** The key that remembers which parts were rejected, until the person has been told. */
+export const RESET_NOTICE_KEY = 'app-data-reset-notice';
+
+/**
+ * The days a stored date may name. The rules of the garden and of the streak walk the calendar
+ * day by day from the oldest date they are given: a date in year 100 costs them seven hundred
+ * thousand steps. No reading can be older than the app (first built in 2026; 2020 leaves room for
+ * a phone whose clock is a few years late), and the end of the century is further than any phone
+ * in use will go. Dates outside are refused when written and rejected when read back.
+ */
+export const STORED_DATE_RANGE = { earliest: '2020-01-01', latest: '2099-12-31' } as const;
+
+/**
+ * The most pauses kept. Each pause is walked day by day too, so their number multiplies the
+ * cost. A pause is a rare event (an illness, a journey): fifty leaves room for years of them.
+ */
+export const MAX_PAUSES = 50;
+
 /** The daily goal the stepper allows (docs/specs/ui-lot1.md, A.3). */
 export const DAILY_GOAL_RANGE = { min: 1, max: 60 } as const;
 
@@ -19,12 +44,16 @@ export const DAILY_GOAL_RANGE = { min: 1, max: 60 } as const;
  */
 export const DEFAULT_DAILY_GOAL_PAGES = 5;
 
-/** The reminders proposed at the first launch, as in the prototype the owner saw. */
+/**
+ * The reminders proposed at the first launch: the two about the person's own reading. The Friday
+ * reminder is off until the person switches it on, because its notification names a surah on a
+ * lock screen others can see (notifications.md › Best practices).
+ */
 export const DEFAULT_REMINDERS: ReminderSettings = Object.freeze({
   dailyEnabled: true,
   dailyTime: Object.freeze({ hour: 20, minute: 30 }),
   thirstyGardenEnabled: true,
-  fridayKahfEnabled: true,
+  fridayKahfEnabled: false,
   fridayTime: Object.freeze({ hour: 9, minute: 0 }),
   quietHours: null,
 });

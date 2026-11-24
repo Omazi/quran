@@ -5,8 +5,9 @@
       "thriving": "Jardin au hizb {{hizb}}",
       "thirsty": "Jardin au hizb {{hizb}}, assoiffé",
       "wilting": "Jardin au hizb {{hizb}}, fané",
-      "dying": "Jardin au hizb {{hizb}}, qui dépérit",
+      "dying": "Jardin au hizb {{hizb}}, mourant",
       "dead": "Terre morte",
+      "revived": "Jardin au hizb {{hizb}}, ranimé",
       "complete": "Jardin complet"
     },
     "label": {
@@ -14,8 +15,9 @@
       "thriving": "Jardin, {{hizb}} hizb sur {{total}}, {{water}}",
       "thirsty": "Jardin assoiffé, {{hizb}} hizb sur {{total}}, {{water}}",
       "wilting": "Jardin fané, {{hizb}} hizb sur {{total}}, {{water}}",
-      "dying": "Jardin qui dépérit, {{hizb}} hizb sur {{total}}, {{water}}",
+      "dying": "Jardin mourant, {{hizb}} hizb sur {{total}}, {{water}}",
       "dead": "Terre morte, {{hizb}} hizb sur {{total}} acquis, {{water}}",
+      "revived": "Jardin ranimé, {{hizb}} hizb sur {{total}}, {{water}}",
       "complete": "Jardin complet, {{hizb}} hizb sur {{total}}, {{water}}"
     }
   },
@@ -32,13 +34,14 @@
       "dry": "l’eau est à sec"
     }
   },
-  "phases": {
+  "states": {
     "bare": "Terre nue",
     "thriving": "Florissant",
-    "thirsty": "A soif",
-    "wilting": "Fane",
-    "dying": "Dépérit",
-    "dead": "Terre morte"
+    "thirsty": "Assoiffé",
+    "wilting": "Fané",
+    "dying": "Mourant",
+    "dead": "Terre morte",
+    "revived": "Ranimé"
   },
   "kinds": {
     "pomegranate": "Grenadier",
@@ -80,7 +83,7 @@
     },
     "health": {
       "label": "Santé",
-      "value": "{{phase}}, {{percent}}\u00a0%",
+      "value": "{{state}}, {{percent}}\u00a0%",
       "minimum": "0\u00a0%",
       "maximum": "100\u00a0%"
     },
@@ -92,7 +95,7 @@
       "value": "{{element}}, {{percent}}\u00a0%"
     },
     "last": {
-      "label": "Dernier élément acquis"
+      "label": "Dernier élément"
     },
     "visible": {
       "label": "Éléments visibles",

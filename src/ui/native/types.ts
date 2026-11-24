@@ -60,6 +60,53 @@ export interface ListSectionProps {
   children: ReactNode;
 }
 
+/**
+ * The colour of the symbol of a `LabelRow`: the accent, a status (`growth`, `warning`), or the
+ * grey of a symbol that says nothing more than its words.
+ */
+export type LabelRowTone = Extract<
+  IconColorRole,
+  'accent' | 'growth' | 'warning' | 'secondaryLabel'
+>;
+
+export interface LabelRowProps {
+  /** The words of the row. They always stay in the primary label colour. */
+  label: string;
+  /** A second line under the label: one short sentence, in the secondary label colour. */
+  detail?: string;
+  /** Decorative: screen readers hear the words only, so the words must say everything. */
+  symbol: IconSymbol;
+  /**
+   * Colours the symbol only, never the words. Defaults to `accent`. Never the only signal: the
+   * words say what the colour says (color.md › Inclusive color).
+   */
+  tone?: LabelRowTone;
+  testID?: string;
+}
+
+/**
+ * A `Button` that is a row of a section: always as wide as the row. A `plain` one is a row among
+ * the others. A `primary` or `secondary` one replaces its row, which has no background: put it
+ * alone in its section.
+ */
+export type ButtonRowProps = Omit<ButtonProps, 'fullWidth'>;
+
+export interface ContentRowProps {
+  /**
+   * React Native content: a scene, a page header. It gets the width of the row and takes the
+   * height it needs, without a side margin of its own: the list gives one. It is no longer
+   * inside the list: a row or a section placed here is refused, and a control gets a host of
+   * its own. The row has no background: put it alone in its section.
+   */
+  children: ReactNode;
+  /**
+   * For content that screen readers cannot read by itself, such as a drawn scene. The row is
+   * then one element with this label, and what it contains is no longer read piece by piece.
+   */
+  accessibilityLabel?: string;
+  testID?: string;
+}
+
 export interface ListRowProps {
   label: string;
   /** Short value shown at the trailing side. */
@@ -223,6 +270,9 @@ export interface NativeControls {
   GroupedList: (props: GroupedListProps) => ReactElement;
   ListSection: (props: ListSectionProps) => ReactElement;
   ListRow: (props: ListRowProps) => ReactElement;
+  LabelRow: (props: LabelRowProps) => ReactElement;
+  ButtonRow: (props: ButtonRowProps) => ReactElement;
+  ContentRow: (props: ContentRowProps) => ReactElement;
   SwitchRow: (props: SwitchRowProps) => ReactElement;
   StepperRow: (props: StepperRowProps) => ReactElement;
   ChoiceRow: <Value extends string>(props: ChoiceRowProps<Value>) => ReactElement;

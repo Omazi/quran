@@ -1,5 +1,12 @@
 {
   "title": "Réglages",
+  "dataResetNotice": {
+    "title": "À savoir",
+    "journal": "L’appli n’a pas pu relire ton journal de lecture. Ton jardin repart d’une terre nue ; tes réglages n’ont pas changé.",
+    "settings": "L’appli n’a pas pu relire tes réglages. Ils reprennent leurs valeurs de départ ; ton journal de lecture n’a pas changé.",
+    "everything": "L’appli n’a pas pu relire ce qu’elle avait enregistré. Elle repart de zéro : réglages de départ et jardin en terre nue.",
+    "dismiss": "D’accord"
+  },
   "language": {
     "label": "Langue",
     "options": {
@@ -29,14 +36,15 @@
   "reminders": {
     "title": "Rappels",
     "daily": "Rappel du jour",
-    "dailyTime": "Heure",
+    "dailyTime": "Heure des rappels",
     "fridayTime": "Heure du vendredi",
     "thirstyGarden": "Quand le jardin a soif",
     "fridayKahf": "Le vendredi : sourate Al-Kahf",
+    "requestPermission": "Demander l’autorisation",
     "openSystemSettings": "Ouvrir les réglages du téléphone",
     "notice": {
-      "will-ask": "Ton téléphone te demandera ensuite d’autoriser les notifications.",
       "denied": "Les notifications de l’appli sont désactivées. Pour recevoir tes rappels, autorise-les dans les réglages du téléphone.",
+      "not-asked": "Ton téléphone ne t’a pas encore demandé si l’appli peut t’envoyer des notifications. D’ici là, tes rappels n’arrivent pas.",
       "none-enabled": "Sans rappel, l’appli ne t’envoie aucune notification."
     }
   },

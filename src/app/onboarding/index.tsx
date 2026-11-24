@@ -29,7 +29,8 @@ export default function OnboardingRoute() {
   const { model, actions } = useOnboarding({
     notifications: deviceNotificationPermissions,
     onFinished: ({ isReplay }) => {
-      if (isReplay) router.back();
+      // Opened by a link, the introduction has no screen behind it to go back to.
+      if (isReplay && router.canGoBack()) router.back();
       else router.replace('/(tabs)');
     },
   });

@@ -23,19 +23,25 @@ export interface OnboardingModel {
   readonly isReplay: boolean;
   readonly dailyGoal: DailyGoalModel;
   readonly reminders: RemindersModel;
+  readonly ending: OnboardingEnding;
   /** True from the press on the last button until the flow closes. */
   readonly isFinishing: boolean;
 }
+
+/**
+ * What the last button does, which decides what it is called.
+ * `ask-permission`: the system's alert follows it; the page announces it and the button is named
+ * "Continue" (privacy.md › Pre-alert screens). `start`: it opens the app. `done`: it closes the
+ * flow opened again from the settings.
+ */
+export type OnboardingEnding = 'ask-permission' | 'start' | 'done';
 
 /** What the person can do in the first-launch flow. */
 export interface OnboardingActions {
   showPage: (pageIndex: number) => void;
   setDailyGoalPages: (pages: number) => void;
   changeReminders: (change: Partial<ReminderSettings>) => void;
-  /**
-   * The last button: lets the system ask for the permission to notify if a reminder is on, then
-   * ends the flow.
-   */
+  /** The last button: shows the system's alert when the ending is `ask-permission`, then ends. */
   finish: () => void;
 }
 
@@ -63,14 +69,21 @@ export function useOnboarding({
   const [pageIndex, setPageIndex] = useState(initialPageIndex);
   const [isFinishing, setFinishing] = useState(false);
   const dailyGoal = useDailyGoal();
-  const reminders = useReminders({ notifications, asks: 'on-request' });
+  // At the first launch the last button asks for the permission, after the page has said so.
+  // Opened again from the settings, the flow asks as the settings do: when a reminder goes on.
+  const reminders = useReminders({ notifications, asks: isReplay ? 'on-enable' : 'on-request' });
+  const ending: OnboardingEnding = isReplay
+    ? 'done'
+    : reminders.willAskPermission
+      ? 'ask-permission'
+      : 'start';
 
   const finish = async () => {
     if (isFinishing) return;
     setFinishing(true);
     // Whatever the person answers, and even if the system cannot ask, the flow ends: their
     // reminders stay as they set them, and the settings say when the system blocks them.
-    await reminders.requestPermission();
+    if (ending === 'ask-permission') await reminders.requestPermission();
     completeOnboarding();
     onFinished({ isReplay });
   };
@@ -82,6 +95,7 @@ export function useOnboarding({
       isReplay,
       dailyGoal: dailyGoal.model,
       reminders: reminders.model,
+      ending,
       isFinishing,
     },
     actions: {

@@ -40,13 +40,14 @@ export interface HomeModelInput {
 }
 
 /**
- * What the home screen reads from the app's data: the reading journal and three settings. The
- * store will provide it; a demonstration source does until then (see `home-source.ts`).
+ * What the home screen reads from the app's data: the reading journal and three settings, as
+ * the store holds them (see `home-source.ts`).
  */
 export type HomeSource = Pick<HomeModelInput, 'journal' | 'settings'>;
 
 /**
- * The message shown under the scene, or none while the garden thrives.
+ * The message shown under the scene, in place of the water status, or none while the garden
+ * thrives.
  * `recovering`: the garden still shows a drought, but the person read today, so it is told as
  * good news. `complete`: the khatma is finished and the next one has no page yet.
  */
@@ -89,6 +90,8 @@ export type HomeModel = HomeReadyModel | HomeUnavailableModel;
 export interface HomeActions {
   /** Opens the reader on the page to read. The one main action of the screen. */
   readonly readAndWater: () => void;
+  /** Builds the model again. The action of the unavailable state. */
+  readonly retry: () => void;
 }
 
 interface NoticeFacts {

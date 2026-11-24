@@ -9,7 +9,7 @@ import { AppStoreProvider } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
 
 import { buildHomeModel } from '../home-model';
-import { buildReadingHistory, READING_HISTORIES } from '../test-support/reading-histories';
+import { buildReadingHistory, READING_HISTORIES } from '../dev-preview/reading-histories';
 import { useHomeModel } from '../use-home-model';
 import { deviceLocalDate, useToday } from '../use-today';
 
@@ -102,7 +102,7 @@ describe('useHomeModel', () => {
 
   it('shows a new person a bare earth: nothing is made up', async () => {
     const { result } = await renderHomeModel().hook;
-    expect(result.current).toMatchObject({
+    expect(result.current.model).toMatchObject({
       status: 'ready',
       garden: { phase: 'bare', hizbCompleted: 0 },
       today: { pagesRead: 0 },
@@ -112,7 +112,7 @@ describe('useHomeModel', () => {
   it.each(READING_HISTORIES)('builds the model of what the store holds: %s', async (name) => {
     const source = buildReadingHistory(name, TODAY, RANGES);
     const { result } = await renderHomeModel(source).hook;
-    expect(result.current).toEqual(
+    expect(result.current.model).toEqual(
       buildHomeModel({ ...source, today: TODAY, hizbPageRanges: RANGES }),
     );
   });
@@ -124,7 +124,7 @@ describe('useHomeModel', () => {
       store.getState().recordPageRead({ page: 1, date: TODAY });
       store.getState().setDailyGoalPages(2);
     });
-    expect(result.current).toMatchObject({
+    expect(result.current.model).toMatchObject({
       status: 'ready',
       today: { pagesRead: 1, goalPages: 2 },
     });
@@ -134,7 +134,22 @@ describe('useHomeModel', () => {
     const { result, rerender } = await renderHomeModel().hook;
     const first = result.current;
     await rerender({});
-    expect(result.current).toBe(first);
+    expect(result.current.model).toBe(first.model);
+    expect(result.current.retry).toBe(first.retry);
+  });
+
+  it('says the screen is unavailable when the data cannot be read, and tries again when asked', async () => {
+    const logged = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const { result } = await renderHomeModel({
+      journal: [],
+      settings: { dailyGoalPages: 0, userSeed: 1, pauses: [] },
+    }).hook;
+    expect(result.current.model).toEqual({ status: 'unavailable' });
+    expect(logged).toHaveBeenCalledTimes(1);
+    // Trying again builds the model once more from the data as it is now.
+    await act(async () => result.current.retry());
+    expect(logged).toHaveBeenCalledTimes(2);
+    expect(result.current.model).toEqual({ status: 'unavailable' });
   });
 
   it('every history is a valid journal on any day, a leap day included', () => {

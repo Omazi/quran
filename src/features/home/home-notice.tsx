@@ -1,79 +1,60 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
 
-import {
-  AppText,
-  Icon,
-  radius,
-  spacing,
-  useColors,
-  type IconColorRole,
-  type IconSymbol,
-} from '@/ui';
+import type { GardenState } from '@/domain/garden';
+import { WATER_SYMBOLS } from '@/features/garden';
+import { LabelRow, type IconSymbol, type LabelRowTone } from '@/ui';
 
 import type { HomeNotice } from './home-model';
 
-interface NoticeIcon {
-  readonly symbol: IconSymbol;
-  readonly color: IconColorRole;
-}
-
-/** The garden: an outline symbol, which sits well beside text (sf-symbols.md › Design variants). */
-const GARDEN_SYMBOL: IconSymbol = { ios: 'leaf', android: 'eco' };
+/** Outline symbols, which sit well beside text (sf-symbols.md › Design variants). */
+const BARE_EARTH_SYMBOL: IconSymbol = { ios: 'leaf', android: 'eco' };
 const COMPLETE_SYMBOL: IconSymbol = { ios: 'checkmark.seal', android: 'verified' };
 
 /**
- * The symbol of each message. Orange is thirst and only colours the symbol; green is a garden
- * that is well. The words always say what the colour says (charter, section 3;
- * accessibility.md › Vision).
+ * The colour of the symbol of each message, and of the symbol only (charter, section 3). Orange
+ * is thirst; the accent is water that flows; green is what has grown. The words always say what
+ * the colour says (color.md › Inclusive color).
  */
-const NOTICE_ICONS: Readonly<Record<HomeNotice, NoticeIcon>> = {
-  bare: { symbol: GARDEN_SYMBOL, color: 'secondaryLabel' },
-  thirsty: { symbol: GARDEN_SYMBOL, color: 'warning' },
-  wilting: { symbol: GARDEN_SYMBOL, color: 'warning' },
-  dying: { symbol: GARDEN_SYMBOL, color: 'warning' },
-  dead: { symbol: GARDEN_SYMBOL, color: 'warning' },
-  recovering: { symbol: GARDEN_SYMBOL, color: 'growth' },
-  complete: { symbol: COMPLETE_SYMBOL, color: 'growth' },
+const NOTICE_TONES: Readonly<Record<HomeNotice, LabelRowTone>> = {
+  bare: 'secondaryLabel',
+  thirsty: 'warning',
+  wilting: 'warning',
+  dying: 'warning',
+  dead: 'warning',
+  recovering: 'accent',
+  complete: 'growth',
 };
 
-export interface HomeNoticeBannerProps {
+/**
+ * A message about water carries the symbol of the water as it is, so that the shape still tells
+ * its state while the water row gives its place to the message.
+ */
+function noticeSymbol(notice: HomeNotice, garden: GardenState): IconSymbol {
+  if (notice === 'bare') return BARE_EARTH_SYMBOL;
+  if (notice === 'complete') return COMPLETE_SYMBOL;
+  return WATER_SYMBOLS[garden.water];
+}
+
+export interface HomeNoticeRowProps {
   notice: HomeNotice;
+  garden: GardenState;
 }
 
 /**
- * The message of the day about the garden: a symbol, a short title and one sentence that says
- * what a page will do. Status shown where it applies, in the interface, never as an alert
- * (feedback.md › Best practices). It never blames (writing.md › Best practices; charter, voice).
- * One element for screen readers: the symbol is decorative, the words say it all.
+ * The message of the day about the garden, as a row of the list: a symbol, the name of the
+ * state, and one sentence that says what a page will do (lists-and-tables.md › Style). Status
+ * shown where it applies, never as an alert (feedback.md › Best practices), and it never blames
+ * (writing.md › Best practices; charter, voice). Place it in a `GroupedList`.
  */
-export function HomeNoticeBanner({ notice }: HomeNoticeBannerProps) {
+export function HomeNoticeRow({ notice, garden }: HomeNoticeRowProps) {
   const { t } = useTranslation('home');
-  const colors = useColors();
-  const { symbol, color } = NOTICE_ICONS[notice];
   return (
-    <View
-      accessible
-      style={[styles.banner, { backgroundColor: colors.secondaryGroupedBackground }]}
+    <LabelRow
+      label={t(`notice.${notice}.title`)}
+      detail={t(`notice.${notice}.text`)}
+      symbol={noticeSymbol(notice, garden)}
+      tone={NOTICE_TONES[notice]}
       testID={`home-notice-${notice}`}
-    >
-      <Icon symbol={symbol} textStyle="headline" color={color} />
-      <View style={styles.words}>
-        <AppText variant="headline">{t(`notice.${notice}.title`)}</AppText>
-        <AppText>{t(`notice.${notice}.text`)}</AppText>
-      </View>
-    </View>
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.md,
-  },
-  // The words take the width left by the symbol and wrap at large text sizes.
-  words: { flexGrow: 1, flexShrink: 1, gap: spacing.xs },
-});

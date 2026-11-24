@@ -5,10 +5,11 @@
  */
 
 export { previewGardenState, type GardenPreview } from './garden-preview';
+export { WATER_SYMBOLS } from './config';
 export {
   GardenElementsSection,
   GardenStateSection,
-  GardenWaterStatus,
+  GardenWaterRow,
   type GardenReadoutProps,
 } from './garden-readout';
 export { GardenScene, type GardenSceneProps, type GardenSceneSize } from './garden-scene';

@@ -10,11 +10,14 @@ import { Platform, PlatformColor, Text as RNText } from 'react-native';
 
 import {
   Button,
+  ButtonRow,
   ChoiceRow,
+  ContentRow,
   ContentUnavailable,
   Gauge,
   GroupedList,
   Icon,
+  LabelRow,
   ListRow,
   ListSection,
   Pager,
@@ -683,6 +686,214 @@ describe('iOS Pager', () => {
   });
 });
 
+describe('iOS LabelRow', () => {
+  it('is the system label: the system draws the symbol itself, in the accent of the list', async () => {
+    setDeviceConditions();
+    await render(
+      <InList>
+        <LabelRow label="Lecture du jour" symbol={BOOK} testID="row" />
+      </InList>,
+    );
+    const row = screen.getByTestId('row');
+    expect(row.props).toMatchObject({ title: 'Lecture du jour', systemImage: 'book.closed' });
+    // No image of the app and no colour of the app: both are the system's.
+    expect(row.queryAll(({ props }) => props.systemName !== undefined)).toHaveLength(0);
+    expect(modifiersOf(row)).toEqual([]);
+  });
+
+  it.each([
+    ['warning', { type: 'color', color: PlatformColor('systemOrange') }],
+    ['growth', { type: 'color', color: iosAppColor('growth') }],
+    ['secondaryLabel', { type: 'hierarchical', hierarchical: 'secondary' }],
+  ] as const)(
+    'a %s tone colours the symbol, which still grows with the text',
+    async (tone, style) => {
+      setDeviceConditions({ fontScale: LARGEST_FONT_SCALE });
+      await render(
+        <InList>
+          <LabelRow label="Le jardin a soif" symbol={DROP} tone={tone} testID="row" />
+        </InList>,
+      );
+      const row = screen.getByTestId('row');
+      expect(row.props.systemImage).toBeUndefined();
+      const symbols = row.queryAll(({ props }) => props.systemName === 'drop.fill');
+      expect(symbols).toHaveLength(1);
+      // A text style, not the 24 points Expo UI gives an image without a font.
+      expect(modifiersOf(symbols[0]!).filter(({ $type }) => $type === 'font')).toEqual([
+        { $type: 'font', textStyle: 'body' },
+      ]);
+      expect(modifierOf(symbols[0]!, 'foregroundStyle')).toMatchObject({ style });
+      expect(modifierOf(symbols[0]!, 'accessibilityHidden')).toMatchObject({ hidden: true });
+    },
+  );
+
+  it('puts a second line under the label, and never colours the words with the tone', async () => {
+    setDeviceConditions();
+    await render(
+      <InList>
+        <LabelRow
+          label="Le jardin a soif"
+          detail="Une page suffit à l’arroser."
+          symbol={DROP}
+          tone="warning"
+          testID="row"
+        />
+      </InList>,
+    );
+    const row = screen.getByTestId('row');
+    expect(row.props.title).toBeUndefined();
+    expect(swiftUITexts(row)).toEqual(['Le jardin a soif', 'Une page suffit à l’arroser.']);
+    const [label, detail] = row.queryAll(({ props }) => 'text' in props);
+    expect(label?.parent?.props).toMatchObject({ alignment: 'leading' });
+    expect(modifiersOf(label!)).toEqual([]);
+    expect(modifiersOf(detail!)).toEqual([
+      { $type: 'font', textStyle: 'subheadline' },
+      { $type: 'foregroundStyle', style: { type: 'hierarchical', hierarchical: 'secondary' } },
+    ]);
+  });
+});
+
+/** The modifiers of a row that gives up the margins, background and separator of the list. */
+const BARE_ROW = [
+  { $type: 'listRowInsets', top: 0, leading: 0, bottom: 0, trailing: 0 },
+  { $type: 'listRowBackground', color: 'clear' },
+  { $type: 'listRowSeparator', visibility: 'hidden' },
+];
+
+describe('iOS ButtonRow', () => {
+  it.each([
+    ['primary', 'borderedProminent'],
+    ['secondary', 'bordered'],
+  ] as const)(
+    'a %s button is the row itself: the system style, as wide as the row, 44 points at least',
+    async (variant, style) => {
+      setDeviceConditions();
+      await render(
+        <InList>
+          <ButtonRow
+            label="Lire et arroser"
+            variant={variant}
+            onPress={jest.fn()}
+            testID="button"
+          />
+        </InList>,
+      );
+      const button = screen.getByTestId('button');
+      expect(modifierOf(button, 'buttonStyle')).toMatchObject({ style });
+      expect(modifierOf(button, 'controlSize')).toMatchObject({ size: 'large' });
+      expect(modifierOf(firstChild(button), 'frame')).toMatchObject({ maxWidth: Infinity });
+      expect(button.parent && modifiersOf(button.parent)).toEqual(BARE_ROW);
+      // The list is the host: the button brings none.
+      expect(hosts()).toHaveLength(1);
+    },
+  );
+
+  it('a plain button keeps the row of the list, which is the button', async () => {
+    setDeviceConditions();
+    await render(
+      <InList>
+        <ButtonRow label="Revoir" variant="plain" onPress={jest.fn()} testID="button" />
+      </InList>,
+    );
+    const button = screen.getByTestId('button');
+    expect(modifierOf(button, 'buttonStyle')).toBeUndefined();
+    expect(button.parent && modifiersOf(button.parent)).toEqual([]);
+    expect(modifierOf(firstChild(button), 'frame')).toBeUndefined();
+  });
+
+  it('is the primary button by default and calls back when pressed', async () => {
+    setDeviceConditions();
+    const onPress = jest.fn();
+    await render(
+      <InList>
+        <ButtonRow label="Lire et arroser" onPress={onPress} testID="button" />
+      </InList>,
+    );
+    const button = screen.getByTestId('button');
+    expect(modifierOf(button, 'buttonStyle')).toMatchObject({ style: 'borderedProminent' });
+    expect(modifierOf(firstChild(button), 'foregroundStyle')).toMatchObject({ style: ON_ACCENT });
+    await fireEvent(button, 'buttonPress');
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['secondary', 'plain'] as const)(
+    'keeps the roles and states of the button: destructive %s, disabled',
+    async (variant) => {
+      setDeviceConditions();
+      await render(
+        <InList>
+          <ButtonRow
+            label="Tout effacer"
+            variant={variant}
+            role="destructive"
+            disabled
+            onPress={jest.fn()}
+            testID="button"
+          />
+        </InList>,
+      );
+      const button = screen.getByTestId('button');
+      expect(button).toHaveProp('role', 'destructive');
+      expect(modifierOf(button, 'tint')).toMatchObject({
+        tint: { type: 'color', color: PlatformColor('systemRed') },
+      });
+      expect(modifierOf(button, 'disabled')).toMatchObject({ disabled: true });
+    },
+  );
+});
+
+describe('iOS ContentRow', () => {
+  function renderContentRow(accessibilityLabel?: string) {
+    return render(
+      <InList>
+        <ContentRow accessibilityLabel={accessibilityLabel} testID="content">
+          <RNText>Scène du jardin</RNText>
+          <Icon symbol={DROP} />
+        </ContentRow>
+      </InList>,
+    );
+  }
+
+  it('is React Native content in a row without margins, background or separator', async () => {
+    setDeviceConditions();
+    await renderContentRow();
+    const content = screen.getByTestId('content');
+    expect(screen.getByText('Scène du jardin')).toBeOnTheScreen();
+    expect(content.parent && modifiersOf(content.parent)).toEqual([]);
+    expect(content.parent?.parent && modifiersOf(content.parent.parent)).toEqual(BARE_ROW);
+  });
+
+  it('takes the width of the row and gives the row the height of its content', async () => {
+    setDeviceConditions();
+    await renderContentRow();
+    const content = screen.getByTestId('content');
+    expect(content.parent?.props).toMatchObject({
+      matchContentsHorizontal: false,
+      matchContentsVertical: true,
+    });
+    // No height of its own: a filling content would have none to give.
+    expect(styleOf(content)).toEqual({});
+  });
+
+  it('gives a control inside it a host of its own', async () => {
+    setDeviceConditions();
+    await renderContentRow();
+    expect(hosts()).toHaveLength(2);
+    expect(swiftUIViewsWithoutHost()).toEqual([]);
+  });
+
+  it('is one element for VoiceOver when it is given a label, and none otherwise', async () => {
+    setDeviceConditions();
+    await renderContentRow('Ton jardin : trois arbres en fleurs');
+    expect(screen.getByLabelText('Ton jardin : trois arbres en fleurs')).toBe(
+      screen.getByTestId('content'),
+    );
+    await screen.unmount();
+    await renderContentRow();
+    expect(screen.getByTestId('content')).toHaveProp('accessible', false);
+  });
+});
+
 describe('iOS rows and sections outside a list', () => {
   beforeEach(() => {
     // React reports the error thrown by a component on the console; the test asserts on it.
@@ -718,8 +929,33 @@ describe('iOS rows and sections outside a list', () => {
         onChange={jest.fn()}
       />,
     ],
+    ['LabelRow', <LabelRow key="label" label="Seule" symbol={BOOK} />],
+    ['ButtonRow', <ButtonRow key="button" label="Lire" onPress={jest.fn()} />],
+    ['ContentRow', <ContentRow key="content">{null}</ContentRow>],
   ])('%s is refused: nothing would display it on an iPhone', async (name, element) => {
     await expect(render(element)).rejects.toThrow(`${name} must be inside a GroupedList`);
+  });
+
+  it('a row inside the React Native content of a ContentRow is refused too', async () => {
+    await expect(
+      render(
+        <InList>
+          <ContentRow>
+            <ListRow label="Perdue" />
+          </ContentRow>
+        </InList>,
+      ),
+    ).rejects.toThrow('ListRow must be inside a GroupedList');
+  });
+
+  it('a ButtonRow refuses what a Button refuses', async () => {
+    await expect(
+      render(
+        <InList>
+          <ButtonRow label="Tout effacer" role="destructive" onPress={jest.fn()} />
+        </InList>,
+      ),
+    ).rejects.toThrow(TypeError);
   });
 });
 

@@ -4,18 +4,20 @@
       "bare": "Bare earth",
       "thriving": "Garden at hizb {{hizb}}",
       "thirsty": "Garden at hizb {{hizb}}, thirsty",
-      "wilting": "Garden at hizb {{hizb}}, wilting",
-      "dying": "Garden at hizb {{hizb}}, withering",
+      "wilting": "Garden at hizb {{hizb}}, wilted",
+      "dying": "Garden at hizb {{hizb}}, withered",
       "dead": "Dead earth",
+      "revived": "Garden at hizb {{hizb}}, revived",
       "complete": "Complete garden"
     },
     "label": {
       "bare": "Bare earth, no hizb finished yet",
       "thriving": "Garden, {{hizb}} of {{total}} hizb, {{water}}",
       "thirsty": "Thirsty garden, {{hizb}} of {{total}} hizb, {{water}}",
-      "wilting": "Wilting garden, {{hizb}} of {{total}} hizb, {{water}}",
-      "dying": "Withering garden, {{hizb}} of {{total}} hizb, {{water}}",
+      "wilting": "Wilted garden, {{hizb}} of {{total}} hizb, {{water}}",
+      "dying": "Withered garden, {{hizb}} of {{total}} hizb, {{water}}",
       "dead": "Dead earth, {{hizb}} of {{total}} hizb earned, {{water}}",
+      "revived": "Revived garden, {{hizb}} of {{total}} hizb, {{water}}",
       "complete": "Complete garden, {{hizb}} of {{total}} hizb, {{water}}"
     }
   },
@@ -32,13 +34,14 @@
       "dry": "the water has run dry"
     }
   },
-  "phases": {
+  "states": {
     "bare": "Bare earth",
     "thriving": "Thriving",
     "thirsty": "Thirsty",
-    "wilting": "Wilting",
-    "dying": "Withering",
-    "dead": "Dead earth"
+    "wilting": "Wilted",
+    "dying": "Withered",
+    "dead": "Dead earth",
+    "revived": "Revived"
   },
   "kinds": {
     "pomegranate": "Pomegranate tree",
@@ -80,7 +83,7 @@
     },
     "health": {
       "label": "Health",
-      "value": "{{phase}}, {{percent}}%",
+      "value": "{{state}}, {{percent}}%",
       "minimum": "0%",
       "maximum": "100%"
     },
@@ -92,7 +95,7 @@
       "value": "{{element}}, {{percent}}%"
     },
     "last": {
-      "label": "Last Element Earned"
+      "label": "Last Element"
     },
     "visible": {
       "label": "Visible Elements",

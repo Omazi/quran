@@ -8,7 +8,7 @@ import { AppStoreProvider, type AppStore } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
 import { resetDeviceConditions } from '@/ui/test-support/environment';
 
-import { buildReadingHistory } from '../test-support/reading-histories';
+import { buildReadingHistory } from '../dev-preview/reading-histories';
 import { deviceLocalDate } from '../use-today';
 
 jest.mock('expo-router', () => ({ router: { navigate: jest.fn() } }));

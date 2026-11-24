@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { render, renderHook, screen } from '@testing-library/react-native';
 
 import {
   DEFAULT_GARDEN_CONFIG,
@@ -8,7 +8,7 @@ import {
   type GardenState,
   type WaterState,
 } from '@/domain/garden';
-import { GroupedList } from '@/ui';
+import { GroupedList, ListSection, useColors } from '@/ui';
 import {
   directionDependentStyles,
   fixedHeightsAroundText,
@@ -17,6 +17,7 @@ import {
   resetDeviceConditions,
   setDeviceConditions,
   styleOf,
+  withDescendants,
 } from '@/ui/test-support/environment';
 
 import arGarden from '../../../i18n/locales/ar/garden.json';
@@ -24,7 +25,7 @@ import enGarden from '../../../i18n/locales/en/garden.json';
 import frGarden from '../../../i18n/locales/fr/garden.json';
 import { GARDEN_SCENE_BAND_MIN_HEIGHT } from '../config';
 import { previewGardenState } from '../garden-preview';
-import { GardenElementsSection, GardenStateSection, GardenWaterStatus } from '../garden-readout';
+import { GardenElementsSection, GardenStateSection, GardenWaterRow } from '../garden-readout';
 import { GardenScene } from '../garden-scene';
 import {
   reactNativeViewsInsideSwiftUI,
@@ -45,13 +46,13 @@ const after = (daysWithoutReading: number): GardenState =>
 
 function Readout({ state }: { state: GardenState }) {
   return (
-    <>
-      <GardenWaterStatus state={state} />
-      <GroupedList>
-        <GardenStateSection state={state} />
-        <GardenElementsSection state={state} />
-      </GroupedList>
-    </>
+    <GroupedList>
+      <ListSection>
+        <GardenWaterRow state={state} />
+      </ListSection>
+      <GardenStateSection state={state} />
+      <GardenElementsSection state={state} />
+    </GroupedList>
   );
 }
 
@@ -81,8 +82,8 @@ describe('GardenScene', () => {
     [
       'dying',
       after(dyingMinDroughtDays),
-      'Jardin au hizb 24, qui dépérit',
-      'Jardin qui dépérit, 24 hizb sur 60, l’eau est à sec',
+      'Jardin au hizb 24, mourant',
+      'Jardin mourant, 24 hizb sur 60, l’eau est à sec',
     ],
     [
       'dead',
@@ -103,7 +104,12 @@ describe('GardenScene', () => {
   it('names a complete garden that dries by its phase, not as complete', async () => {
     await showLanguage('fr');
     // Written by hand: the wording must hold whatever the garden module decides for 60 hizb.
-    const state: GardenState = { ...complete, phase: 'thirsty', water: 'dry' };
+    const state: GardenState = {
+      ...complete,
+      phase: 'thirsty',
+      water: 'dry',
+      daysSinceLastWatered: 4,
+    };
     await render(<GardenScene state={state} size="fill" />);
     expect(screen.getByText('Jardin au hizb 60, assoiffé')).toBeOnTheScreen();
   });
@@ -151,7 +157,7 @@ describe('the garden in words', () => {
       });
       const health = screen.getByRole('progressbar', { name: t('readout.health.label') });
       expect(health).toHaveAccessibilityValue({
-        text: t('readout.health.value', { phase: t('phases.thirsty'), percent: 79 }),
+        text: t('readout.health.value', { state: t('states.thirsty'), percent: 79 }),
       });
       // Next element and its growth, last element earned.
       expect(screen.getByTestId('garden-next-element')).toHaveTextContent(
@@ -174,7 +180,7 @@ describe('the garden in words', () => {
   it.each(waterWords)('says in words that the water is %s', async (water, state, words) => {
     await showLanguage('fr');
     expect(state.water).toBe(water);
-    await render(<GardenWaterStatus state={state} />);
+    await render(<Readout state={state} />);
     expect(screen.getByTestId('garden-water')).toHaveTextContent(words);
   });
 
@@ -192,8 +198,9 @@ describe('the garden in words', () => {
 
   const healthWords: readonly (readonly [GardenPhase, GardenState, string])[] = [
     ['thriving', thriving, 'Florissant, 100\u00a0%'],
-    ['wilting', after(wiltingMinDroughtDays), 'Fane, 57\u00a0%'],
-    ['dying', after(dyingMinDroughtDays), 'Dépérit, 29\u00a0%'],
+    ['thirsty', after(thirstyMinDroughtDays), 'Assoiffé, 79\u00a0%'],
+    ['wilting', after(wiltingMinDroughtDays), 'Fané, 57\u00a0%'],
+    ['dying', after(dyingMinDroughtDays), 'Mourant, 29\u00a0%'],
     ['dead', after(droughtDaysToDeath), 'Terre morte, 0\u00a0%'],
   ];
 
@@ -203,6 +210,49 @@ describe('the garden in words', () => {
     expect(screen.getByRole('progressbar', { name: 'Santé' })).toHaveAccessibilityValue({
       text: words,
     });
+  });
+
+  it('names a drought day that was watered by the water that came back, not by the drought', async () => {
+    await showLanguage('fr');
+    const revived = previewGardenState({
+      hizbCompleted: 24,
+      daysWithoutReading: droughtDaysToDeath,
+      readsToday: true,
+    });
+    // The garden module still counts a drought that day; the words do not call it dying.
+    expect(revived.phase).toBe('dying');
+    await render(
+      <>
+        <GardenScene state={revived} size="band" />
+        <Readout state={revived} />
+      </>,
+    );
+    expect(screen.getByText('Jardin au hizb 24, ranimé')).toBeOnTheScreen();
+    expect(
+      screen.getByRole('image', { name: 'Jardin ranimé, 24 hizb sur 60, l’eau coule' }),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole('progressbar', { name: 'Santé' })).toHaveAccessibilityValue({
+      text: 'Ranimé, 21\u00a0%',
+    });
+    expect(screen.queryByText(/mourant/i)).toBeNull();
+  });
+
+  it('gives each gauge its own colour: green for what grew, water or thirst for health', async () => {
+    setDeviceConditions({ os: 'android' });
+    await showLanguage('fr');
+    const { result: colors } = await renderHook(() => useColors());
+    const fillOf = (name: string) =>
+      withDescendants(screen.getByRole('progressbar', { name })).map(
+        (element) => styleOf(element).backgroundColor,
+      );
+    const fine = await render(<Readout state={thriving} />);
+    expect(fillOf('Hizb terminés')).toContain(colors.current.growth);
+    expect(fillOf('Santé')).toContain(colors.current.accent);
+    expect(fillOf('Santé')).not.toContain(colors.current.growth);
+    await fine.unmount();
+    await render(<Readout state={after(thirstyMinDroughtDays)} />);
+    expect(fillOf('Hizb terminés')).toContain(colors.current.growth);
+    expect(fillOf('Santé')).toContain(colors.current.warning);
   });
 
   it('says how many elements a dying garden still shows, and only then', async () => {

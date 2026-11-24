@@ -6,7 +6,7 @@ import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-li
 import * as SplashScreen from 'expo-splash-screen';
 
 import { DIRECTION_RESTART_KEY } from '@/features/settings';
-import { STORED_DATA_KEY, STORED_DATA_VERSION } from '@/store';
+import { REJECTED_DATA_KEY, RESET_NOTICE_KEY, STORED_DATA_KEY, STORED_DATA_VERSION } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
 import {
   iosAppColor,
@@ -38,7 +38,7 @@ jest.mock('expo-splash-screen', () => ({
 }));
 
 const WINDOW = { x: 0, y: 0, width: 390, height: 700 };
-const LAST_PAGE = 15;
+const LAST_PAGE = 12;
 
 /** The first launch loads every route of the app: it needs more than Jest's five seconds. */
 jest.setTimeout(30_000);
@@ -134,6 +134,17 @@ function swipeToPage(page: number) {
   });
 }
 
+/**
+ * What the app has written under a key, once its writes have settled. The writes are promises,
+ * not renders: they are awaited here without `waitFor`, whose polling would overlap them.
+ */
+async function writtenUnder(key: string, expected: string | null): Promise<string | null> {
+  for (let turn = 0; turn < 100; turn += 1) {
+    if ((await AsyncStorage.getItem(key)) === expected) break;
+  }
+  return AsyncStorage.getItem(key);
+}
+
 function tabsHost(): RenderedElement {
   const host = screen.container.queryAll(({ type }) => type === 'RNSTabsHostIOS')[0];
   if (host === undefined) throw new Error('The tab bar is not on screen.');
@@ -160,33 +171,33 @@ describe('first launch', () => {
     await layOutIntroduction();
 
     expect(app.getPathname()).toBe('/onboarding');
-    expect(screen.getByRole('header', { name: 'A Bare Earth' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Bare Earth' })).toBeOnTheScreen();
     expect(SplashScreen.hide).toHaveBeenCalled();
     // The seed is drawn and kept from the very first launch.
     expect(typeof (await storedSettings()).userSeed).toBe('number');
     expect((await storedSettings()).onboardingCompleted).toBe(false);
   });
 
-  it('shows the garden of each page with the garden scene, and a named placeholder elsewhere', async () => {
+  it('shows the garden of each page with the garden scene: it grows, dries, revives', async () => {
     await openApp();
     await layOutIntroduction();
+    expect(screen.getByTestId('onboarding-pager-indicator')).toHaveAccessibilityValue({
+      text: 'Page 1 sur 13',
+    });
     const labels = screen
       .getAllByTestId('garden-scene')
       .map(({ props }) => String(props.accessibilityLabel));
-    // The growth pages go from the bare earth to the complete garden...
+    // The garden grows from the bare earth to hizb 40...
     expect(labels[0]).toMatch(/^Terre nue/);
     expect(labels[1]).toMatch(/^Jardin, 8 hizb sur 60/);
-    expect(labels[5]).toMatch(/^Jardin complet, 60 hizb sur 60/);
-    // ...and the drought pages dry a garden of 59 hizb: a complete one no longer dries.
-    expect(labels[6]).toMatch(/^Jardin assoiffé, 59 hizb sur 60/);
-    expect(labels[7]).toMatch(/^Jardin fané, 59 hizb sur 60/);
-    expect(labels[8]).toMatch(/^Jardin qui dépérit, 59 hizb sur 60/);
-    expect(labels[9]).toMatch(/^Terre morte, 59 hizb sur 60 acquis/);
-
-    await swipeToPage(11);
-    expect(
-      await screen.findByRole('image', { name: 'Lecture à voix haute, suivie mot à mot' }),
-    ).toBeOnTheScreen();
+    expect(labels[4]).toMatch(/^Jardin, 40 hizb sur 60/);
+    // ...and it is that garden in progress that dries, never the complete one.
+    expect(labels[5]).toMatch(/^Jardin assoiffé, 40 hizb sur 60/);
+    expect(labels[6]).toMatch(/^Jardin fané, 40 hizb sur 60/);
+    expect(labels[7]).toMatch(/^Jardin mourant, 40 hizb sur 60/);
+    expect(labels[8]).toMatch(/^Terre morte, 40 hizb sur 60 acquis/);
+    // No page presents a feature the app does not have yet.
+    expect(screen.queryByRole('image', { name: /voix haute|proches|Passage/ })).toBeNull();
   });
 
   it('gives no way out of the introduction but its last page: no header, no back swipe', async () => {
@@ -204,7 +215,7 @@ describe('first launch', () => {
     const app = await openApp();
     await layOutIntroduction();
     await swipeToPage(LAST_PAGE);
-    expect(await screen.findByRole('header', { name: 'Tes rappels.' })).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Tes rappels' })).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Continuer' }));
     await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
@@ -234,7 +245,7 @@ describe('first launch', () => {
     const app = await openApp();
     await layOutIntroduction();
     expect(app.getPathname()).toBe('/onboarding');
-    expect(screen.getByRole('header', { name: 'Une terre nue.' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Une terre nue' })).toBeOnTheScreen();
     expect((await storedSettings()).dailyGoalPages).toBe(5);
     warn.mockRestore();
   });
@@ -302,7 +313,7 @@ describe('returning person', () => {
     expect(reloadAppAsync).not.toHaveBeenCalled();
   });
 
-  it('can see the introduction again from the settings, leave it by the back button, or finish it', async () => {
+  it('can see the introduction again from the settings, with a back button, and finish it', async () => {
     setPermission(PermissionStatus.GRANTED);
     const app = await openApp('/settings');
     await fireEvent.press(await screen.findByRole('button', { name: 'Revoir la présentation' }));
@@ -314,12 +325,122 @@ describe('returning person', () => {
       .queryAll(({ type }) => type === 'RNSScreenStackHeaderConfig')
       .find(({ props }) => props.title === 'Présentation');
     expect(header).toHaveProp('hidden', false);
+    // The back button takes the accent of the app, not the system's blue.
+    expect(header).toHaveProp('color', iosAppColor('accent'));
 
+    // Opened again, the flow simply ends: "Terminé", and the system is asked nothing.
     await swipeToPage(LAST_PAGE);
-    await fireEvent.press(await screen.findByRole('button', { name: 'Continuer' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Terminé' }));
     await waitFor(() => expect(app.getPathname()).toBe('/settings'));
-    // Already allowed: the system has nothing to ask, and is not made to.
+    expect(requestPermissionsAsync).not.toHaveBeenCalled();
     expect(screen.getByRole('header', { name: 'Réglages' })).toBeOnTheScreen();
+  });
+});
+
+describe('stored data that could not be read back', () => {
+  /** Sound settings of a returning person, and a journal the app cannot trust. */
+  async function storeDamagedJournal(): Promise<string> {
+    const settings = { ...createTestAppStore().getState().settings, onboardingCompleted: true };
+    const raw = JSON.stringify({ version: STORED_DATA_VERSION, settings, journal: 'damaged' });
+    await AsyncStorage.setItem(STORED_DATA_KEY, raw);
+    return raw;
+  }
+
+  it('shows no badge on any tab when all is well', async () => {
+    await store({ onboardingCompleted: true });
+    const app = await openApp();
+    await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
+    expect(tabs().map(({ props }) => props.badgeValue)).toEqual([undefined, undefined, undefined]);
+  });
+
+  it('marks the settings tab, says there what happened, and forgets it once read', async () => {
+    const raw = await storeDamagedJournal();
+    setPermission(PermissionStatus.GRANTED);
+    const app = await openApp('/settings');
+    await waitFor(() => expect(app.getPathname()).toBe('/settings'));
+
+    // No alert at launch: a badge leads to the explanation, written in the settings.
+    expect(tabs().map(({ props }) => props.badgeValue)).toEqual([undefined, undefined, '!']);
+    expect(screen.getByRole('header', { name: 'À savoir' })).toBeOnTheScreen();
+    expect(
+      screen.getByText(/L’appli n’a pas pu relire ton journal de lecture\./),
+    ).toBeOnTheScreen();
+    // What could not be read is kept aside on the device, as it was.
+    expect(await writtenUnder(REJECTED_DATA_KEY, raw)).toBe(raw);
+    expect(await writtenUnder(RESET_NOTICE_KEY, 'journal')).toBe('journal');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'D’accord' }));
+    await waitFor(() =>
+      expect(tabs().map(({ props }) => props.badgeValue)).toEqual([
+        undefined,
+        undefined,
+        undefined,
+      ]),
+    );
+    expect(screen.queryByRole('header', { name: 'À savoir' })).toBeNull();
+    expect(await writtenUnder(RESET_NOTICE_KEY, null)).toBeNull();
+    expect(await AsyncStorage.getItem(REJECTED_DATA_KEY)).toBe(raw);
+  });
+
+  it('still says it at the next launch when the app was closed before it was read', async () => {
+    await store({ onboardingCompleted: true });
+    await AsyncStorage.setItem(RESET_NOTICE_KEY, 'settings');
+    setPermission(PermissionStatus.GRANTED);
+    const app = await openApp('/settings');
+    await waitFor(() => expect(app.getPathname()).toBe('/settings'));
+    expect(tabs().map(({ props }) => props.badgeValue)).toEqual([undefined, undefined, '!']);
+    expect(screen.getByText(/L’appli n’a pas pu relire tes réglages\./)).toBeOnTheScreen();
+  });
+});
+
+describe('links', () => {
+  it('opened on the introduction once it is finished, ends on the tabs: nobody is stuck', async () => {
+    await store({ onboardingCompleted: true });
+    setPermission(PermissionStatus.GRANTED);
+    const app = await openApp('/onboarding');
+    await waitFor(() => expect(app.getPathname()).toBe('/onboarding'));
+    await layOutIntroduction();
+    await swipeToPage(LAST_PAGE);
+
+    // There is no screen behind the introduction to go back to.
+    await fireEvent.press(await screen.findByRole('button', { name: 'Terminé' }));
+    await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
+    expect(app.getPathname()).toBe('/');
+    expect(tabs()).toHaveLength(3);
+    expect(requestPermissionsAsync).not.toHaveBeenCalled();
+  });
+
+  it('explains an address that leads nowhere, and offers the way back to the garden', async () => {
+    await store({ onboardingCompleted: true });
+    const app = await openApp('/nowhere/at/all');
+    expect(await screen.findByText('Cette page n’existe pas')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Le lien que tu as suivi ne mène nulle part dans l’appli.'),
+    ).toBeOnTheScreen();
+    // The app's own words, not the router's "Unmatched Route" page, and no bare header.
+    expect(screen.queryByText(/unmatched/i)).toBeNull();
+    const header = screen.container
+      .queryAll(({ type }) => type === 'RNSScreenStackHeaderConfig')
+      .find(({ props }) => props.title === '+not-found');
+    expect(header).toHaveProp('hidden', true);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Revenir au jardin' }));
+    await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
+    expect(app.getPathname()).toBe('/');
+  });
+
+  it('explains it in the language of the person', async () => {
+    await store({ onboardingCompleted: true, language: 'ar' });
+    setDeviceConditions({ rightToLeft: true });
+    await openApp('/nowhere');
+    expect(await screen.findByText('هذه الصفحة غير موجودة')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'العودة إلى الحديقة' })).toBeOnTheScreen();
+  });
+
+  it('leads a person who has not seen the introduction to it, not past it', async () => {
+    const app = await openApp('/nowhere');
+    await fireEvent.press(await screen.findByRole('button', { name: 'Revenir au jardin' }));
+    await waitFor(() => expect(app.getPathname()).toBe('/onboarding'));
   });
 });
 
@@ -343,7 +464,7 @@ describe('writing direction at start-up', () => {
     await layOutIntroduction();
 
     // The app shows itself in Arabic, in the direction it has, and says nothing false about it.
-    expect(screen.getByRole('header', { name: 'أرض جرداء.' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'أرض جرداء' })).toBeOnTheScreen();
     expect(reloadAppAsync).not.toHaveBeenCalled();
     expect(SplashScreen.hide).toHaveBeenCalled();
   });

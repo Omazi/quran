@@ -37,8 +37,18 @@ export interface AppData {
   readonly journal: ReadingJournal;
 }
 
+/**
+ * What the person must still be told after stored data could not be read back: which part
+ * started again from nothing. Null when there is nothing to tell.
+ */
+export type DataResetNotice = 'settings' | 'journal' | 'everything';
+
 /** The state of the store: the data and the only ways to change it. Every change is saved. */
 export interface AppState extends AppData {
+  /** Not part of the stored document: kept apart, so that a reset cannot erase it. */
+  readonly dataResetNotice: DataResetNotice | null;
+  /** The person has read the notice: it is not shown again. */
+  dismissDataResetNotice: () => void;
   /** Records the person's choice of language. Showing it is the caller's job. */
   setLanguage: (language: AppLanguage) => void;
   /** Throws a `RangeError` outside `DAILY_GOAL_RANGE`. */
@@ -46,6 +56,15 @@ export interface AppState extends AppData {
   /** Changes some of the reminder settings. Throws a `RangeError` for an impossible time. */
   updateReminders: (change: Partial<ReminderSettings>) => void;
   completeOnboarding: () => void;
-  /** Adds a page to the journal through the khatm module. A page read again changes nothing. */
+  /**
+   * Adds a page to the journal through the khatm module. A page read again changes nothing.
+   * Throws a `RangeError` for a day outside `STORED_DATE_RANGE`: a phone whose clock is that far
+   * off must not write a date the app would refuse to read back.
+   */
   recordPageRead: (pageRead: PageRead) => void;
+  /**
+   * Adds a period during which the garden is frozen. Throws a `RangeError` for days outside
+   * `STORED_DATE_RANGE`, for an end before the start, and beyond `MAX_PAUSES` pauses.
+   */
+  addPause: (pause: Pause) => void;
 }

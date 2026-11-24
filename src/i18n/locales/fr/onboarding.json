@@ -4,7 +4,12 @@
     "position": "Page {{page}} sur {{total}}"
   },
   "replayTitle": "Présentation",
-  "finish": "Continuer",
+  "finish": {
+    "ask-permission": "Continuer",
+    "start": "Commencer",
+    "done": "Terminé"
+  },
+  "permissionNotice": "Ton téléphone te demandera ensuite d’autoriser les notifications.",
   "scenes": {
     "bareEarth": "Jardin : terre nue",
     "garden": "Jardin au hizb {{hizb}}",
@@ -17,51 +22,51 @@
   },
   "pages": {
     "bareEarth": {
-      "title": "Une terre nue.",
+      "title": "Une terre nue",
       "text": "Soixante hizb pour en faire un jardin. Glisse pour continuer."
     },
     "hizb8": {
-      "title": "Lis, et l’eau coule.",
+      "title": "Lis, et l’eau coule",
       "text": "Chaque nouvelle page que tu lis arrose ton jardin. Les canaux se remplissent, les premiers arbres arrivent."
     },
     "hizb20": {
-      "title": "Un hizb, un nouvel élément.",
+      "title": "Un hizb, un nouvel élément",
       "text": "Un arbre, des fleurs, une fontaine : chaque hizb terminé ajoute quelque chose."
     },
     "hizb30": {
-      "title": "À mi-chemin, les murs s’élèvent.",
+      "title": "À mi-chemin, les murs s’élèvent",
       "text": "Ton jardin prend forme, hizb après hizb."
     },
     "hizb40": {
-      "title": "Les portes s’ouvrent.",
+      "title": "Les portes s’ouvrent",
       "text": "Plus tu avances, plus il s’embellit."
     },
     "hizb60": {
-      "title": "Ton jardin est complet.",
-      "text": "Soixante hizb : tu as lu le Coran en entier."
+      "title": "Au soixantième hizb, ton jardin est complet",
+      "text": "Tu as lu le Coran en entier, et ce jardin-là ne sèche plus."
     },
     "thirsty": {
-      "title": "Si tu arrêtes de lire, il a soif.",
+      "title": "Si tu arrêtes de lire, il a soif",
       "text": "L’eau ne coule plus, l’herbe pâlit."
     },
     "wilting": {
-      "title": "Puis il fane.",
+      "title": "Puis il fane",
       "text": "L’herbe jaunit, les arbres prennent leurs couleurs d’automne, les canaux sont à sec."
     },
     "dying": {
-      "title": "Les arbres se dénudent.",
+      "title": "Les arbres se dénudent",
       "text": "Les fleurs ont disparu, la terre se craquelle."
     },
     "dead": {
-      "title": "Et il redevient une terre morte.",
+      "title": "Et il redevient une terre morte",
       "text": "Deux semaines sans lecture, et il ne reste rien."
     },
     "revival": {
-      "title": "Une page suffit pour le faire revivre.",
+      "title": "Une page suffit pour le faire revivre",
       "text": "Tes hizb lus restent acquis. Reprends, et l’eau revient."
     },
     "voice": {
-      "title": "Lis à voix haute, l’appli te suit.",
+      "title": "Lis à voix haute, l’appli te suit",
       "text": "Chaque mot s’allume quand tu le récites. Un mot mal lu passe en rouge, pour que tu le reprennes."
     },
     "recognition": {
@@ -69,15 +74,15 @@
       "text": "Tu entends une récitation ? Fais-la écouter : l’appli te dit la sourate et le verset."
     },
     "friends": {
-      "title": "Avec tes proches.",
+      "title": "Avec tes proches",
       "text": "Visite leurs jardins, encouragez-vous, et lisez une khatma à plusieurs."
     },
     "goal": {
-      "title": "Ton objectif du jour.",
+      "title": "Ton objectif du jour",
       "text": "C’est toi qui décides. Tu pourras le changer quand tu veux."
     },
     "reminders": {
-      "title": "Tes rappels.",
+      "title": "Tes rappels",
       "text": "Pour que ton jardin ne manque jamais d’eau."
     }
   }

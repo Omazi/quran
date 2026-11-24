@@ -9,12 +9,18 @@
   "tabs": {
     "garden": "Jardin",
     "quran": "Coran",
-    "settings": "Réglages"
+    "settings": "Réglages",
+    "attentionBadge": "!"
   },
   "quran": {
     "unavailable": {
       "title": "La lecture arrive bientôt",
       "description": "Tu liras le Coran ici, page après page, et chaque nouvelle page arrosera ton jardin."
     }
+  },
+  "notFound": {
+    "title": "Cette page n’existe pas",
+    "description": "Le lien que tu as suivi ne mène nulle part dans l’appli.",
+    "back": "Revenir au jardin"
   }
 }

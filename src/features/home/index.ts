@@ -21,5 +21,6 @@ export {
   buildHomeModelOrUnavailable,
   useHomeModel,
   type HomeModelDependencies,
+  type HomeModelResult,
 } from './use-home-model';
 export { deviceLocalDate, useToday, type Clock } from './use-today';

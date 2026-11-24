@@ -5,8 +5,9 @@
       "thriving": "الحديقة عند الحزب {{hizb}}",
       "thirsty": "الحديقة عند الحزب {{hizb}}، عطشى",
       "wilting": "الحديقة عند الحزب {{hizb}}، ذابلة",
-      "dying": "الحديقة عند الحزب {{hizb}}، تجفّ",
+      "dying": "الحديقة عند الحزب {{hizb}}، يابسة",
       "dead": "أرض ميتة",
+      "revived": "الحديقة عند الحزب {{hizb}}، منتعشة",
       "complete": "الحديقة مكتملة"
     },
     "label": {
@@ -14,8 +15,9 @@
       "thriving": "الحديقة، {{hizb}} من {{total}} حزبًا، {{water}}",
       "thirsty": "حديقة عطشى، {{hizb}} من {{total}} حزبًا، {{water}}",
       "wilting": "حديقة ذابلة، {{hizb}} من {{total}} حزبًا، {{water}}",
-      "dying": "حديقة تجفّ، {{hizb}} من {{total}} حزبًا، {{water}}",
+      "dying": "حديقة يابسة، {{hizb}} من {{total}} حزبًا، {{water}}",
       "dead": "أرض ميتة، {{hizb}} من {{total}} حزبًا باقية لك، {{water}}",
+      "revived": "حديقة منتعشة، {{hizb}} من {{total}} حزبًا، {{water}}",
       "complete": "حديقة مكتملة، {{hizb}} من {{total}} حزبًا، {{water}}"
     }
   },
@@ -32,13 +34,14 @@
       "dry": "جفّ الماء"
     }
   },
-  "phases": {
+  "states": {
     "bare": "أرض جرداء",
     "thriving": "مزدهرة",
     "thirsty": "عطشى",
     "wilting": "ذابلة",
-    "dying": "تجفّ",
-    "dead": "أرض ميتة"
+    "dying": "يابسة",
+    "dead": "أرض ميتة",
+    "revived": "منتعشة"
   },
   "kinds": {
     "pomegranate": "شجرة رمان",
@@ -80,7 +83,7 @@
     },
     "health": {
       "label": "الصحة",
-      "value": "{{phase}}، {{percent}}%",
+      "value": "{{state}}، {{percent}}%",
       "minimum": "0%",
       "maximum": "100%"
     },
@@ -92,7 +95,7 @@
       "value": "{{element}}، {{percent}}%"
     },
     "last": {
-      "label": "آخر عنصر مكتسب"
+      "label": "آخر عنصر"
     },
     "visible": {
       "label": "العناصر الظاهرة",

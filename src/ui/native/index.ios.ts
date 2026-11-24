@@ -21,11 +21,14 @@ const controls: NativeControls =
 
 export const {
   Button,
+  ButtonRow,
   ChoiceRow,
+  ContentRow,
   ContentUnavailable,
   Gauge,
   GroupedList,
   Icon,
+  LabelRow,
   ListRow,
   ListSection,
   Pager,

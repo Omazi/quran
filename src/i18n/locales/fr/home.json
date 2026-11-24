@@ -4,23 +4,23 @@
   "streak_other": "{{count}} jours de suite",
   "notice": {
     "bare": {
-      "title": "Une terre nue",
+      "title": "Terre nue",
       "text": "Ton premier hizb fera naître ton jardin."
     },
     "thirsty": {
-      "title": "Ton jardin a soif",
+      "title": "Jardin assoiffé",
       "text": "Une page suffit pour faire revenir l’eau."
     },
     "wilting": {
-      "title": "Ton jardin fane",
+      "title": "Jardin fané",
       "text": "Une page aujourd’hui, et il reprend des forces."
     },
     "dying": {
-      "title": "Ton jardin dépérit",
+      "title": "Jardin mourant",
       "text": "Une page fait déjà revenir des éléments."
     },
     "dead": {
-      "title": "Rien n’est perdu",
+      "title": "Terre morte",
       "text": "Tes hizb lus restent acquis. Une page fait revenir l’eau."
     },
     "recovering": {
@@ -29,7 +29,7 @@
     },
     "complete": {
       "title": "Khatma terminée",
-      "text": "Ton jardin est complet. Lis une page pour commencer la suivante : un nouveau jardin t’attend."
+      "text": "Ton jardin est complet. Lis une page pour commencer la suivante\u00a0: un nouveau jardin t’attend."
     }
   },
   "today": {
@@ -45,18 +45,19 @@
       "value": "Page {{page}}"
     },
     "finish": {
-      "label": "Fin estimée de la khatma",
-      "labelNext": "Fin estimée de la prochaine khatma",
+      "label": "Fin estimée",
+      "labelNext": "Fin de la suivante",
       "today": "Aujourd’hui"
     },
-    "footer_one": "Estimation au rythme de ton objectif : {{count}} page par jour.",
-    "footer_other": "Estimation au rythme de ton objectif : {{count}} pages par jour."
+    "footer_one": "Estimation au rythme de ton objectif\u00a0: {{count}} page par jour.",
+    "footer_other": "Estimation au rythme de ton objectif\u00a0: {{count}} pages par jour."
   },
   "actions": {
     "read": "Lire et arroser"
   },
   "unavailable": {
     "title": "Jardin indisponible",
-    "description": "Impossible de calculer l’état du jardin. Ferme l’appli, puis rouvre-la."
+    "description": "Impossible de calculer l’état du jardin. Réessaie, ou ferme l’appli puis rouvre-la.",
+    "retry": "Réessayer"
   }
 }

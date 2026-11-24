@@ -1,7 +1,7 @@
 import { EMPTY_JOURNAL, recordPageRead, type ReadingJournal } from '@/domain/khatm';
 import { parseLocalDate } from '@/domain/shared/local-date';
 
-import { DEFAULT_REMINDERS, STORED_DATA_VERSION } from '../config';
+import { DEFAULT_REMINDERS, MAX_PAUSES, STORED_DATA_VERSION, STORED_DATE_RANGE } from '../config';
 import { readStoredData, writeStoredData } from '../stored-data';
 import type { AppData, AppSettings } from '../types';
 
@@ -259,5 +259,74 @@ describe('corrupt stored document', () => {
       journal: null,
       discarded: ['settings', 'journal'],
     });
+  });
+});
+
+describe('bounds of the stored data', () => {
+  const PAUSE = { from: '2026-03-01', to: '2026-03-04' };
+  const pauses = (count: number) => Array.from({ length: count }, () => PAUSE);
+
+  it('names a window of days no reading can leave, and a number of pauses', () => {
+    expect(STORED_DATE_RANGE).toEqual({ earliest: '2020-01-01', latest: '2099-12-31' });
+    expect(MAX_PAUSES).toBe(50);
+  });
+
+  it('accepts dates and pauses at the very edge of the bounds', () => {
+    const journal = [
+      { khatm: 1, page: 1, date: STORED_DATE_RANGE.earliest },
+      { khatm: 1, page: 2, date: STORED_DATE_RANGE.latest },
+    ];
+    const edge = [{ from: STORED_DATE_RANGE.earliest, to: STORED_DATE_RANGE.latest }];
+    expect(readStoredData(documentWith({ journal })).discarded).toEqual([]);
+    expect(readStoredData(settingsWith({ pauses: edge })).discarded).toEqual([]);
+    expect(readStoredData(settingsWith({ pauses: pauses(MAX_PAUSES) })).discarded).toEqual([]);
+  });
+
+  it.each([
+    ['a pause that starts in year 100', { pauses: [{ from: '0100-01-01', to: '2026-03-01' }] }],
+    ['a pause that starts in 2019', { pauses: [{ from: '2019-12-31', to: '2026-03-01' }] }],
+    ['a pause that ends in 2100', { pauses: [{ from: '2026-03-01', to: '2100-01-01' }] }],
+    ['a pause that ends in year 9999', { pauses: [{ from: '2026-03-01', to: '9999-12-31' }] }],
+    ['one pause too many', { pauses: pauses(MAX_PAUSES + 1) }],
+    ['two hundred pauses', { pauses: pauses(200) }],
+  ])('discards the settings: %s', (_name, change) => {
+    expect(readStoredData(settingsWith(change))).toMatchObject({
+      settings: null,
+      journal: JOURNAL,
+      discarded: ['settings'],
+    });
+  });
+
+  it.each([
+    ['year 100', '0100-01-01'],
+    ['the day before the window', '2019-12-31'],
+    ['the day after the window', '2100-01-01'],
+    ['year 9999', '9999-12-31'],
+  ])('discards the journal for a page read in %s', (_name, date) => {
+    const journal = [{ khatm: 1, page: 1, date }];
+    expect(readStoredData(documentWith({ journal }))).toMatchObject({
+      settings: SETTINGS,
+      journal: null,
+      discarded: ['journal'],
+    });
+  });
+
+  it('discards at once the document that blocked the home screen', () => {
+    // Two hundred century-long pauses and readings from year 100: about 9 KB of valid JSON.
+    const raw = documentWith({
+      settings: {
+        ...SETTINGS,
+        pauses: Array.from({ length: 200 }, (_, index) => ({
+          from: `${String(100 + index * 9).padStart(4, '0')}-01-01`,
+          to: `${String(200 + index * 9).padStart(4, '0')}-01-01`,
+        })),
+      },
+      journal: [{ khatm: 1, page: 1, date: '0100-01-01' }],
+    });
+    const before = Date.now();
+    const reading = readStoredData(raw);
+    expect(Date.now() - before).toBeLessThan(100);
+    expect(reading).toMatchObject({ settings: null, journal: null });
+    expect(reading.discarded).toEqual(['settings', 'journal']);
   });
 });

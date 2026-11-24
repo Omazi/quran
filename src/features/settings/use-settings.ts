@@ -5,7 +5,7 @@ import {
   setDisplayedLanguage,
   type AppLanguage,
 } from '@/i18n';
-import { useAppStore, type ReminderSettings } from '@/store';
+import { useAppStore, type DataResetNotice, type ReminderSettings } from '@/store';
 
 import { useDailyGoal, type DailyGoalModel } from './daily-goal';
 import { useReminders, type RemindersModel } from './reminders';
@@ -28,6 +28,11 @@ export interface LanguageModel {
 
 /** What the settings screen shows. */
 export interface SettingsModel {
+  /**
+   * Set when stored data could not be read back and started again from nothing: the screen says
+   * so, once, until the person has read it.
+   */
+  readonly dataResetNotice: DataResetNotice | null;
   readonly language: LanguageModel;
   readonly dailyGoal: DailyGoalModel;
   readonly reminders: RemindersModel;
@@ -35,10 +40,13 @@ export interface SettingsModel {
 
 /** What the person can do on the settings screen. */
 export interface SettingsActions {
+  dismissDataResetNotice: () => void;
   selectLanguage: (language: AppLanguage) => void;
   restartApp: () => void;
   setDailyGoalPages: (pages: number) => void;
   changeReminders: (change: Partial<ReminderSettings>) => void;
+  /** Makes the system ask for the permission to notify, when it was never asked. */
+  requestNotificationPermission: () => void;
   openSystemSettings: () => void;
   replayIntroduction: () => void;
 }
@@ -61,12 +69,15 @@ export function useSettings({
 }: SettingsDependencies): { model: SettingsModel; actions: SettingsActions } {
   const savedLanguage = useAppStore((state) => state.settings.language);
   const saveLanguage = useAppStore((state) => state.setLanguage);
+  const dataResetNotice = useAppStore((state) => state.dataResetNotice);
+  const dismissDataResetNotice = useAppStore((state) => state.dismissDataResetNotice);
   const selected = savedLanguage ?? getDisplayedLanguage();
   const dailyGoal = useDailyGoal();
   const reminders = useReminders({ notifications, asks: 'on-enable' });
 
   return {
     model: {
+      dataResetNotice,
       language: {
         selected,
         options: SUPPORTED_LANGUAGES,
@@ -77,6 +88,7 @@ export function useSettings({
       reminders: reminders.model,
     },
     actions: {
+      dismissDataResetNotice,
       selectLanguage: (language) => {
         saveLanguage(language);
         // The texts change at once, so that the person can read what follows in the language
@@ -92,6 +104,9 @@ export function useSettings({
       },
       setDailyGoalPages: dailyGoal.setPages,
       changeReminders: reminders.change,
+      requestNotificationPermission: () => {
+        void reminders.requestPermission();
+      },
       openSystemSettings,
       replayIntroduction: openIntroduction,
     },

@@ -1,7 +1,6 @@
 import { fireEvent, render, renderHook, screen } from '@testing-library/react-native';
 
 import { quranStructure } from '@/data/quran';
-import { recordPageRead } from '@/domain/khatm';
 import { parseLocalDate } from '@/domain/shared/local-date';
 import { gardenSceneLabel } from '@/features/garden/garden-words';
 import {
@@ -19,6 +18,7 @@ import {
   setDeviceConditions,
   styleOf,
   touchTargetHeight,
+  withDescendants,
 } from '@/ui/test-support/environment';
 
 import arHome from '../../../i18n/locales/ar/home.json';
@@ -28,7 +28,7 @@ import {
   buildReadingHistory,
   READING_HISTORY_CONFIG,
   type ReadingHistoryName,
-} from '../test-support/reading-histories';
+} from '../dev-preview/reading-histories';
 import {
   buildHomeModel,
   type HomeActions,
@@ -43,21 +43,9 @@ afterEach(resetDeviceConditions);
 const TODAY = parseLocalDate('2026-11-24');
 const RANGES = quranStructure.hizbPageRanges();
 
-function modelOf(preset: ReadingHistoryName): HomeReadyModel {
+function modelOf(history: ReadingHistoryName): HomeReadyModel {
   return buildHomeModel({
-    ...buildReadingHistory(preset, TODAY, RANGES),
-    today: TODAY,
-    hizbPageRanges: RANGES,
-  });
-}
-
-/** A dead garden on the day the person reads one page again. */
-function recoveringModel(): HomeReadyModel {
-  const source = buildReadingHistory('dead', TODAY, RANGES);
-  const nextPage = modelOf('dead').reading.nextPage;
-  return buildHomeModel({
-    ...source,
-    journal: recordPageRead(source.journal, { page: nextPage, date: TODAY }),
+    ...buildReadingHistory(history, TODAY, RANGES),
     today: TODAY,
     hizbPageRanges: RANGES,
   });
@@ -77,14 +65,20 @@ const STATES: readonly HomeStateCase[] = [
   { name: 'wilting', model: modelOf('wilting'), notice: 'wilting' },
   { name: 'dying', model: modelOf('dying'), notice: 'dying' },
   { name: 'dead', model: modelOf('dead'), notice: 'dead' },
-  { name: 'recovering', model: recoveringModel(), notice: 'recovering' },
+  { name: 'recovering', model: modelOf('recovering'), notice: 'recovering' },
   { name: 'khatma complete', model: modelOf('khatma-complete'), notice: 'complete' },
 ];
 
 const UNAVAILABLE: HomeModel = { status: 'unavailable' };
 
-function actionsSpy(): HomeActions & { readAndWater: jest.Mock } {
-  return { readAndWater: jest.fn() };
+function actionsSpy(): { readAndWater: jest.Mock; retry: jest.Mock } & HomeActions {
+  return { readAndWater: jest.fn(), retry: jest.fn() };
+}
+
+/** Where each element comes in reading order: its rank among everything on screen. */
+function readingOrder(testIDs: readonly string[]): number[] {
+  const all = withDescendants(screen.container);
+  return testIDs.map((testID) => all.indexOf(screen.getByTestId(testID)));
 }
 
 describe.each(STATES)('HomeScreen, $name', ({ model, notice }) => {
@@ -104,18 +98,15 @@ describe.each(STATES)('HomeScreen, $name', ({ model, notice }) => {
       expect(
         screen.getByRole('image', { name: gardenSceneLabel(model.garden, tGarden) }),
       ).toBeOnTheScreen();
-      expect(screen.getByTestId('garden-water')).toBeOnTheScreen();
-      expect(
-        screen.getByRole('progressbar', { name: tGarden('readout.hizb.label') }),
-      ).toBeOnTheScreen();
 
-      // The message of the day: words beside a symbol, or nothing while the garden thrives.
+      // The state of the day is said once: the message, or the water while the garden thrives.
       if (notice === null) {
         expect(screen.queryByTestId(/^home-notice-/)).toBeNull();
+        expect(screen.getByTestId('garden-water')).toBeOnTheScreen();
       } else {
-        const banner = screen.getByTestId(`home-notice-${notice}`);
-        expect(banner).toHaveTextContent(new RegExp(t(`notice.${notice}.title`)));
-        expect(banner).toHaveTextContent(new RegExp(t(`notice.${notice}.text`)));
+        const message = screen.getByTestId(`home-notice-${notice}`);
+        expect(message).toHaveTextContent(new RegExp(t(`notice.${notice}.title`)));
+        expect(screen.queryByTestId('garden-water')).toBeNull();
       }
 
       // Today: pages read out of the goal, the page to read, the estimated end.
@@ -129,13 +120,25 @@ describe.each(STATES)('HomeScreen, $name', ({ model, notice }) => {
       expect(screen.getByTestId('home-finish')).toBeOnTheScreen();
 
       // One button, named by what it does, large enough to touch, and it calls the action.
-      const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(1);
+      expect(screen.getAllByRole('button')).toHaveLength(1);
       const read = screen.getByRole('button', { name: t('actions.read') });
       expect(touchTargetHeight(read)).toBeGreaterThanOrEqual(layout.touchTarget);
       expect(touchTargetHeight(read)).toBeGreaterThanOrEqual(44);
       await fireEvent.press(read);
       expect(actions.readAndWater).toHaveBeenCalledTimes(1);
+
+      // Gauges: green for what grew; for health, water while it is fine and orange from thirst.
+      const fillsOf = (name: string) =>
+        withDescendants(screen.getByRole('progressbar', { name })).map(
+          (element) => styleOf(element).backgroundColor,
+        );
+      expect(fillsOf(tGarden('readout.hizb.label'))).toContain(colors.current.growth);
+      if (model.garden.phase !== 'bare') {
+        const isFine = model.garden.phase === 'thriving';
+        expect(fillsOf(tGarden('readout.health.label'))).toContain(
+          isFine ? colors.current.accent : colors.current.warning,
+        );
+      }
 
       // Mirrors in Arabic, cuts no text, and takes its colours from the roles of this appearance.
       expect(directionDependentStyles(screen.container)).toEqual([]);
@@ -150,6 +153,33 @@ describe.each(STATES)('HomeScreen, $name', ({ model, notice }) => {
     },
   );
 
+  it('is one list, in the order of importance', async () => {
+    await showLanguage('fr');
+    await render(<HomeScreen model={model} actions={actionsSpy()} />);
+    // One scrolling region for the whole screen: everything is inside the list.
+    const scrollers = screen.container.queryAll(
+      ({ type }) => typeof type === 'string' && /ScrollView$/.test(type),
+    );
+    expect(scrollers).toHaveLength(1);
+    const inList = withDescendants(screen.getByTestId('home-list'));
+    expect(inList).toContain(screen.getByRole('header', { name: 'Jardin' }));
+    expect(inList).toContain(screen.getByTestId('garden-scene'));
+    expect(inList).toContain(screen.getByRole('button', { name: 'Lire et arroser' }));
+
+    // Scene, state of the day, today, the button right under it, then gauges, then elements.
+    const order = readingOrder([
+      'garden-scene',
+      model.notice === null ? 'garden-water' : `home-notice-${model.notice}`,
+      'home-today-pages',
+      'home-finish',
+      'home-read',
+      'garden-hizb-gauge',
+      model.garden.nextElement === null ? 'garden-last-element' : 'garden-next-element',
+    ]);
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+    expect(order).not.toContain(-1);
+  });
+
   it('keeps every word whole and reachable at the largest text size', async () => {
     setDeviceConditions({ fontScale: LARGEST_FONT_SCALE });
     await showLanguage('fr');
@@ -163,13 +193,6 @@ describe.each(STATES)('HomeScreen, $name', ({ model, notice }) => {
           props.maxFontSizeMultiplier !== undefined),
     );
     expect(limitedTexts).toHaveLength(0);
-    // What is above the list gives way and scrolls; the list keeps room for a few rows.
-    expect(styleOf(screen.getByTestId('home-top'))).toMatchObject({ flexGrow: 0, flexShrink: 1 });
-    const list = screen.getByTestId('home-list').parent;
-    expect(list === null ? {} : styleOf(list)).toMatchObject({
-      flex: 1,
-      minHeight: layout.touchTarget * 3,
-    });
   });
 
   it('is made of system components an iPhone can display', async () => {
@@ -180,52 +203,66 @@ describe.each(STATES)('HomeScreen, $name', ({ model, notice }) => {
 });
 
 describe('HomeScreen, the words of each state in French', () => {
-  const frenchNotices: readonly (readonly [string, HomeReadyModel, string, string])[] = [
-    [
-      'bare earth',
-      modelOf('bare-earth'),
-      'Une terre nue',
-      'Ton premier hizb fera naître ton jardin.',
-    ],
-    [
-      'thirsty',
-      modelOf('thirsty'),
-      'Ton jardin a soif',
-      'Une page suffit pour faire revenir l’eau.',
-    ],
+  const frenchNotices: readonly (readonly [HomeNotice, HomeReadyModel, string, string])[] = [
+    ['bare', modelOf('bare-earth'), 'Terre nue', 'Ton premier hizb fera naître ton jardin.'],
+    ['thirsty', modelOf('thirsty'), 'Jardin assoiffé', 'Une page suffit pour faire revenir l’eau.'],
     [
       'wilting',
       modelOf('wilting'),
-      'Ton jardin fane',
+      'Jardin fané',
       'Une page aujourd’hui, et il reprend des forces.',
     ],
-    ['dying', modelOf('dying'), 'Ton jardin dépérit', 'Une page fait déjà revenir des éléments.'],
+    ['dying', modelOf('dying'), 'Jardin mourant', 'Une page fait déjà revenir des éléments.'],
     [
       'dead',
       modelOf('dead'),
-      'Rien n’est perdu',
+      'Terre morte',
       'Tes hizb lus restent acquis. Une page fait revenir l’eau.',
     ],
     [
       'recovering',
-      recoveringModel(),
+      modelOf('recovering'),
       'L’eau est revenue',
       'Ton jardin reprend des forces. Continue demain.',
     ],
     [
-      'khatma complete',
+      'complete',
       modelOf('khatma-complete'),
       'Khatma terminée',
       'Ton jardin est complet. Lis une page pour commencer la suivante : un nouveau jardin t’attend.',
     ],
   ];
 
-  it.each(frenchNotices)('%s', async (_, model, title, text) => {
+  it.each(frenchNotices)('%s', async (notice, model, title, text) => {
     await showLanguage('fr');
     await render(<HomeScreen model={model} actions={actionsSpy()} />);
-    expect(screen.getByText(title)).toBeOnTheScreen();
-    expect(screen.getByText(text)).toBeOnTheScreen();
+    // The matcher reads every kind of space, non-breaking ones included, as one space.
+    expect(screen.getByTestId(`home-notice-${notice}`)).toHaveTextContent(`${title}${text}`);
     expect(screen.getByRole('button', { name: 'Lire et arroser' })).toBeOnTheScreen();
+  });
+
+  it('uses one word per state: the scene, the message and the gauge agree', async () => {
+    await showLanguage('fr');
+    await render(<HomeScreen model={modelOf('thirsty')} actions={actionsSpy()} />);
+    expect(screen.getByText('Jardin au hizb 24, assoiffé')).toBeOnTheScreen();
+    expect(screen.getByText('Jardin assoiffé')).toBeOnTheScreen();
+    expect(screen.getByRole('progressbar', { name: 'Santé' })).toHaveAccessibilityValue({
+      text: 'Assoiffé, 79\u00a0%',
+    });
+    expect(screen.queryByText(/a soif/i)).toBeNull();
+  });
+
+  it('a drought day that was watered is not called dying anywhere', async () => {
+    await showLanguage('fr');
+    await render(<HomeScreen model={modelOf('recovering')} actions={actionsSpy()} />);
+    expect(screen.getByText('Jardin au hizb 24, ranimé')).toBeOnTheScreen();
+    expect(screen.getByRole('progressbar', { name: 'Santé' })).toHaveAccessibilityValue({
+      text: 'Ranimé, 21\u00a0%',
+    });
+    // (The developer preview, below in the list, names the states it offers.)
+    expect(screen.getByTestId('garden-scene')).not.toHaveTextContent(/mourant|dépérit/i);
+    expect(screen.getByTestId('garden-scene').props.accessibilityLabel).not.toMatch(/mourant/i);
+    expect(screen.getByTestId('home-notice-recovering')).not.toHaveTextContent(/mourant/i);
   });
 
   it('thriving at hizb 24: streak, pages of the day, where to resume, estimated end', async () => {
@@ -235,15 +272,14 @@ describe('HomeScreen, the words of each state in French', () => {
     expect(screen.getByTestId('home-streak')).toHaveTextContent(
       `${model.streakDays} jours de suite`,
     );
+    expect(screen.getByTestId('garden-water')).toHaveTextContent('L’eau coule');
     expect(screen.getByTestId('home-today-pages')).toHaveTextContent('Pages lues3 sur 5');
     expect(screen.getByTestId('home-next-page')).toHaveTextContent(
       `ReprendrePage ${model.reading.nextPage}`,
     );
-    expect(screen.getByTestId('home-finish')).toHaveTextContent(
-      /^Fin estimée de la khatma\d{1,2} \S+ 202\d$/,
-    );
+    expect(screen.getByTestId('home-finish')).toHaveTextContent(/^Fin estimée\d{1,2} \S+ 202\d$/);
     expect(
-      screen.getByText('Estimation au rythme de ton objectif : 5 pages par jour.'),
+      screen.getByText(/^Estimation au rythme de ton objectif\s: 5 pages par jour\.$/),
     ).toBeOnTheScreen();
   });
 
@@ -259,9 +295,7 @@ describe('HomeScreen, the words of each state in French', () => {
     await showLanguage('fr');
     await render(<HomeScreen model={modelOf('khatma-complete')} actions={actionsSpy()} />);
     expect(screen.getByTestId('home-next-page')).toHaveTextContent('CommencerPage 1');
-    expect(screen.getByTestId('home-finish')).toHaveTextContent(
-      /^Fin estimée de la prochaine khatma/,
-    );
+    expect(screen.getByTestId('home-finish')).toHaveTextContent(/^Fin de la suivante/);
   });
 
   it('says when the goal of the day is reached, and when the khatma ends today', async () => {
@@ -276,9 +310,7 @@ describe('HomeScreen, the words of each state in French', () => {
     expect(screen.getByTestId('home-today-pages')).toHaveTextContent(
       'Pages lues5 sur 5, objectif atteint',
     );
-    expect(screen.getByTestId('home-finish')).toHaveTextContent(
-      'Fin estimée de la khatmaAujourd’hui',
-    );
+    expect(screen.getByTestId('home-finish')).toHaveTextContent('Fin estiméeAujourd’hui');
   });
 
   it('writes the estimated end in the language of the interface', async () => {
@@ -300,18 +332,26 @@ describe('HomeScreen, the words of each state in French', () => {
 
 describe('HomeScreen, unavailable', () => {
   it.each(SCREEN_CONDITIONS)(
-    'says what happened and what to do ($scheme, $language)',
+    'says what happened and offers to try again ($scheme, $language)',
     async ({ language, ...device }) => {
       setDeviceConditions(device);
       const i18n = await showLanguage(language);
       const t = i18n.getFixedT(language, 'home');
-      await render(<HomeScreen model={UNAVAILABLE} actions={actionsSpy()} />);
+      const actions = actionsSpy();
+      await render(<HomeScreen model={UNAVAILABLE} actions={actions} />);
       expect(screen.getByRole('header', { name: t('title') })).toBeOnTheScreen();
       expect(screen.getByText(t('unavailable.title'))).toBeOnTheScreen();
       expect(screen.getByText(t('unavailable.description'))).toBeOnTheScreen();
-      // No garden and no numbers are made up, and there is nothing to press.
+      // No garden and no numbers are made up.
       expect(screen.queryByTestId('garden-scene')).toBeNull();
-      expect(screen.queryByRole('button')).toBeNull();
+      expect(screen.queryByTestId('home-read')).toBeNull();
+      // One action: try again.
+      expect(screen.getAllByRole('button')).toHaveLength(1);
+      const retry = screen.getByRole('button', { name: t('unavailable.retry') });
+      expect(touchTargetHeight(retry)).toBeGreaterThanOrEqual(44);
+      await fireEvent.press(retry);
+      expect(actions.retry).toHaveBeenCalledTimes(1);
+      expect(actions.readAndWater).not.toHaveBeenCalled();
       expect(directionDependentStyles(screen.container)).toEqual([]);
       expect(fixedHeightsAroundText(screen.container)).toEqual([]);
     },
@@ -335,10 +375,29 @@ describe('the home locale files', () => {
     );
   }
   const uniqueKeys = (locale: unknown) => [...new Set(keysOf(locale))].sort();
+  const textsOf = (locale: unknown): string[] =>
+    typeof locale === 'string'
+      ? [locale]
+      : typeof locale === 'object' && locale !== null
+        ? Object.values(locale).flatMap(textsOf)
+        : [];
 
   it('have the same keys in French, English and Arabic', () => {
     expect(uniqueKeys(enHome)).toEqual(uniqueKeys(frHome));
     expect(uniqueKeys(arHome)).toEqual(uniqueKeys(frHome));
+  });
+
+  it('French never lets a colon start a line: the space before it does not break', () => {
+    expect(textsOf(frHome).filter((text) => / :/.test(text))).toEqual([]);
+    expect(textsOf(frHome).filter((text) => /\u00a0:/.test(text))).toHaveLength(3);
+  });
+
+  it('English titles of messages are capitalised like the other titles', () => {
+    const titles = Object.values(enHome.notice).map((notice) => notice.title);
+    const lowercaseWords = titles.flatMap((title) =>
+      title.split(' ').filter((word) => /^[a-z]/.test(word)),
+    );
+    expect(lowercaseWords).toEqual([]);
   });
 
   it('give Arabic its six plural forms', async () => {
