@@ -9,16 +9,27 @@ La méthode est celle de DishPlay, l'autre appli du propriétaire (`Omazi/dishpl
 
 ## Où on en est
 
-| Étape                                | État                                                     |
-| ------------------------------------ | -------------------------------------------------------- |
-| Assembler le JavaScript pour iOS     | Vérifié le 24 novembre 2026 (1 605 modules, sans erreur) |
-| Générer le projet iOS natif          | Vérifié le 24 novembre 2026                              |
-| Compiler pour iPhone, sans signature | Script prêt (`ios-check.yml`), **jamais encore exécuté** |
-| Ouvrir l'appli dans le simulateur    | Script prêt (même fichier), **jamais encore exécuté**    |
-| Signer et envoyer sur TestFlight     | **À écrire**, le jour où le propriétaire le demande      |
+| Étape                                | État                                                               |
+| ------------------------------------ | ------------------------------------------------------------------ |
+| Assembler le JavaScript pour iOS     | Vérifié le 24 novembre 2026 (1 605 modules, sans erreur)           |
+| Générer le projet iOS natif          | Vérifié le 24 novembre 2026                                        |
+| Compiler pour iPhone, sans signature | **Réussi** le 24 novembre 2026 sur un Mac de GitHub (19 min)       |
+| Ouvrir l'appli dans le simulateur    | **Réussi** le même jour (44 min) ; images **pas encore regardées** |
+| Signer et envoyer sur TestFlight     | **À écrire**, le jour où le propriétaire le demande                |
 
 Les deux premières lignes ont été vérifiées sous Linux (`npx expo export --platform ios`,
 `npx expo prebuild --platform ios --no-install`). Tout le reste a besoin d'un Mac.
+
+Première exécution complète : `a61b16d`, exécution 45484558341, dès l'ouverture du dépôt.
+Les trois tâches sont vertes (tests 3 min, iPhone 19 min, simulateur 44 min). Deux points
+restent ouverts :
+
+- Les quatre images du premier écran sont dans l'artefact `ios-first-screen`, mais la
+  session de travail de l'assistant n'a pas le droit de joindre l'hôte où GitHub range les
+  artefacts (`*.blob.core.windows.net`). Personne ne les a donc encore regardées. Le
+  propriétaire peut les télécharger depuis la page de l'exécution.
+- GitHub signale que `actions/upload-artifact` v4.6.2 vise Node 20, qui est déprécié : à
+  remplacer par une version plus récente, épinglée de la même façon.
 
 ## La vérification de compilation
 
