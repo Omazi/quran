@@ -60,3 +60,22 @@ suivante repart d'une terre nue. Le profil montre les badges et le jardin en cou
 
 L'utilisateur fixe librement son objectif quotidien. Le jardin gagne un élément à chaque
 hizb terminé ; entre deux hizb, l'élément suivant pousse au fil des pages lues.
+
+## D11 — iOS d'abord, composants natifs, règles d'Apple
+
+L'interface suit les Human Interface Guidelines (édition 2026) et utilise les composants
+du système par Expo UI et les onglets natifs. Android suivra sur la même base : chaque
+contrôle natif a une variante par défaut. Typographie système (San Francisco, New York),
+SF Symbols, Liquid Glass réservé aux éléments flottants.
+
+## D12 — Le jardin affiché est provisoire
+
+Le rendu 2D en SVG sert à faire vivre les règles (croissance, dessèchement). Le jardin
+final sera fait de vrais modèles 3D, dans un style à choisir. Le rendu est un composant
+remplaçable qui ne reçoit qu'un `GardenState`.
+
+## D13 — Rappels par notifications locales
+
+Aucun serveur : le plan des rappels est calculé sur le téléphone à partir de l'état du
+jardin, puis programmé localement. L'autorisation est demandée à la fin du premier
+lancement, après explication.

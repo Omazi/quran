@@ -10,6 +10,7 @@ Architecte (session principale)
  ├─ Développeur jardin             src/domain/garden
  ├─ Développeur reconnaissance     src/domain/recognition
  ├─ Développeur interface          src/ui, src/features, src/app
+ ├─ Relecteur design               chaque écran, selon les règles d'Apple
  ├─ Testeurs indépendants          __tests__/acceptance de chaque module
  └─ Relecteur sécurité             tout le dépôt, en lecture
 ```
@@ -24,7 +25,11 @@ Architecte (session principale)
    renvoie les défauts au développeur du module, qui corrige.
 5. On reteste. Le module n'est intégré que lorsque `npm run check` passe, tests
    d'acceptation compris.
-6. Le relecteur sécurité passe avant chaque push.
+6. Chaque écran passe une revue de design : règles d'Apple (pages concernées relues,
+   pas citées de mémoire), liste des tics « généré par IA », et note sur cinq critères
+   (cohérence, hiérarchie, finition, fonction, originalité). En dessous de 7 sur 10 sur
+   un critère, l'écran retourne au développeur.
+7. Le relecteur sécurité passe avant chaque push.
 
 ## Règles communes
 

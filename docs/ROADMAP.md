@@ -11,7 +11,10 @@ indépendant_ → _validé_.
 - [ ] Jardin : 60 étapes, santé, dégradation, renaissance, pause, un jardin par khatma —
       **première version écrite, non relue ; à mettre à jour (D9, D10), puis à tester**
 - [ ] Reconnaissance (cœur) : normalisation, recherche de versets, suivi mot à mot — **à faire**
-- [ ] Interface : accueil avec jardin, lecteur de mushaf, réglages
+- [ ] Rappels : plan de notifications locales tiré de l'état du jardin — **à faire, après le
+      module jardin**
+- [ ] Interface (iOS d'abord) : premier lancement, accueil avec jardin, lecteur de mushaf,
+      réglages — **en cours**
 - [ ] Jardin en 3D sur appareil (test Filament), style final du jardin
 
 ## Lot 2 — La voix
@@ -28,6 +31,10 @@ Récits, contextes de révélation (sources vérifiées), écriture simple, widg
 mode enfants.
 
 ## Questions ouvertes
+
+- Design du premier lancement à retravailler (pages « lecture à voix haute » et
+  « rappels » non validées).
+- Présentation du texte du Coran (police, mise en page) à revoir avec le propriétaire.
 
 - Nom de l'application.
 - Style final du jardin.

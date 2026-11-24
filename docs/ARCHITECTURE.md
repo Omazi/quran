@@ -31,6 +31,7 @@ src/domain     règles métier en TypeScript pur : aucun import React, Expo, sto
 | `domain/quran`       | Vocabulaire commun, structure du mushaf (sourates, pages, hizb), intégrité du texte | [quran.md](specs/quran.md)             |
 | `domain/khatm`       | Journal de lecture, progression, objectif du jour, série                            | [khatm.md](specs/khatm.md)             |
 | `domain/garden`      | État du jardin : 60 étapes, santé, dégradation, renaissance                         | [garden.md](specs/garden.md)           |
+| `domain/reminders`   | Plan des rappels à venir, déduit de l'état du jardin                                | [reminders.md](specs/reminders.md)     |
 | `domain/recognition` | Normalisation de l'arabe, recherche de versets tolérante, suivi mot à mot           | [recognition.md](specs/recognition.md) |
 
 Les modules communiquent par des valeurs simples passées en paramètre. Exemple : le jardin

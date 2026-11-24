@@ -6,6 +6,8 @@
  * change to this file, not a hunt through screens.
  */
 
+import { Platform } from 'react-native';
+
 export const palette = {
   ink: '#1D2A23',
   inkMuted: '#6B756F',
@@ -54,12 +56,16 @@ export const radius = {
   pill: 999,
 } as const;
 
-/** Font families. Loaded once in the root layout; see src/ui/fonts.ts. */
+/**
+ * Font families. Interface text uses the system fonts only (Apple guidance): San Francisco
+ * for the interface and New York, the system serif, for large titles. Bundled fonts are
+ * reserved for Quran text; see src/ui/fonts.ts.
+ */
 export const fontFamily = {
   /** Interface text: the platform font (San Francisco on iOS, Roboto on Android). */
   ui: undefined,
-  /** Rare, emotional headlines. */
-  display: 'Fraunces_600SemiBold',
+  /** Large titles: the system serif (New York on iOS). */
+  display: Platform.select({ ios: 'ui-serif', default: 'serif' }),
   /** Quran text. Isolated here because the final mushaf font needs a licence (see DECISIONS D6). */
   quran: 'AmiriQuran_400Regular',
   /** Arabic titles (surah names). */
@@ -67,14 +73,14 @@ export const fontFamily = {
 } as const;
 
 export const typography = {
-  display: { fontFamily: fontFamily.display, fontSize: 30, lineHeight: 34, letterSpacing: -0.4 },
-  title: { fontFamily: fontFamily.display, fontSize: 21, lineHeight: 26, letterSpacing: -0.2 },
+  display: { fontFamily: fontFamily.display, fontSize: 34, lineHeight: 41, fontWeight: '700' },
+  title: { fontFamily: fontFamily.display, fontSize: 22, lineHeight: 28, fontWeight: '700' },
   headline: { fontSize: 18, lineHeight: 23, fontWeight: '700' },
-  body: { fontSize: 15.5, lineHeight: 23, fontWeight: '400' },
-  bodyStrong: { fontSize: 15.5, lineHeight: 23, fontWeight: '600' },
-  label: { fontSize: 14, lineHeight: 18, fontWeight: '600' },
-  caption: { fontSize: 13, lineHeight: 17, fontWeight: '500' },
-  button: { fontSize: 16, lineHeight: 20, fontWeight: '600' },
+  body: { fontSize: 17, lineHeight: 22, fontWeight: '400' },
+  bodyStrong: { fontSize: 17, lineHeight: 22, fontWeight: '600' },
+  label: { fontSize: 15, lineHeight: 20, fontWeight: '600' },
+  caption: { fontSize: 13, lineHeight: 18, fontWeight: '400' },
+  button: { fontSize: 17, lineHeight: 22, fontWeight: '600' },
 } as const;
 
 export type TypographyToken = keyof typeof typography;

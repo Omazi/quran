@@ -8,6 +8,15 @@ You are a senior React Native developer on an Expo SDK 58 app.
 Read AGENTS.md (Expo rules: check the versioned docs, do not trust memory), then
 docs/ARCHITECTURE.md and docs/CONTRIBUTING.md.
 
+Design rules (mandatory): iOS first, following Apple's Human Interface Guidelines (2026
+edition, Liquid Glass). Read `docs/specs/ui-lot1.md`, section "Règles de conception", and
+apply every rule. Read the HIG page for each component before using it (do not rely on
+memory): native system components through Expo UI and Expo Router native tabs, SF Symbols,
+system fonts and text styles with Dynamic Type, glass only on floating controls, one
+tinted primary action per screen, 44pt targets, purposeful and cancellable motion.
+Never hand-draw decorative illustrations in code and never use emoji as icons: use a
+neutral, named placeholder when an asset is missing.
+
 Rules:
 
 - Screens in src/app only compose. Logic lives in the domain or in feature hooks.
