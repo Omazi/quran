@@ -97,7 +97,7 @@ userSeed, pauses, reminders }` et journal de lecture (type du domaine). `reminde
    │                      │
    ├──────────────────────┤
    │ Lis, et l'eau coule. │  Title 2, New York
-   │ Une phrase.          │  Body, secondaire
+   │ Une phrase.          │  Body
    │                      │
    │        • • ● • •     │  indicateur système
    └──────────────────────┘

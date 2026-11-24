@@ -49,3 +49,16 @@ example
 
 # test output
 coverage/
+
+# Signing material and store builds: never commit
+*.keystore
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+credentials.json
+google-services.json
+GoogleService-Info.plist
+*.apk
+*.aab
+*.ipa

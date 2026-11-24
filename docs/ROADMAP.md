@@ -32,6 +32,14 @@ mode enfants.
 
 ## Questions ouvertes
 
+- **Signature des écrans** : la relecture design note les écrans « sobres » (originalité
+  4 sur 10) : rien n'y est propre à l'appli tant que le jardin n'a pas ses images. Deux
+  choses la feront monter : les modèles du jardin (D12) et le choix parmi les maquettes
+  fil de fer des pages « voix » et « rappels ».
+- **Premier lancement, structure à venir** : une seule scène de jardin fixe en haut, qui
+  change quand on tourne la page, et un pageur de texte dessous (aujourd'hui chaque page
+  porte sa propre scène, qui glisse avec le texte).
+
 - **Édition du mushaf** : la mise en page suivie est celle de l'édition de 1441 H. 25 pages
   n'y commencent pas au même verset que dans le mushaf de Médine classique (pages 121-123,
   145, 532-534, 565, 568, 570, 576, 584, 586, 588-590, 592-600). Quelle édition suivre ?

@@ -30,3 +30,18 @@
 ## Signaler un problème
 
 Écrire au propriétaire du dépôt, sans ouvrir de ticket public.
+
+## Sauvegardes de l'appareil
+
+Le journal de lecture révèle une pratique religieuse : il reste sur le téléphone.
+
+- iOS : le dossier où il est rangé est exclu des sauvegardes par défaut.
+- Android : la sauvegarde de l'appli est désactivée (`allowBackup: false`).
+
+Conséquence assumée : changer de téléphone fait repartir de zéro tant que la
+synchronisation par compte (lot 3) n'existe pas. À revoir avec le propriétaire.
+
+## Notifications
+
+Seules des notifications locales sont utilisées : l'envoi à distance est désactivé dans la
+configuration, et aucun jeton n'est demandé.
