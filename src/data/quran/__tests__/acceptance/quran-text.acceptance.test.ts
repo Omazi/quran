@@ -501,13 +501,10 @@ describe('Hygiène du texte (corpus entier, les deux écritures)', () => {
     },
   );
 
-  it.each(SCRIPTS)(
-    '%s: the only white space is U+0020',
-    (script) => {
-      const otherWhiteSpace = versesMatching(script, /[^\S ]/);
-      expect(otherWhiteSpace).toEqual([]);
-    },
-  );
+  it.each(SCRIPTS)('%s: the only white space is U+0020', (script) => {
+    const otherWhiteSpace = versesMatching(script, /[^\S ]/);
+    expect(otherWhiteSpace).toEqual([]);
+  });
 
   it.each(SCRIPTS)('%s: only expected code points, apart from the declared surprises', (script) => {
     const found = new Map<number, { count: number; first: string }>();
