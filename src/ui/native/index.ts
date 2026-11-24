@@ -1,0 +1,28 @@
+/**
+ * Native controls, default entry: Android and the web. iOS has its own entry, `index.ios.ts`,
+ * which Metro picks by its file name. Both must export the same names.
+ */
+
+import * as defaultControls from './default';
+import type { NativeControls } from './types';
+
+// The annotation is the check: an implementation that drifts from the shared props fails to compile.
+const controls: NativeControls = defaultControls;
+
+export const {
+  Button,
+  ChoiceRow,
+  ContentUnavailable,
+  Gauge,
+  GroupedList,
+  ListRow,
+  ListSection,
+  ProgressIndicator,
+  StepperRow,
+  SwitchRow,
+  TimePickerRow,
+} = controls;
+
+export { Icon } from './icon';
+export { PageIndicator } from './page-indicator';
+export type * from './types';

@@ -1,6 +1,6 @@
 import { HIZB_PAGE_RANGES, withHizbRange } from '../__fixtures__/hizb-page-ranges';
 import { allPagesOutOfOrder, day, pageRange, readPages } from '../__fixtures__/journal-builders';
-import { EMPTY_JOURNAL, getKhatmProgress, type HizbPageRange } from '../index';
+import { EMPTY_JOURNAL, getKhatmProgress, recordPageRead, type HizbPageRange } from '../index';
 
 // Fixture reminder: hizb 1 = pages 1..11, hizb 2 = 11..21, hizb 3 = 21..31 ... hizb 60 = 591..604.
 const MONDAY = day('2026-11-23');
@@ -140,18 +140,21 @@ describe('Rule 3 — progress (progression)', () => {
     expect(progress.firstUnreadPage).toBe(2);
   });
 
-  it('page read again another day: counted once', () => {
+  it('page read again another day: no effect on the progress', () => {
     const monday = readPages(EMPTY_JOURNAL, 1, [1, 2, 3], MONDAY);
     const tuesday = readPages(monday, 1, [1, 2, 3], TUESDAY);
 
+    expect(getKhatmProgress(tuesday, 1, HIZB_PAGE_RANGES)).toEqual(
+      getKhatmProgress(monday, 1, HIZB_PAGE_RANGES),
+    );
     expect(getKhatmProgress(tuesday, 1, HIZB_PAGE_RANGES).pagesRead).toBe(3);
   });
 
   it('counts only the pages of the requested khatma', () => {
-    let journal = readPages(EMPTY_JOURNAL, 1, pageRange(1, 11), MONDAY);
-    journal = readPages(journal, 2, [1, 2], MONDAY);
+    let journal = readPages(EMPTY_JOURNAL, 1, allPagesOutOfOrder(), MONDAY);
+    journal = readPages(journal, 2, [1, 2], TUESDAY);
 
-    expect(getKhatmProgress(journal, 1, HIZB_PAGE_RANGES).pagesRead).toBe(11);
+    expect(getKhatmProgress(journal, 1, HIZB_PAGE_RANGES).pagesRead).toBe(604);
     expect(getKhatmProgress(journal, 2, HIZB_PAGE_RANGES).pagesRead).toBe(2);
     expect(getKhatmProgress(journal, 3, HIZB_PAGE_RANGES).pagesRead).toBe(0);
   });
@@ -161,6 +164,25 @@ describe('Rule 3 — progress (progression)', () => {
 
     expect(getKhatmProgress(EMPTY_JOURNAL, 1, HIZB_PAGE_RANGES).fraction).toBe(0);
     expect(getKhatmProgress(complete, 1, HIZB_PAGE_RANGES).fraction).toBe(1);
+  });
+
+  it('pages read in any order: every new page adds one page and never removes a hizb', () => {
+    let journal = EMPTY_JOURNAL;
+    let previous = getKhatmProgress(journal, 1, HIZB_PAGE_RANGES);
+
+    for (const page of allPagesOutOfOrder()) {
+      journal = recordPageRead(journal, { page, date: MONDAY });
+      const progress = getKhatmProgress(journal, 1, HIZB_PAGE_RANGES);
+
+      expect(progress.pagesRead).toBe(previous.pagesRead + 1);
+      expect(progress.hizbCompleted).toBeGreaterThanOrEqual(previous.hizbCompleted);
+      expect(progress.currentHizbProgress).toBeGreaterThanOrEqual(0);
+      expect(progress.currentHizbProgress).toBeLessThan(1);
+      previous = progress;
+    }
+
+    expect(previous.hizbCompleted).toBe(60);
+    expect(previous.isComplete).toBe(true);
   });
 });
 

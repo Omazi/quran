@@ -1,43 +1,37 @@
-import { PAGE_COUNT } from '@/domain/quran/types';
-import { FIRST_KHATM } from './config';
-import type { ReadingEntry, ReadingJournal } from './types';
-import { assertEntry, assertKhatmNumber, assertPage } from './validation';
+import { summarizeJournal } from './journal-summary';
+import type { PageRead, ReadingJournal } from './types';
+import { assertKhatmNumber, assertLocalDate, assertPage } from './validation';
 
 /** The journal of a user who has not read anything yet. */
 export const EMPTY_JOURNAL: ReadingJournal = Object.freeze([]);
 
-function isSameEntry(a: ReadingEntry, b: ReadingEntry): boolean {
-  return a.khatm === b.khatm && a.page === b.page && a.date === b.date;
-}
-
 /**
- * Records that a page was read on a day, for a khatma, and returns the new journal.
+ * Records a page read and returns the new journal. The journal given is never modified.
  *
- * An entry is unique per (khatm, page, date): recording the same page again on the same day
- * changes nothing and returns the very same journal, so callers can detect "nothing new"
- * with `===`. Reading the page again on another day adds an entry: it counts for that day
- * (daily goal, watered day) but not for the progress of the khatma.
+ * The caller never chooses the khatma: the page is filed in the khatma in progress (the
+ * first one that is not complete), so khatma n + 1 starts with the first page recorded
+ * after khatma n is complete (spec rule 4).
+ *
+ * A page already read in the khatma in progress is a re-read: it never counts, whatever the
+ * day, and the very same journal is returned (callers can detect "nothing new" with `===`).
+ * The entry keeps the date of the first read.
  */
-export function recordPageRead(journal: ReadingJournal, entry: ReadingEntry): ReadingJournal {
-  assertEntry(entry);
-  if (journal.some((existing) => isSameEntry(existing, entry))) return journal;
-  // Copied field by field so the journal never keeps a reference to a caller-owned object.
-  return [...journal, { khatm: entry.khatm, page: entry.page, date: entry.date }];
+export function recordPageRead(journal: ReadingJournal, pageRead: PageRead): ReadingJournal {
+  assertPage(pageRead.page);
+  assertLocalDate(pageRead.date, 'reading date');
+  const { khatmas, currentKhatm } = summarizeJournal(journal);
+
+  const isAlreadyRead = khatmas.get(currentKhatm)?.readPages.has(pageRead.page) ?? false;
+  if (isAlreadyRead) return journal;
+
+  // Built field by field so the journal never keeps a reference to a caller-owned object.
+  return [...journal, { khatm: currentKhatm, page: pageRead.page, date: pageRead.date }];
 }
 
-/**
- * The set of pages read for a khatma (spec rule 1: one entry is enough, whatever its date).
- * Every entry of the journal is checked on the way, so a corrupted journal (for example one
- * loaded from storage) fails loudly instead of producing a wrong progress.
- */
+/** The set of pages read for a khatma (spec rule 1: a page is read once an entry exists). */
 export function getReadPages(journal: ReadingJournal, khatm: number): ReadonlySet<number> {
   assertKhatmNumber(khatm);
-  const pages = new Set<number>();
-  for (const entry of journal) {
-    assertEntry(entry);
-    if (entry.khatm === khatm) pages.add(entry.page);
-  }
-  return pages;
+  return summarizeJournal(journal).khatmas.get(khatm)?.readPages ?? new Set<number>();
 }
 
 /** Spec rule 1: a page is read for a khatma as soon as one entry exists for it. */
@@ -47,15 +41,9 @@ export function isPageRead(journal: ReadingJournal, khatm: number, page: number)
 }
 
 /**
- * The khatma the user is reading now (spec rule 4): the highest khatma number found in the
- * journal, or the next one when that khatma is complete. An empty journal gives khatma 1.
+ * The khatma in progress (spec rule 4): the first khatma that is not complete. It is 1 for
+ * an empty journal, and n + 1 as soon as the 604 pages of khatma n are read.
  */
 export function getCurrentKhatm(journal: ReadingJournal): number {
-  let latestKhatm = FIRST_KHATM;
-  for (const entry of journal) {
-    assertEntry(entry);
-    if (entry.khatm > latestKhatm) latestKhatm = entry.khatm;
-  }
-  const isLatestComplete = getReadPages(journal, latestKhatm).size === PAGE_COUNT;
-  return isLatestComplete ? latestKhatm + 1 : latestKhatm;
+  return summarizeJournal(journal).currentKhatm;
 }

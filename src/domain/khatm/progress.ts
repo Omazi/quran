@@ -24,22 +24,17 @@ function findFirstUnreadPage(readPages: ReadonlySet<number>): number | null {
 }
 
 /**
- * Progress of one khatma (spec rules 2, 3 and 4), derived from the journal alone.
+ * Progress of a khatma from its set of read pages (spec rules 2 and 3). Internal: the
+ * callers have already checked the khatma number, the pages and the hizb ranges.
  *
  * A hizb is completed when every page from its first to its last is read. A page shared by
  * two hizb counts for both, so finishing a hizb usually starts the next one.
- *
- * Each khatma is computed from its own entries only: starting khatma n + 1 never changes
- * the progress (nor the completed hizb) of khatma n.
  */
-export function getKhatmProgress(
-  journal: ReadingJournal,
+export function measureKhatmProgress(
   khatm: number,
+  readPages: ReadonlySet<number>,
   hizbPageRanges: readonly HizbPageRange[],
 ): KhatmProgress {
-  assertHizbPageRanges(hizbPageRanges);
-  const readPages = getReadPages(journal, khatm);
-
   let hizbCompleted = 0;
   let currentHizb: number | null = null;
   let currentHizbProgress = 0;
@@ -68,4 +63,20 @@ export function getKhatmProgress(
     firstUnreadPage: findFirstUnreadPage(readPages),
     isComplete: pagesRead === PAGE_COUNT,
   };
+}
+
+/**
+ * Progress of one khatma (spec rules 2, 3 and 4), derived from the journal alone.
+ *
+ * Each khatma is computed from its own entries only: starting khatma n + 1 never changes
+ * the progress (nor the completed hizb) of khatma n. A khatma that has no entry yet has
+ * nothing read.
+ */
+export function getKhatmProgress(
+  journal: ReadingJournal,
+  khatm: number,
+  hizbPageRanges: readonly HizbPageRange[],
+): KhatmProgress {
+  assertHizbPageRanges(hizbPageRanges);
+  return measureKhatmProgress(khatm, getReadPages(journal, khatm), hizbPageRanges);
 }

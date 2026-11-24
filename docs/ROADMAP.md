@@ -32,6 +32,11 @@ mode enfants.
 
 ## Questions ouvertes
 
+- Nouvelle khatma : la première page lue après la 604e ouvre un nouveau jardin. Faut-il
+  demander une confirmation avant (« Commencer un nouveau jardin ? ») ? Proposé : oui.
+- Jardin complet entre deux khatmas : il ne peut plus être arrosé. Proposé : il ne se
+  dessèche pas tant que la khatma suivante n'a pas commencé.
+
 - Direction visuelle à choisir (trois directions dans `design/brand-spec.md`).
 - Provenance et style des modèles 3D du jardin.
 - Premier lancement : 16 pages sans « Passer », ou 10 pages selon les règles d'Apple.

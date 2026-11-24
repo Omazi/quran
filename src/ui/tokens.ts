@@ -1,99 +1,219 @@
 /**
- * Design tokens: the single place where the look of the app is decided.
+ * Design tokens: the values of the design charter (docs/design/brand-spec.md, section 3).
  *
- * Features never write a literal color, font size, spacing or radius: they pick a
- * token. Restyling the app (the visual direction is still being refined) is then a
- * change to this file, not a hunt through screens.
+ * This file is data only. Features never read a colour from here: they call `useColors()`
+ * (src/ui/use-colors.ts) or pass a role name to a component of src/ui. Text styles are applied
+ * through `AppText`. Spacing, radii and layout values are imported directly.
  */
 
-import { Platform } from 'react-native';
+import { Platform, type TextProps } from 'react-native';
 
-export const palette = {
-  ink: '#1D2A23',
-  inkMuted: '#6B756F',
-  inkFaint: '#A8AFAA',
-  surface: '#F7F3EA',
-  card: '#FFFFFF',
-  paper: '#FBF7EC',
-  paperEdge: '#EFE4C8',
-  hairline: 'rgba(29,42,35,0.08)',
-  primary: '#1F5C45',
-  primaryDeep: '#123C2D',
-  primarySoft: '#E6EFE9',
-  gold: '#D9A441',
-  goldDeep: '#A9823F',
-  water: '#3FA7B5',
-  waterDeep: '#2B7F93',
-  waterSoft: '#E3F1F3',
-  warning: '#7A4A16',
-  warningSoft: '#FBEBD3',
-  danger: '#D93A3A',
-  dangerSoft: '#FCEBEB',
-  white: '#FFFFFF',
-  black: '#000000',
+// ---------------------------------------------------------------------------------------------
+// Colours
+// ---------------------------------------------------------------------------------------------
+
+/** A colour with one value per appearance. */
+export interface ColorPair {
+  readonly light: string;
+  readonly dark: string;
+}
+
+/**
+ * The colours that belong to the app. One colour, one meaning (color.md › Best practices).
+ * `onAccent` is the label drawn on an accent background, `ink` the text drawn on `paper`.
+ *
+ * The charter gives no increased-contrast variants yet (color.md › Best practices asks for one
+ * per custom colour): `DynamicColorIOS` accepts them when the charter does.
+ */
+export const appColors = {
+  /** Water: the main action of a screen, the selected tab, "watered". */
+  accent: { light: '#0E6B78', dark: '#5CC8D6' },
+  onAccent: { light: '#FFFFFF', dark: '#000000' },
+  /** The garden when it is well, in content only. */
+  growth: { light: '#1F6B4A', dark: '#63C794' },
+  /** The mushaf page, and nothing else. */
+  paper: { light: '#FBF7EC', dark: '#1B1915' },
+  ink: { light: '#1C1C1E', dark: '#EFE8D8' },
+  /** Ornaments of the mushaf, in content only. */
+  ornament: { light: '#8F611A', dark: '#D9A441' },
+} as const satisfies Record<string, ColorPair>;
+
+/**
+ * System roles on iOS: names of UIKit's dynamic colours, resolved by the system. Their values are
+ * never written in the app, so they follow Dark Mode and Increase Contrast on their own
+ * (color.md › System colors, dark-mode.md › Dark Mode colors).
+ */
+export const iosSystemColorNames = {
+  /** Overall view (color.md › Mobile). */
+  background: 'systemBackground',
+  /** Groups content inside the overall view. */
+  secondaryBackground: 'secondarySystemBackground',
+  /** Overall view of a screen that shows a grouped list. */
+  groupedBackground: 'systemGroupedBackground',
+  /** Groups content inside a grouped screen. */
+  secondaryGroupedBackground: 'secondarySystemGroupedBackground',
+  label: 'label',
+  secondaryLabel: 'secondaryLabel',
+  /** Non-essential content only: its contrast is low by design. */
+  tertiaryLabel: 'tertiaryLabel',
+  separator: 'separator',
+  /** Thin shapes such as the track of a bar. */
+  fill: 'systemFill',
+  /** Thirst and alerts. Graphics and large or bold text, always with an icon and a word. */
+  warning: 'systemOrange',
+  /** Destructive actions. Graphics and large or bold text. */
+  destructive: 'systemRed',
 } as const;
 
-export type ColorToken = keyof typeof palette;
+export type SystemColorRole = keyof typeof iosSystemColorNames;
+export type AppColorRole = keyof typeof appColors;
+export type ColorRole = SystemColorRole | AppColorRole;
 
-/** 4-point spacing scale. */
-export const spacing = {
-  none: 0,
-  xxs: 2,
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 20,
-  xxl: 28,
-  xxxl: 40,
+/**
+ * System roles outside iOS (Android, web): equivalents chosen in JavaScript from the device
+ * theme. Provisional until the Android lot.
+ *
+ * Sources: backgrounds are the surfaces the charter measures its contrasts against; labels and
+ * separators are the neutral palette of the SwiftUI Design skill (typography-color.md › Color
+ * Palette Structure), as are orange and red. The light orange of that palette reaches only
+ * 2.2:1 on white, so it is darkened (same hue, 80 %) to the first value above 3:1.
+ */
+export const fallbackSystemColors = {
+  background: { light: '#FFFFFF', dark: '#000000' },
+  secondaryBackground: { light: '#F2F2F7', dark: '#1C1C1E' },
+  groupedBackground: { light: '#F2F2F7', dark: '#000000' },
+  secondaryGroupedBackground: { light: '#FFFFFF', dark: '#1C1C1E' },
+  label: { light: '#000000', dark: '#FFFFFF' },
+  secondaryLabel: { light: '#6B6B6B', dark: '#8E8E93' },
+  tertiaryLabel: { light: '#999999', dark: '#636366' },
+  separator: { light: '#E5E5E5', dark: '#38383A' },
+  fill: { light: '#E5E5E5', dark: '#38383A' },
+  warning: { light: '#CC7700', dark: '#FF9500' },
+  destructive: { light: '#FF3B30', dark: '#FF3B30' },
+} as const satisfies Record<SystemColorRole, ColorPair>;
+
+/** WCAG AA thresholds used by Apple's Accessibility Inspector (accessibility.md › Vision). */
+export const contrastThresholds = {
+  /** Text up to 17 points. */
+  text: 4.5,
+  /** Text of 18 points or more, bold text, and graphics. */
+  largeTextAndGraphics: 3,
 } as const;
 
-export const radius = {
-  sm: 9,
-  md: 16,
-  lg: 22,
-  xl: 26,
-  pill: 999,
+// ---------------------------------------------------------------------------------------------
+// Typography
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Font families. The interface uses the system fonts only (typography.md › Using system fonts):
+ * San Francisco by default, New York for large titles. React Native maps `ui-serif` to the
+ * system serif design on iOS. Bundled fonts are reserved for Quran text (see fonts.ts, D6).
+ */
+export const fontFamily = {
+  /** New York on iOS, the platform serif elsewhere. */
+  serif: Platform.select({ ios: 'ui-serif', default: 'serif' }),
+  /** Quran text. */
+  quran: 'AmiriQuran_400Regular',
+  /** Arabic titles (surah names). */
+  quranTitle: 'Amiri_700Bold',
 } as const;
 
 /**
- * Font families. Interface text uses the system fonts only (Apple guidance): San Francisco
- * for the interface and New York, the system serif, for large titles. Bundled fonts are
- * reserved for Quran text; see src/ui/fonts.ts.
+ * Regular, semibold and bold only: light weights are hard to read at small sizes
+ * (typography.md › Ensuring legibility).
  */
-export const fontFamily = {
-  /** Interface text: the platform font (San Francisco on iOS, Roboto on Android). */
-  ui: undefined,
-  /** Large titles: the system serif (New York on iOS). */
-  display: Platform.select({ ios: 'ui-serif', default: 'serif' }),
-  /** Quran text. Isolated here because the final mushaf font needs a licence (see DECISIONS D6). */
-  quran: 'AmiriQuran_400Regular',
-  /** Arabic titles (surah names). */
-  arabicTitle: 'Amiri_700Bold',
-} as const;
+export type FontWeightToken = '400' | '600' | '700';
 
-export const typography = {
-  display: { fontFamily: fontFamily.display, fontSize: 34, lineHeight: 41, fontWeight: '700' },
-  title: { fontFamily: fontFamily.display, fontSize: 22, lineHeight: 28, fontWeight: '700' },
-  headline: { fontSize: 18, lineHeight: 23, fontWeight: '700' },
+export interface TextStyleToken {
+  /** Omitted for San Francisco, the platform font. */
+  readonly fontFamily?: string;
+  /** Size in points at the default text size. */
+  readonly fontSize: number;
+  readonly lineHeight: number;
+  readonly fontWeight: FontWeightToken;
+}
+
+/**
+ * Apple's text styles kept by the charter, at the default ("Large") text size
+ * (typography.md › Specifications). At most four per screen.
+ */
+export const textStyles = {
+  /** Screen title. */
+  largeTitle: { fontFamily: fontFamily.serif, fontSize: 34, lineHeight: 41, fontWeight: '700' },
+  /** Title of an onboarding page or of a group. */
+  title2: { fontFamily: fontFamily.serif, fontSize: 22, lineHeight: 28, fontWeight: '700' },
+  /** Important label. */
+  headline: { fontSize: 17, lineHeight: 22, fontWeight: '600' },
   body: { fontSize: 17, lineHeight: 22, fontWeight: '400' },
-  bodyStrong: { fontSize: 17, lineHeight: 22, fontWeight: '600' },
-  label: { fontSize: 15, lineHeight: 20, fontWeight: '600' },
-  caption: { fontSize: 13, lineHeight: 18, fontWeight: '400' },
-  button: { fontSize: 17, lineHeight: 22, fontWeight: '600' },
+  /** Secondary text. */
+  subhead: { fontSize: 15, lineHeight: 20, fontWeight: '400' },
+  /** Notes and captions. */
+  footnote: { fontSize: 13, lineHeight: 18, fontWeight: '400' },
+} as const satisfies Record<string, TextStyleToken>;
+
+export type TextStyleName = keyof typeof textStyles;
+
+/** Apple's name of each text style, as React Native and SwiftUI spell it. */
+export type AppleTextStyle = NonNullable<TextProps['dynamicTypeRamp']>;
+
+/**
+ * The Dynamic Type ramp of each style. With it, iOS scales a text the way Apple's tables do
+ * (a large title grows less than a footnote), not by one factor for all styles.
+ */
+export const appleTextStyles = {
+  largeTitle: 'largeTitle',
+  title2: 'title2',
+  headline: 'headline',
+  body: 'body',
+  subhead: 'subheadline',
+  footnote: 'footnote',
+} as const satisfies Record<TextStyleName, AppleTextStyle>;
+
+/** Smallest text size the interface may use (typography.md › Ensuring legibility). */
+export const MINIMUM_FONT_SIZE = 11;
+
+// ---------------------------------------------------------------------------------------------
+// Spacing, shapes, targets
+// ---------------------------------------------------------------------------------------------
+
+/** The 8-point grid of the charter. */
+export const spacing = {
+  none: 0,
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
 } as const;
 
-export type TypographyToken = keyof typeof typography;
+export type SpacingToken = keyof typeof spacing;
 
-/** Minimum touch target, per Apple and Google accessibility guidance. */
-export const MIN_TOUCH_TARGET = 44;
+export const radius = {
+  sm: 8,
+  md: 12,
+  lg: 16,
+} as const;
 
-export const elevation = {
-  card: {
-    shadowColor: palette.ink,
-    shadowOpacity: 0.07,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 3,
-  },
+/** Comfortable touch target of each platform (accessibility.md › Mobility; 48 dp on Material). */
+export const touchTargets = { ios: 44, android: 48, default: 44 } as const;
+
+export const layout = {
+  /** Margin between the screen edge and its content. */
+  screenMargin: spacing.md,
+  /** Space between two controls that have a bezel (accessibility.md › Mobility). */
+  controlGap: 12,
+  /** Smallest width and height of anything that can be touched. */
+  touchTarget: Platform.select(touchTargets),
+  /** Outline of a default (non-iOS) control. */
+  outlineWidth: 1,
+} as const;
+
+/**
+ * States of the default (non-iOS) controls. Material's conventions, outside the design skills:
+ * a pressed layer of 10 %, disabled content at 38 %.
+ */
+export const stateOpacity = {
+  pressed: 0.9,
+  disabled: 0.38,
 } as const;

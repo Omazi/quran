@@ -1,7 +1,7 @@
 import { HIZB_COUNT, PAGE_COUNT } from '@/domain/quran/types';
-import { compareLocalDates, isLocalDate } from '@/domain/shared/local-date';
+import { compareLocalDates, isLocalDate, type LocalDate } from '@/domain/shared/local-date';
 import { FIRST_KHATM, FIRST_PAGE } from './config';
-import type { HizbPageRange, KhatmConfig, Pause, ReadingEntry } from './types';
+import type { HizbPageRange, KhatmConfig, Pause } from './types';
 
 /**
  * Guards of the module. Invalid input always raises an explicit error; nothing is silently
@@ -20,17 +20,14 @@ export function assertKhatmNumber(khatm: number): void {
   }
 }
 
-/** A LocalDate is a branded string: the brand can be forged by a cast, so we check the value. */
-export function assertLocalDate(date: string, label: string): void {
-  if (!isLocalDate(date)) {
-    throw new RangeError(`Invalid ${label}: "${date}" (expected a real YYYY-MM-DD date)`);
+/**
+ * A LocalDate is a branded string: the brand can be forged by a cast (or by data loaded from
+ * storage), so the value itself is checked, starting with its type.
+ */
+export function assertLocalDate(date: LocalDate, label: string): void {
+  if (typeof date !== 'string' || !isLocalDate(date)) {
+    throw new RangeError(`Invalid ${label}: "${String(date)}" (expected a real YYYY-MM-DD date)`);
   }
-}
-
-export function assertEntry(entry: ReadingEntry): void {
-  assertKhatmNumber(entry.khatm);
-  assertPage(entry.page);
-  assertLocalDate(entry.date, 'entry date');
 }
 
 function assertPositiveInteger(value: number, label: string): void {
@@ -39,8 +36,12 @@ function assertPositiveInteger(value: number, label: string): void {
   }
 }
 
+/** The daily goal is chosen by the user: a whole number of pages, at least 1. */
+export function assertDailyGoalPages(dailyGoalPages: number): void {
+  assertPositiveInteger(dailyGoalPages, 'dailyGoalPages');
+}
+
 export function assertConfig(config: KhatmConfig): void {
-  assertPositiveInteger(config.dailyGoalPages, 'dailyGoalPages');
   assertPositiveInteger(config.minPagesPerWateredDay, 'minPagesPerWateredDay');
   assertPositiveInteger(config.averagePaceWindowDays, 'averagePaceWindowDays');
 }

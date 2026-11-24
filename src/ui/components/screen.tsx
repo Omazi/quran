@@ -1,30 +1,55 @@
-import { StyleSheet, type ViewProps } from 'react-native';
+import type { ReactNode } from 'react';
+import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
-import { palette, type ColorToken } from '../tokens';
+import type { ColorRole } from '../tokens';
+import { useColors } from '../use-colors';
 
-export interface ScreenProps extends ViewProps {
-  background?: ColorToken;
-  /** Safe-area edges to pad. Defaults to top and bottom. */
+/**
+ * `background` for an ordinary screen, `groupedBackground` when the screen shows a grouped list
+ * (color.md › Mobile), `paper` for the mushaf page only.
+ */
+export type ScreenBackground = Extract<ColorRole, 'background' | 'groupedBackground' | 'paper'>;
+
+export interface ScreenProps {
+  children: ReactNode;
+  background?: ScreenBackground;
+  /** Safe-area edges to keep clear. Defaults to all four (layout.md › Guides and safe areas). */
   edges?: readonly Edge[];
+  /**
+   * Lets the content scroll vertically, so that it stays reachable at the largest text sizes
+   * (layout.md › Adaptability). Leave it off when the content scrolls by itself, as a grouped
+   * list does.
+   */
+  scroll?: boolean;
+  testID?: string;
 }
 
-/** Root container of every screen: background color and safe-area padding. */
+/** Root of every screen: the system background and the safe areas. */
 export function Screen({
-  background = 'surface',
-  edges = ['top', 'bottom'],
-  style,
-  ...rest
+  children,
+  background = 'background',
+  edges,
+  scroll = false,
+  testID,
 }: ScreenProps) {
+  const colors = useColors();
   return (
     <SafeAreaView
-      {...rest}
       edges={edges}
-      style={[styles.screen, { backgroundColor: palette[background] }, style]}
-    />
+      style={[styles.screen, { backgroundColor: colors[background] }]}
+      testID={testID}
+    >
+      {scroll ? (
+        <ScrollView contentContainerStyle={styles.scrollContent}>{children}</ScrollView>
+      ) : (
+        children
+      )}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  scrollContent: { flexGrow: 1 },
 });

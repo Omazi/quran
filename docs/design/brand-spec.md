@@ -49,6 +49,16 @@ Quatre couleurs seulement appartiennent à l'appli. Une couleur, un seul sens
 | `paper` / encre | La page du mushaf, et elle seule                             | `#FBF7EC` / `#1C1C1E` | 15,89:1                                                               | `#1B1915` / `#EFE8D8` | 14,38:1                                                               |
 | `ornament` (or) | Les ornements du mushaf, dans le contenu seulement           | `#8F611A`             | 5,04:1 sur papier                                                     | `#D9A441`             | 7,80:1 sur papier sombre                                              |
 
+Contraste élevé (`color.md › Best practices` : les couleurs doivent tenir en clair, en
+sombre et en contraste augmenté) : quand la personne active « augmenter le contraste »,
+les couleurs de l'appli passent à ces valeurs.
+
+| Rôle       | Clair     | Contraste         | Sombre    | Contraste                 |
+| ---------- | --------- | ----------------- | --------- | ------------------------- |
+| `accent`   | `#0A4F59` | 9,23:1 sur blanc  | `#8FE0EA` | 14,02:1 sur noir          |
+| `growth`   | `#164F36` | 9,52:1 sur blanc  | `#8FE0B4` | 13,49:1 sur noir          |
+| `ornament` | `#6A470F` | 7,78:1 sur papier | `#EBC272` | 10,44:1 sur papier sombre |
+
 Soif et alerte : orange système. Action destructive : rouge système. Aucune information
 ne passe par la couleur seule (`accessibility.md › Vision`) : toujours une
 icône et un mot avec.

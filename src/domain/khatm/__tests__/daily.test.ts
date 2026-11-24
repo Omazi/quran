@@ -1,5 +1,5 @@
 import type { LocalDate } from '@/domain/shared/local-date';
-import { day, pageRange, readPages } from '../__fixtures__/journal-builders';
+import { allPagesOutOfOrder, day, pageRange, readPages } from '../__fixtures__/journal-builders';
 import {
   DEFAULT_KHATM_CONFIG,
   EMPTY_JOURNAL,
@@ -15,6 +15,7 @@ const TODAY = day('2026-11-23');
 const YESTERDAY = day('2026-11-22');
 const TWO_DAYS_AGO = day('2026-11-21');
 const TOMORROW = day('2026-11-24');
+const LAST_MONTH = day('2026-10-01');
 // Cast on purpose: forged LocalDate values are what the runtime checks must catch.
 const IMPOSSIBLE_DATE = '2026-02-30' as LocalDate;
 
@@ -30,19 +31,27 @@ function readOnePageOn(dates: readonly string[]): ReadingJournal {
   );
 }
 
+/** Khatma 1 read last month except the given pages, which are still to read. */
+function firstKhatmaExcept(unreadPages: readonly number[]): ReadingJournal {
+  const pages = allPagesOutOfOrder().filter((page) => !unreadPages.includes(page));
+  return readPages(EMPTY_JOURNAL, 1, pages, LAST_MONTH);
+}
+
 describe('Default configuration', () => {
-  it('one page waters a day, the goal is at least one page, the pace window is 7 days', () => {
-    expect(DEFAULT_KHATM_CONFIG.minPagesPerWateredDay).toBe(1);
-    expect(DEFAULT_KHATM_CONFIG.dailyGoalPages).toBeGreaterThanOrEqual(1);
-    expect(DEFAULT_KHATM_CONFIG.averagePaceWindowDays).toBe(7);
+  it('one new page waters a day and the pace window is 7 days', () => {
+    expect(DEFAULT_KHATM_CONFIG).toEqual({ minPagesPerWateredDay: 1, averagePaceWindowDays: 7 });
+  });
+
+  it('holds no daily goal: the goal belongs to the user', () => {
+    expect(DEFAULT_KHATM_CONFIG).not.toHaveProperty('dailyGoalPages');
   });
 });
 
 describe('Rule 5 — today (aujourd’hui)', () => {
-  const goalOfFive = configWith({ dailyGoalPages: 5 });
+  const GOAL_OF_FIVE = 5;
 
   it('empty journal: nothing read, the whole goal remains', () => {
-    expect(getTodayProgress(EMPTY_JOURNAL, TODAY, goalOfFive)).toEqual({
+    expect(getTodayProgress(EMPTY_JOURNAL, TODAY, GOAL_OF_FIVE)).toEqual({
       pagesRead: 0,
       goalPages: 5,
       pagesRemaining: 5,
@@ -50,10 +59,10 @@ describe('Rule 5 — today (aujourd’hui)', () => {
     });
   });
 
-  it('counts the pages read today and compares them with the goal', () => {
+  it('counts the entries dated today and compares them with the goal', () => {
     const journal = readPages(EMPTY_JOURNAL, 1, [10, 11, 12], TODAY);
 
-    expect(getTodayProgress(journal, TODAY, goalOfFive)).toEqual({
+    expect(getTodayProgress(journal, TODAY, GOAL_OF_FIVE)).toEqual({
       pagesRead: 3,
       goalPages: 5,
       pagesRemaining: 2,
@@ -66,15 +75,15 @@ describe('Rule 5 — today (aujourd’hui)', () => {
     journal = readPages(journal, 1, [9], TODAY);
     journal = readPages(journal, 1, [10, 11], TOMORROW);
 
-    expect(getTodayProgress(journal, TODAY, goalOfFive).pagesRead).toBe(1);
+    expect(getTodayProgress(journal, TODAY, GOAL_OF_FIVE).pagesRead).toBe(1);
   });
 
-  it('the goal is reached at exactly dailyGoalPages pages', () => {
+  it('the goal is reached at exactly the goal', () => {
     const fourPages = readPages(EMPTY_JOURNAL, 1, pageRange(1, 4), TODAY);
     const fivePages = readPages(fourPages, 1, [5], TODAY);
 
-    expect(getTodayProgress(fourPages, TODAY, goalOfFive).goalReached).toBe(false);
-    expect(getTodayProgress(fivePages, TODAY, goalOfFive)).toEqual({
+    expect(getTodayProgress(fourPages, TODAY, GOAL_OF_FIVE).goalReached).toBe(false);
+    expect(getTodayProgress(fivePages, TODAY, GOAL_OF_FIVE)).toEqual({
       pagesRead: 5,
       goalPages: 5,
       pagesRemaining: 0,
@@ -85,55 +94,84 @@ describe('Rule 5 — today (aujourd’hui)', () => {
   it('reading beyond the goal never gives a negative remainder', () => {
     const journal = readPages(EMPTY_JOURNAL, 1, pageRange(1, 9), TODAY);
 
-    const today = getTodayProgress(journal, TODAY, goalOfFive);
+    const today = getTodayProgress(journal, TODAY, GOAL_OF_FIVE);
 
     expect(today.pagesRead).toBe(9);
     expect(today.pagesRemaining).toBe(0);
     expect(today.goalReached).toBe(true);
   });
 
-  it('all khatmas merged: the end of one khatma and the start of the next add up', () => {
-    let journal = readPages(EMPTY_JOURNAL, 1, [603, 604], TODAY);
-    journal = readPages(journal, 2, [1, 2, 3], TODAY);
+  it('a goal of one page is reached by the first page', () => {
+    const journal = readPages(EMPTY_JOURNAL, 1, [1], TODAY);
 
-    expect(getTodayProgress(journal, TODAY, goalOfFive).pagesRead).toBe(5);
+    expect(getTodayProgress(EMPTY_JOURNAL, TODAY, 1).goalReached).toBe(false);
+    expect(getTodayProgress(journal, TODAY, 1).goalReached).toBe(true);
   });
 
-  it('distinct pages: the same page number in two khatmas on the same day counts once', () => {
-    let journal = readPages(EMPTY_JOURNAL, 1, [7], TODAY);
+  it('the goal has no upper limit: more pages than a whole mushaf is a valid goal', () => {
+    const journal = readPages(EMPTY_JOURNAL, 1, pageRange(1, 9), TODAY);
+
+    expect(getTodayProgress(journal, TODAY, 1000)).toEqual({
+      pagesRead: 9,
+      goalPages: 1000,
+      pagesRemaining: 991,
+      goalReached: false,
+    });
+  });
+
+  it('the end of one khatma and the start of the next add up', () => {
+    let journal = firstKhatmaExcept([603, 604]);
+    journal = readPages(journal, 1, [603, 604], TODAY);
+    journal = readPages(journal, 2, [1, 2, 3], TODAY);
+
+    expect(getTodayProgress(journal, TODAY, GOAL_OF_FIVE).pagesRead).toBe(5);
+  });
+
+  it('the day a khatma ends and the next one starts, the same page can count twice, once in each (accepted)', () => {
+    // Page 7 is the last page of khatma 1; read again the same day, it opens khatma 2.
+    let journal = firstKhatmaExcept([7]);
+    journal = readPages(journal, 1, [7], TODAY);
+    expect(getTodayProgress(journal, TODAY, GOAL_OF_FIVE).pagesRead).toBe(1);
+
     journal = readPages(journal, 2, [7], TODAY);
 
-    expect(getTodayProgress(journal, TODAY, goalOfFive).pagesRead).toBe(1);
+    expect(getTodayProgress(journal, TODAY, GOAL_OF_FIVE).pagesRead).toBe(2);
+    // Only once in each: a third read of the page that day is a re-read in khatma 2.
+    expect(readPages(journal, 2, [7], TODAY)).toBe(journal);
   });
 
   it('page read again the same day: counted once', () => {
     let journal = readPages(EMPTY_JOURNAL, 1, [7], TODAY);
     journal = readPages(journal, 1, [7], TODAY);
 
-    expect(getTodayProgress(journal, TODAY, goalOfFive).pagesRead).toBe(1);
+    expect(getTodayProgress(journal, TODAY, GOAL_OF_FIVE).pagesRead).toBe(1);
   });
 
-  it('page read again another day: the re-read counts as reading of the day', () => {
+  it('page read again another day: no effect on the daily goal', () => {
     let journal = readPages(EMPTY_JOURNAL, 1, [7, 8], YESTERDAY);
     journal = readPages(journal, 1, [7, 8], TODAY);
 
-    expect(getTodayProgress(journal, TODAY, goalOfFive).pagesRead).toBe(2);
-  });
-
-  it('uses the default configuration when none is given', () => {
-    const today = getTodayProgress(EMPTY_JOURNAL, TODAY);
-
-    expect(today.goalPages).toBe(DEFAULT_KHATM_CONFIG.dailyGoalPages);
+    expect(getTodayProgress(journal, TODAY, GOAL_OF_FIVE).pagesRead).toBe(0);
+    expect(getTodayProgress(journal, YESTERDAY, GOAL_OF_FIVE).pagesRead).toBe(2);
   });
 
   it.each([0, -3, 2.5, Number.NaN])('invalid input: rejects a daily goal of %p', (goal) => {
-    expect(() =>
-      getTodayProgress(EMPTY_JOURNAL, TODAY, configWith({ dailyGoalPages: goal })),
-    ).toThrow(RangeError);
+    expect(() => getTodayProgress(EMPTY_JOURNAL, TODAY, goal)).toThrow(RangeError);
   });
 
   it('invalid input: rejects an impossible date', () => {
-    expect(() => getTodayProgress(EMPTY_JOURNAL, IMPOSSIBLE_DATE)).toThrow(RangeError);
+    expect(() => getTodayProgress(EMPTY_JOURNAL, IMPOSSIBLE_DATE, GOAL_OF_FIVE)).toThrow(
+      RangeError,
+    );
+  });
+
+  it('invalid input: rejects a corrupted journal', () => {
+    const duplicated: ReadingJournal = [
+      { khatm: 1, page: 5, date: TODAY },
+      { khatm: 1, page: 5, date: TODAY },
+    ];
+
+    expect(() => getTodayProgress(duplicated, TODAY, GOAL_OF_FIVE)).toThrow(RangeError);
   });
 });
 
@@ -142,13 +180,13 @@ describe('Rule 6 — watered day (jour arrosé)', () => {
     expect(getWateredDays(EMPTY_JOURNAL).size).toBe(0);
   });
 
-  it('by default one page is enough to water a day', () => {
+  it('by default one new page is enough to water a day', () => {
     const journal = readOnePageOn(['2026-11-21', '2026-11-23']);
 
     expect(getWateredDays(journal)).toEqual(new Set([TWO_DAYS_AGO, TODAY]));
   });
 
-  it('a day needs at least minPagesPerWateredDay pages', () => {
+  it('a day needs at least minPagesPerWateredDay new pages', () => {
     let journal = readPages(EMPTY_JOURNAL, 1, [1, 2], YESTERDAY);
     journal = readPages(journal, 1, [3, 4, 5], TODAY);
 
@@ -157,28 +195,67 @@ describe('Rule 6 — watered day (jour arrosé)', () => {
     expect(wateredDays).toEqual(new Set([TODAY]));
   });
 
-  it('page read again another day: a re-read waters the day', () => {
+  it('page read again another day: a re-read does not water the day', () => {
     let journal = readPages(EMPTY_JOURNAL, 1, [1], YESTERDAY);
     journal = readPages(journal, 1, [1], TODAY);
 
-    expect(getWateredDays(journal)).toEqual(new Set([YESTERDAY, TODAY]));
+    expect(getWateredDays(journal)).toEqual(new Set([YESTERDAY]));
   });
 
-  it('counts distinct pages, all khatmas merged', () => {
-    let journal = readPages(EMPTY_JOURNAL, 1, [604], TODAY);
+  it('re-reads do not help to reach minPagesPerWateredDay', () => {
+    let journal = readPages(EMPTY_JOURNAL, 1, [1, 2], YESTERDAY);
+    journal = readPages(journal, 1, [1, 2, 3], TODAY);
+
+    const wateredDays = getWateredDays(journal, configWith({ minPagesPerWateredDay: 2 }));
+
+    expect(wateredDays).toEqual(new Set([YESTERDAY]));
+  });
+
+  it('new pages of two khatmas on the same day add up', () => {
+    let journal = firstKhatmaExcept([604]);
+    journal = readPages(journal, 1, [604], TODAY);
     journal = readPages(journal, 2, [1], TODAY);
-    let samePageTwice = readPages(EMPTY_JOURNAL, 1, [7], YESTERDAY);
-    samePageTwice = readPages(samePageTwice, 2, [7], YESTERDAY);
+
+    const wateredDays = getWateredDays(journal, configWith({ minPagesPerWateredDay: 2 }));
+
+    expect(wateredDays.has(TODAY)).toBe(true);
+  });
+
+  it('the same page number read as the end of one khatma and the start of the next is two new pages', () => {
+    let journal = firstKhatmaExcept([7]);
+    journal = readPages(journal, 1, [7], TODAY);
+    const endOnly = journal;
+    journal = readPages(journal, 2, [7], TODAY);
     const twoPagesNeeded = configWith({ minPagesPerWateredDay: 2 });
 
-    expect(getWateredDays(journal, twoPagesNeeded)).toEqual(new Set([TODAY]));
-    expect(getWateredDays(samePageTwice, twoPagesNeeded).size).toBe(0);
+    expect(getWateredDays(endOnly, twoPagesNeeded).has(TODAY)).toBe(false);
+    expect(getWateredDays(journal, twoPagesNeeded).has(TODAY)).toBe(true);
   });
 
-  it.each([0, -1, 1.5])('invalid input: rejects minPagesPerWateredDay = %p', (minPages) => {
-    expect(() =>
-      getWateredDays(EMPTY_JOURNAL, configWith({ minPagesPerWateredDay: minPages })),
-    ).toThrow(RangeError);
+  it('keeps the watered days of every khatma', () => {
+    let journal = firstKhatmaExcept([604]);
+    journal = readPages(journal, 1, [604], YESTERDAY);
+    journal = readPages(journal, 2, [1], TODAY);
+
+    expect(getWateredDays(journal)).toEqual(new Set([LAST_MONTH, YESTERDAY, TODAY]));
+  });
+
+  it.each([0, -1, 1.5, Number.NaN])(
+    'invalid input: rejects minPagesPerWateredDay = %p',
+    (minPages) => {
+      expect(() =>
+        getWateredDays(EMPTY_JOURNAL, configWith({ minPagesPerWateredDay: minPages })),
+      ).toThrow(RangeError);
+    },
+  );
+
+  it('invalid input: rejects a corrupted journal instead of watering a day with a page counted twice', () => {
+    const duplicated: ReadingJournal = [
+      { khatm: 1, page: 5, date: YESTERDAY },
+      { khatm: 1, page: 5, date: TODAY },
+    ];
+
+    expect(() => getWateredDays(duplicated)).toThrow(RangeError);
   });
 });
 
@@ -222,12 +299,42 @@ describe('Rule 7 — streak (série)', () => {
     expect(getStreak(journal, TODAY)).toBe(3);
   });
 
+  it('a day made only of re-reads is not watered and breaks the streak', () => {
+    // New pages on the 20th and 21st, only re-reads on the 22nd, a new page today.
+    let journal = readPages(EMPTY_JOURNAL, 1, [1], day('2026-11-20'));
+    journal = readPages(journal, 1, [2], TWO_DAYS_AGO);
+    const beforeRereads = journal;
+    journal = readPages(journal, 1, [1, 2], YESTERDAY);
+
+    expect(journal).toBe(beforeRereads);
+    expect(getWateredDays(journal).has(YESTERDAY)).toBe(false);
+    expect(getStreak(journal, TODAY)).toBe(0);
+    expect(getStreak(readPages(journal, 1, [3], TODAY), TODAY)).toBe(1);
+  });
+
+  it('re-reading today does not extend the streak', () => {
+    let journal = readOnePageOn(['2026-11-21', '2026-11-22']);
+    journal = readPages(journal, 1, [1, 2], TODAY);
+
+    expect(getStreak(journal, TODAY)).toBe(2);
+    expect(getStreak(journal, TOMORROW)).toBe(0);
+  });
+
   it('a day below minPagesPerWateredDay is a missed day', () => {
     let journal = readPages(EMPTY_JOURNAL, 1, [1, 2], TWO_DAYS_AGO);
     journal = readPages(journal, 1, [3], YESTERDAY);
     journal = readPages(journal, 1, [4, 5], TODAY);
 
     expect(getStreak(journal, TODAY, [], configWith({ minPagesPerWateredDay: 2 }))).toBe(1);
+    expect(getStreak(journal, TODAY)).toBe(3);
+  });
+
+  it('the streak goes on from one khatma to the next', () => {
+    let journal = firstKhatmaExcept([603, 604]);
+    journal = readPages(journal, 1, [603], TWO_DAYS_AGO);
+    journal = readPages(journal, 1, [604], YESTERDAY);
+    journal = readPages(journal, 2, [1], TODAY);
+
     expect(getStreak(journal, TODAY)).toBe(3);
   });
 
@@ -346,6 +453,18 @@ describe('Rule 7 — streak (série)', () => {
     const pause: Pause = { from: TODAY, to: YESTERDAY };
 
     expect(() => getStreak(EMPTY_JOURNAL, TODAY, [pause])).toThrow(RangeError);
+  });
+
+  it('invalid input: rejects a corrupted journal and an invalid configuration', () => {
+    const duplicated: ReadingJournal = [
+      { khatm: 1, page: 5, date: YESTERDAY },
+      { khatm: 1, page: 5, date: TODAY },
+    ];
+
+    expect(() => getStreak(duplicated, TODAY)).toThrow(RangeError);
+    expect(() =>
+      getStreak(EMPTY_JOURNAL, TODAY, [], configWith({ minPagesPerWateredDay: 0 })),
+    ).toThrow(RangeError);
   });
 
   it('invalid input: rejects impossible dates', () => {

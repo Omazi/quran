@@ -148,7 +148,8 @@ espaces de noms `home` et `garden`.
    neutre** (D12) : pas de dessin. Son libellé d'accessibilité résume l'état
    (« Jardin, 24 hizb sur 60, l'eau coule »).
 2. **État du jardin en clair**, pour que les règles restent visibles et vérifiables sans
-   image : progression « n hizb sur 60 » (indicateur du système), santé (jauge), eau
+   image : progression « n hizb sur 60 » (jauge du système, `gauges.md` : un indicateur de
+   progression est réservé à une attente), santé (jauge), eau
    (icône et mot : coule, immobile, à sec), prochain élément et sa croissance, dernier
    élément acquis. Le dessèchement se lit dans ces valeurs, jour après jour ; il se
    **verra** quand les modèles existeront, et `GardenScene` reçoit déjà tout ce qu'il

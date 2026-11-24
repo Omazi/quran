@@ -1,74 +1,57 @@
 import { addDays, compareLocalDates, type LocalDate } from '@/domain/shared/local-date';
 import { DEFAULT_KHATM_CONFIG } from './config';
+import { summarizeJournal } from './journal-summary';
 import type { KhatmConfig, Pause, ReadingJournal, TodayProgress } from './types';
-import { assertConfig, assertEntry, assertLocalDate, assertPauses } from './validation';
+import { assertConfig, assertDailyGoalPages, assertLocalDate, assertPauses } from './validation';
 
 /**
- * The one definition of "pages read on a day" shared by the daily goal, the watered days
- * and the recent pace: distinct page numbers read that day, all khatmas merged. A page read
- * again on another day counts for that day too.
+ * Spec rule 5: today's new pages compared with the daily goal. The goal belongs to the user
+ * and has no default: it is always given (whole number of pages, at least 1).
+ *
+ * "New pages" are the journal entries dated today, all khatmas together: the last pages of
+ * a khatma and the first pages of the next one add up.
  */
-function countPagesReadByDay(journal: ReadingJournal): ReadonlyMap<LocalDate, number> {
-  const pagesByDay = new Map<LocalDate, Set<number>>();
-  for (const entry of journal) {
-    assertEntry(entry);
-    const pages = pagesByDay.get(entry.date) ?? new Set<number>();
-    pages.add(entry.page);
-    pagesByDay.set(entry.date, pages);
-  }
-
-  const countByDay = new Map<LocalDate, number>();
-  for (const [day, pages] of pagesByDay) countByDay.set(day, pages.size);
-  return countByDay;
-}
-
-/**
- * Pages read during the `dayCount` days ending on `lastDay` (included). Each day is counted
- * on its own, so a page read on two days of the window counts twice.
- */
-export function countPagesReadInLastDays(
-  journal: ReadingJournal,
-  lastDay: LocalDate,
-  dayCount: number,
-): number {
-  assertLocalDate(lastDay, 'last day');
-  const countByDay = countPagesReadByDay(journal);
-  let total = 0;
-  for (let daysAgo = 0; daysAgo < dayCount; daysAgo += 1) {
-    total += countByDay.get(addDays(lastDay, -daysAgo)) ?? 0;
-  }
-  return total;
-}
-
-/** Spec rule 5: today's reading compared with the daily goal. */
 export function getTodayProgress(
   journal: ReadingJournal,
   today: LocalDate,
-  config: KhatmConfig = DEFAULT_KHATM_CONFIG,
+  dailyGoalPages: number,
 ): TodayProgress {
   assertLocalDate(today, 'today');
-  assertConfig(config);
-  const pagesRead = countPagesReadByDay(journal).get(today) ?? 0;
-  const goalPages = config.dailyGoalPages;
+  assertDailyGoalPages(dailyGoalPages);
+  const pagesRead = summarizeJournal(journal).newPagesByDay.get(today) ?? 0;
   return {
     pagesRead,
-    goalPages,
-    pagesRemaining: Math.max(0, goalPages - pagesRead),
-    goalReached: pagesRead >= goalPages,
+    goalPages: dailyGoalPages,
+    pagesRemaining: Math.max(0, dailyGoalPages - pagesRead),
+    goalReached: pagesRead >= dailyGoalPages,
   };
 }
 
-/** Spec rule 6: the days on which at least `minPagesPerWateredDay` pages were read. */
+/**
+ * The days that reach `minPagesPerWateredDay` new pages. Internal: the caller has already
+ * checked the configuration, and the counts come from a checked journal.
+ */
+export function selectWateredDays(
+  newPagesByDay: ReadonlyMap<LocalDate, number>,
+  config: KhatmConfig,
+): Set<LocalDate> {
+  const wateredDays = new Set<LocalDate>();
+  for (const [day, newPages] of newPagesByDay) {
+    if (newPages >= config.minPagesPerWateredDay) wateredDays.add(day);
+  }
+  return wateredDays;
+}
+
+/**
+ * Spec rule 6: the days with at least `minPagesPerWateredDay` new pages, all khatmas
+ * together. A day made only of re-reads has no entry, so it is never watered.
+ */
 export function getWateredDays(
   journal: ReadingJournal,
   config: KhatmConfig = DEFAULT_KHATM_CONFIG,
 ): ReadonlySet<LocalDate> {
   assertConfig(config);
-  const wateredDays = new Set<LocalDate>();
-  for (const [day, pagesRead] of countPagesReadByDay(journal)) {
-    if (pagesRead >= config.minPagesPerWateredDay) wateredDays.add(day);
-  }
-  return wateredDays;
+  return selectWateredDays(summarizeJournal(journal).newPagesByDay, config);
 }
 
 function isPaused(day: LocalDate, pauses: readonly Pause[]): boolean {
@@ -87,7 +70,7 @@ function findEarliestDay(days: ReadonlySet<LocalDate>): LocalDate | null {
 
 /**
  * Spec rule 7: number of consecutive watered days ending today, or yesterday when today is
- * not watered yet.
+ * not watered yet. A day made only of re-reads has no new page: it is a missed day.
  *
  * Walking back from today, each day is one of:
  * - watered: counted, even inside a pause (a pause forgives, it never erases real reading);
@@ -95,7 +78,8 @@ function findEarliestDay(days: ReadonlySet<LocalDate>): LocalDate | null {
  * - today, not watered yet: skipped, because the day in progress must not break the streak;
  * - any other day: a missed day, the streak stops there.
  *
- * Days after `today` are ignored.
+ * Days after `today` are ignored. The streak belongs to the user, not to a khatma: it goes
+ * on from one khatma to the next.
  */
 export function getStreak(
   journal: ReadingJournal,
