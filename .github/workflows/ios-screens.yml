@@ -34,13 +34,15 @@ concurrency:
 jobs:
   publish:
     name: Publish the pictures
-    # Only checks of `main` that succeeded. "iOS check" has no pull_request trigger; the test stays
-    # here in case one is ever added.
+    # Only successful checks of this repository's own `main`, started by a push or by hand. A fork
+    # can rename its branch `main` and make its copy of "iOS check" start on other events: a run
+    # that comes from a fork never gets here.
     if: >-
       github.event_name != 'workflow_run' ||
       (github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.head_branch == 'main' &&
-       github.event.workflow_run.event != 'pull_request')
+       github.event.workflow_run.head_repository.full_name == github.repository &&
+       (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch'))
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -59,19 +61,23 @@ jobs:
           FROM_INPUT: ${{ inputs.run_id }}
         run: |
           set -euo pipefail
+          # What makes a run acceptable, whoever asks for it: "iOS check", of this repository's own
+          # main, successful, started by a push or by hand. Compared inside jq, field by field.
+          OURS='.path == ".github/workflows/ios-check.yml" and .head_branch == "main" and .conclusion == "success"
+            and .repository.full_name == env.GITHUB_REPOSITORY and .head_repository.full_name == env.GITHUB_REPOSITORY
+            and (.event == "push" or .event == "workflow_dispatch")'
           RUN="${FROM_EVENT:-${FROM_INPUT:-}}"
           if [ -z "$RUN" ]; then
-            RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ios-check.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
+            RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ios-check.yml/runs?branch=main&status=success&per_page=30" \
+              --jq "[.workflow_runs[] | select($OURS)][0].id // empty")
           fi
           case "$RUN" in
             '' | *[!0-9]*) echo "::error::no run of iOS check to read"; exit 1 ;;
           esac
-          # It must be a successful "iOS check" of main, whatever asked for it.
-          read -r WORKFLOW BRANCH SHA CONCLUSION EVENT < <(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN" --jq '"\(.path) \(.head_branch) \(.head_sha) \(.conclusion) \(.event)"')
-          if [ "$WORKFLOW" != ".github/workflows/ios-check.yml" ] || [ "$BRANCH" != "main" ] || [ "$CONCLUSION" != "success" ] || [ "$EVENT" = "pull_request" ]; then
-            echo "::error::run $RUN is not a successful iOS check of main"
-            exit 1
-          fi
+          SHA=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN" --jq "select($OURS) | .head_sha")
+          case "$SHA" in
+            '' | *[!0-9a-f]*) echo "::error::run $RUN is not a successful iOS check of this repository's main"; exit 1 ;;
+          esac
           echo "id=$RUN" >> "$GITHUB_OUTPUT"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0

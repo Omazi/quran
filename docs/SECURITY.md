@@ -35,7 +35,10 @@ Le dépôt est public (D24). Tout ce qui y est poussé, historique compris, est 
   clés Apple ne vivent que dans les secrets de GitHub, que personne ne peut relire.
 - L'historique a été passé en revue avant l'ouverture (24 novembre 2026, 25 commits) : aucun
   secret, aucune adresse personnelle.
-- La compilation sur Mac (`ios-check.yml`) ne se lance jamais sur une demande de fusion.
+- La compilation sur Mac (`ios-check.yml`) n'a pas de déclencheur de demande de fusion. Une
+  demande venue d'une copie du dépôt (un « fork ») peut toutefois modifier sa propre copie du
+  script : ce qui l'arrête, c'est l'accord demandé avant de lancer les scripts d'un
+  contributeur extérieur (réglage plus bas, à étendre à tous les contributeurs extérieurs).
   Les vérifications sous Linux (`ci.yml`) s'y lancent, avec un jeton en lecture seule et sans
   aucun secret. Un script qui lit un secret ne doit jamais se lancer sur une demande de fusion,
   ni publier son journal : les artefacts d'un dépôt public sont publics.
@@ -43,14 +46,18 @@ Le dépôt est public (D24). Tout ce qui y est poussé, historique compris, est 
 - Un seul script a le droit d'écrire dans le dépôt : `ios-screens.yml`, qui dépose les images
   du premier écran sur la branche `ci-screens`. Décidé par le propriétaire le 24 novembre 2026,
   pour que ces images se regardent depuis un téléphone. Ce qui le borne :
-  - il ne compile rien et n'installe aucune dépendance : la compilation reste dans
-    `ios-check.yml`, en lecture seule ;
-  - il ne lit que l'artefact d'une vérification réussie de `main`, et le traite comme une
-    donnée non sûre : seules les quatre images attendues sont gardées, après contrôle que ce
-    sont bien des images PNG (`tools/ci/publish-screens.py`) ; rien de ce qu'il contient n'est
-    exécuté ;
-  - il remplace une branche qui ne contient rien d'autre, jamais `main` ;
-  - son jeton d'écriture n'existe que le temps de cette tâche.
+  - il ne compile rien et n'installe aucune dépendance : il lance deux étapes fournies par
+    GitHub, figées par leur empreinte, et un script du dépôt pris sur `main`. La compilation
+    reste dans `ios-check.yml`, en lecture seule ;
+  - il ne lit que l'artefact d'une vérification réussie du `main` de ce dépôt, lancée par un
+    push ou à la main : une exécution venue d'un fork est refusée, à deux endroits ;
+  - il traite cet artefact comme une donnée non sûre : seules les quatre images attendues
+    sont gardées, chacune lue jusqu'au bout pour vérifier que c'est un fichier PNG entier
+    (`tools/ci/publish-screens.py`) ; rien de ce qu'il contient n'est exécuté ;
+  - le script ne pousse que la branche `ci-screens`, qui ne contient rien d'autre. Son jeton,
+    lui, pourrait écrire ailleurs : seule l'écriture du script l'en empêche. Une règle de
+    protection de `main` (réglage du propriétaire, plus bas) fermerait cette porte ;
+  - ce jeton n'existe que le temps de cette tâche.
 - Les fichiers venus de tiers (texte et police du Coran) sont republiés tels quels, avec leur
   mention : voir `docs/DATA_SOURCES.md`. Leurs conditions de rediffusion restent à éclaircir.
 
@@ -58,12 +65,14 @@ Le dépôt est public (D24). Tout ce qui y est poussé, historique compris, est 
 
 Écrire au propriétaire du dépôt, sans ouvrir de ticket public.
 
-Deux réglages GitHub restent à activer par le propriétaire, maintenant que le dépôt est public :
+Trois réglages GitHub restent à activer par le propriétaire, maintenant que le dépôt est public :
 
 - Settings › Actions › General : demander son accord avant de lancer les scripts sur la
   demande de fusion de tout contributeur extérieur.
 - Settings › Security : le signalement privé des failles, pour qu'un inconnu ait un moyen de
   prévenir sans rien publier.
+- Settings › Rules › Rulesets : une règle sur `main` qui interdit de forcer un push et de
+  supprimer la branche, pour qu'aucun script ne puisse la réécrire.
 
 ## Sauvegarde et restauration de la progression
 

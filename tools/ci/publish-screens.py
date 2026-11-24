@@ -4,8 +4,8 @@
 
 The artifact `ios-first-screen` comes from a job that ran the whole build, third-party tools
 included, so it is read as untrusted data: nothing in it is executed, only the four pictures the
-iOS check is known to take are kept, and each one must really be a PNG of a plausible size. The
-build log that travels in the same artifact is left behind.
+iOS check is known to take are kept, and each one must be a whole PNG file of a plausible size,
+read chunk by chunk to its end. The build log that travels in the same artifact is left behind.
 
 The output folder receives the pictures and a README.md that shows them with a label each. The
 workflow `.github/workflows/ios-screens.yml` then replaces the branch with that folder.
@@ -17,6 +17,7 @@ import pathlib
 import re
 import struct
 import sys
+import zlib
 
 # File name -> label shown above the picture. The names are those of ios-check.yml.
 EXPECTED = {
@@ -32,13 +33,38 @@ MAX_SIDE = 4000  # an iPhone screenshot is at most 1320 x 2868 pixels today
 
 
 def png_size(data: bytes) -> tuple[int, int] | None:
-    """Width and height when `data` starts like a PNG file, otherwise nothing."""
-    if len(data) < 33 or not data.startswith(PNG_SIGNATURE) or data[12:16] != b"IHDR":
+    """Width and height when `data` is a whole PNG file and nothing else, otherwise nothing.
+
+    Every chunk is walked with its checksum, from the header to the end marker, and no byte may
+    follow: a file that only starts like a picture is refused.
+    """
+    if not data.startswith(PNG_SIGNATURE):
         return None
-    width, height = struct.unpack(">II", data[16:24])
-    if not (0 < width <= MAX_SIDE and 0 < height <= MAX_SIDE):
-        return None
-    return width, height
+    position, size, seen_data = len(PNG_SIGNATURE), None, False
+    while True:
+        if position + 12 > len(data):
+            return None
+        (length,) = struct.unpack(">I", data[position : position + 4])
+        kind = data[position + 4 : position + 8]
+        end = position + 12 + length
+        if end > len(data):
+            return None
+        body = data[position + 8 : position + 8 + length]
+        (checksum,) = struct.unpack(">I", data[end - 4 : end])
+        if zlib.crc32(kind + body) & 0xFFFFFFFF != checksum:
+            return None
+        if size is None:
+            if kind != b"IHDR" or length != 13:
+                return None
+            width, height = struct.unpack(">II", body[:8])
+            if not (0 < width <= MAX_SIDE and 0 < height <= MAX_SIDE):
+                return None
+            size = (width, height)
+        elif kind == b"IDAT":
+            seen_data = True
+        elif kind == b"IEND":
+            return size if seen_data and length == 0 and end == len(data) else None
+        position = end
 
 
 def find(folder: pathlib.Path, name: str) -> pathlib.Path | None:
