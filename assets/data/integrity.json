@@ -1,0 +1,61 @@
+{
+  "formatVersion": 1,
+  "counts": {
+    "surahs": 114,
+    "verses": 6236,
+    "pages": 604,
+    "juz": 30,
+    "hizb": 60,
+    "lines": 9046,
+    "uthmaniWords": 77428,
+    "uthmaniMinimalWords": 77433
+  },
+  "pagesPerFile": 20,
+  "canonicalText": {
+    "format": "UTF-8, one line \"<surah>|<verse>|<text>\\n\" per verse, the 6236 verses in reading order",
+    "uthmaniSha256": "7b2b07124666739062f6992d914f2dc14fda010780aba524467cc56972d5bb0d",
+    "uthmaniMinimalSha256": "432e8775149564af0cf0420b0b427eb90cb25d5d9f2118dc396afd2192814b4b"
+  },
+  "files": {
+    "NOTICE.txt": "c3ed6b377b82a9fba2129505e02976f6dac19e9b74c930c3daeacde3bb380f83",
+    "pages/pages-001-020.json": "ab255fe5cbe59cc253b8afd849a44ba95e0e061eba41e0507612daeaa30d7c12",
+    "pages/pages-021-040.json": "a6788ccb913c8924afd090bd404fd078209db72bee018f6a24667c4a2bdaf0dc",
+    "pages/pages-041-060.json": "2ee30d5da24c8277f61c8b1dcf3e04d60a9cd3828e5604cecd34a64e2fcfc0c2",
+    "pages/pages-061-080.json": "8c849d351bc89d614978e948442ec2fb7cefbd1fd5c66db0d375af92916614a5",
+    "pages/pages-081-100.json": "658e2d3a9d28acb702fee5a396474568736f003b6e78a36553dcd98684fbe0e4",
+    "pages/pages-101-120.json": "9ff33037cdb5b091df1e3f5e604a81b5dcfe7977dfb1a499a20d379524ede069",
+    "pages/pages-121-140.json": "110c170dfd2efd6d1712f400d33924b294fd5a149c3404b862494db195c5383b",
+    "pages/pages-141-160.json": "2bbe07a92d2e0a945a08138934ed52df65d711435f1a1e7fcfc2e3d5ac93a6ba",
+    "pages/pages-161-180.json": "d0395bfab3c44329834ec45eb6cc17656a8d023558d0afbbb4db99e103435b71",
+    "pages/pages-181-200.json": "c7065b6996884d1410cc020aff8c7a707016c732094f6b94f91e2d7b0bb5c8b1",
+    "pages/pages-201-220.json": "f2734942d9ee19913cb8bbf4c57047dc35987121bd00108d9187524c50e468fd",
+    "pages/pages-221-240.json": "7511d860aed9737b8986757d1829d257f132c7786f3f6e0d1be98dc89d84a4e6",
+    "pages/pages-241-260.json": "bf81e772fe8a4809bdee1aa62685dce4eb41cda9a7060805339085110e8a9800",
+    "pages/pages-261-280.json": "0bf1aee1001f045c3d7705c2f0d10a6d0f3a57f11e6ad5a96eaad6b0fc332762",
+    "pages/pages-281-300.json": "26669e69afc95009a520e62f26f6fb81821871e8b650162dafde837e5a4c5490",
+    "pages/pages-301-320.json": "f7bb24d62ebe197a41652253f092ffdc4bfbb538e39e532ac232fce7c82fdbcc",
+    "pages/pages-321-340.json": "69d9a93690b421e3851bf27763807162d834aaf990836f0577918983bcee8262",
+    "pages/pages-341-360.json": "7737217e109c30b255df07be41646dc6346f84c820c6f1068cdbb22e41e93643",
+    "pages/pages-361-380.json": "ef8b9f366f89054b1d34c222a61bbd136a763579c80ea3c6651128fe6fefc7ea",
+    "pages/pages-381-400.json": "12bb15e5b3a25ef17fde5287655ea9cf3e953de42090c188211cb88e2876ad35",
+    "pages/pages-401-420.json": "7cdb9ce4778192627de54aaef8f98b033b2cabf03dadcfc2c2411e94eaa47ea7",
+    "pages/pages-421-440.json": "c9aad435b9b193744060f87766a846721f9b3ec7205abd46be47662a4ef56a90",
+    "pages/pages-441-460.json": "bdbd8bff4a9646b9292b371de76cc6f63fb72dcf1e15ace655b1d4d571b2d195",
+    "pages/pages-461-480.json": "50b8586c0f165f04200f37c32d0c83c07f24d023eea724f1b55578bd0ae9b640",
+    "pages/pages-481-500.json": "49c45a9b93d529d058c23547a9c5005545b5b5885d7815792b49b2a35c0a9b21",
+    "pages/pages-501-520.json": "240f86cfa6bbb359e6213274ad3fa885b5950bca6ba39efb742d858c0d18d6d7",
+    "pages/pages-521-540.json": "74dffad3b3922e7fcb955a2e9561c5aa0819b89cdc8bd56e00a6125fe0a2f17a",
+    "pages/pages-541-560.json": "07a26ec4f507bbab85e69b413f297c526bd5df8b12cf2e60e6c400c957ac1b56",
+    "pages/pages-561-580.json": "84e869a735ac40ff3e2d5fd570cb29e4a378d975584e6b6fec7f27fd5f059b17",
+    "pages/pages-581-600.json": "dcc71c8707c9e0de0ad6c7eb08b236376ab227ea7e6b3d820b633463d8ea81cf",
+    "pages/pages-601-604.json": "25fe980255283c48b5a426d0e8053242cdb6a9e3a47ef109353fb1730881b4b3",
+    "structure.json": "c3b03969e1b745ba7afaacff6d548122055173ce2e8b1f8aab5e05f0cf1d7eee",
+    "verses/uthmani-minimal.json": "8b95f6e370ed2be2f97cc0856fedb9c3d8e9146933c2c2116313270b7777c540",
+    "verses/uthmani.json": "4aabdae9a6a05b7a3b2d43fa432d17824207a5049d754c4af663b08093b09485"
+  },
+  "sources": {
+    "quran.json": "d8a8adff387f60ce3ff7dbe3238dd9b27120bfe29d8fcb07ad2e89cad37cefd4",
+    "tanzil_simple.json": "a93b85d35660b1fbcce78a17fc50196845a0029e066aef77b2ff93ebee52ec5d",
+    "qpages": "4a75ae3a1dd6d14d5b135a496b1b2abc834854736983b577302fee516d48dff6"
+  }
+}

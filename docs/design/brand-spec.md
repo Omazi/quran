@@ -59,7 +59,9 @@ les couleurs de l'appli passent à ces valeurs.
 | `growth`   | `#164F36` | 9,52:1 sur blanc  | `#8FE0B4` | 13,49:1 sur noir          |
 | `ornament` | `#6A470F` | 7,78:1 sur papier | `#EBC272` | 10,44:1 sur papier sombre |
 
-Soif et alerte : orange système. Action destructive : rouge système. Aucune information
+Soif et alerte : orange système, pour l'icône et la jauge seulement ; le mot qui
+l'accompagne reste dans la couleur du texte, parce que l'orange n'est pas assez lisible
+sur fond clair (`accessibility.md › Vision`). Action destructive : rouge système. Aucune information
 ne passe par la couleur seule (`accessibility.md › Vision`) : toujours une
 icône et un mot avec.
 

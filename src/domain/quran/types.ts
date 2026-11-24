@@ -9,6 +9,18 @@ export const PAGE_COUNT = 604;
 export const JUZ_COUNT = 30;
 export const HIZB_COUNT = 60;
 export const LINES_PER_PAGE = 15;
+export const HIZB_PER_JUZ = 2;
+
+/**
+ * The two texts shipped with the app:
+ * - `uthmani`: fully vowelled Uthmani script, the text of the mushaf pages;
+ * - `uthmani-minimal`: the same Uthmani spelling with fewer signs (Tanzil "Uthmani Minimal").
+ *
+ * Neither is the everyday (imlā'ī, "simple") script: no source for it is in the app yet.
+ * Mushaf pages exist in `uthmani` only.
+ */
+export type QuranScript = 'uthmani' | 'uthmani-minimal';
+export const DEFAULT_QURAN_SCRIPT: QuranScript = 'uthmani';
 
 /** A verse reference such as "18:10" (surah 18, verse 10). */
 export type VerseKey = `${number}:${number}`;
@@ -20,8 +32,32 @@ export interface VerseRef {
 
 export interface Verse extends VerseRef {
   readonly key: VerseKey;
-  /** Uthmani text, word-separated by single spaces, exactly as published by the source. */
+  /**
+   * Text in the requested script (Uthmani by default), exactly as published by the source.
+   * Words are separated by single spaces (U+0020): split it with `splitVerseWords` only.
+   */
   readonly text: string;
+}
+
+export type RevelationPlace = 'meccan' | 'medinan';
+
+export interface SurahInfo {
+  readonly surah: number;
+  readonly nameArabic: string;
+  readonly nameTransliterated: string;
+  readonly verseCount: number;
+  readonly revelationPlace: RevelationPlace;
+}
+
+/**
+ * First and last mushaf page of a hizb. A page on which a hizb ends and the next one
+ * starts belongs to both ranges.
+ */
+export interface HizbPageRange {
+  /** 1-based hizb number, 1..60. */
+  readonly hizb: number;
+  readonly firstPage: number;
+  readonly lastPage: number;
 }
 
 /** One word placed on a line of the printed mushaf. */
@@ -44,14 +80,19 @@ export type MushafLine =
 
 export interface MushafPage {
   readonly page: number;
+  /** Juz and hizb of the first verse of the page (a page can hold the start of the next one). */
   readonly juz: number;
   readonly hizb: number;
   readonly lines: readonly MushafLine[];
 }
 
-/** What the rest of the app needs from Quran storage. Implemented in src/data. */
+/**
+ * What the rest of the app needs from Quran storage. Implemented in src/data.
+ * Invalid input (page 605, surah 0, verse 300 of surah 1...) rejects with an explicit error.
+ */
 export interface QuranRepository {
+  /** The page as printed, with its words in the Uthmani script. */
   getPage(page: number): Promise<MushafPage>;
-  getVerse(key: VerseKey): Promise<Verse>;
-  getSurahVerses(surah: number): Promise<readonly Verse[]>;
+  getVerse(key: VerseKey, script?: QuranScript): Promise<Verse>;
+  getSurahVerses(surah: number, script?: QuranScript): Promise<readonly Verse[]>;
 }

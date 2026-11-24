@@ -1,130 +1,74 @@
 /**
- * Tunable numbers of the garden, and their conversion to exact integer arithmetic.
+ * Tunable numbers of the garden: the values of docs/specs/garden.md, and their checks.
  */
+import { isObject } from './checks';
 import type { GardenConfig } from './types';
 
 export const DEFAULT_GARDEN_CONFIG: GardenConfig = Object.freeze({
-  recoveryPerWateredDay: 0.2,
-  // A missed day hurts quickly at first, then the garden declines slowly.
-  // From full health the garden is dead on the 14th missed day in a row.
-  missedDayCosts: Object.freeze([
-    Object.freeze({ fromMissedDay: 1, cost: 0.1 }),
-    Object.freeze({ fromMissedDay: 2, cost: 0.15 }),
-    Object.freeze({ fromMissedDay: 4, cost: 0.07 }),
-    Object.freeze({ fromMissedDay: 7, cost: 0.05 }),
-  ]),
-  thrivingMinHealth: 0.75,
-  thirstyMinHealth: 0.5,
-  wiltingMinHealth: 0.25,
-  allElementsVisibleMinHealth: 0.25,
+  // Two weeks without reading turn the garden into a dead earth.
+  droughtDaysToDeath: 14,
+  // A watered day takes back three missed days: from a dead earth, five days of reading
+  // bring the garden back to full health.
+  droughtDaysRecoveredPerWateredDay: 3,
+  thirstyMinDroughtDays: 3,
+  wiltingMinDroughtDays: 6,
+  dyingMinDroughtDays: 10,
   dryWaterMinMissedDays: 3,
 });
 
-/**
- * Health is simulated in whole points, 100 points being full health.
- *
- * Adding 0.1 and 0.15 day after day in floating point drifts (0.1 + 0.2 !== 0.3), and a
- * health of "0.25" could then land just under the 0.25 threshold. Integers do not drift:
- * comparisons with the thresholds are exact.
- */
-export const HEALTH_POINTS_AT_FULL_HEALTH = 100;
-
-/** Float noise tolerated when checking that `value * 100` is a whole number. */
-const WHOLE_POINTS_TOLERANCE = 1e-9;
-
-/** The configuration, validated and converted to health points. */
-export interface GardenRules {
-  readonly recoveryPoints: number;
-  readonly missedDayCosts: readonly { readonly fromMissedDay: number; readonly points: number }[];
-  readonly thrivingMinPoints: number;
-  readonly thirstyMinPoints: number;
-  readonly wiltingMinPoints: number;
-  readonly allElementsVisibleMinPoints: number;
-  readonly dryWaterMinMissedDays: number;
-}
-
-export function healthFromPoints(points: number): number {
-  return points / HEALTH_POINTS_AT_FULL_HEALTH;
-}
-
-/** Converts a 0..1 health fraction to points. Throws unless it is a whole number of points. */
-function toHealthPoints(value: number, name: string): number {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 1) {
-    throw new RangeError(`Garden config: ${name} must be between 0 and 1, got ${value}`);
-  }
-  const scaled = value * HEALTH_POINTS_AT_FULL_HEALTH;
-  const points = Math.round(scaled);
-  if (Math.abs(scaled - points) > WHOLE_POINTS_TOLERANCE) {
+function assertWholeDays(value: number, name: string): void {
+  if (!Number.isInteger(value) || value < 1) {
     throw new RangeError(
-      `Garden config: ${name} must be a whole number of hundredths, got ${value}`,
+      `Garden config: ${name} must be a whole number of at least 1, got ${value}`,
     );
   }
-  return points;
 }
 
 /**
- * Checks that a configuration makes sense and converts it to health points.
- * Throws a RangeError naming the first incoherent value.
+ * Throws unless a configuration makes sense: whole numbers of days, and phases that
+ * follow each other (thriving, thirsty, wilting, dying, dead).
  */
-export function resolveGardenConfig(config: GardenConfig): GardenRules {
-  const recoveryPoints = toHealthPoints(config.recoveryPerWateredDay, 'recoveryPerWateredDay');
-  if (recoveryPoints === 0) {
-    throw new RangeError('Garden config: recoveryPerWateredDay must be above 0');
+export function assertValidConfig(config: GardenConfig): void {
+  if (!isObject(config)) {
+    throw new TypeError('Garden config: expected a configuration object');
   }
+  assertWholeDays(config.droughtDaysToDeath, 'droughtDaysToDeath');
+  assertWholeDays(config.droughtDaysRecoveredPerWateredDay, 'droughtDaysRecoveredPerWateredDay');
+  assertWholeDays(config.thirstyMinDroughtDays, 'thirstyMinDroughtDays');
+  assertWholeDays(config.wiltingMinDroughtDays, 'wiltingMinDroughtDays');
+  assertWholeDays(config.dyingMinDroughtDays, 'dyingMinDroughtDays');
+  assertWholeDays(config.dryWaterMinMissedDays, 'dryWaterMinMissedDays');
 
-  if (!Array.isArray(config.missedDayCosts) || config.missedDayCosts.length === 0) {
-    throw new RangeError('Garden config: missedDayCosts must list at least one tier');
-  }
-  let previousFromMissedDay = 0;
-  const missedDayCosts = config.missedDayCosts.map((tier, index) => {
-    const name = `missedDayCosts[${index}]`;
-    const expectedStart = index === 0 ? 'exactly 1' : `above ${previousFromMissedDay}`;
-    const startsWhereExpected =
-      Number.isInteger(tier.fromMissedDay) &&
-      (index === 0 ? tier.fromMissedDay === 1 : tier.fromMissedDay > previousFromMissedDay);
-    if (!startsWhereExpected) {
-      throw new RangeError(
-        `Garden config: ${name}.fromMissedDay must be a whole number ${expectedStart}, got ${tier.fromMissedDay}`,
-      );
-    }
-    previousFromMissedDay = tier.fromMissedDay;
-    return { fromMissedDay: tier.fromMissedDay, points: toHealthPoints(tier.cost, `${name}.cost`) };
-  });
-
-  const thrivingMinPoints = toHealthPoints(config.thrivingMinHealth, 'thrivingMinHealth');
-  const thirstyMinPoints = toHealthPoints(config.thirstyMinHealth, 'thirstyMinHealth');
-  const wiltingMinPoints = toHealthPoints(config.wiltingMinHealth, 'wiltingMinHealth');
-  const phasesAreOrdered =
-    0 < wiltingMinPoints &&
-    wiltingMinPoints < thirstyMinPoints &&
-    thirstyMinPoints < thrivingMinPoints;
-  if (!phasesAreOrdered) {
+  const phasesFollowEachOther =
+    config.thirstyMinDroughtDays < config.wiltingMinDroughtDays &&
+    config.wiltingMinDroughtDays < config.dyingMinDroughtDays &&
+    config.dyingMinDroughtDays < config.droughtDaysToDeath;
+  if (!phasesFollowEachOther) {
     throw new RangeError(
-      'Garden config: expected 0 < wiltingMinHealth < thirstyMinHealth < thrivingMinHealth',
+      'Garden config: expected thirstyMinDroughtDays < wiltingMinDroughtDays < dyingMinDroughtDays < droughtDaysToDeath',
     );
   }
+}
 
-  const allElementsVisibleMinPoints = toHealthPoints(
-    config.allElementsVisibleMinHealth,
-    'allElementsVisibleMinHealth',
-  );
-  if (allElementsVisibleMinPoints === 0) {
-    throw new RangeError('Garden config: allElementsVisibleMinHealth must be above 0');
-  }
+// A broken default configuration must stop the app at start-up.
+assertValidConfig(DEFAULT_GARDEN_CONFIG);
 
-  if (!Number.isInteger(config.dryWaterMinMissedDays) || config.dryWaterMinMissedDays < 1) {
-    throw new RangeError(
-      `Garden config: dryWaterMinMissedDays must be a whole number of at least 1, got ${config.dryWaterMinMissedDays}`,
-    );
-  }
+/** The configuration to apply: `config` once checked, or the default one when none is given. */
+export function checkedConfig(config: GardenConfig | undefined): GardenConfig {
+  if (config === undefined || config === DEFAULT_GARDEN_CONFIG) return DEFAULT_GARDEN_CONFIG;
+  assertValidConfig(config);
+  return config;
+}
 
-  return {
-    recoveryPoints,
-    missedDayCosts,
-    thrivingMinPoints,
-    thirstyMinPoints,
-    wiltingMinPoints,
-    allElementsVisibleMinPoints,
-    dryWaterMinMissedDays: config.dryWaterMinMissedDays,
-  };
+/** Health, from 1 (no drought) down to 0 (dead). */
+export function healthOf(droughtDays: number, config: GardenConfig): number {
+  return 1 - droughtDays / config.droughtDaysToDeath;
+}
+
+/**
+ * Number of equal steps in which a dying garden loses its elements: with the default
+ * values, 5 (drought 10, 11, 12, 13 leave 4, 3, 2, 1 fifths, rounded up; 14 leaves nothing).
+ */
+export function dyingStepCount(config: GardenConfig): number {
+  return config.droughtDaysToDeath - config.dyingMinDroughtDays + 1;
 }

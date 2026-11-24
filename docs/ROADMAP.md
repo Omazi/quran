@@ -32,6 +32,10 @@ mode enfants.
 
 ## Questions ouvertes
 
+- Rythme minimal : avec les réglages actuels (un jour manqué = +1, un jour lu = −3), lire
+  un jour sur quatre suffit à garder le jardin en vie ; un jour sur cinq, il finit par
+  mourir. À ajuster si c'est trop indulgent (constante `droughtDaysRecoveredPerWateredDay`).
+
 - Nouvelle khatma : la première page lue après la 604e ouvre un nouveau jardin. Faut-il
   demander une confirmation avant (« Commencer un nouveau jardin ? ») ? Proposé : oui.
 - Jardin complet entre deux khatmas : il ne peut plus être arrosé. Proposé : il ne se

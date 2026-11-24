@@ -65,8 +65,10 @@ On parcourt les jours de `firstHizbCompletedOn` à `today`, en partant de 0 :
   ignoré (il ne devient un jour manqué que le lendemain).
 - **Avant le premier hizb**, le jardin n'existe pas encore : rien ne peut sécher. Les
   jours d'avant `firstHizbCompletedOn` ne comptent pas.
-- **Jardin complet** : après `completedOn`, plus rien ne change. On ne peut plus
-  l'arroser, donc il ne sèche plus ; il reste tel quel jusqu'à la khatma suivante.
+- **Jardin complet** : à partir de `completedOn`, le jardin est montré **en pleine santé**
+  (sécheresse 0, tous les éléments, l'eau coule) et plus rien ne change jusqu'à la khatma
+  suivante. Finir le Coran est une fête : on ne montre pas un jardin mourant à ce
+  moment-là, et le badge de la même khatma montre lui aussi un jardin complet.
 
 Pourquoi ce modèle : lire ne doit **jamais** nuire. Avec un coût qui dépendait du rang du
 jour manqué, lire une page au milieu d'une absence faisait mourir le jardin un jour plus
@@ -93,8 +95,10 @@ Sur la terre nue (aucun hizb), il n'y a pas encore d'eau : `dry`, et aucun jour 
 ## Éléments visibles
 
 - Jusqu'à `wilting` compris : tous les éléments débloqués.
-- `dying` : `floor(débloqués × (14 − sécheresse) / 5)` éléments, les premiers du catalogue
-  (les derniers arrivés disparaissent en premier) : 80 %, 60 %, 40 %, 20 %.
+- `dying` : `ceil(débloqués × (14 − sécheresse) / 5)` éléments, les premiers du catalogue
+  (les derniers arrivés disparaissent en premier) : 80 %, 60 %, 40 %, 20 %. Arrondi vers le
+  haut : tant que le jardin n'est pas mort, il reste au moins un élément, et la première
+  lecture après la mort en fait toujours revenir un.
 - `dead` : aucun.
 - Quand la sécheresse recule, ils reviennent selon la même règle.
 - L'élément en train de pousser n'est visible que si tous les éléments débloqués le sont.
@@ -138,8 +142,10 @@ jours-là sont simplement ignorés ; l'écran d'accueil ne doit pas planter pour
 - La prévision d'un jour égale le calcul direct fait ce jour-là.
 - Scénarios : hizb 24 arrosé 12 jours de suite → `thriving`, eau `flowing`, dernier
   élément `springs`, prochain `tree-12` oranger ; 3 jours manqués → `thirsty`, eau `dry`,
-  sécheresse 3 ; 6 → `wilting` ; 10 → `dying`, 80 % des éléments ; 14 → `dead`, aucun
+  sécheresse 3 ; 6 → `wilting` ; 10 → `dying`, 80 % des éléments (20 sur 24) ; 14 → `dead`, aucun
   élément, `hizbCompleted` toujours 24 ; puis un jour de lecture → sécheresse 11, eau
   `flowing`.
 - Un seul hizb, terminé après un mois d'absence : le jardin naît en pleine santé.
 - Jardin complet, puis un mois sans lecture : inchangé.
+- Khatma terminée après une absence : jardin complet en pleine santé, pas mourant.
+- Un seul élément, jardin mort, puis un jour de lecture : l'élément est de nouveau visible.

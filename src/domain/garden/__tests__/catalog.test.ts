@@ -1,11 +1,14 @@
 import { HIZB_COUNT } from '@/domain/quran/types';
 
+import { catalogForTreeSpeciesOffset } from '../catalog';
 import {
   assertValidCatalog,
+  displayableVerse,
   GARDEN_CATALOG,
   isTreeKind,
   TREE_SPECIES_CYCLE,
   type GardenElement,
+  type GardenVerse,
 } from '../index';
 
 /** Written by hand from the specification, independently of catalog.ts. */
@@ -21,14 +24,19 @@ const EXPECTED_IDS_IN_HIZB_ORDER = [
   'roses', 'waterfall', 'full-bloom',
 ];
 
+/** The six catalogues the module can serve: one per shift of the tree species cycle. */
+const ALL_BUILT_IN_CATALOGS = TREE_SPECIES_CYCLE.map((_species, offset) =>
+  catalogForTreeSpeciesOffset(offset),
+);
+
 function elementOfHizb(hizb: number): GardenElement {
   const element = GARDEN_CATALOG[hizb - 1];
   if (!element) throw new Error(`No element for hizb ${hizb}`);
   return element;
 }
 
-function elementWithId(id: string): GardenElement {
-  const element = GARDEN_CATALOG.find((candidate) => candidate.id === id);
+function elementWithId(id: string, catalog = GARDEN_CATALOG): GardenElement {
+  const element = catalog.find((candidate) => candidate.id === id);
   if (!element) throw new Error(`No element with id ${id}`);
   return element;
 }
@@ -100,19 +108,80 @@ describe('garden catalogue', () => {
     expect(elementWithId('tree-30').kind).toBe('orange');
   });
 
-  // The specification says "tree 13, at hizb 25". With its own list of 30 non-tree
-  // elements, 13 of them come before hizb 25, so hizb 25 is the 12th tree. The list wins
-  // here; the contradiction is reported in README.md ("Points contestés").
+  // 13 of the non-tree elements come before hizb 25: it is the 12th tree.
   it('places tree-12 (orange) at hizb 25 and tree-13 (pomegranate) at hizb 26', () => {
     expect(elementOfHizb(25)).toEqual({ hizb: 25, id: 'tree-12', kind: 'orange' });
     expect(elementOfHizb(26)).toEqual({
       hizb: 26,
       id: 'tree-13',
       kind: 'pomegranate',
-      verse: '55:68',
+      verse: { key: '55:68', validatedByTeacher: false },
     });
   });
 
+  it('cannot be modified by a caller', () => {
+    for (const catalog of ALL_BUILT_IN_CATALOGS) {
+      expect(Object.isFrozen(catalog)).toBe(true);
+      expect(catalog.every((element) => Object.isFrozen(element))).toBe(true);
+      expect(catalog.every((element) => !element.verse || Object.isFrozen(element.verse))).toBe(
+        true,
+      );
+    }
+  });
+
+  it('tells trees from other elements', () => {
+    expect(isTreeKind('olive')).toBe(true);
+    expect(isTreeKind('roses')).toBe(false);
+  });
+});
+
+describe('tree species shifted by the variant', () => {
+  it('is the reference catalogue when the shift is 0', () => {
+    expect(catalogForTreeSpeciesOffset(0)).toBe(GARDEN_CATALOG);
+  });
+
+  it.each([
+    [0, 'pomegranate'],
+    [1, 'date-palm'],
+    [2, 'olive'],
+    [3, 'fig'],
+    [4, 'cypress'],
+    [5, 'orange'],
+  ] as const)('with a shift of %i, tree-1 is a %s tree', (offset, species) => {
+    expect(elementWithId('tree-1', catalogForTreeSpeciesOffset(offset)).kind).toBe(species);
+  });
+
+  it('wraps around the cycle: with a shift of 5, tree-2 is a pomegranate tree again', () => {
+    const catalog = catalogForTreeSpeciesOffset(5);
+    expect(elementWithId('tree-2', catalog).kind).toBe('pomegranate');
+    expect(elementWithId('tree-30', catalog).kind).toBe('cypress');
+  });
+
+  it('changes nothing but the species of the trees: same ids, same order, same other elements', () => {
+    for (const catalog of ALL_BUILT_IN_CATALOGS) {
+      expect(catalog.map((element) => element.id)).toEqual(EXPECTED_IDS_IN_HIZB_ORDER);
+      catalog.forEach((element, index) => {
+        const reference = GARDEN_CATALOG[index];
+        if (!isTreeKind(element.kind)) expect(element).toEqual(reference);
+        else expect(isTreeKind(reference?.kind ?? 'roses')).toBe(true);
+      });
+    }
+  });
+
+  it('keeps the six species evenly spread, five trees each, whatever the shift', () => {
+    for (const catalog of ALL_BUILT_IN_CATALOGS) {
+      for (const species of TREE_SPECIES_CYCLE) {
+        expect(catalog.filter((element) => element.kind === species)).toHaveLength(5);
+      }
+    }
+  });
+
+  it.each([-1, 6, 1.5, Number.NaN])('rejects a shift of %d (outside 0..5)', (offset) => {
+    expect(() => catalogForTreeSpeciesOffset(offset)).toThrow(RangeError);
+  });
+});
+
+describe('associated verses', () => {
   it.each([
     ['channels', '2:25'],
     ['springs', '55:66'],
@@ -124,17 +193,19 @@ describe('garden catalogue', () => {
     ['waterfall', '56:31'],
     ['cushions', '88:15'],
     ['carpets', '88:16'],
-  ])('associates every %s with verse %s', (kind, verse) => {
-    const elements = GARDEN_CATALOG.filter((element) => element.kind === kind);
-    expect(elements.length).toBeGreaterThan(0);
-    for (const element of elements) expect(element.verse).toBe(verse);
+  ])('associates every %s with verse %s, in every variant', (kind, verse) => {
+    for (const catalog of ALL_BUILT_IN_CATALOGS) {
+      const elements = catalog.filter((element) => element.kind === kind);
+      expect(elements.length).toBeGreaterThan(0);
+      for (const element of elements) expect(element.verse?.key).toBe(verse);
+    }
   });
 
   it('associates no verse with the other kinds', () => {
     const kindsWithVerse = new Set(
-      GARDEN_CATALOG.filter((element) => element.verse !== undefined).map(
-        (element) => element.kind,
-      ),
+      ALL_BUILT_IN_CATALOGS.flat()
+        .filter((element) => element.verse !== undefined)
+        .map((element) => element.kind),
     );
     expect([...kindsWithVerse].sort()).toEqual([
       'carpets',
@@ -149,30 +220,79 @@ describe('garden catalogue', () => {
       'waterfall',
     ]);
   });
+});
 
-  it('cannot be modified by a caller', () => {
-    expect(Object.isFrozen(GARDEN_CATALOG)).toBe(true);
-    expect(GARDEN_CATALOG.every((element) => Object.isFrozen(element))).toBe(true);
+describe('verses are shown only once validated by a teacher', () => {
+  const withVerse = (verse: GardenVerse): GardenElement => ({ ...elementOfHizb(1), verse });
+
+  it('gives every verse of the catalogue a validation flag', () => {
+    const verses = ALL_BUILT_IN_CATALOGS.flat().flatMap((element) =>
+      element.verse ? [element.verse] : [],
+    );
+    expect(verses.length).toBeGreaterThan(0);
+    for (const verse of verses) expect(typeof verse.validatedByTeacher).toBe('boolean');
   });
 
-  it('tells trees from other elements', () => {
-    expect(isTreeKind('olive')).toBe(true);
-    expect(isTreeKind('roses')).toBe(false);
+  // This test is meant to fail the day a verse is marked as validated: the list below
+  // must then be updated by hand, with the name of the teacher in the commit message.
+  it('has no validated verse yet: nothing religious can be displayed', () => {
+    const validated = ALL_BUILT_IN_CATALOGS.flat().filter(
+      (element) => element.verse?.validatedByTeacher === true,
+    );
+    expect(validated).toEqual([]);
+    for (const element of ALL_BUILT_IN_CATALOGS.flat()) {
+      expect(displayableVerse(element)).toBeNull();
+    }
+  });
+
+  it('hides a verse that is not validated', () => {
+    expect(displayableVerse(withVerse({ key: '2:25', validatedByTeacher: false }))).toBeNull();
+  });
+
+  it('shows a verse once it is validated', () => {
+    expect(displayableVerse(withVerse({ key: '2:25', validatedByTeacher: true }))).toBe('2:25');
+  });
+
+  it('shows nothing for an element without verse', () => {
+    expect(displayableVerse(elementOfHizb(2))).toBeNull();
+  });
+
+  it('hides a verse whose flag is anything but true', () => {
+    // `as` on purpose: these values cannot be written in typed code, but can arrive from JSON.
+    const flaggedWith = (flag: unknown): GardenElement =>
+      withVerse({ key: '2:25', validatedByTeacher: flag as boolean });
+    expect(displayableVerse(flaggedWith(undefined))).toBeNull();
+    expect(displayableVerse(flaggedWith('true'))).toBeNull();
+    expect(displayableVerse(flaggedWith(1))).toBeNull();
   });
 });
 
 describe('assertValidCatalog', () => {
   const replaceAt = (index: number, element: GardenElement): GardenElement[] =>
     GARDEN_CATALOG.map((original, position) => (position === index ? element : original));
+  // `as` on purpose in this block: these values cannot be written in typed code, but can
+  // arrive from JSON.
+  const withVerse = (verse: unknown): GardenElement[] =>
+    replaceAt(0, { ...elementOfHizb(1), verse: verse as GardenVerse });
 
-  it('accepts the built-in catalogue', () => {
-    expect(() => assertValidCatalog(GARDEN_CATALOG)).not.toThrow();
+  it('accepts the built-in catalogues', () => {
+    for (const catalog of ALL_BUILT_IN_CATALOGS) {
+      expect(() => assertValidCatalog(catalog)).not.toThrow();
+    }
   });
 
   it('rejects a catalogue that does not have exactly 60 elements', () => {
     expect(() => assertValidCatalog(GARDEN_CATALOG.slice(0, 59))).toThrow(RangeError);
     expect(() => assertValidCatalog([...GARDEN_CATALOG, elementOfHizb(60)])).toThrow(RangeError);
     expect(() => assertValidCatalog([])).toThrow(RangeError);
+  });
+
+  it('rejects what is not a list of elements', () => {
+    expect(() => assertValidCatalog(null as unknown as GardenElement[])).toThrow(TypeError);
+    expect(() => assertValidCatalog('catalogue' as unknown as GardenElement[])).toThrow(TypeError);
+    expect(() => assertValidCatalog(replaceAt(3, null as unknown as GardenElement))).toThrow(
+      TypeError,
+    );
   });
 
   it('rejects a hizb that is missing, repeated or out of order', () => {
@@ -194,13 +314,34 @@ describe('assertValidCatalog', () => {
     );
   });
 
+  it('rejects an element without kind', () => {
+    const noKind = { ...elementOfHizb(10), kind: '' as GardenElement['kind'] };
+    expect(() => assertValidCatalog(replaceAt(9, noKind))).toThrow(/has no kind/);
+  });
+
   it('rejects a malformed verse reference', () => {
-    // `as` on purpose: these values cannot be written in typed code, but can arrive from JSON.
-    const withVerse = (verse: string) =>
-      replaceAt(0, { ...elementOfHizb(1), verse: verse as GardenElement['verse'] });
-    expect(() => assertValidCatalog(withVerse('2-25'))).toThrow(/invalid verse reference/);
-    expect(() => assertValidCatalog(withVerse('115:1'))).toThrow(RangeError);
-    expect(() => assertValidCatalog(withVerse('0:1'))).toThrow(RangeError);
-    expect(() => assertValidCatalog(withVerse('2:0'))).toThrow(RangeError);
+    const referring = (key: string) => withVerse({ key, validatedByTeacher: false });
+    expect(() => assertValidCatalog(referring('2-25'))).toThrow(/invalid verse reference "2-25"/);
+    expect(() => assertValidCatalog(referring('115:1'))).toThrow(RangeError);
+    expect(() => assertValidCatalog(referring('0:1'))).toThrow(RangeError);
+    expect(() => assertValidCatalog(referring('2:0'))).toThrow(RangeError);
+    expect(() => assertValidCatalog(withVerse({ validatedByTeacher: false }))).toThrow(RangeError);
+  });
+
+  it('rejects a verse without validation flag: a bare reference could be shown by mistake', () => {
+    expect(() => assertValidCatalog(withVerse('2:25'))).toThrow(/invalid verse reference "2:25"/);
+    expect(() => assertValidCatalog(withVerse({ key: '2:25' }))).toThrow(
+      /must say whether a teacher validated it/,
+    );
+    expect(() => assertValidCatalog(withVerse({ key: '2:25', validatedByTeacher: 'yes' }))).toThrow(
+      RangeError,
+    );
+    expect(() => assertValidCatalog(withVerse(null))).toThrow(RangeError);
+  });
+
+  it('accepts a validated verse', () => {
+    expect(() =>
+      assertValidCatalog(withVerse({ key: '2:25', validatedByTeacher: true })),
+    ).not.toThrow();
   });
 });

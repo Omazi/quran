@@ -90,3 +90,24 @@ Journal vide ; page relue le même jour ; page relue un autre jour (aucun effet)
 fait uniquement de relectures (non arrosé, série cassée) ; hizb à page partagée ;
 série avec aujourd'hui non lu ; série à cheval sur une pause ; passage d'année ; khatma
 terminée puis nouvelle khatma ; badges de plusieurs khatmas ; 604 pages lues en désordre.
+
+## Précisions (après les tests indépendants)
+
+- **Pause** (règle 7) : un jour en pause **sans lecture** ne casse pas la série et ne la
+  fait pas avancer. Un jour en pause où l'on a lu compte comme un jour arrosé.
+- **Estimation** (règle 8) : une khatma déjà terminée donne `null`. Les pages « lues
+  aujourd'hui » et la moyenne comptent toutes les khatmas, comme la règle 5. Une date
+  au-delà de l'an 9999 est une erreur explicite.
+- **Première lecture** : c'est la première lecture _enregistrée_ qui fixe la date, pas la
+  date la plus ancienne ; une relecture antidatée est ignorée. À revoir le jour où l'on
+  fusionnera des journaux de plusieurs appareils (lot 3).
+- **Jours arrosés du jardin** (règle 10) : ce sont des jours où la personne a lu, quelle
+  que soit la khatma ; le jardin ne retient que ceux de sa propre vie.
+- **Juste après une khatma** : `getCurrentKhatm` donne déjà `n + 1`, alors que
+  `getGardenFeed` donne encore `n` (le jardin complet reste affiché). L'interface doit le
+  savoir.
+- Sont acceptées sans erreur : une entrée datée après aujourd'hui (changement de fuseau
+  horaire), une page partagée par trois hizb, une lecture demandée pour un numéro de
+  khatma au-delà de celle en cours (vide). Des plages de hizb qui ne sont pas dans
+  l'ordre 1..60 sont refusées.
+- `averagePaceWindowDays` : entier de 1 à 366.

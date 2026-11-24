@@ -2,7 +2,8 @@
  * Helpers shared by the garden tests. Not part of the module's API.
  *
  * Histories are written as a "timeline": one letter per day that is over, starting on the
- * garden's first day. Spaces are ignored, so runs can be grouped for the reader.
+ * day the garden started living (the day its first hizb was finished). Spaces are ignored,
+ * so runs can be grouped for the reader.
  *   W  watered (the user read)
  *   M  missed
  *   P  paused, and the user did not read
@@ -12,8 +13,10 @@
 import { addDays, parseLocalDate, type LocalDate } from '@/domain/shared/local-date';
 
 import type { GardenInput, GardenPause } from '../types';
+import { REFERENCE_GARDEN_VARIANT } from '../variant';
 
-export const GARDEN_START_DATE = parseLocalDate('2026-01-01');
+/** First day of every timeline: the day the first hizb was finished. */
+export const GARDEN_FIRST_DAY = parseLocalDate('2026-01-01');
 
 export type TodayKind = 'unread' | 'read' | 'paused-unread' | 'paused-read';
 
@@ -24,7 +27,14 @@ const TIMELINE_LETTER_OF_TODAY: Readonly<Record<TodayKind, string>> = {
   'paused-read': 'R',
 };
 
-/** Builds a garden input from a timeline. `overrides` replaces any field afterwards. */
+/**
+ * Builds a garden input from a timeline: 24 hizb finished, the first of them on
+ * `GARDEN_FIRST_DAY`, the khatma not finished, and the reference variant, unless
+ * `overrides` replaces these or any other field.
+ *
+ * With `hizbCompleted: 0` the garden is a bare earth: it has no first hizb, and the
+ * timeline then only says on which days the user read.
+ */
 export function gardenInput(
   past: string,
   today: TodayKind = 'unread',
@@ -35,7 +45,7 @@ export function gardenInput(
   const pauses: GardenPause[] = [];
 
   [...letters].forEach((letter, index) => {
-    const day = addDays(GARDEN_START_DATE, index);
+    const day = addDays(GARDEN_FIRST_DAY, index);
     if (letter === 'W' || letter === 'R') wateredDays.add(day);
     if (letter === 'P' || letter === 'R') pauses.push({ from: day, to: day });
     if (!'WMPR'.includes(letter)) throw new Error(`Unknown timeline letter "${letter}"`);
@@ -45,9 +55,11 @@ export function gardenInput(
     hizbCompleted: 24,
     currentHizbProgress: 0,
     wateredDays,
-    startDate: GARDEN_START_DATE,
-    today: addDays(GARDEN_START_DATE, letters.length - 1),
+    firstHizbCompletedOn: overrides.hizbCompleted === 0 ? null : GARDEN_FIRST_DAY,
+    completedOn: null,
+    today: addDays(GARDEN_FIRST_DAY, letters.length - 1),
     pauses,
+    variant: REFERENCE_GARDEN_VARIANT,
     ...overrides,
   };
 }

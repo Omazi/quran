@@ -22,6 +22,9 @@ describe('local-date', () => {
     expect(addDays(parseLocalDate('2028-02-28'), 1)).toBe('2028-02-29');
     expect(addDays(parseLocalDate('2026-03-01'), -1)).toBe('2026-02-28');
     expect(() => addDays(parseLocalDate('2026-03-01'), 0.5)).toThrow(RangeError);
+    expect(() => addDays(parseLocalDate('9999-12-31'), 1)).toThrow(RangeError);
+    expect(() => addDays(parseLocalDate('0001-01-01'), -1)).toThrow(RangeError);
+    expect(addDays(parseLocalDate('9999-12-30'), 1)).toBe('9999-12-31');
   });
 
   it('counts whole days regardless of daylight saving changes', () => {

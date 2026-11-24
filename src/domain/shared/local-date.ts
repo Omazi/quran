@@ -58,7 +58,13 @@ export function parseLocalDate(value: string): LocalDate {
 
 export function addDays(date: LocalDate, days: number): LocalDate {
   if (!Number.isInteger(days)) throw new RangeError(`addDays expects whole days, got ${days}`);
-  return fromEpochDay(toEpochDay(date) + days);
+  const result = fromEpochDay(toEpochDay(date) + days);
+  // Beyond year 9999 the calendar no longer fits the YYYY-MM-DD shape: refuse rather than
+  // return a string that only looks like a date.
+  if (!isLocalDate(result)) {
+    throw new RangeError(`addDays(${date}, ${days}) falls outside the years 0001 to 9999`);
+  }
+  return result;
 }
 
 /** Whole days from `from` to `to`. Negative when `to` is before `from`. */
