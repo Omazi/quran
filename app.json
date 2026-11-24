@@ -9,10 +9,11 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "app.quran.provisional",
+      "bundleIdentifier": "com.omazi.quran",
       "supportsTablet": false,
       "infoPlist": {
-        "RCTAsyncStorageExcludeFromBackup": false
+        "RCTAsyncStorageExcludeFromBackup": false,
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -23,7 +24,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "app.quran.provisional",
+      "package": "com.omazi.quran",
       "allowBackup": true,
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW",
