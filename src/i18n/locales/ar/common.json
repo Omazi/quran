@@ -1,0 +1,4 @@
+{
+  "appName": "Quran App",
+  "actions": { "continue": "متابعة", "back": "رجوع", "cancel": "إلغاء", "done": "تم" }
+}
