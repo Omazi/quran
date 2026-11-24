@@ -9,13 +9,13 @@ La méthode est celle de DishPlay, l'autre appli du propriétaire (`Omazi/dishpl
 
 ## Où on en est
 
-| Étape                                | État                                                               |
-| ------------------------------------ | ------------------------------------------------------------------ |
-| Assembler le JavaScript pour iOS     | Vérifié le 24 novembre 2026 (1 605 modules, sans erreur)           |
-| Générer le projet iOS natif          | Vérifié le 24 novembre 2026                                        |
-| Compiler pour iPhone, sans signature | **Réussi** le 24 novembre 2026 sur un Mac de GitHub (19 min)       |
-| Ouvrir l'appli dans le simulateur    | **Réussi** le même jour (44 min) ; images **pas encore regardées** |
-| Signer et envoyer sur TestFlight     | **À écrire**, le jour où le propriétaire le demande                |
+| Étape                                | État                                                                |
+| ------------------------------------ | ------------------------------------------------------------------- |
+| Assembler le JavaScript pour iOS     | Vérifié le 24 novembre 2026 (1 605 modules, sans erreur)            |
+| Générer le projet iOS natif          | Vérifié le 24 novembre 2026                                         |
+| Compiler pour iPhone, sans signature | **Réussi** le 24 novembre 2026 sur un Mac de GitHub (19 min)        |
+| Ouvrir l'appli dans le simulateur    | **Réussi** le même jour (44 min) ; images regardées (voir plus bas) |
+| Signer et envoyer sur TestFlight     | **À écrire**, le jour où le propriétaire le demande                 |
 
 Les deux premières lignes ont été vérifiées sous Linux (`npx expo export --platform ios`,
 `npx expo prebuild --platform ios --no-install`). Tout le reste a besoin d'un Mac.
@@ -29,6 +29,11 @@ restent ouverts :
   artefacts (`*.blob.core.windows.net`). Le script `ios-screens.yml` les dépose donc sur la
   branche [`ci-screens`](https://github.com/Omazi/quran/tree/ci-screens), où elles se
   regardent depuis un téléphone (voir `SECURITY.md`, « Dépôt public »).
+- Ce que montrent ces images (exécution 45484558341) : l'appli se lance, en français clair
+  et sombre, en anglais et en arabe (mise en page inversée, point courant à droite). L'écran
+  est l'aperçu des états du jardin ; l'image du jardin y est un rectangle gris, parce que le
+  jardin n'a pas encore ses images. À corriger : en anglais, « Bare Earth » dans le titre et
+  « Bare earth » dans l'image.
 - GitHub signale que `actions/upload-artifact` v4.6.2 vise Node 20, qui est déprécié : à
   remplacer par une version plus récente, épinglée de la même façon.
 
