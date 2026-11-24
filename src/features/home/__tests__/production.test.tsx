@@ -1,7 +1,8 @@
 /**
- * The home screen as a production bundle runs it: `__DEV__` is false. The modules of the home
- * feature are loaded after the flag is set, as the bundler would have compiled them, and the
- * developer preview is replaced by a module that fails the test if anything loads it.
+ * The home screen as a production bundle runs it: `__DEV__` is false and the build was made
+ * without `EXPO_PUBLIC_STATE_PREVIEW`. The modules of the home feature are loaded after both are
+ * set, as the bundler would have compiled them, and the preview is replaced by a module that
+ * fails the test if anything loads it.
  */
 
 import { fireEvent, render, screen } from '@testing-library/react-native';
@@ -21,7 +22,7 @@ const mockLoadDevPreview = jest.fn();
 jest.mock('expo-router', () => ({ router: { navigate: jest.fn() } }));
 jest.mock('../dev-preview/dev-preview', () => {
   mockLoadDevPreview();
-  throw new Error('The developer preview was loaded although __DEV__ is false.');
+  throw new Error('The preview was loaded in a production bundle.');
 });
 
 const devFlag = globalThis as { __DEV__?: boolean };
@@ -29,6 +30,7 @@ let HomeRoute: ComponentType;
 
 beforeAll(() => {
   devFlag.__DEV__ = false;
+  delete process.env.EXPO_PUBLIC_STATE_PREVIEW;
   // Loaded here, not imported above, so that the modules see the flag of a production bundle.
   HomeRoute = jest.requireActual<{ default: ComponentType }>('@/app/(tabs)/index').default;
 });
@@ -51,7 +53,7 @@ describe('the home screen in a production bundle', () => {
     expect(screen.getByRole('button', { name: 'Lire et arroser' })).toBeOnTheScreen();
     expect(mockLoadDevPreview).not.toHaveBeenCalled();
     expect(screen.queryByTestId('home-dev-preview')).toBeNull();
-    expect(screen.queryByText(/Aperçu|développement/i)).toBeNull();
+    expect(screen.queryByText(/Aperçu/i)).toBeNull();
     expect(screen.queryAllByRole('radio')).toHaveLength(0);
   });
 

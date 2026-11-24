@@ -1,14 +1,15 @@
 /**
- * DEVELOPMENT ONLY: a way to see every state of the home screen on a phone before the reader
- * exists, when a real journal can only show a bare earth.
+ * PREVIEW ONLY: a way to see every state of the home screen on a phone before the reader exists,
+ * when a real journal can only show a bare earth.
  *
  * The choice lives in memory, in this module: it replaces what the home screen shows and nothing
  * else. It never reads or writes the store, so the person's journal and settings are untouched,
- * and it is forgotten when the app restarts. This file is loaded only when `__DEV__` is true
- * (see `home-screen.tsx` and `use-home-model.ts`): a production bundle does not contain it.
+ * and it is forgotten when the app restarts. This file is loaded only through `state-preview.ts`:
+ * in development, and in a test build made with `EXPO_PUBLIC_STATE_PREVIEW=1`. A production
+ * bundle does not contain it.
  *
- * Its words are written here, in French, and not in the locale files: they are for the
- * developer, and the locale files are part of the production bundle.
+ * Its words are written here, in French, and not in the locale files: they are for the owner
+ * and the developers, and the locale files are part of the production bundle.
  */
 
 import { useMemo, useSyncExternalStore } from 'react';
@@ -36,10 +37,10 @@ const OPTIONS: readonly ChoiceOption<DevPreviewChoice>[] = [
 ];
 
 const WORDS = {
-  title: 'Aperçu (développement)',
+  title: 'Aperçu des états',
   label: 'État montré',
   footer:
-    'Visible en développement seulement. Rien n’est enregistré : tes données ne changent pas.',
+    'Visible dans les versions de test seulement. Rien n’est enregistré\u00a0: tes données ne changent pas.',
 } as const;
 
 let choice: DevPreviewChoice = 'store';
@@ -80,7 +81,7 @@ export function usePreviewedSource(source: HomeSource, today: LocalDate): HomeSo
   return history ?? source;
 }
 
-/** The last section of the home screen in development: the choice of what it shows. */
+/** The last section of the home screen where the preview exists: the choice of what it shows. */
 export function DevPreviewSection() {
   const chosen = useDevPreviewChoice();
   return (

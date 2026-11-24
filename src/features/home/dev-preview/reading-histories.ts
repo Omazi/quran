@@ -1,9 +1,9 @@
 /**
- * DEVELOPMENT ONLY: made-up reading histories that put the garden in each of its states.
+ * PREVIEW ONLY: made-up reading histories that put the garden in each of its states.
  *
- * Used by the tests and by the developer preview of the home screen (`dev-preview.tsx`). The
- * app itself only shows what the store holds: this folder is loaded only when `__DEV__` is true
- * and is absent from a production bundle.
+ * Used by the tests and by the preview of the home screen (`dev-preview.tsx`). The app itself
+ * only shows what the store holds: this folder is loaded only in development or in a test build
+ * (see `../state-preview.ts`) and is absent from a production bundle.
  *
  * Each history is a real reading journal, written page by page through the khatm module
  * (`recordPageRead`): the garden and the numbers on screen are then computed by the same code as

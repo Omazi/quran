@@ -1,23 +1,11 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { quranStructure } from '@/data/quran';
-import type { LocalDate } from '@/domain/shared/local-date';
 
-import { buildHomeModel, type HomeModel, type HomeModelInput, type HomeSource } from './home-model';
+import { buildHomeModel, type HomeModel, type HomeModelInput } from './home-model';
 import { useHomeSource } from './home-source';
+import { usePreviewedSource } from './state-preview';
 import { useToday, type Clock } from './use-today';
-
-/**
- * In development, a developer can replace what the screen shows by a made-up reading history
- * (`dev-preview/`). The module is required only when `__DEV__` is true: the bundler drops the
- * whole branch from a production bundle, where the person's data is always shown as it is.
- */
-const usePreviewedSource: (source: HomeSource, today: LocalDate) => HomeSource = __DEV__
-  ? // A conditional `require` is the only form the bundler can leave out; it has no type of its own.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    (require('./dev-preview/dev-preview') as typeof import('./dev-preview/dev-preview'))
-      .usePreviewedSource
-  : (source) => source;
 
 export interface HomeModelDependencies {
   /** Gives the present instant. Defaults to the device clock. */

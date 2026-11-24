@@ -28,7 +28,7 @@ describe('the developer preview of the home screen (development only)', () => {
   it('is the last section of the list and starts on the real data', async () => {
     expect(__DEV__).toBe(true);
     await renderHome(createTestAppStore());
-    expect(screen.getByRole('header', { name: 'Aperçu (développement)' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Aperçu des états' })).toBeOnTheScreen();
     expect(screen.getByRole('radio', { name: 'Mes vraies données' })).toBeChecked();
     // A new person: the real data is a bare earth.
     expect(screen.getByRole('image', { name: /^Terre nue/ })).toBeOnTheScreen();

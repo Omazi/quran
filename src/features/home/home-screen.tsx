@@ -1,4 +1,3 @@
-import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -24,19 +23,8 @@ import {
 
 import type { HomeActions, HomeModel, HomeReadyModel } from './home-model';
 import { HomeNoticeRow } from './home-notice';
+import { StatePreviewSection } from './state-preview';
 import { TodaySection } from './today-section';
-
-/**
- * In development, the last section of the list lets a developer choose which state the screen
- * shows (`dev-preview/`). The module is required only when `__DEV__` is true: the bundler drops
- * the whole branch, and the module with it, from a production bundle.
- */
-const DevPreviewSection: ComponentType | null = __DEV__
-  ? // A conditional `require` is the only form the bundler can leave out; it has no type of its own.
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    (require('./dev-preview/dev-preview') as typeof import('./dev-preview/dev-preview'))
-      .DevPreviewSection
-  : null;
 
 const UNAVAILABLE_SYMBOL: IconSymbol = { ios: 'leaf', android: 'eco' };
 
@@ -116,7 +104,7 @@ function ReadyHome({ model, actions }: { model: HomeReadyModel; actions: HomeAct
         </ListSection>
         <GardenStateSection state={garden} />
         <GardenElementsSection state={garden} />
-        {DevPreviewSection === null ? null : <DevPreviewSection />}
+        {StatePreviewSection === null ? null : <StatePreviewSection />}
       </GroupedList>
     </Screen>
   );
