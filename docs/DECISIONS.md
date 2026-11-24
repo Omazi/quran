@@ -180,3 +180,29 @@ Décisions du propriétaire (24 novembre 2026).
   `docs/SECURITY.md`, « Dépôt public ».
 - **Le déploiement sur TestFlight viendra plus tard**, à son signal. D'ici là, chaque push
   est compilé pour iPhone, sans signature (`docs/BUILD.md`).
+
+## D25 — Prénoms d'exemple
+
+Décision du propriétaire (24 novembre 2026). Partout où l'appli ou ses images montrent des
+proches d'exemple (premier lancement, page des proches, captures pour les boutiques), les
+prénoms sont **Omar, Mustapha, Sarah et Taghread** (تغريد). Iman et Bilal, utilisés dans
+l'ancien prototype, ne le sont plus.
+
+## D26 — Le jardin sèche et revit par étapes, sous les yeux
+
+Exigence du propriétaire (24 novembre 2026), sur l'animation : le dessèchement ne se montre
+jamais d'un coup. On voit d'abord l'eau partir, puis les arbres perdre leurs feuilles, et
+ainsi de suite jusqu'à la terre morte. À la reprise de la lecture, le jardin revient lui
+aussi par étapes, plus vite qu'il n'a séché. Les règles (`specs/garden.md`) le font déjà :
+quatorze jours pour mourir, cinq jours de lecture pour revenir d'une terre morte. Ce que
+chaque étape doit montrer est écrit dans `specs/garden.md`, « Ce qu'on voit, étape par
+étape ».
+
+## D27 — L'écran d'écoute : au niveau de Shazam
+
+Exigence du propriétaire (24 novembre 2026) : il n'a pas aimé le fond de la page de
+détection du prototype. L'écran qui reconnaît un passage du Coran doit être aussi beau que
+celui de Shazam, qu'il donne comme niveau à atteindre. On ne copie ni son dessin ni sa
+marque ; on vise la même force : un seul geste, un écran entier qui écoute, un résultat qui
+arrive avec évidence. Les écarts aux règles d'Apple que cela demande s'inscrivent au
+registre de `design/SKILLS.md`.

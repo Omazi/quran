@@ -21,14 +21,43 @@ indépendant_ → _validé_.
 
 Micro, modèle sur l'appareil, lecture suivie, reconnaissance d'un passage (« Shazam »).
 
+- **Écran d'écoute** : au niveau de celui de Shazam (D27). Trois directions montrées le
+  24 novembre 2026 (l'onde, la page, le jardin qui écoute) : **aucune retenue** ; « le jardin
+  qui écoute » est la moins écartée. Avant un nouvel essai, savoir ce qui déplaît ; le
+  montrer en mouvement plutôt qu'en image fixe.
+- **Mémoriser (« le prof »)**, demande du propriétaire (24 novembre 2026). On choisit une
+  sourate à apprendre, puis des exercices de difficulté croissante :
+  1. les versets sont affichés ;
+  2. des mots sont retirés : retrouver le mot qui va à cet endroit ;
+  3. donner la suite de l'aya, à voix haute (reconnaissance) ou en la choisissant ;
+  4. choisir la bonne aya parmi plusieurs.
+
 ## Lot 3 — Les proches
 
 Comptes, proches, visite des jardins, jardins partagés (khatm de groupe), confidentialité.
+
+- **Groupes et compétitions** (demande du propriétaire, 24 novembre 2026) : les gens créent
+  des groupes et se mesurent entre eux, par exemple à qui lit le plus. À préciser avec lui :
+  ce qui compte (pages nouvelles, récitation reconnue à voix haute, relectures), pour que
+  relire sans cesse la même page ne fasse pas gagner (D8).
+- **Compteur de hasanat**, pour chaque personne (demande confirmée le 24 novembre 2026) : un
+  moteur dans le domaine, qui compte les lettres lues. Base : le hadith de la lettre, une
+  hasana par lettre récitée, multipliée par dix (Sunan at-Tirmidhî n° 2910, d'après Ibn
+  Mas'ûd ; référence relevée le 24 novembre 2026, à faire confirmer par une personne
+  qualifiée comme tout contenu religieux). À trancher : la façon de compter les lettres dans
+  l'écriture uthmani, et la formulation à l'écran (une estimation, avec sa source).
 
 ## Lot 4 — Comprendre et prolonger
 
 Récits, contextes de révélation (sources vérifiées), écriture simple, widgets, rappels,
 mode enfants.
+
+- **Par sourate, deux sections** (rappel du propriétaire, 24 novembre 2026) : l'histoire de
+  la sourate (son contexte de révélation, sabab al-nuzûl) et les récits qu'elle contient.
+- **Règle** : on doit être certain de ce qu'on rapporte. Rien n'est écrit sans source
+  nommée ; la source s'affiche avec le texte ; un récit dont l'authenticité est discutée est
+  dit tel ou laissé de côté ; tout est relu par une personne qualifiée avant publication.
+  Rien de tout cela ne s'écrit de mémoire.
 
 ## Questions ouvertes
 

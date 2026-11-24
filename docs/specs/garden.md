@@ -93,6 +93,30 @@ Sur la terre nue (aucun hizb), il n'y a pas encore d'eau : `dry`, et aucun jour 
 `bare` (aucun hizb) · `thriving` (sécheresse 0 à 2) · `thirsty` (3 à 5) · `wilting`
 (6 à 9) · `dying` (10 à 13) · `dead` (14).
 
+## Ce qu'on voit, étape par étape
+
+Exigence du propriétaire (D26) : jamais de passage d'un coup d'un jardin vivant à une terre
+morte, ni l'inverse. Chaque état ci-dessous est une image distincte, et l'on passe de l'une
+à la suivante par une transition, dans l'ordre.
+
+| Sécheresse | Ce qu'on voit                                                                        |
+| ---------- | ------------------------------------------------------------------------------------ |
+| 0          | Jardin en pleine santé, l'eau coule                                                  |
+| 1 à 2      | **L'eau part en premier** : elle ne coule plus (`still`)                             |
+| 3 à 5      | Bassins et canaux à sec (`dry`), l'herbe et les fleurs ternissent : le jardin a soif |
+| 6 à 9      | **Les arbres perdent leurs feuilles**, les fleurs fanent                             |
+| 10 à 13    | Les éléments disparaissent un à un, les derniers arrivés d'abord                     |
+| 14         | Terre morte                                                                          |
+
+À la reprise, on remonte les mêmes étapes dans l'autre sens, **plus vite** : un jour de
+lecture rattrape trois jours de sécheresse, et l'eau revient le jour même. Si l'on ouvre
+l'appli après plusieurs jours d'absence, ou après une lecture qui fait remonter le jardin
+de plusieurs étapes, l'animation passe par les étapes intermédiaires au lieu de sauter à
+l'état final. Avec « Réduire les animations », on montre l'état final, sans transition.
+
+Dans le premier lancement, le dessèchement se raconte dans cet ordre, une étape par page,
+et la reprise aussi se montre en plus d'une image.
+
 ## Éléments visibles
 
 - Jusqu'à `wilting` compris : tous les éléments débloqués.
