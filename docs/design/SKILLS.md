@@ -21,6 +21,12 @@ En pratique, pour tout ce qui touche à l'interface :
    l'emportent pour l'identité (ton, signature, contenu).
 5. **Une décision explicite du propriétaire l'emporte sur un skill**, mais l'écart est
    inscrit et lui est signalé.
+6. **On ne montre rien de moche.** Règle du propriétaire (24 novembre 2026) : « Du moment
+   que c'est moche, ne me demande même pas. » Avant de lui présenter un écran, une image ou
+   un prototype, on se pose la question soi-même : est-ce premium, est-ce que ça donne envie ?
+   Si la réponse est non, on ne le montre pas et on ne demande pas son avis : on le reprend.
+   La relecture design indépendante (7 sur 10 partout, originalité comprise) est la barrière
+   à passer avant toute présentation.
 
 ## Les skills
 

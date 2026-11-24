@@ -206,3 +206,11 @@ celui de Shazam, qu'il donne comme niveau à atteindre. On ne copie ni son dessi
 marque ; on vise la même force : un seul geste, un écran entier qui écoute, un résultat qui
 arrive avec évidence. Les écarts aux règles d'Apple que cela demande s'inscrivent au
 registre de `design/SKILLS.md`.
+
+## D28 — On ne présente que ce qu'on juge soi-même premium
+
+Règle du propriétaire (24 novembre 2026), après deux séries d'écrans d'écoute qu'il a
+refusées et que nous avions nous-mêmes jugées insuffisantes une fois la question posée.
+Tant qu'un design est moche ou seulement correct, on ne le lui montre pas et on ne lui
+demande pas son avis : on se corrige d'abord. Le détail est dans `design/SKILLS.md`,
+règle 6.
