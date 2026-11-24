@@ -32,6 +32,9 @@ mode enfants.
 
 ## Questions ouvertes
 
+- Direction visuelle à choisir (trois directions dans `design/brand-spec.md`).
+- Provenance et style des modèles 3D du jardin.
+- Premier lancement : 16 pages sans « Passer », ou 10 pages selon les règles d'Apple.
 - Design du premier lancement à retravailler (pages « lecture à voix haute » et
   « rappels » non validées).
 - Présentation du texte du Coran (police, mise en page) à revoir avec le propriétaire.

@@ -68,14 +68,28 @@ du système par Expo UI et les onglets natifs. Android suivra sur la même base 
 contrôle natif a une variante par défaut. Typographie système (San Francisco, New York),
 SF Symbols, Liquid Glass réservé aux éléments flottants.
 
-## D12 — Le jardin affiché est provisoire
+## D12 — Pas de jardin dessiné en code
 
-Le rendu 2D en SVG sert à faire vivre les règles (croissance, dessèchement). Le jardin
-final sera fait de vrais modèles 3D, dans un style à choisir. Le rendu est un composant
-remplaçable qui ne reçoit qu'un `GardenState`.
+Les jardins dessinés en code ont tous été refusés, et le skill SwiftUI Design l'interdit
+(principe 4 : un emplacement neutre vaut mieux qu'une mauvaise image). À l'écran, le
+jardin passe par un seul composant, `GardenScene`, qui ne reçoit qu'un `GardenState`. Au
+lot 1, il affiche un emplacement neutre et l'état en clair. Le vrai jardin sera fait de
+modèles 3D ; **leur provenance et leur style restent à décider avec le propriétaire**.
 
 ## D13 — Rappels par notifications locales
 
 Aucun serveur : le plan des rappels est calculé sur le téléphone à partir de l'état du
 jardin, puis programmé localement. L'autorisation est demandée à la fin du premier
 lancement, après explication.
+
+## D14 — Les skills d'abord
+
+Pour l'interface, on suit les skills de design demandés par le propriétaire. On ne s'en
+écarte que pour faire mieux, et l'écart est écrit. Règle et registre :
+[design/SKILLS.md](design/SKILLS.md).
+
+## D15 — Direction visuelle « L'eau », en attente de choix
+
+Fonds et textes du système, accent bleu d'eau, titres en New York, clair et sombre.
+Trois directions sont décrites dans [design/brand-spec.md](design/brand-spec.md) ; le
+propriétaire choisit.

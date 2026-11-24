@@ -46,3 +46,9 @@ Read `docs/ARCHITECTURE.md` and `docs/CONTRIBUTING.md` before changing anything.
 layer (`src/domain`) is pure TypeScript: no React, Expo or storage imports. Module specs
 live in `docs/specs/`. Team roles and the review circuit are in `docs/TEAM.md`.
 Run `npm run check` before declaring a task done.
+
+## Design
+
+Interface work follows the design skills requested by the owner, never personal taste.
+Read `docs/design/SKILLS.md` (the rule, the skills, the deviation log) and
+`docs/design/brand-spec.md` before touching `src/ui`, `src/features` or `src/app`.

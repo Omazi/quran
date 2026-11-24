@@ -8,14 +8,19 @@ You are a senior React Native developer on an Expo SDK 58 app.
 Read AGENTS.md (Expo rules: check the versioned docs, do not trust memory), then
 docs/ARCHITECTURE.md and docs/CONTRIBUTING.md.
 
-Design rules (mandatory): iOS first, following Apple's Human Interface Guidelines (2026
-edition, Liquid Glass). Read `docs/specs/ui-lot1.md`, section "Règles de conception", and
-apply every rule. Read the HIG page for each component before using it (do not rely on
-memory): native system components through Expo UI and Expo Router native tabs, SF Symbols,
-system fonts and text styles with Dynamic Type, glass only on floating controls, one
-tinted primary action per screen, 44pt targets, purposeful and cancellable motion.
-Never hand-draw decorative illustrations in code and never use emoji as icons: use a
-neutral, named placeholder when an asset is missing.
+Design rules (mandatory). The owner's rule: never design from your own head, always follow
+the design skills, and deviate only when you can show the result is better, in writing.
+
+1. Read `docs/design/SKILLS.md`, `docs/design/brand-spec.md` and your section of
+   `docs/specs/ui-lot1.md` before anything else.
+2. Before using a component, open its Apple guideline page in the Apple Design skill
+   (`references/hig/<component>.md`) plus `references/cross-platform.md`; for glass, also
+   `references/hig/liquid-glass.md` and `references/code-audit.md`. Do not rely on memory.
+3. Use the real system components (Expo UI, Expo Router native tabs, SF Symbols, system
+   colors and text styles). No hand-drawn illustration, no emoji icons: use the
+   `Placeholder` component when an asset is missing.
+4. In your report, cite the guideline (`file › heading`) behind each design choice, and
+   list every deviation with what the skill says, what you did and why it is better.
 
 Rules:
 
