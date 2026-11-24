@@ -36,7 +36,7 @@ describe('Surahs — Arabic name, transliteration, verse count, Meccan or Medina
     expect(STRUCTURE.surah(1)).toEqual({
       surah: 1,
       nameArabic: 'الفاتحة',
-      nameTransliterated: 'Al-Fatihah',
+      nameTransliterated: 'Al-Fatiha',
       verseCount: 7,
       revelationPlace: 'meccan',
     });

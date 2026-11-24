@@ -3,7 +3,7 @@
     {
       "surah": 1,
       "nameArabic": "الفاتحة",
-      "nameTransliterated": "Al-Fatihah",
+      "nameTransliterated": "Al-Fatiha",
       "verseCount": 7,
       "revelationPlace": "meccan"
     },
@@ -423,7 +423,7 @@
     {
       "surah": 61,
       "nameArabic": "الصف",
-      "nameTransliterated": "As-Saf",
+      "nameTransliterated": "As-Saff",
       "verseCount": 14,
       "revelationPlace": "medinan"
     },
@@ -556,7 +556,7 @@
     {
       "surah": 80,
       "nameArabic": "عبس",
-      "nameTransliterated": "'Abasa",
+      "nameTransliterated": "Abasa",
       "verseCount": 42,
       "revelationPlace": "meccan"
     },

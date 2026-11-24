@@ -26,12 +26,13 @@ describe('splitVerseWords — words are separated by one space (U+0020)', () => 
     expect(() => splitVerseWords(undefined as unknown as string)).toThrow(TypeError);
   });
 
-  it('keeps the thin space that the source writes inside a word of 2:72', () => {
-    const text = verseText(uthmaniVerses, '2:72');
-    const words = splitVerseWords(text);
-    expect(words).toHaveLength(10);
-    expect(words[3]).toContain('\u2009');
-    // Splitting on any white space would wrongly cut this word in two.
-    expect(text.split(/\s+/u)).toHaveLength(11);
+  it('cuts on the ordinary space only: any other white space stays inside its word', () => {
+    // Made-up text. An earlier source wrote a thin space (U+2009) inside a word of 2:72.
+    expect(splitVerseWords('a\u2009b c')).toEqual(['a\u2009b', 'c']);
+    expect(splitVerseWords('a\u00A0b')).toEqual(['a\u00A0b']);
+  });
+
+  it('2:72 has its ten words', () => {
+    expect(splitVerseWords(verseText(uthmaniVerses, '2:72'))).toHaveLength(10);
   });
 });

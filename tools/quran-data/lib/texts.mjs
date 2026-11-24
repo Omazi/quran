@@ -1,10 +1,11 @@
 /**
- * Reads the two verse sources into one simple shape, without changing a single character:
+ * Reads the two verse sources into one simple shape. The Tanzil text is taken unchanged;
+ * the Uthmani text is extracted by the two documented removals of `verseTextOf`:
  *
  *   { surahs: [{ surah, nameArabic, nameTransliterated, verseCount, revelationPlace }],
  *     verses: string[][] }            verses[surah - 1][verse - 1]
  */
-import { THIN_SPACE, VERSES_WITH_THIN_SPACE_INSIDE_A_WORD, WORD_SEPARATOR } from './declared.mjs';
+import { QUARTER_MARK, WORD_SEPARATOR } from './declared.mjs';
 import { fail } from './fail.mjs';
 
 export const SURAH_COUNT = 114;
@@ -22,7 +23,7 @@ const TANZIL_NOTICE = Object.freeze({
   copyright: 'Copyright (C) 2007-2025 Tanzil Project',
   license: 'Creative Commons Attribution 3.0',
 });
-const OTHER_WHITESPACE = /[^\S ]/gu;
+const OTHER_WHITESPACE = /[^\S ]/u;
 
 export function verseKey(surah, verse) {
   return `${surah}:${verse}`;
@@ -41,29 +42,19 @@ export function forEachVerse(verses, visit) {
 
 /**
  * Words must be separated by exactly one U+0020, otherwise word positions are ambiguous.
- * Any other white space must be declared (the build never guesses how to split a word).
+ * Any other white space is refused (the build never guesses how to split a word).
  */
-function assertWordSeparation(sourceName, verses, versesWithThinSpace) {
-  const found = [];
+function assertWordSeparation(sourceName, verses) {
   forEachVerse(verses, (surah, verse, text) => {
     const key = verseKey(surah, verse);
     if (typeof text !== 'string' || text === '') fail(`${sourceName} ${key}: empty verse`);
     if (splitWords(text).includes('')) {
       fail(`${sourceName} ${key}: leading, trailing or double space in "${text}"`);
     }
-    const others = text.match(OTHER_WHITESPACE) ?? [];
-    if (others.some((character) => character !== THIN_SPACE)) {
+    if (OTHER_WHITESPACE.test(text)) {
       fail(`${sourceName} ${key}: unexpected white-space character in "${text}"`);
     }
-    if (others.length > 0) found.push(key);
   });
-
-  if (found.join() !== versesWithThinSpace.join()) {
-    fail(
-      `${sourceName}: verses with a thin space inside a word are [${found}], ` +
-        `but [${versesWithThinSpace}] are declared in declared.mjs`,
-    );
-  }
 }
 
 function assertCounts(sourceName, surahs, verses) {
@@ -74,10 +65,7 @@ function assertCounts(sourceName, surahs, verses) {
   surahs.forEach((info, index) => {
     if (info.surah !== index + 1)
       fail(`${sourceName}: surah ${index + 1} is numbered ${info.surah}`);
-    if (!REVELATION_PLACES.includes(info.revelationPlace)) {
-      fail(`${sourceName}: surah ${info.surah} has revelation place "${info.revelationPlace}"`);
-    }
-    if (info.nameArabic === '' || info.nameTransliterated === '') {
+    if (!info.nameArabic || !info.nameTransliterated) {
       fail(`${sourceName}: surah ${info.surah} has an empty name`);
     }
     const count = verses[index].length;
@@ -97,26 +85,82 @@ function assertNumberedFromOne(sourceName, surah, items) {
   });
 }
 
-/** quran.json of the npm package quran-json: [{ id, name, transliteration, type, total_verses, verses: [{ id, text }] }]. */
+const NO_BREAK_SPACE = '\u00A0';
+const ARABIC_INDIC_ZERO = 0x0660;
+const VERSE_NUMBER_AT_THE_END = /\u00A0([\u0660-\u0669]+)$/u;
+const ANY_ARABIC_INDIC_DIGIT = /[\u0660-\u0669]/u;
+
+/**
+ * The text of a verse, taken from the `aya_text` column of the publisher's file.
+ *
+ * `aya_text` is the verse as the publisher prints it: the verse, a no-break space and the
+ * verse number in Arabic-Indic digits; and, where a quarter of hizb starts, the sign followed
+ * by a no-break space. Exactly two things are removed, and nothing else is touched:
+ *   1. at the end: the no-break space and the verse number (checked to be this verse's number);
+ *   2. at the start: the no-break space that follows the hizb sign (the sign itself is kept).
+ * The build stops if a no-break space or a digit is left anywhere else.
+ */
+function verseTextOf(row, key) {
+  const printed = row.aya_text;
+  const number = VERSE_NUMBER_AT_THE_END.exec(printed ?? '');
+  if (!number) fail(`Uthmani source ${key}: no verse number at the end of "${printed}"`);
+  const digits = [...number[1]].map((digit) => digit.codePointAt(0) - ARABIC_INDIC_ZERO).join('');
+  if (Number(digits) !== row.aya_no) {
+    fail(`Uthmani source ${key}: the text ends with verse number ${digits}`);
+  }
+
+  let text = printed.slice(0, number.index);
+  if (text.startsWith(QUARTER_MARK + NO_BREAK_SPACE)) {
+    text = QUARTER_MARK + text.slice((QUARTER_MARK + NO_BREAK_SPACE).length);
+  }
+  if (text.includes(NO_BREAK_SPACE) || ANY_ARABIC_INDIC_DIGIT.test(text)) {
+    fail(`Uthmani source ${key}: unexpected no-break space or digit left in "${text}"`);
+  }
+  return text;
+}
+
+/**
+ * hafsData_v18.json of the King Fahd Complex: one row per verse, in reading order,
+ * { id, jozz, sora, sora_name_en, sora_name_ar, page, line_start, line_end, aya_no, aya_text,
+ * aya_text_emlaey }.
+ *
+ * Only `sora`, `aya_no`, `aya_text`, `page` and the two surah names are read. Its `jozz`
+ * column puts 3:92 and 9:93 in the wrong juz and is not used. The surah names and the first
+ * verse of each `page` come back as the publisher gives them: structure.mjs only uses them
+ * to cross-check the names kept in the app and the pages of the layout.
+ */
 export function readUthmaniSource(raw) {
   const sourceName = 'Uthmani source';
-  if (!Array.isArray(raw)) fail(`${sourceName}: expected an array of surahs`);
+  if (!Array.isArray(raw)) fail(`${sourceName}: expected an array of verses`);
 
-  const surahs = raw.map((entry) => ({
-    surah: entry.id,
-    nameArabic: entry.name,
-    nameTransliterated: entry.transliteration,
-    verseCount: entry.total_verses,
-    revelationPlace: entry.type,
-  }));
-  const verses = raw.map((entry) => {
-    assertNumberedFromOne(sourceName, entry.id, entry.verses);
-    return entry.verses.map((verse) => verse.text);
-  });
+  const surahs = [];
+  const verses = [];
+  const pageStarts = [];
+  for (const row of raw) {
+    const key = verseKey(row.sora, row.aya_no);
+    if (row.page === pageStarts.length + 1) pageStarts.push(key);
+    else if (row.page !== pageStarts.length)
+      fail(`${sourceName}: page jumps to ${row.page} at ${key}`);
+    if (row.aya_no === 1) {
+      surahs.push({
+        surah: row.sora,
+        nameArabic: row.sora_name_ar,
+        nameTransliterated: row.sora_name_en,
+        verseCount: 0,
+      });
+      verses.push([]);
+    }
+    const info = surahs.at(-1);
+    if (info === undefined || row.sora !== info.surah || row.aya_no !== info.verseCount + 1) {
+      fail(`${sourceName}: verse ${key} is out of order`);
+    }
+    verses.at(-1).push(verseTextOf(row, key));
+    info.verseCount += 1;
+  }
 
   assertCounts(sourceName, surahs, verses);
-  assertWordSeparation(sourceName, verses, VERSES_WITH_THIN_SPACE_INSIDE_A_WORD);
-  return { surahs, verses };
+  assertWordSeparation(sourceName, verses);
+  return { surahs, verses, pageStarts };
 }
 
 /**
@@ -143,8 +187,13 @@ export function readTanzilSource(raw) {
     return entry.ayat.map((ayah) => ayah.text);
   });
 
+  for (const info of surahs) {
+    if (!REVELATION_PLACES.includes(info.revelationPlace)) {
+      fail(`${sourceName}: surah ${info.surah} has revelation place "${info.revelationPlace}"`);
+    }
+  }
   assertCounts(sourceName, surahs, verses);
-  assertWordSeparation(sourceName, verses, []);
+  assertWordSeparation(sourceName, verses);
 
   const juzStarts = [];
   const sajdaVerses = [];

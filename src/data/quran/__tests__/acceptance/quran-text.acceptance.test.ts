@@ -42,13 +42,11 @@ const SIGN_OF_PROSTRATION = '۩';
 const SIGN_OF_HIZB_QUARTER = '۞';
 const THIN_SPACE = ' ';
 
-/** The five verses in which the Uthmani source writes two words without a space. */
+/** The three verses in which the Uthmani source writes two words without a space. */
 const DECLARED_JOINED_WORDS: Readonly<Record<string, number>> = {
   '15:7': 1,
   '27:20': 4,
   '36:22': 1,
-  '37:164': 1,
-  '41:47': 25,
 };
 
 const surahsByScript = new Map<QuranScript, (readonly Verse[])[]>();
@@ -441,7 +439,6 @@ describe('Hygiène du texte (corpus entier, les deux écritures)', () => {
     [0x0621, 0x063a], // letters hamza .. ghain
     [0x0640, 0x064a], // tatweel, letters feh .. yeh
     [0x064b, 0x0657], // vowel signs, shadda, sukun, madda, hamza above and below
-    [0x065c, 0x065c], // dot below (imala of 11:41 in the Uthmani source)
     [0x065e, 0x065e], // used by the Uthmani source for a form of tanwin
     [0x0670, 0x0671], // small alif above, alif wasla
     [0x06d6, 0x06dc], // signs of pause, small high seen
@@ -450,7 +447,7 @@ describe('Hygiène du texte (corpus entier, les deux écritures)', () => {
 
   /** Surprising code points found by the tester, with where and how often. */
   const DECLARED_SURPRISES: Readonly<Record<QuranScript, readonly string[]>> = {
-    uthmani: ['U+2009 x1 first in 2:72'],
+    uthmani: [],
     'uthmani-minimal': [],
   };
 
@@ -505,10 +502,10 @@ describe('Hygiène du texte (corpus entier, les deux écritures)', () => {
   );
 
   it.each(SCRIPTS)(
-    '%s: the only white space is U+0020, apart from the declared thin space',
+    '%s: the only white space is U+0020',
     (script) => {
       const otherWhiteSpace = versesMatching(script, /[^\S ]/);
-      expect(otherWhiteSpace).toEqual(script === 'uthmani' ? ['2:72'] : []);
+      expect(otherWhiteSpace).toEqual([]);
     },
   );
 
@@ -532,10 +529,10 @@ describe('Hygiène du texte (corpus entier, les deux écritures)', () => {
     expect(surprises).toEqual(DECLARED_SURPRISES[script]);
   });
 
-  it('the thin space of 2:72 is inside the fourth word, which splitVerseWords keeps whole', () => {
+  it('2:72 has ten words; its fourth word no longer holds a thin space', () => {
     const words = wordsOf('uthmani', '2:72');
     expect(words).toHaveLength(10);
-    expect(itemAt(words, 3)).toContain(THIN_SPACE);
+    expect(itemAt(words, 3)).not.toContain(THIN_SPACE);
     expect(wordsOf('uthmani-minimal', '2:72')).toHaveLength(10);
   });
 
@@ -598,7 +595,7 @@ describe('Hygiène du texte (corpus entier, les deux écritures)', () => {
 });
 
 describe('Cohérence entre les deux écritures', () => {
-  it('same number of words in every verse, except the five declared verses (one word fewer in Uthmani)', () => {
+  it('same number of words in every verse, except the three declared verses (one word fewer in Uthmani)', () => {
     const differences: Record<string, number> = {};
     for (const key of ALL_KEYS) {
       const difference = wordsOf('uthmani-minimal', key).length - wordsOf('uthmani', key).length;
@@ -606,10 +603,10 @@ describe('Cohérence entre les deux écritures', () => {
         differences[key] = difference;
       }
     }
-    expect(differences).toEqual({ '15:7': 1, '27:20': 1, '36:22': 1, '37:164': 1, '41:47': 1 });
+    expect(differences).toEqual({ '15:7': 1, '27:20': 1, '36:22': 1 });
   });
 
-  it('in the five declared verses, one Uthmani word is two words of the other text written together', () => {
+  it('in the three declared verses, one Uthmani word is two words of the other text written together', () => {
     for (const [key, position] of Object.entries(DECLARED_JOINED_WORDS)) {
       const uthmani = wordsOf('uthmani', key);
       const minimal = wordsOf('uthmani-minimal', key);

@@ -1,7 +1,8 @@
 /**
  * One-off helper: vendors the raw source files into tools/quran-data/sources.
  *
- *   node tools/quran-data/import-sources.mjs <folder with quran.json, tanzil_simple.json, qpages/>
+ *   node tools/quran-data/import-sources.mjs <folder with hafsData_v18.json, hafsData_v18.README.md,
+ *     tanzil_simple.json and qpages/>
  *
  * Each file is stored gzip-compressed and byte-for-byte unchanged once decompressed. The
  * SHA-256 of every original file is written to sources/SHA256SUMS; the build refuses any
@@ -19,6 +20,7 @@ import {
   SOURCES_DIR,
   TANZIL_FILE,
   UTHMANI_FILE,
+  UTHMANI_NOTES_FILE,
 } from './lib/sources.mjs';
 
 const [originDir] = process.argv.slice(2);
@@ -33,7 +35,7 @@ const pageFiles = readdirSync(join(originDir, PAGE_LAYOUT_FOLDER))
   .map((name) => `${PAGE_LAYOUT_FOLDER}/${name}`);
 
 const checksumLines = [];
-for (const name of [...pageFiles, UTHMANI_FILE, TANZIL_FILE].sort()) {
+for (const name of [...pageFiles, UTHMANI_FILE, UTHMANI_NOTES_FILE, TANZIL_FILE].sort()) {
   const original = readFileSync(join(originDir, name));
   const target = join(SOURCES_DIR, name + COMPRESSED_SUFFIX);
   mkdirSync(dirname(target), { recursive: true });

@@ -1,0 +1,58 @@
+KFGQPC HAFS Uthmanic Script, version 0.18
+=========================================
+
+File:      KFGQPC-HAFS-Uthmanic-Script-v0.18.ttf  (KFGQPC HAFS Uthmanic Script Regular, Version 0.18)
+Owner:     King Fahd Glorious Quran Printing Complex (KFGQPC), Madinah
+SHA-256:   a0636e68e375af9552470d67773936f54d536e6586ce2608311b2fe7f9cbec3a
+Size:      242368 bytes
+Copied, unmodified, from: github.com/ibnhazm/kfgqpc, file hafs/font/hafs.18.ttf,
+           commit 25f2f8886d6ad0b47190f252d9d7fb1e296f3231 (a mirror of the Complex's
+           developer page, https://qurancomplex.gov.sa/en/techquran/dev/).
+           Only the file name was changed. The file must never be modified, subset or
+           converted: the test tools/quran-data/__tests__/font-coverage.test.js checks
+           its checksum.
+Embedding: the font's OS/2 fsType field is 0 (installable embedding, no restriction).
+
+This is the font the Uthmani text of assets/data/verses/uthmani.json was published
+for (hafsData_v18.json, same version). The Complex changed the meaning of some code
+points between versions of this font: never replace it by another version without
+replacing the text by the text of that version. See docs/DATA_SOURCES.md.
+
+The two texts below are copied from the font file itself (name table, records 0 and 13).
+
+COPYRIGHT
+---------
+The digitally signed machine readable Typeface(Font) licensed to you is
+copyrighted, (2010), King Fahd Glorious Quran Printing Complex.
+ISBN: 978-603-8010-15-0, Accession No. 1430/7278
+All rights reserved. This Font is the property of King Fahd Glorious Quran
+Printing Complex, and may not be reproduced, modified without the express
+written approval of King Fahd Glorious Quran Printing Complex.
+
+LICENCE
+-------
+ELECTRONIC END-USER LICENSE AGREEMENT
+
+By installing this Font You accept all the terms and conditions of this
+Agreement.
+
+Copyright (c) 2010 by King Fahd Glorious Quran Printing Complex (KFGQPC),
+AlMadinah AlMunawarrah, Kingdom of Saudi Arabia. All Rights Reserved. KFGQPC
+retains full title and ownership of this Typeface both as artwork and font
+software. This Agreement does not grant you any intellectual property rights in
+the Font.
+
+Permission is hereby granted, Free of Cost, to any person obtaining a copy of
+this Font accompanying this license, the rights to Use, Copy, Distribute,
+subject to the following conditions:
+
+1.    The Font Software cannot be Sold, Modified, Altered, Translated, Reverse
+Engineered, Decompiled, Disassembled, Reproduced or Attempted to discover the
+Source Code of this Font in no means.
+
+2.    The Font Software is provided "AS IS", and KFGQPC makes no warranties as
+to its use or performance, fitness for a particular purpose. KFGQPC does not and
+cannot warrant the performance or results you may obtain by using the Font. In
+no event shall KFGQPC be liable for any Claims, Damages or other Liability,
+including any Damages, arising from, out of the use or inability to use the Font
+or from other dealings in the Font.

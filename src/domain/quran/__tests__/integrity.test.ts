@@ -10,7 +10,7 @@ import { SURAH_COUNT } from '../types';
  * by a single character, this test fails even if the data and integrity.json were
  * regenerated together: changing the text must be a visible, deliberate act.
  */
-const PINNED_UTHMANI_SHA256 = '7b2b07124666739062f6992d914f2dc14fda010780aba524467cc56972d5bb0d';
+const PINNED_UTHMANI_SHA256 = 'f0cb43235f1ebb96cc5fa5de33c2043c04c3a68d7a11c63626fa7e4f0f2bb687';
 const PINNED_UTHMANI_MINIMAL_SHA256 =
   '432e8775149564af0cf0420b0b427eb90cb25d5d9f2118dc396afd2192814b4b';
 

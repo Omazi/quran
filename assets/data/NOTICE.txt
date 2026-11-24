@@ -7,11 +7,19 @@ docs/DATA_SOURCES.md
 
 verses/uthmani.json
 -------------------
-The text of each verse is copied unchanged from dist/quran.json of the npm
-package quran-json 3.1.2 (Risan Bagja Pradana, github.com/risan/quran-json).
-That package attributes its Uthmani text to The Noble Qur'an Encyclopedia
-(quranenc.com). Licence announced by the package: CC BY 4.0 in its package.json,
-CC BY-SA 4.0 in its LICENSE.txt and README.
+The text of each verse is taken from the column "aya_text" of hafsData_v18.json,
+the Hafs data published by the King Fahd Glorious Quran Printing Complex
+(Madinah) with version 0.18 of its font "KFGQPC HAFS Uthmanic Script". The copy
+comes from github.com/ibnhazm/kfgqpc (commit 25f2f8886d6ad0b47190f252d9d7fb1e296f3231),
+which mirrors the Complex's developer page.
+
+Exactly two things are removed from the printed verse, and nothing else is
+changed: the no-break space and verse number at its end, and the no-break space
+after the hizb sign. The text is made to be displayed with that version of that
+font (assets/fonts, with its own notice).
+
+No licence text for the data file itself was found in the mirror. The font
+shipped with it carries the Complex's licence: see assets/fonts/NOTICE.txt.
 
 
 verses/uthmani-minimal.json
@@ -37,6 +45,9 @@ Terms stated by that package for the Tanzil text:
 
 pages/*.json and structure.json
 -------------------------------
+Surah names and revelation places come from the same file as
+verses/uthmani-minimal.json.
+
 The place of each word on each page is derived from pages/*.json of the npm
 package quran-qcf4 1.1.0 (layout of the Medina mushaf, 1441 AH edition).
     MIT License, Copyright (c) 2026 Mohamad Hajj Rabee

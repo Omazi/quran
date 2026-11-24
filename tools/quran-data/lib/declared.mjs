@@ -8,7 +8,6 @@
 
 export const QUARTER_MARK = '\u06DE'; // ۞ start of a quarter of hizb, glued to the first word
 export const SAJDA_MARK = '\u06E9'; // ۩ place of prostration, glued to the last word
-export const THIN_SPACE = '\u2009';
 export const WORD_SEPARATOR = ' ';
 
 /**
@@ -19,24 +18,17 @@ export const WORD_SEPARATOR = ' ';
 export const LAYOUT_SAJDA_PLACEHOLDER = '#1969';
 
 /**
- * Uthmani words that the text source writes without a space although they are two words
- * for the page layout and for the Tanzil text: verse key -> positions (1-based) of these
- * words in the Uthmani verse. The text is kept exactly as published; the word simply
- * takes the two neighbouring places of the layout, which must be on the same line.
+ * Uthmani words that the publisher (the King Fahd Complex) writes without a space, in
+ * every version of its text that was compared, although they are two words for the page
+ * layout and for the Tanzil text: verse key -> positions (1-based) of these words in the
+ * Uthmani verse. The text is kept exactly as published; the word simply takes the two
+ * neighbouring places of the layout, which must be on the same line.
  */
 export const JOINED_WORDS = Object.freeze({
-  '15:7': [1], // لَّوۡمَا
-  '27:20': [4], // مَالِيَ
-  '36:22': [1], // وَمَالِيَ
-  '37:164': [1], // وَمَامِنَّآ
-  '41:47': [25], // مَامِنَّا
+  '15:7': [1],
+  '27:20': [4],
+  '36:22': [1],
 });
-
-/**
- * Verses whose Uthmani text holds a thin space (U+2009) inside a word. Words are separated
- * by U+0020 only, so the thin space stays inside its word, as published.
- */
-export const VERSES_WITH_THIN_SPACE_INSIDE_A_WORD = Object.freeze(['2:72']);
 
 /**
  * Quarter-of-hizb starts on which quran-meta and the mushaf disagree. The ۞ sign printed

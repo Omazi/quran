@@ -97,6 +97,16 @@ function editSource(sourcesDir, name, edit, { updateChecksum = true } = {}) {
   }
 }
 
+/** The row of a verse in the publisher's file (hafsData_v18.json: one row per verse). */
+function rowOf(rows, surah, verse) {
+  return rows.find((row) => row.sora === surah && row.aya_no === verse);
+}
+
+/** Where the printed verse number starts in `aya_text`: at the no-break space before it. */
+function numberStart(row) {
+  return row.aya_text.lastIndexOf('\u00A0');
+}
+
 function expectBuildToFail(sourcesDir, ...expectedInMessage) {
   const out = join(temporaryFolder(), 'out');
   const result = build(sourcesDir, out);
@@ -185,9 +195,9 @@ describe('data:build — regenerates assets/data deterministically', () => {
 describe('data:build — no silent fallback: a verse that cannot be aligned stops the build', () => {
   it('two text words written without a space (the known cause) are reported with their verse', () => {
     const sources = copyOfSources();
-    editSource(sources, 'quran.json', (surahs) => {
-      const verse = surahs[1].verses[5]; // 2:6
-      verse.text = verse.text.replace(' ', '');
+    editSource(sources, 'hafsData_v18.json', (rows) => {
+      const row = rowOf(rows, 2, 6);
+      row.aya_text = row.aya_text.replace(' ', '');
     });
 
     expectBuildToFail(sources, 'Page 3, line 1', 'verse 2:6 cannot be aligned', 'declared.mjs');
@@ -195,9 +205,10 @@ describe('data:build — no silent fallback: a verse that cannot be aligned stop
 
   it('a word missing from the text is reported with its verse', () => {
     const sources = copyOfSources();
-    editSource(sources, 'quran.json', (surahs) => {
-      const verse = surahs[17].verses[9]; // 18:10
-      verse.text = verse.text.split(' ').slice(0, -1).join(' ');
+    editSource(sources, 'hafsData_v18.json', (rows) => {
+      const row = rowOf(rows, 18, 10);
+      const words = row.aya_text.slice(0, numberStart(row)).split(' ');
+      row.aya_text = words.slice(0, -1).join(' ') + row.aya_text.slice(numberStart(row));
     });
 
     expectBuildToFail(sources, 'verse 18:10 cannot be aligned');
@@ -234,13 +245,13 @@ describe('data:build — no silent fallback: a verse that cannot be aligned stop
 
   it('a joined word that is declared but not real is refused', () => {
     const sources = copyOfSources();
-    editSource(sources, 'quran.json', (surahs) => {
-      const verse = surahs[36].verses[163]; // 37:164, declared as starting with a joined word
-      const [first, second, ...others] = verse.text.split(' ');
-      verse.text = [second, first, ...others].join(' ');
+    editSource(sources, 'hafsData_v18.json', (rows) => {
+      const row = rowOf(rows, 36, 22); // declared as starting with a joined word
+      const [first, second, ...others] = row.aya_text.split(' ');
+      row.aya_text = [second, first, ...others].join(' ');
     });
 
-    expectBuildToFail(sources, 'verse 37:164 cannot be aligned');
+    expectBuildToFail(sources, 'verse 36:22 cannot be aligned');
   });
 
   it('a page that would start in the middle of a verse is refused', () => {
@@ -257,23 +268,79 @@ describe('data:build — no silent fallback: a verse that cannot be aligned stop
   });
 });
 
+describe('data:build — the verse text is the printed verse minus two documented removals', () => {
+  it('removes the verse number and the no-break space after the hizb sign, nothing else', () => {
+    const out = join(temporaryFolder(), 'out');
+    expect(build(SOURCES_DIR, out).status).toBe(0);
+    const verses = JSON.parse(readFileSync(join(out, 'verses/uthmani.json'), 'utf8'));
+    const rows = JSON.parse(
+      gunzipSync(readFileSync(join(SOURCES_DIR, 'hafsData_v18.json.gz'))).toString('utf8'),
+    );
+
+    expect(rows).toHaveLength(6236);
+    let withHizbSign = 0;
+    for (const row of rows) {
+      const text = verses[row.sora][row.aya_no - 1];
+      const startsQuarter = row.aya_text.startsWith('\u06DE\u00A0');
+      if (startsQuarter) withHizbSign += 1;
+      // Putting back what was removed must give the printed verse, character for character.
+      const rebuilt =
+        (startsQuarter ? '\u06DE\u00A0' + text.slice(1) : text) +
+        row.aya_text.slice(numberStart(row));
+      expect(rebuilt).toBe(row.aya_text);
+      expect(row.aya_text.slice(numberStart(row))).toMatch(/^\u00A0[\u0660-\u0669]+$/u);
+    }
+    expect(withHizbSign).toBe(199);
+  });
+
+  it('a verse that does not end with its own number is refused', () => {
+    const sources = copyOfSources();
+    editSource(sources, 'hafsData_v18.json', (rows) => {
+      const row = rowOf(rows, 2, 6);
+      row.aya_text = row.aya_text.slice(0, numberStart(row)) + rowOf(rows, 2, 7).aya_text.slice(-2);
+    });
+
+    expectBuildToFail(sources, 'Uthmani source 2:6: the text ends with verse number 7');
+  });
+
+  it('a verse without a number at its end is refused', () => {
+    const sources = copyOfSources();
+    editSource(sources, 'hafsData_v18.json', (rows) => {
+      const row = rowOf(rows, 2, 6);
+      row.aya_text = row.aya_text.slice(0, numberStart(row));
+    });
+
+    expectBuildToFail(sources, 'Uthmani source 2:6: no verse number at the end');
+  });
+
+  it('a no-break space anywhere else in a verse is refused, not removed', () => {
+    const sources = copyOfSources();
+    editSource(sources, 'hafsData_v18.json', (rows) => {
+      const row = rowOf(rows, 2, 6);
+      row.aya_text = row.aya_text.replace(' ', '\u00A0');
+    });
+
+    expectBuildToFail(sources, 'Uthmani source 2:6: unexpected no-break space or digit left');
+  });
+});
+
 describe('data:build — sources are checked before anything is generated', () => {
   it('a source file that does not match its checksum is refused', () => {
     const sources = copyOfSources();
-    editSource(sources, 'quran.json', (surahs) => surahs, { updateChecksum: false });
+    editSource(sources, 'hafsData_v18.json', (rows) => rows, { updateChecksum: false });
 
-    expectBuildToFail(sources, 'Source quran.json does not match its checksum');
+    expectBuildToFail(sources, 'Source hafsData_v18.json does not match its checksum');
   });
 
   it('a source file that is not a gzip archive is refused with a clear message, by both tools', () => {
     const sources = copyOfSources();
-    writeFileSync(join(sources, 'quran.json.gz'), 'not a gzip archive');
+    writeFileSync(join(sources, 'hafsData_v18.json.gz'), 'not a gzip archive');
 
-    expectBuildToFail(sources, 'Source quran.json.gz is not a readable gzip archive');
+    expectBuildToFail(sources, 'Source hafsData_v18.json.gz is not a readable gzip archive');
     const verification = verify(DATA_DIR, sources);
     expect(verification.status).toBe(1);
     expect(verification.stderr).toContain(
-      'data:verify failed: Source quran.json.gz is not a readable',
+      'data:verify failed: Source hafsData_v18.json.gz is not a readable',
     );
     expect(verification.stderr).not.toContain('at ');
   });
@@ -281,13 +348,22 @@ describe('data:build — sources are checked before anything is generated', () =
   it('a source file that is not JSON is refused with a clear message', () => {
     const sources = copyOfSources();
     const content = Buffer.from('{ not json', 'utf8');
-    writeFileSync(join(sources, 'quran.json.gz'), gzipSync(content));
+    writeFileSync(join(sources, 'hafsData_v18.json.gz'), gzipSync(content));
     const checksums = readFileSync(join(sources, CHECKSUM_FILE), 'utf8')
       .split('\n')
-      .map((line) => (line.endsWith('  quran.json') ? `${sha256(content)}  quran.json` : line));
+      .map((line) =>
+        line.endsWith('  hafsData_v18.json') ? `${sha256(content)}  hafsData_v18.json` : line,
+      );
     writeFileSync(join(sources, CHECKSUM_FILE), checksums.join('\n'));
 
-    expectBuildToFail(sources, 'Source quran.json is not valid JSON');
+    expectBuildToFail(sources, 'Source hafsData_v18.json is not valid JSON');
+  });
+
+  it("the publisher's notes on its data are archived and checked like the other sources", () => {
+    const sources = copyOfSources();
+    writeFileSync(join(sources, 'hafsData_v18.README.md.gz'), gzipSync('other notes'));
+
+    expectBuildToFail(sources, 'Source hafsData_v18.README.md does not match its checksum');
   });
 
   it('a missing source file is refused', () => {
@@ -455,8 +531,8 @@ describe('data:verify — checks the generated files without regenerating them',
 
   it('refuses data generated from other sources than the vendored ones', () => {
     const sources = copyOfSources();
-    editSource(sources, 'quran.json', (surahs) => {
-      surahs[0].transliteration = 'Al-Fatiha';
+    editSource(sources, 'hafsData_v18.json', (rows) => {
+      rows[0].sora_name_en = 'Al-Fatiha';
     });
 
     const result = verify(DATA_DIR, sources);

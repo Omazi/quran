@@ -13,7 +13,10 @@ import { fail } from './fail.mjs';
 export const SOURCES_DIR = fileURLToPath(new URL('../sources', import.meta.url));
 export const CHECKSUM_FILE = 'SHA256SUMS';
 export const COMPRESSED_SUFFIX = '.gz';
-export const UTHMANI_FILE = 'quran.json';
+/** The Hafs data published by the King Fahd Complex with version 0.18 of its font. */
+export const UTHMANI_FILE = 'hafsData_v18.json';
+/** The publisher's own notes on that version. Archived with its checksum; not read. */
+export const UTHMANI_NOTES_FILE = 'hafsData_v18.README.md';
 export const TANZIL_FILE = 'tanzil_simple.json';
 export const PAGE_LAYOUT_FOLDER = 'qpages';
 
@@ -61,7 +64,7 @@ function listCompressedFiles(sourcesDir, folder = '') {
  */
 export function readSources(sourcesDir = SOURCES_DIR) {
   const expected = readExpectedChecksums(sourcesDir);
-  const required = [UTHMANI_FILE, TANZIL_FILE];
+  const required = [UTHMANI_FILE, UTHMANI_NOTES_FILE, TANZIL_FILE];
   for (let page = 1; page <= PAGE_COUNT; page += 1) required.push(pageLayoutFile(page));
 
   for (const name of required) {
@@ -71,7 +74,7 @@ export function readSources(sourcesDir = SOURCES_DIR) {
     if (!required.includes(name)) fail(`Unexpected source file: ${name}`);
   }
 
-  const readJson = (name) => {
+  const readOriginal = (name) => {
     const path = join(sourcesDir, name + COMPRESSED_SUFFIX);
     if (!existsSync(path)) fail(`Missing source file: ${path}`);
     let original;
@@ -88,12 +91,17 @@ export function readSources(sourcesDir = SOURCES_DIR) {
           'A source is never edited: restore the original file.',
       );
     }
+    return original.toString('utf8');
+  };
+  const readJson = (name) => {
     try {
-      return JSON.parse(original.toString('utf8'));
+      return JSON.parse(readOriginal(name));
     } catch (error) {
-      return fail(`Source ${name} is not valid JSON (${error.message})`);
+      if (error instanceof SyntaxError) fail(`Source ${name} is not valid JSON (${error.message})`);
+      throw error;
     }
   };
+  readOriginal(UTHMANI_NOTES_FILE);
 
   const pages = [];
   for (let page = 1; page <= PAGE_COUNT; page += 1) pages.push(readJson(pageLayoutFile(page)));

@@ -18,7 +18,6 @@ type TextLine = Extract<MushafLine, { kind: 'text' }>;
 
 const QUARTER_MARK = '\u06DE';
 const SAJDA_MARK = '\u06E9';
-const THIN_SPACE = '\u2009';
 
 /** The 15 verses marked with a sajda sign in the Medina mushaf. */
 const SAJDA_VERSES = [
@@ -40,16 +39,14 @@ const SAJDA_VERSES = [
 ];
 
 /**
- * The five places where the Uthmani source writes two words without a space: the word is
- * kept as published and counts as one word. `words` is the number of words of the verse in
- * the Uthmani text; the Uthmani-minimal text has one more.
+ * The three places where the publisher of the Uthmani text writes two words without a
+ * space: the word is kept as published and counts as one word. `words` is the number of
+ * words of the verse in the Uthmani text; the Uthmani-minimal text has one more.
  */
 const JOINED_WORDS = [
   { key: '15:7', position: 1, words: 7 },
   { key: '27:20', position: 4, words: 11 },
   { key: '36:22', position: 1, words: 7 },
-  { key: '37:164', position: 1, words: 5 },
-  { key: '41:47', position: 25, words: 27 },
 ] as const;
 
 const pages: MushafPage[] = [];
@@ -147,8 +144,8 @@ describe('Invariant — every word of every verse appears exactly once in the pa
     expect(new Set(places).size).toBe(places.length);
   });
 
-  it('the pages hold the 77428 words of the Uthmani text', () => {
-    expect(pageWords).toHaveLength(77428);
+  it('the pages hold the 77430 words of the Uthmani text', () => {
+    expect(pageWords).toHaveLength(77430);
     expect(pageWords).toHaveLength(integrity.counts.uthmaniWords);
   });
 
@@ -269,7 +266,7 @@ describe('Known alignment cases — resolved explicitly, never by a fallback', (
   });
 
   it.each(JOINED_WORDS)(
-    'joined word: word $position of $key is one word, as its source writes it',
+    'joined word: word $position of $key is one word, as its publisher writes it',
     ({ key, position, words }) => {
       const uthmaniVerse = uthmani.find((verse) => verse.key === key);
       const minimalVerse = uthmaniMinimal.find((verse) => verse.key === key);
@@ -284,7 +281,7 @@ describe('Known alignment cases — resolved explicitly, never by a fallback', (
     },
   );
 
-  it('the five joined words are the only difference in word count between the two texts', () => {
+  it('the three joined words are the only difference in word count between the two texts', () => {
     const different = uthmani.filter((verse, index) => {
       const other = uthmaniMinimal[index];
       return splitVerseWords(verse.text).length !== splitVerseWords(other?.text ?? '').length;
@@ -292,13 +289,20 @@ describe('Known alignment cases — resolved explicitly, never by a fallback', (
     expect(different.map((verse) => verse.key)).toEqual(JOINED_WORDS.map((joined) => joined.key));
   });
 
-  it('thin space: word 4 of 2:72 keeps the thin space of its source and stays one word', () => {
-    const words = pageWords.filter((word) => word.verseKey === '2:72');
-    expect(words).toHaveLength(10);
-    expect(words[3]?.text).toContain(THIN_SPACE);
+  it('white space: no verse of either text holds anything but ordinary spaces between words', () => {
+    const otherWhiteSpace = /[^\S ]/u;
     expect(
-      uthmani.filter((verse) => verse.text.includes(THIN_SPACE)).map((verse) => verse.key),
-    ).toEqual(['2:72']);
+      uthmani.filter((verse) => otherWhiteSpace.test(verse.text)).map((verse) => verse.key),
+    ).toEqual([]);
+    expect(uthmaniMinimal.filter((verse) => otherWhiteSpace.test(verse.text))).toEqual([]);
+    expect(pageWords.filter((word) => word.verseKey === '2:72')).toHaveLength(10);
+  });
+
+  it('the Uthmani text holds no verse number and no no-break space left from its source', () => {
+    const leftover = /[\u00A0\u0660-\u0669]/u;
+    expect(uthmani.filter((verse) => leftover.test(verse.text)).map((verse) => verse.key)).toEqual(
+      [],
+    );
   });
 });
 

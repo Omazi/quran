@@ -282,16 +282,24 @@ function checkJuzAndHizb({ structure }, pageStarts) {
   );
 }
 
+/**
+ * The verse as stored must be the verse as the publisher prints it in `aya_text`, minus the
+ * two documented removals: the no-break space and verse number at the end, and the no-break
+ * space after the hizb sign. Written here a second time, on purpose, without the build's code.
+ */
+function publishedVerseText(printed) {
+  return printed.replace(/\u00A0[\u0660-\u0669]+$/u, '').replace(/^\u06DE\u00A0/u, '\u06DE');
+}
+
 /** The text on disk must be the text of the sources, character for character. */
 function checkTextIsTheSourceText({ integrity, uthmani, uthmaniMinimal }, sources) {
-  sources.uthmani.forEach((surah) => {
-    surah.verses.forEach((verse) => {
-      const key = `${surah.id}:${verse.id}`;
-      check(
-        uthmani[surah.id]?.[verse.id - 1] === verse.text,
-        `Uthmani ${key} differs from its source`,
-      );
-    });
+  check(sources.uthmani.length === EXPECTED.verses, 'The Uthmani source does not have 6236 rows');
+  sources.uthmani.forEach((row) => {
+    const key = `${row.sora}:${row.aya_no}`;
+    check(
+      uthmani[row.sora]?.[row.aya_no - 1] === publishedVerseText(row.aya_text),
+      `Uthmani ${key} differs from its source`,
+    );
   });
   sources.tanzil.surahs.forEach((surah) => {
     surah.ayat.forEach((ayah) => {
@@ -302,7 +310,7 @@ function checkTextIsTheSourceText({ integrity, uthmani, uthmaniMinimal }, source
       );
     });
   });
-  for (const name of ['quran.json', 'tanzil_simple.json']) {
+  for (const name of ['hafsData_v18.json', 'tanzil_simple.json']) {
     check(
       integrity.sources[name] === sources.checksums[name],
       `integrity.json was not generated from the current ${name}`,

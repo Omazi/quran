@@ -28,16 +28,20 @@ const surah = await quranRepository.getSurahVerses(18);
 
 ## Règles à connaître
 
-- **Le texte n'est jamais modifié.** Il est tel que la source le publie : le signe ۞ est
-  collé au premier mot de 199 versets, le signe ۩ au dernier mot de 15 versets.
+- **Le texte n'est jamais modifié ni normalisé.** Le texte uthmani est celui que publie le
+  complexe du roi Fahd (version 0.18) : le signe ۞ est collé au premier mot de 199 versets,
+  le signe ۩ au dernier mot de 15 versets.
+- **Le texte uthmani s'affiche avec sa police, et elle seule** (`fontFamily.quran`,
+  `assets/fonts`, décision D19). Certains signes n'ont le bon dessin que dans cette version
+  de cette police. Texte et police ne se remplacent qu'ensemble.
 - **Couper un verset en mots : `splitVerseWords` uniquement.** Les mots sont séparés par une
-  espace ordinaire. Le verset 2:72 contient une espace fine à l'intérieur d'un mot.
+  espace ordinaire ; la fonction refuse un texte qui donnerait un mot vide.
 - **Deux textes, aucun en écriture simple.** `uthmani` est le texte du mushaf.
   `uthmani-minimal` est le texte « Uthmani Minimal » de Tanzil : même orthographe, moins de
   signes. L'écriture simple (imlâ'î) demande une autre source.
-- **Cinq mots du texte uthmani en valent deux** pour la mise en page et pour le texte de
-  Tanzil (15:7, 27:20, 36:22, 37:164, 41:47). Ils comptent pour un mot. Détail dans
-  `docs/DATA_SOURCES.md`.
+- **Trois mots du texte uthmani en valent deux** pour la mise en page et pour le texte de
+  Tanzil (15:7, 27:20, 36:22) : l'éditeur les écrit sans espace. Ils comptent pour un mot.
+  Détail dans `docs/DATA_SOURCES.md`.
 - **Les pages du mushaf n'existent qu'en `uthmani`.** `getPage` ne prend pas d'écriture.
 - **Hizb et juz d'une page** : ceux de son premier verset. Le hizb suivant peut commencer
   plus bas sur la page ; elle appartient alors aux deux plages de `hizbPageRanges()`.

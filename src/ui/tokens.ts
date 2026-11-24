@@ -149,8 +149,8 @@ export const contrastThresholds = {
 export const fontFamily = {
   /** New York on iOS, the platform serif elsewhere. */
   serif: Platform.select({ ios: 'ui-serif', default: 'serif' }),
-  /** Quran text. */
-  quran: 'AmiriQuran_400Regular',
+  /** Quran text: the Hafs font of the King Fahd Complex, the one the text was published for (D19). */
+  quran: 'KFGQPCHafsUthmanic',
   /** Arabic titles (surah names). */
   quranTitle: 'Amiri_700Bold',
 } as const;

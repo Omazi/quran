@@ -3,8 +3,11 @@
  * starts) and cross-checks every piece against the other sources.
  *
  * Where each piece comes from:
- *   - surahs:      Uthmani source, checked against the Tanzil file and quran-meta;
- *   - page starts: the page layout (the pages the app displays);
+ *   - surahs:      names and revelation place from the Tanzil file (the publisher's file has
+ *                  no revelation place and writes its names for its own font), checked
+ *                  against the publisher's file and quran-meta;
+ *   - page starts: the page layout (the pages the app displays), checked against the page
+ *                  number the publisher of the Uthmani text gives to each verse;
  *   - hizb starts: quran-meta (every 4th quarter of hizb), checked against the ۞ signs
  *                  of the layout and of the Uthmani text;
  *   - juz starts:  every 2nd hizb, checked against quran-meta and the Tanzil file.
@@ -13,6 +16,7 @@ import {
   PAGES_STARTING_ELSEWHERE_IN_QURAN_META,
   QUARTER_START_DISAGREEMENTS,
 } from './declared.mjs';
+import { comparisonKey } from './comparison-key.mjs';
 import { fail } from './fail.mjs';
 import { VERSE_COUNT, verseKey } from './texts.mjs';
 
@@ -118,21 +122,21 @@ function assertPageStartDifferencesAreTheDeclaredOnes(layoutPageStarts, metaPage
 }
 
 export function buildStructure({ uthmani, tanzil, alignment, quranMeta }) {
-  const surahs = uthmani.surahs;
+  const surahs = tanzil.surahs;
   const meta = readQuranMeta(quranMeta, surahs);
 
   assertSameList('Verses per surah', {
-    'the Uthmani source': surahs.map((info) => info.verseCount),
-    'the Tanzil file': tanzil.surahs.map((info) => info.verseCount),
+    'the Uthmani source': uthmani.surahs.map((info) => info.verseCount),
+    'the Tanzil file': surahs.map((info) => info.verseCount),
     'quran-meta': meta.verseCounts,
   });
-  assertSameList('Arabic surah names', {
-    'the Uthmani source': surahs.map((info) => info.nameArabic),
-    'the Tanzil file': tanzil.surahs.map((info) => info.nameArabic),
+  // The publisher writes the names with vowel signs: the letters must be the same.
+  assertSameList('Arabic surah names (letters)', {
+    'the Uthmani source': uthmani.surahs.map((info) => comparisonKey(info.nameArabic)),
+    'the Tanzil file': surahs.map((info) => comparisonKey(info.nameArabic)),
   });
   assertSameList('Revelation place per surah', {
-    'the Uthmani source': surahs.map((info) => info.revelationPlace),
-    'the Tanzil file': tanzil.surahs.map((info) => info.revelationPlace),
+    'the Tanzil file': surahs.map((info) => info.revelationPlace),
     'quran-meta': meta.revelationPlaces,
   });
 
@@ -148,6 +152,10 @@ export function buildStructure({ uthmani, tanzil, alignment, quranMeta }) {
   if (alignment.pageStarts.length !== PAGE_COUNT) {
     fail(`Expected ${PAGE_COUNT} pages, found ${alignment.pageStarts.length}`);
   }
+  assertSameList('First verse of each page', {
+    'the page layout': alignment.pageStarts,
+    'the Uthmani source': uthmani.pageStarts,
+  });
   assertPageStartDifferencesAreTheDeclaredOnes(alignment.pageStarts, meta.pageStarts);
 
   const quarterStarts = settleQuarterStarts(meta.quarterStarts, alignment.quarterVerses);

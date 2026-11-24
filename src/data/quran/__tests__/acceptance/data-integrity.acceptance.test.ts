@@ -136,9 +136,9 @@ describe('Sources — obligations d’attribution livrées avec les données', (
     expect(notice).toContain('Permission is hereby granted, free of charge');
   });
 
-  it('credits the package of the Uthmani text', () => {
-    expect(notice).toContain('quran-json');
-    expect(notice).toContain('Risan Bagja Pradana');
+  it('credits the publisher of the Uthmani text', () => {
+    expect(notice).toContain('hafsData_v18.json');
+    expect(notice).toContain('King Fahd Glorious Quran Printing Complex');
   });
 });
 
@@ -441,7 +441,7 @@ describe('npm run data:verify et data:build (sur une copie hors du dépôt)', ()
     });
 
     it('a source archive of the tool replaced by other text: the verification does not pass', () => {
-      const archivePath = pathInCopy('tools', 'quran-data', 'sources', 'quran.json.gz');
+      const archivePath = pathInCopy('tools', 'quran-data', 'sources', 'hafsData_v18.json.gz');
       // as: the source is one JSON document; the test only changes a letter inside it.
       const altered = nodeZlib
         .gunzipSync(nodeFileSystem.readFileSync(archivePath))
@@ -452,7 +452,7 @@ describe('npm run data:verify et data:build (sur une copie hors du dépôt)', ()
     });
 
     it('a source archive that is no longer an archive: an explicit failure, not a crash', () => {
-      const archivePath = pathInCopy('tools', 'quran-data', 'sources', 'quran.json.gz');
+      const archivePath = pathInCopy('tools', 'quran-data', 'sources', 'hafsData_v18.json.gz');
       nodeFileSystem.writeFileSync(archivePath, 'not a gzip archive');
       const verification = verifyCopy();
       expect(verification.passed).toBe(false);
