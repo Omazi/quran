@@ -40,10 +40,8 @@ mode enfants.
   change quand on tourne la page, et un pageur de texte dessous (aujourd'hui chaque page
   porte sa propre scène, qui glisse avec le texte).
 
-- **Édition du mushaf** : la mise en page suivie est celle de l'édition de 1441 H. 25 pages
-  n'y commencent pas au même verset que dans le mushaf de Médine classique (pages 121-123,
-  145, 532-534, 565, 568, 570, 576, 584, 586, 588-590, 592-600). Quelle édition suivre ?
-  Dans tous les cas, ces pages sont à comparer à un mushaf imprimé avant toute sortie.
+- **Édition du mushaf** : tranché, édition de 1441 H (D17). Reste à comparer les 25 pages
+  qui diffèrent du mushaf classique à un exemplaire imprimé de cette édition.
 - **Police du Coran** : le texte uthmani emploie certains signes (tanwin, sajda) avec le
   sens que leur donnent les polices du Complexe du roi Fahd. Une police standard comme
   Amiri Quran en dessinera d'autres. Il faut la police qui correspond au texte

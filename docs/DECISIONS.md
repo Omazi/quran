@@ -101,3 +101,14 @@ l'appli est inclus dans les sauvegardes, et une copie du journal est gardée dan
 pour le cas « supprimer puis réinstaller », que la sauvegarde d'iOS ne couvre pas. Les
 comptes (lot 3) prendront le relais entre plateformes. Voir
 [specs/backup.md](specs/backup.md).
+
+## D17 — Édition du mushaf : 1441 H
+
+Décision du propriétaire (24 novembre 2026) : l'appli suit la mise en page de l'édition de
+1441 H, celle des données actuelles. 25 pages y diffèrent du mushaf de Médine classique ;
+elles restent à comparer à un exemplaire imprimé de cette édition avant toute sortie.
+
+## D18 — Compilation dans le cloud, installation par TestFlight
+
+Le propriétaire a un compte développeur Apple et pas de Mac. Les compilations iOS se font
+par Expo EAS, l'installation sur son iPhone par TestFlight.
