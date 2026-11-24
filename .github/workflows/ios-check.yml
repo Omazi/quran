@@ -1,0 +1,148 @@
+name: iOS check
+
+# Compiles the app for iPhone on a Mac hosted by GitHub. No secret is used and nothing is sent to
+# Apple: the build is unsigned. Nobody on the project has a Mac, so this is the only place where
+# the native build is verified (docs/BUILD.md).
+#
+# Two jobs:
+#  - "iPhone build" says whether the app compiles. It decides the result of the workflow.
+#  - "First screen" starts the app in the iPhone simulator and keeps pictures of what it shows.
+#    It is reported, never blocking: the pictures are there to be looked at.
+#
+# There is deliberately no `pull_request` trigger: the repository is public, and a pull request
+# from a stranger must not start Mac jobs here.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-check-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  EXPO_NO_TELEMETRY: '1'
+
+jobs:
+  build:
+    name: iPhone build
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Select the newest released Xcode and record versions
+        run: bash tools/ci/select-xcode.sh
+      - run: npm ci
+      - name: Generate the iOS project and install its pods
+        run: npx expo prebuild --platform ios
+      - name: Build for iPhone (unsigned)
+        run: |
+          set -o pipefail
+          mkdir -p build
+          WORKSPACE=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          echo "workspace: $WORKSPACE, scheme: $SCHEME"
+          xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release \
+            -destination 'generic/platform=iOS' -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO build > build/xcodebuild.log 2>&1 \
+            || { grep -E "error:" build/xcodebuild.log | sort -u | cut -c1-400 | head -60; tail -60 build/xcodebuild.log; exit 1; }
+          grep -E "BUILD SUCCEEDED" build/xcodebuild.log
+      - name: Check what the app contains
+        run: |
+          APP=$(find build/DerivedData/Build/Products/Release-iphoneos -maxdepth 1 -name "*.app" | head -1)
+          echo "app: $APP ($(du -sh "$APP" | cut -f1))"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")" = "com.omazi.quran"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :MinimumOSVersion' "$APP/Info.plist"
+          # The JavaScript of the app, compiled into the bundle.
+          test -s "$APP/main.jsbundle"
+          # The Quran font travels with the app: without it the text would fall back to a system font.
+          find "$APP" -name "KFGQPC-HAFS-Uthmanic-Script-v0.18.ttf" | grep -q .
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: ios-build-log
+          path: build/xcodebuild.log
+          if-no-files-found: warn
+          retention-days: 7
+
+  first-screen:
+    name: First screen
+    runs-on: macos-26
+    timeout-minutes: 60
+    # Reported, not blocking: see the header.
+    continue-on-error: true
+    env:
+      # The test build shows the preview of the garden's states (src/features/home/state-preview.ts).
+      EXPO_PUBLIC_STATE_PREVIEW: '1'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Select the newest released Xcode and record versions
+        run: bash tools/ci/select-xcode.sh
+      - run: npm ci
+      - name: Generate the iOS project and install its pods
+        run: npx expo prebuild --platform ios
+      - name: Start an iPhone simulator
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 tools/ci/pick-simulator.py)
+          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          sleep 20   # the home screen is still settling right after the start
+          xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4 || true
+      - name: Build for the simulator
+        run: |
+          set -o pipefail
+          mkdir -p build/screens
+          WORKSPACE=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release \
+            -destination "platform=iOS Simulator,id=$SIM_UDID" -derivedDataPath build/SimData \
+            build > build/sim-build.log 2>&1 \
+            || { grep -E "error:" build/sim-build.log | sort -u | cut -c1-400 | head -60; tail -60 build/sim-build.log; exit 1; }
+      - name: Open the app and keep a picture of its first screen
+        run: |
+          APP=$(find build/SimData/Build/Products/Release-iphonesimulator -maxdepth 1 -name "*.app" | head -1)
+          xcrun simctl install "$SIM_UDID" "$APP"
+          # The very first launch of an app on a fresh simulator can take a minute: done once, unrecorded.
+          xcrun simctl launch "$SIM_UDID" com.omazi.quran || true
+          sleep 40
+          xcrun simctl terminate "$SIM_UDID" com.omazi.quran || true
+          shot() {  # name, appearance, language, locale
+            xcrun simctl ui "$SIM_UDID" appearance "$2"
+            sleep 3
+            xcrun simctl launch "$SIM_UDID" com.omazi.quran -AppleLanguages "($3)" -AppleLocale "$4"
+            sleep 15
+            xcrun simctl io "$SIM_UDID" screenshot "build/screens/$1.png"
+            xcrun simctl terminate "$SIM_UDID" com.omazi.quran || true
+          }
+          shot 1-francais-clair light fr fr_FR
+          shot 2-francais-sombre dark fr fr_FR
+          shot 3-anglais-clair light en en_US
+          # Arabic last: the app restarts itself once to mirror its layout, so the picture is taken
+          # on the second launch.
+          xcrun simctl launch "$SIM_UDID" com.omazi.quran -AppleLanguages "(ar)" -AppleLocale ar_SA || true
+          sleep 15
+          xcrun simctl terminate "$SIM_UDID" com.omazi.quran || true
+          shot 4-arabe-clair light ar ar_SA
+          ls -la build/screens
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: ios-first-screen
+          path: |
+            build/screens/*.png
+            build/sim-build.log
+          if-no-files-found: warn
+          retention-days: 14

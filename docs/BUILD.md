@@ -1,66 +1,77 @@
 # Compiler l'appli et l'installer sur un iPhone, sans Mac
 
-L'appli se compile dans le cloud d'Expo (EAS Build) et arrive sur l'iPhone par TestFlight.
-Tout se lance depuis un terminal, sous Linux comme ailleurs.
+Personne sur le projet n'a de Mac. L'appli se compile sur un Mac hébergé par GitHub (GitHub
+Actions) et arrivera sur l'iPhone par TestFlight. Pas de compte Expo, pas de service de
+compilation d'Expo (décision D24).
 
-**Rien de ceci n'a pu être essayé dans l'environnement de développement** : ni la
-compilation native, ni l'envoi à Apple. La première compilation peut échouer ; dans ce
-cas, garder le journal d'erreur.
+La méthode est celle de DishPlay, l'autre appli du propriétaire (`Omazi/dishplay3d`,
+`docs/TESTFLIGHT.md`), qui compile, signe et envoie sur TestFlight de cette façon.
 
-## Ce qu'il faut
+## Où on en est
 
-- Node.js 22 et git.
-- Un compte Expo, gratuit : <https://expo.dev>. Le forfait gratuit limite le nombre de
-  compilations par mois.
-- Le compte développeur Apple.
-- L'appli TestFlight sur l'iPhone.
+| Étape                                | État                                                     |
+| ------------------------------------ | -------------------------------------------------------- |
+| Assembler le JavaScript pour iOS     | Vérifié le 24 novembre 2026 (1 605 modules, sans erreur) |
+| Générer le projet iOS natif          | Vérifié le 24 novembre 2026                              |
+| Compiler pour iPhone, sans signature | Script prêt (`ios-check.yml`), **jamais encore exécuté** |
+| Ouvrir l'appli dans le simulateur    | Script prêt (même fichier), **jamais encore exécuté**    |
+| Signer et envoyer sur TestFlight     | **À écrire**, le jour où le propriétaire le demande      |
 
-## La première fois
+Les deux premières lignes ont été vérifiées sous Linux (`npx expo export --platform ios`,
+`npx expo prebuild --platform ios --no-install`). Tout le reste a besoin d'un Mac.
 
-```sh
-git clone https://github.com/Omazi/quran.git
-cd quran
-npm ci
-npx eas-cli@latest login
-npx eas-cli@latest init
-```
+## La vérification de compilation
 
-`init` crée le projet côté Expo et inscrit son identifiant dans `app.json`
-(`extra.eas.projectId`). **Enregistrer ce changement dans le dépôt** :
+`.github/workflows/ios-check.yml`, à chaque push sur `main` ou à la main (Actions › iOS
+check › Run workflow). Aucun secret, rien n'est envoyé à Apple.
 
-```sh
-git add app.json && git commit -m "Link the Expo project" && git push
-```
+- **iPhone build** : génère le projet iOS, installe les pods, compile pour iPhone sans
+  signature, puis vérifie le contenu de l'appli (identifiant `com.omazi.quran`, JavaScript
+  embarqué, police du Coran présente). C'est lui qui décide du résultat.
+- **First screen** : compile pour le simulateur, ouvre l'appli et garde une image de son
+  premier écran en français (clair et sombre), en anglais et en arabe. Les images sont dans
+  l'artefact `ios-first-screen` de l'exécution. Il ne bloque jamais : les images sont faites
+  pour être regardées.
 
-## Compiler et envoyer sur TestFlight
+Le Xcode utilisé est le plus récent installé sur la machine, hors versions bêta
+(`tools/ci/select-xcode.sh`) ; le journal de chaque exécution dit lequel.
 
-```sh
-npx eas-cli@latest build --platform ios --profile testflight --auto-submit
-```
+**Pourquoi le dépôt est public** : sur un dépôt privé, GitHub refusait de démarrer la moindre
+machine (paiement ou plafond de dépense du compte). Sur un dépôt public, les machines
+standard sont gratuites. Si le dépôt redevient privé, chaque compilation sur Mac compte dix
+fois son temps dans le quota du compte : ne plus la lancer à chaque push.
 
-La commande pose quelques questions la première fois :
+## L'envoi sur TestFlight (plus tard)
 
-- la connexion à Apple (identifiant Apple et code de validation) : c'est EAS qui la
-  demande, sur ta machine ; elle sert à créer le certificat et le profil de signature ;
-- laisser EAS créer et gérer le certificat, le profil et la clé d'App Store Connect.
+Rien n'est encore écrit. Le jour venu, on reprend les scripts de DishPlay
+(`ios/ci/install-signing.py`, `tools/asc_profile.py`, `tools/asc_testflight.py`,
+`ios-testflight.yml`), adaptés à une appli Expo.
 
-Ensuite la compilation tourne chez Expo, puis le résultat part chez Apple. Le premier
-envoi crée la fiche de l'appli dans App Store Connect.
+Ce qui existe déjà côté Apple et se réutilise, parce que cela vaut pour tout le compte : la
+clé de l'API App Store Connect et le certificat de distribution. Ce qui est propre à cette
+appli : sa fiche dans App Store Connect et son profil de signature.
 
-## Installer sur l'iPhone
+À faire par le propriétaire, parce que cela passe par ses identifiants :
 
-1. Dans App Store Connect, onglet TestFlight de l'appli : créer un groupe de test interne
-   et s'y ajouter.
-2. Attendre que la version soit traitée par Apple, puis l'ouvrir dans TestFlight.
+1. Créer la fiche de l'appli dans App Store Connect (Apps › + › New App), avec l'identifiant
+   `com.omazi.quran`. **Cet identifiant devient définitif à ce moment-là.**
+2. Ranger dans le dépôt `Omazi/quran` (Settings › Secrets and variables › Actions) les mêmes
+   valeurs que dans `dishplay3d`, sous les mêmes noms :
 
-## Les deux profils
+   | Type     | Nom                                                                                         |
+   | -------- | ------------------------------------------------------------------------------------------- |
+   | Variable | `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_ISSUER_ID`                                          |
+   | Secret   | `APP_STORE_CONNECT_API_KEY`, `IOS_DISTRIBUTION_P12_BASE64`, `IOS_DISTRIBUTION_P12_PASSWORD` |
 
-| Profil       | Pour quoi          | Particularité                                                                                         |
-| ------------ | ------------------ | ----------------------------------------------------------------------------------------------------- |
-| `testflight` | Les essais         | Affiche en bas de l'onglet Jardin la section « Aperçu » qui fait passer le jardin d'un état à l'autre |
-| `production` | La version publiée | Sans cet aperçu                                                                                       |
+   Les variables se relisent dans les réglages de `dishplay3d`. Les secrets ne se relisent
+   pas : il faut les fichiers d'origine (`AuthKey_….p8`, le `.p12` et son mot de passe). S'ils
+   sont perdus, on crée une deuxième clé chez Apple (l'ancienne continue de servir à DishPlay)
+   et un nouveau certificat.
 
-## Quoi regarder en premier
+Ne jamais copier une clé, un certificat ou un mot de passe dans une conversation ni dans le
+dépôt.
+
+## Quoi regarder en premier sur l'iPhone
 
 Liste tirée de la relecture design, dans l'ordre :
 
@@ -74,7 +85,15 @@ Liste tirée de la relecture design, dans l'ordre :
 5. La taille de texte au maximum.
 6. Le téléphone en arabe : redémarrage au premier lancement, onglets et pages en miroir.
 
+## Version d'essai et version publiée
+
+Une compilation faite avec la variable `EXPO_PUBLIC_STATE_PREVIEW=1` affiche en bas de
+l'onglet Jardin la section « Aperçu », qui fait passer le jardin d'un état à l'autre. La
+version publiée se compile sans cette variable et ne contient pas cet aperçu
+(`src/features/home/state-preview.ts`).
+
 ## Ce qui n'est pas encore activé
 
 - La copie de la progression dans iCloud : voir `docs/specs/backup.md`, « Activation ».
-- Les identifiants `com.omazi.quran` et le nom « Quran App » sont provisoires.
+- L'identifiant `com.omazi.quran` et le nom « Quran App » sont provisoires tant que la fiche
+  de l'appli n'est pas créée.

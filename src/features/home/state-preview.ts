@@ -3,8 +3,8 @@
  * choose which state the home screen shows before the reader exists.
  *
  * The door is open in development (`__DEV__`) and in a build made with the variable
- * `EXPO_PUBLIC_STATE_PREVIEW=1`: the `testflight` build profile sets it, the `production` profile
- * does not. Both conditions are known when the bundle is built: Expo writes the value of an
+ * `EXPO_PUBLIC_STATE_PREVIEW=1`: a test build sets it, the published build does not
+ * (docs/BUILD.md). Both conditions are known when the bundle is built: Expo writes the value of an
  * `EXPO_PUBLIC_` variable into the code, so a bundle built without it loses the whole branch
  * below, and the preview module with it. The condition must stay written out here, next to the
  * `require`: moved behind a function or another module, the bundler could no longer drop it.

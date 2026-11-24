@@ -113,6 +113,8 @@ elles restent à comparer à un exemplaire imprimé de cette édition avant tout
 Le propriétaire a un compte développeur Apple et pas de Mac. Les compilations iOS se font
 par Expo EAS, l'installation sur son iPhone par TestFlight.
 
+Le moyen de compiler est remplacé par D24 ; l'installation par TestFlight reste.
+
 ## D19 — Police du Coran : Hafs du Complexe du roi Fahd, telle quelle
 
 Décision du propriétaire (24 novembre 2026). Le texte uthmani emploie des signes dont le
@@ -159,3 +161,22 @@ réglage permet de les cacher.
 Conséquence pour le code : la variante du jardin ne dépend plus que du numéro de khatma
 (plus de graine propre à l'utilisateur), et chaque jardin a son propre catalogue de 60
 éléments.
+
+## D24 — Compilation sur les Mac de GitHub, dépôt public, pas de compte Expo
+
+Décisions du propriétaire (24 novembre 2026).
+
+- **Pas de compte Expo.** Il ne veut pas avoir à gérer ce service : on n'utilise pas la
+  compilation dans le cloud d'Expo (EAS). L'appli reste écrite avec Expo (un seul code pour
+  iPhone et Android, D1) : c'est l'outil, pas le service.
+- **Compilation sur un Mac hébergé par GitHub** (GitHub Actions), comme pour son autre appli,
+  DishPlay (`Omazi/dishplay3d`), dont on reprend la méthode et les scripts : signature avec le
+  certificat de distribution du compte, envoi par une clé de l'API App Store Connect, valeurs
+  rangées dans les secrets GitHub. La clé et le certificat valent pour tout le compte Apple,
+  donc pour cette appli aussi ; seuls la fiche de l'appli et son profil lui sont propres.
+- **Le dépôt devient public.** Sur un dépôt privé, GitHub refusait de démarrer la moindre
+  machine (paiement ou plafond de dépense du compte) ; sur un dépôt public, les machines
+  standard sont gratuites. Conséquence : tout ce qui est poussé est lisible par tous. Voir
+  `docs/SECURITY.md`, « Dépôt public ».
+- **Le déploiement sur TestFlight viendra plus tard**, à son signal. D'ici là, chaque push
+  est compilé pour iPhone, sans signature (`docs/BUILD.md`).

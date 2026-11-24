@@ -27,9 +27,32 @@
 - `npm audit --omit=dev` en intégration continue (échec dès une faille élevée).
 - Revue de sécurité par un agent dédié avant chaque push (secrets, dépendances, entrées).
 
+## Dépôt public
+
+Le dépôt est public (D24). Tout ce qui y est poussé, historique compris, est lisible par tous.
+
+- Aucun secret dans le dépôt, jamais : ni clé, ni certificat, ni mot de passe, ni jeton. Les
+  clés Apple ne vivent que dans les secrets de GitHub, que personne ne peut relire.
+- L'historique a été passé en revue avant l'ouverture (24 novembre 2026, 25 commits) : aucun
+  secret, aucune adresse personnelle.
+- La compilation sur Mac (`ios-check.yml`) ne se lance jamais sur une demande de fusion.
+  Les vérifications sous Linux (`ci.yml`) s'y lancent, avec un jeton en lecture seule et sans
+  aucun secret. Un script qui lit un secret ne doit jamais se lancer sur une demande de fusion,
+  ni publier son journal : les artefacts d'un dépôt public sont publics.
+- Les versions des étapes fournies par GitHub sont figées par leur empreinte.
+- Les fichiers venus de tiers (texte et police du Coran) sont republiés tels quels, avec leur
+  mention : voir `docs/DATA_SOURCES.md`. Leurs conditions de rediffusion restent à éclaircir.
+
 ## Signaler un problème
 
 Écrire au propriétaire du dépôt, sans ouvrir de ticket public.
+
+Deux réglages GitHub restent à activer par le propriétaire, maintenant que le dépôt est public :
+
+- Settings › Actions › General : demander son accord avant de lancer les scripts sur la
+  demande de fusion de tout contributeur extérieur.
+- Settings › Security : le signalement privé des failles, pour qu'un inconnu ait un moyen de
+  prévenir sans rien publier.
 
 ## Sauvegarde et restauration de la progression
 
