@@ -10,7 +10,10 @@
     "ios": {
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "app.quran.provisional",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "RCTAsyncStorageExcludeFromBackup": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +24,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "app.quran.provisional",
-      "allowBackup": false,
+      "allowBackup": true,
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.READ_EXTERNAL_STORAGE",

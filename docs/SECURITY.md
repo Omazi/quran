@@ -31,15 +31,22 @@
 
 Écrire au propriétaire du dépôt, sans ouvrir de ticket public.
 
-## Sauvegardes de l'appareil
+## Sauvegarde et restauration de la progression
 
-Le journal de lecture révèle une pratique religieuse : il reste sur le téléphone.
+Décision du propriétaire : **changer de téléphone, ou supprimer l'appli puis la
+retélécharger, doit ramener la personne là où elle en était** (D16).
 
-- iOS : le dossier où il est rangé est exclu des sauvegardes par défaut.
-- Android : la sauvegarde de l'appli est désactivée (`allowBackup: false`).
+Le journal de lecture révèle une pratique religieuse. Il ne quitte le téléphone que vers
+les sauvegardes personnelles de la personne (son compte Apple ou Google), jamais vers un
+serveur de l'appli tant que les comptes (lot 3) n'existent pas.
 
-Conséquence assumée : changer de téléphone fait repartir de zéro tant que la
-synchronisation par compte (lot 3) n'existe pas. À revoir avec le propriétaire.
+| Cas                             | Android                                                | iOS                                                                                                                                               |
+| ------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Nouveau téléphone               | Sauvegarde automatique de Google (`allowBackup: true`) | Sauvegarde iCloud ou transfert direct : le stockage de l'appli y est inclus (`RCTAsyncStorageExcludeFromBackup: false`)                           |
+| Suppression puis réinstallation | Restauré à l'installation par la sauvegarde de Google  | **Pas couvert par la sauvegarde** : iOS efface les données d'une appli supprimée. Il faut une copie dans iCloud (à faire, voir `specs/backup.md`) |
+
+Limites à connaître : tout cela dépend des réglages de la personne (sauvegarde Google ou
+iCloud activée). Rien n'est vérifié sur un appareil.
 
 ## Notifications
 

@@ -93,3 +93,11 @@ Pour l'interface, on suit les skills de design demandés par le propriétaire. O
 Fonds et textes du système, accent bleu d'eau, titres en New York, clair et sombre.
 Trois directions sont décrites dans [design/brand-spec.md](design/brand-spec.md) ; le
 propriétaire choisit.
+
+## D16 — La progression survit au changement de téléphone et à la réinstallation
+
+Décision du propriétaire. Android : sauvegarde automatique de Google. iOS : le stockage de
+l'appli est inclus dans les sauvegardes, et une copie du journal est gardée dans iCloud
+pour le cas « supprimer puis réinstaller », que la sauvegarde d'iOS ne couvre pas. Les
+comptes (lot 3) prendront le relais entre plateformes. Voir
+[specs/backup.md](specs/backup.md).
