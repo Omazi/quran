@@ -1,5 +1,4 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
-import { PlatformColor } from 'react-native';
 
 import {
   createInertNotificationPermissions,
@@ -11,9 +10,12 @@ import {
   LARGEST_FONT_SCALE,
   directionDependentStyles,
   fixedHeightsAroundText,
+  iosPaletteColor,
   resetDeviceConditions,
   setDeviceConditions,
+  styleOf,
   touchTargetHeight,
+  withDescendants,
 } from '@/ui/test-support/environment';
 
 import { SettingsScreen } from '../settings-screen';
@@ -164,11 +166,17 @@ describe('settings screen', () => {
     expect(screen.getByTestId('settings')).toBeOnTheScreen();
   });
 
-  it('sits on the grouped background, as a screen that shows a grouped list', async () => {
+  it('sits on the warm canvas of the app, its groups on white cards, like the profile that opens it', async () => {
     await renderSettings();
     expect(screen.getByTestId('settings')).toHaveStyle({
-      backgroundColor: PlatformColor('systemGroupedBackground'),
+      backgroundColor: iosPaletteColor('canvas'),
     });
+    const surface = JSON.stringify(iosPaletteColor('surface'));
+    const cards = withDescendants(screen.getByTestId('settings-list')).filter(
+      (element) => JSON.stringify(styleOf(element).backgroundColor) === surface,
+    );
+    // Language, daily goal, reminders, introduction.
+    expect(cards).toHaveLength(4);
   });
 });
 

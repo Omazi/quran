@@ -1,24 +1,28 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { PAGE_COUNT } from '@/domain/quran';
 import type { StatsPeriod } from '@/domain/stats';
 import {
+  ActionButton,
   AppText,
   BarChart,
-  ButtonRow,
-  ChoiceRow,
-  ContentRow,
+  Card,
   Icon,
-  LabelRow,
-  ListRow,
-  ListSection,
+  IconTile,
   ProgressIndicator,
+  ProgressRing,
+  SectionHeader,
   SegmentedChoice,
+  layout,
+  radius,
   spacing,
+  stateOpacity,
+  useColors,
   type BarChartBar,
-  type IconSymbol,
 } from '@/ui';
 
+import { FIGURE_SYMBOLS, PROFILE_SYMBOLS } from './config';
 import {
   formatDayLong,
   formatDayMedium,
@@ -41,12 +45,6 @@ import {
 } from './stats-model';
 import type { ProfileStatsActions, ProfileStatsModel } from './use-profile-stats';
 
-const EMPTY_SYMBOL: IconSymbol = { ios: 'chart.bar', android: 'bar_chart' };
-const FAILED_SYMBOL: IconSymbol = { ios: 'exclamationmark.circle', android: 'error' };
-// The garden still growing, and the gardens completed (D23: one khatma, one garden).
-const KHATMA_IN_PROGRESS_SYMBOL: IconSymbol = { ios: 'leaf', android: 'eco' };
-const KHATMA_COMPLETE_SYMBOL: IconSymbol = { ios: 'checkmark.seal', android: 'verified' };
-
 /** In a month of days, the days that carry a label: a week apart, from the first. */
 const MONTH_TICK_EVERY_DAYS = 7;
 
@@ -55,66 +53,74 @@ export interface StatsSectionsProps {
   actions: ProfileStatsActions;
   /** The next step of a blank profile: opens the reader. */
   onRead: () => void;
-  /**
-   * The person's garden is shown right above: a blank profile then needs no symbol of its own,
-   * the bare garden already says it.
-   */
-  hasGardenAbove: boolean;
 }
 
 /**
- * The statistics of the profile, the signature of the tab (docs/specs/stats.md, section 3): the
- * period, the hasanat estimate told as one figure with its source, the daily evolution of the
- * figure the person picks, the other figures, and each khatma. Sections of the system's grouped
- * list (lists-and-tables.md), in the order of importance (layout.md › Visual hierarchy). Place
- * it in a `GroupedList`.
+ * The statistics of the profile, the signature of the tab after the garden (docs/specs/stats.md,
+ * section 3), in the visual language of the validated mockups (white cards on the warm canvas).
+ *
+ * One card, "Le sélecteur" of the wireframes: the period (the system's segmented control,
+ * segmented-controls.md › Mobile), then the figure the person follows written large with the
+ * sentence that says what matters (charts.md › Descriptive content), the chart of that figure,
+ * and the list of every figure of the period, which is also the choice of what the chart follows
+ * (charting-data.md › Maintain continuity among multiple charts that use the same data). Every
+ * value is on screen without a touch (charts.md › Best practices). Then each khatma, as the
+ * garden it grows.
  */
-export function StatsSections({ model, actions, onRead, hasGardenAbove }: StatsSectionsProps) {
+export function StatsSections({ model, actions, onRead }: StatsSectionsProps) {
   const { t } = useTranslation('profile');
   const { t: tHome } = useTranslation('home');
   if (model.status === 'loading') {
     return (
-      <ListSection isBare>
-        <ContentRow>
-          <View style={styles.centered}>
-            <ProgressIndicator accessibilityLabel={t('loading')} testID="profile-stats-loading" />
-          </View>
-        </ContentRow>
-      </ListSection>
+      <Card tone="raised">
+        <View style={styles.centered}>
+          <ProgressIndicator accessibilityLabel={t('loading')} testID="profile-stats-loading" />
+        </View>
+      </Card>
     );
   }
   if (model.status === 'failed') {
     return (
-      <StatsMessage
-        symbol={FAILED_SYMBOL}
-        title={t('failed.title')}
-        description={t('failed.description')}
-        testID="profile-stats-failed"
-      />
+      <Card tone="raised" testID="profile-stats-failed">
+        <View style={styles.message}>
+          <Icon symbol={PROFILE_SYMBOLS.failed} textStyle="title1" color="muted" />
+          <AppText variant="headline" align="center">
+            {t('failed.title')}
+          </AppText>
+          <AppText color="muted" align="center">
+            {t('failed.description')}
+          </AppText>
+        </View>
+      </Card>
     );
   }
-  const { stats, period, metric } = model;
+  const { stats, period, metric, dailyGoalPages } = model;
   if (!stats.hasAnything) {
     // A blank screen gives its next step, with a button to take it (writing.md › Provide clear
-    // next steps on any blank screens). Same action as on the home screen, so the same name
+    // next steps on any blank screens). Same action and same name as on the home screen
     // (brand-spec, section 3, Voix): it opens the reader where the person resumes.
     return (
-      <>
-        <StatsMessage
-          symbol={hasGardenAbove ? undefined : EMPTY_SYMBOL}
-          title={t('empty.title')}
-          description={t('empty.description')}
-          testID="profile-stats-empty"
+      <Card tone="raised" testID="profile-stats-empty">
+        <View style={styles.message}>
+          <AppText variant="headline" align="center">
+            {t('empty.title')}
+          </AppText>
+          <AppText color="muted" align="center">
+            {t('empty.description')}
+          </AppText>
+        </View>
+        <ActionButton
+          label={tHome('actions.read')}
+          symbol={PROFILE_SYMBOLS.drop}
+          onPress={onRead}
+          testID="profile-read"
         />
-        <ListSection>
-          <ButtonRow label={tHome('actions.read')} onPress={onRead} testID="profile-read" />
-        </ListSection>
-      </>
+      </Card>
     );
   }
   return (
     <>
-      <ListSection>
+      <Card tone="raised" testID="profile-stats">
         <SegmentedChoice<StatsPeriod>
           label={t('periods.label')}
           options={STATS_PERIODS.map((value) => ({ value, label: t(`periods.${value}`) }))}
@@ -122,92 +128,114 @@ export function StatsSections({ model, actions, onRead, hasGardenAbove }: StatsS
           onChange={actions.selectPeriod}
           testID="profile-period"
         />
-      </ListSection>
-      <HasanatHeadline stats={stats} period={period} />
-      <ChartSections chart={stats.chart} metric={metric} onChangeMetric={actions.selectMetric} />
-      <FiguresSection stats={stats} />
-      <KhatmasSection khatmas={stats.khatmas} />
+        <Hero stats={stats} period={period} metric={metric} />
+        <Chart chart={stats.chart} metric={metric} />
+        <Figures stats={stats} metric={metric} onSelect={actions.selectMetric} />
+        <View style={styles.notes}>
+          <AppTime stats={stats} />
+          <AppText variant="footnote" color="muted" testID="profile-hasanat-note">
+            {t('hasanat.note')}
+          </AppText>
+        </View>
+      </Card>
+      <Khatmas khatmas={stats.khatmas} dailyGoalPages={dailyGoalPages} />
     </>
   );
 }
 
-/**
- * Nothing to count yet, or the counts could not be made: a symbol, a title and one sentence,
- * the shape of the system's empty state (SwiftUI Pro, design.md › Standard system styling),
- * composed here because the system view cannot sit inside a row of the list.
- */
-function StatsMessage({
-  symbol,
-  title,
-  description,
-  testID,
-}: {
-  /** Left out where a picture right above already plays its part. */
-  symbol?: IconSymbol;
-  title: string;
-  description: string;
-  testID: string;
-}) {
-  return (
-    <ListSection isBare>
-      <ContentRow>
-        <View style={styles.message} testID={testID}>
-          {symbol === undefined ? null : (
-            <Icon symbol={symbol} textStyle="largeTitle" color="secondaryLabel" />
-          )}
-          <AppText variant="headline" align="center">
-            {title}
-          </AppText>
-          <AppText color="secondaryLabel" align="center">
-            {description}
-          </AppText>
-        </View>
-      </ContentRow>
-    </ListSection>
-  );
-}
-
-/**
- * The one figure told large: the hasanat estimate, in the serif of the titles. Its source and
- * the reminder that Allah alone knows the reward sit right under it, never apart from it
- * (docs/specs/stats.md: always an estimate, always with its source).
- */
-function HasanatHeadline({ stats, period }: { stats: ProfileStats; period: StatsPeriod }) {
-  const { t, i18n } = useTranslation('profile');
-  const value = formatNumber(stats.counts.hasanatEstimate, i18n.language);
-  return (
-    <ListSection isBare>
-      <ContentRow>
-        <View style={styles.headline} testID="profile-hasanat">
-          <View
-            accessible
-            accessibilityLabel={`${t(`hasanat.caption.${period}`)}. ${t('hasanat.valueSpoken', { value })}`}
-          >
-            <AppText color="secondaryLabel">{t(`hasanat.caption.${period}`)}</AppText>
-            <AppText variant="displayTitle" accessibilityRole="text" testID="profile-hasanat-value">
-              {stats.counts.hasanatEstimate === 0 ? value : t('hasanat.value', { value })}
-            </AppText>
-          </View>
-          <AppText variant="footnote" color="secondaryLabel" testID="profile-hasanat-note">
-            {t('hasanat.note')}
-          </AppText>
-        </View>
-      </ContentRow>
-    </ListSection>
-  );
-}
-
-/** A value of a figure, as written on the chart and in its summary. */
+/** A value of a figure, as written and as VoiceOver says it. */
 function useMetricValue() {
   const { t, i18n } = useTranslation('profile');
+  const number = (value: number) => formatNumber(value, i18n.language);
   return {
-    written: (metric: StatsMetric, value: number) =>
-      metric === 'readingTime' ? formatDuration(value, t) : formatNumber(value, i18n.language),
-    spoken: (metric: StatsMetric, value: number) =>
-      metric === 'readingTime'
-        ? formatDuration(value, t, true)
-        : formatNumber(value, i18n.language),
+    /** As written in the chart and its summary: no sign of estimate there. */
+    plain: (metric: StatsMetric, value: number) =>
+      metric === 'readingTime' ? formatDuration(value, t) : number(value),
+    /** As written as a figure: the hasanat carry the sign of an estimate. */
+    written: (metric: StatsMetric, value: number) => {
+      if (metric === 'readingTime') return formatDuration(value, t);
+      if (metric === 'hasanat' && value > 0) return t('hasanat.value', { value: number(value) });
+      return number(value);
+    },
+    spoken: (metric: StatsMetric, value: number) => {
+      if (metric === 'readingTime') return formatDuration(value, t, true);
+      if (metric === 'hasanat' && value > 0) {
+        return t('figures.hasanatSpoken', { value: number(value) });
+      }
+      return number(value);
+    },
   };
+}
+
+/** The value of each figure in the period. Reading time is in seconds. */
+function valueOf(stats: ProfileStats, metric: StatsMetric): number {
+  switch (metric) {
+    case 'hasanat':
+      return stats.counts.hasanatEstimate;
+    case 'verses':
+      return stats.counts.verses;
+    case 'words':
+      return stats.counts.words;
+    case 'pages':
+      return stats.counts.pages;
+    case 'readingTime':
+      return stats.time.reader;
+  }
+}
+
+function dateOf(chart: StatsChart, bar: ChartBar, language: string): string {
+  return chart.unit === 'month'
+    ? formatMonthLong(bar.start, language)
+    : formatDayLong(bar.start, language);
+}
+
+/**
+ * The figure followed, written large in the serif of the titles: what it is and over which
+ * period, its value, and the sentence that gives the chart's main message before the chart
+ * (charts.md › Descriptive content; charting-data.md › Aid comprehension by adding descriptive
+ * text). The name and the value are read as one element.
+ */
+function Hero({
+  stats,
+  period,
+  metric,
+}: {
+  stats: ProfileStats;
+  period: StatsPeriod;
+  metric: StatsMetric;
+}) {
+  const { t, i18n } = useTranslation('profile');
+  const value = useMetricValue();
+  const caption = t(`hero.caption.${metric}.${period}`);
+  const amount = valueOf(stats, metric);
+  const { chart } = stats;
+  const summary =
+    chart.best === null
+      ? t('chart.nothingYet')
+      : t(chart.unit === 'month' ? 'chart.bestMonth' : 'chart.bestDay', {
+          date: dateOf(chart, chart.best, i18n.language),
+          value: value.plain(metric, chart.best.value),
+        });
+  return (
+    <View style={styles.hero} testID="profile-hero">
+      <View accessible accessibilityLabel={`${caption}, ${value.spoken(metric, amount)}`}>
+        <AppText variant="subheadEmphasized" color="actionTint">
+          {caption}
+        </AppText>
+        <AppText
+          variant="largeTitle"
+          color="heading"
+          accessibilityRole="text"
+          testID="profile-hero-value"
+        >
+          {value.written(metric, amount)}
+        </AppText>
+      </View>
+      <AppText variant="footnote" color="muted" testID="profile-chart-summary">
+        {summary}
+      </AppText>
+    </View>
+  );
 }
 
 function tickLabel(chart: StatsChart, bar: ChartBar, index: number, language: string) {
@@ -217,30 +245,16 @@ function tickLabel(chart: StatsChart, bar: ChartBar, index: number, language: st
 }
 
 /**
- * The daily evolution, right under the headline figure: a title and, as its subtitle, the
- * sentence that says what matters before the chart shows it, as Weather does (charts.md ›
- * Descriptive content; charting-data.md › Aid comprehension by adding descriptive text), one bar
- * chart, and under it the menu that picks the figure it follows (the system's pop-up button,
- * pop-up-buttons.md). Under the chart, so that the radio list Android draws for it never pushes
- * the chart away from the headline.
+ * The evolution of the figure followed, day by day (or month by month for the whole history), in
+ * the green of what grows: the water blue keeps its one meaning (brand-spec, palette of the
+ * mockups). Each bar is read by VoiceOver with its date and its value in words (charts.md ›
+ * Enhancing the accessibility of a chart).
  */
-function ChartSections({
-  chart,
-  metric,
-  onChangeMetric,
-}: {
-  chart: StatsChart;
-  metric: StatsMetric;
-  onChangeMetric: (metric: StatsMetric) => void;
-}) {
+function Chart({ chart, metric }: { chart: StatsChart; metric: StatsMetric }) {
   const { t, i18n } = useTranslation('profile');
   const language = i18n.language;
   const value = useMetricValue();
   const metricName = t(`chart.metrics.${metric}`);
-  const dateOf = (bar: ChartBar) =>
-    chart.unit === 'month'
-      ? formatMonthLong(bar.start, language)
-      : formatDayLong(bar.start, language);
   const bars: BarChartBar[] = chart.bars.map((bar, index) => ({
     key: bar.start,
     // Reading time is drawn in minutes, so the axis reads in round minutes.
@@ -249,140 +263,216 @@ function ChartSections({
     isCurrent: bar.isCurrent,
     isFuture: bar.isFuture,
     accessibilityLabel: t('chart.bar', {
-      date: dateOf(bar),
+      date: dateOf(chart, bar, language),
       metric: metricName,
       value: value.spoken(metric, bar.value),
     }),
   }));
-  const summary =
-    chart.best === null
-      ? t('chart.nothingYet')
-      : t(chart.unit === 'month' ? 'chart.bestMonth' : 'chart.bestDay', {
-          date: dateOf(chart.best),
-          value: value.written(metric, chart.best.value),
-        });
   return (
-    <>
-      <ListSection isBare>
-        <ContentRow>
-          <View style={styles.chart}>
-            <View style={styles.chartTitle} testID="profile-chart-title">
-              <AppText variant="headline" accessibilityRole="header">
-                {t(chart.unit === 'month' ? 'chart.titleMonth' : 'chart.titleDay')}
-              </AppText>
-              <AppText variant="subhead" color="secondaryLabel" testID="profile-chart-summary">
-                {summary}
-              </AppText>
-            </View>
-            <BarChart
-              bars={bars}
-              formatValue={(axisValue) =>
-                value.written(
-                  metric,
-                  metric === 'readingTime' ? axisValue * SECONDS_PER_MINUTE : axisValue,
-                )
-              }
-              testID="profile-chart"
-            />
-          </View>
-        </ContentRow>
-      </ListSection>
-      <ListSection>
-        <ChoiceRow<StatsMetric>
-          label={t('chart.metricLabel')}
-          options={STATS_METRICS.map((option) => ({
-            value: option,
-            label: t(`chart.metrics.${option}`),
-          }))}
-          value={metric}
-          onChange={onChangeMetric}
-          testID="profile-chart-metric"
-        />
-      </ListSection>
-    </>
+    <View style={styles.chart}>
+      <BarChart
+        bars={bars}
+        tone="growth"
+        formatValue={(axisValue) =>
+          value.plain(metric, metric === 'readingTime' ? axisValue * SECONDS_PER_MINUTE : axisValue)
+        }
+        testID="profile-chart"
+      />
+    </View>
   );
 }
 
-/** The other figures of the period, as rows of label and value (lists-and-tables.md › Content). */
-function FiguresSection({ stats }: { stats: ProfileStats }) {
-  const { t, i18n } = useTranslation('profile');
-  const number = (value: number) => formatNumber(value, i18n.language);
+/**
+ * Every figure of the period, one row each, and the choice of the one the chart follows: a radio
+ * group for VoiceOver, the chosen row on the pale green of the mockups' quiet actions, its words
+ * in green and bolder, so the choice is told by a shape and a weight, not by colour alone
+ * (lists-and-tables.md › Provide appropriate feedback when people select a list item;
+ * accessibility.md › Vision). Rows are 44 points tall at least, with a press state
+ * (buttons.md › Best practices).
+ */
+function Figures({
+  stats,
+  metric,
+  onSelect,
+}: {
+  stats: ProfileStats;
+  metric: StatsMetric;
+  onSelect: (metric: StatsMetric) => void;
+}) {
+  const { t } = useTranslation('profile');
+  const colors = useColors();
+  const value = useMetricValue();
   return (
-    <ListSection>
-      <ListRow
-        label={t('figures.versesRead')}
-        value={number(stats.counts.verses)}
-        testID="profile-verses"
-      />
-      <ListRow
-        label={t('figures.wordsRead')}
-        value={number(stats.counts.words)}
-        testID="profile-words"
-      />
-      <ListRow
-        label={t('figures.pagesRead')}
-        value={number(stats.counts.pages)}
-        testID="profile-pages"
-      />
-      {/* "h" and "min" are spoken in words (voiceover.md › Descriptions). */}
-      <ListRow
-        label={t('figures.readingTime')}
-        value={formatDuration(stats.time.reader, t)}
-        valueAccessibilityLabel={formatDuration(stats.time.reader, t, true)}
-        testID="profile-reading-time"
-      />
-      <ListRow
-        label={t('figures.appTime')}
-        value={formatDuration(stats.time.app, t)}
-        valueAccessibilityLabel={formatDuration(stats.time.app, t, true)}
-        testID="profile-app-time"
-      />
-    </ListSection>
+    <View
+      accessibilityRole="radiogroup"
+      accessibilityLabel={t('figures.label')}
+      style={styles.figures}
+      testID="profile-figures"
+    >
+      {STATS_METRICS.map((option) => {
+        const isSelected = option === metric;
+        const name = t(`chart.metrics.${option}`);
+        const amount = valueOf(stats, option);
+        return (
+          <Pressable
+            key={option}
+            accessibilityRole="radio"
+            accessibilityLabel={t('figures.choice', {
+              name,
+              value: value.spoken(option, amount),
+            })}
+            accessibilityState={{ checked: isSelected, selected: isSelected }}
+            onPress={() => onSelect(option)}
+            testID={`profile-figure-${option}`}
+            style={({ pressed }) => [
+              styles.figure,
+              isSelected && { backgroundColor: colors.actionTonal },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Icon
+              symbol={FIGURE_SYMBOLS[option]}
+              textStyle="body"
+              color={isSelected ? 'actionTint' : 'muted'}
+            />
+            <AppText
+              variant={isSelected ? 'headline' : 'body'}
+              color={isSelected ? 'actionTint' : 'label'}
+              style={styles.figureName}
+            >
+              {name}
+            </AppText>
+            <AppText variant="headline" color={isSelected ? 'actionTint' : 'heading'}>
+              {value.written(option, amount)}
+            </AppText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/** The time in the app, which no chart follows: one line under the figures, said in words. */
+function AppTime({ stats }: { stats: ProfileStats }) {
+  const { t } = useTranslation('profile');
+  return (
+    <AppText
+      variant="footnote"
+      color="muted"
+      accessibilityLabel={t('figures.appTimeSpoken', {
+        value: formatDuration(stats.time.app, t, true),
+      })}
+      testID="profile-app-time"
+    >
+      {t('figures.appTime', { value: formatDuration(stats.time.app, t) })}
+    </AppText>
   );
 }
 
 /**
  * Each khatma told as the garden it grows (D23: each khatma completed opens the next level and
- * its garden), the one in progress first, with all its figures. The source of the estimate is
- * said once, under the headline figure: not again here.
+ * its garden), the one in progress first with how far it has grown and when it would end at the
+ * pace of the daily goal (owner's decision, 25 November 2026; the estimate the home screen gave),
+ * the pace said under the card. The source of the hasanat is said once, in the card above.
  */
-function KhatmasSection({ khatmas }: { khatmas: readonly KhatmaSummary[] }) {
+function Khatmas({
+  khatmas,
+  dailyGoalPages,
+}: {
+  khatmas: readonly KhatmaSummary[];
+  dailyGoalPages: number;
+}) {
   const { t, i18n } = useTranslation('profile');
   if (khatmas.length === 0) return null;
   const number = (value: number) => formatNumber(value, i18n.language);
+  const hasEstimate = khatmas.some((khatma) => khatma.estimatedFinishDate !== null);
   return (
-    <ListSection title={t('khatmas.title')}>
-      {khatmas.map((khatma) => (
-        <LabelRow
-          key={khatma.khatm}
-          label={
-            khatma.isComplete
+    <View style={styles.group}>
+      <SectionHeader title={t('khatmas.title')} />
+      <Card tone="raised">
+        <View style={styles.khatmas}>
+          {khatmas.map((khatma) => {
+            const title = khatma.isComplete
               ? t('khatmas.complete', {
                   number: khatma.khatm,
                   date: formatDayMedium(khatma.lastDate, i18n.language),
                 })
-              : t('khatmas.inProgress', { number: khatma.khatm })
-          }
-          detail={t('khatmas.detail', {
-            number: khatma.khatm,
-            pages: number(khatma.counts.pages),
-            verses: number(khatma.counts.verses),
-            words: number(khatma.counts.words),
-            hasanat: number(khatma.counts.hasanatEstimate),
+              : khatma.estimatedFinishDate === null
+                ? t('khatmas.inProgress', { number: khatma.khatm })
+                : t('khatmas.inProgressUntil', {
+                    number: khatma.khatm,
+                    date: formatDayMedium(khatma.estimatedFinishDate, i18n.language),
+                  });
+            const detail = t('khatmas.detail', {
+              number: khatma.khatm,
+              pages: number(khatma.counts.pages),
+              verses: number(khatma.counts.verses),
+              words: number(khatma.counts.words),
+              hasanat: number(khatma.counts.hasanatEstimate),
+            });
+            return (
+              <View
+                key={khatma.khatm}
+                accessible
+                accessibilityLabel={`${title}, ${detail}`}
+                style={styles.khatma}
+                testID={`profile-khatma-${khatma.khatm}`}
+              >
+                {khatma.isComplete ? (
+                  <IconTile symbol={PROFILE_SYMBOLS.completed} tone="growth" size="medium" />
+                ) : (
+                  <ProgressRing
+                    progress={Math.min(1, khatma.counts.pages / PAGE_COUNT)}
+                    size="small"
+                    tone="growth"
+                    accessibilityLabel={title}
+                    accessibilityValue={detail}
+                  >
+                    <Icon symbol={PROFILE_SYMBOLS.leaf} textStyle="footnote" color="actionTint" />
+                  </ProgressRing>
+                )}
+                <View style={styles.khatmaWords}>
+                  <AppText variant="callout">{title}</AppText>
+                  <AppText variant="footnote" color="muted">
+                    {detail}
+                  </AppText>
+                </View>
+              </View>
+            );
           })}
-          symbol={khatma.isComplete ? KHATMA_COMPLETE_SYMBOL : KHATMA_IN_PROGRESS_SYMBOL}
-          tone={khatma.isComplete ? 'secondaryLabel' : 'growth'}
-          testID={`profile-khatma-${khatma.khatm}`}
-        />
-      ))}
-    </ListSection>
+        </View>
+      </Card>
+      {hasEstimate ? (
+        <AppText variant="footnote" color="muted" style={styles.groupNote}>
+          {t('khatmas.pace', { count: dailyGoalPages })}
+        </AppText>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   centered: { alignItems: 'center', paddingVertical: spacing.lg },
-  message: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl },
-  headline: { gap: spacing.sm, paddingVertical: spacing.sm },
-  chart: { gap: spacing.sm, paddingTop: spacing.sm },
-  chartTitle: { gap: spacing.xs },
+  message: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.md },
+  hero: { marginTop: spacing.lg, gap: spacing.xs },
+  chart: { marginTop: spacing.md },
+  figures: { marginTop: spacing.md, rowGap: spacing.xs },
+  figure: {
+    minHeight: layout.touchTarget,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    columnGap: layout.controlGap,
+    paddingHorizontal: layout.controlGap,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+  },
+  figureName: { flexGrow: 1, flexShrink: 1 },
+  pressed: { opacity: stateOpacity.pressed },
+  notes: { marginTop: spacing.md, gap: spacing.sm },
+  group: { rowGap: spacing.sm },
+  groupNote: { paddingHorizontal: spacing.xs },
+  khatmas: { rowGap: spacing.md },
+  khatma: { flexDirection: 'row', alignItems: 'center', columnGap: layout.controlGap },
+  khatmaWords: { flex: 1, rowGap: spacing.none },
 });

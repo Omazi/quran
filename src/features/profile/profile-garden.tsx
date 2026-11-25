@@ -3,61 +3,74 @@ import { StyleSheet, View } from 'react-native';
 
 import type { GardenState } from '@/domain/garden';
 import { GARDEN_STEP_COUNT, GardenScene } from '@/features/garden';
-import { AppText, ContentRow, ListSection, spacing } from '@/ui';
+import { AppText, DottedProgress, Icon, layout, spacing } from '@/ui';
 
-import { PROFILE_GARDEN_PICTURE_WIDTH } from './config';
+import { PROFILE_GARDEN_PICTURE_WIDTH, PROFILE_SYMBOLS } from './config';
 
-export interface ProfileGardenSectionProps {
+export interface ProfileGardenProps {
   garden: GardenState;
 }
 
 /**
- * The head of the profile, its one signature: the person's garden, the same picture the home
- * screen and their friends see (D23: a level is recognised by its garden), named after the
- * khatma it grows with, and how far it has grown. Everything under it stays the system's
- * (brand-spec, section 1: the garden is the signature). On the bare earth of a first garden
- * nothing is written under it: the profile never points at a zero.
+ * The person's garden under the title, on the gradient of the home screen: the same picture the
+ * home screen and their friends see (D23: a level is recognised by its garden), named after the
+ * khatma it grows with, then how far it has grown, in words with a leaf and in sixty dots, as
+ * under the garden of the home screen (accueil.png). On the bare earth of a first garden nothing
+ * is written under it: the profile never points at a zero.
  */
-export function ProfileGardenSection({ garden }: ProfileGardenSectionProps) {
+export function ProfileGarden({ garden }: ProfileGardenProps) {
   const { t } = useTranslation('profile');
   const { t: tGarden } = useTranslation('garden');
   const hasWords = garden.hizbCompleted > 0 || garden.variant.cycle > 1;
   const title = t('garden.title', { number: garden.variant.cycle });
-  const progress =
-    garden.hizbCompleted > 0
-      ? tGarden('readout.hizb.value', { hizb: garden.hizbCompleted, total: GARDEN_STEP_COUNT })
-      : null;
+  const progress = tGarden('readout.hizb.value', {
+    hizb: garden.hizbCompleted,
+    total: GARDEN_STEP_COUNT,
+  });
   return (
-    <ListSection isBare>
-      <ContentRow>
-        <View style={styles.column} testID="profile-garden">
-          <View style={styles.picture}>
-            <GardenScene state={garden} size="band" />
-          </View>
-          {hasWords ? (
-            <View
-              accessible
-              accessibilityLabel={progress === null ? title : `${title}, ${progress}`}
-              style={styles.words}
-            >
-              <AppText variant="title2" align="center">
-                {title}
-              </AppText>
-              {progress === null ? null : (
-                <AppText variant="subhead" color="secondaryLabel" align="center">
-                  {progress}
-                </AppText>
-              )}
-            </View>
+    <View style={styles.column} testID="profile-garden">
+      <View style={styles.picture}>
+        <GardenScene state={garden} size="band" />
+      </View>
+      {hasWords ? (
+        <View style={styles.words}>
+          <AppText variant="title2" color="heading">
+            {title}
+          </AppText>
+          {garden.hizbCompleted > 0 ? (
+            <>
+              <View style={styles.count} accessible accessibilityLabel={progress}>
+                <Icon
+                  symbol={PROFILE_SYMBOLS.leaf}
+                  textStyle="subheadEmphasized"
+                  color="actionTint"
+                />
+                <AppText variant="subheadEmphasized">{progress}</AppText>
+              </View>
+              <DottedProgress
+                total={GARDEN_STEP_COUNT}
+                reached={garden.hizbCompleted}
+                hasStepInProgress={garden.nextElement !== null}
+                accessibilityLabel={tGarden('readout.hizb.label')}
+                accessibilityValue={progress}
+                testID="profile-hizb-dots"
+              />
+            </>
           ) : null}
         </View>
-      </ContentRow>
-    </ListSection>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  column: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm },
+  column: { alignItems: 'center', paddingTop: spacing.sm },
   picture: { width: PROFILE_GARDEN_PICTURE_WIDTH },
-  words: { alignItems: 'center', gap: spacing.xs },
+  words: {
+    alignSelf: 'stretch',
+    paddingHorizontal: layout.screenMargin + spacing.xs,
+    paddingTop: spacing.md,
+    rowGap: spacing.sm,
+  },
+  count: { flexDirection: 'row', alignItems: 'center', columnGap: spacing.sm },
 });
