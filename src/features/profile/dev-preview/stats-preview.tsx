@@ -14,15 +14,17 @@ import { PAGE_COUNT } from '@/domain/quran';
 import { addDays, type LocalDate } from '@/domain/shared/local-date';
 import type { DaySeconds } from '@/domain/stats';
 import { useToday } from '@/features/home';
-import { ChoiceRow, ListSection, type ChoiceOption } from '@/ui';
+import { StyleSheet, View } from 'react-native';
+
+import { AppText, Card, SegmentedChoice, spacing, type ChoiceOption } from '@/ui';
 
 import type { StatsSource } from '../stats-source';
 
 export type StatsPreviewChoice = 'store' | 'example';
 
 const OPTIONS: readonly ChoiceOption<StatsPreviewChoice>[] = [
-  { value: 'store', label: 'Mes vraies données' },
-  { value: 'example', label: 'Exemple : onze mois de lecture' },
+  { value: 'store', label: 'Mes données' },
+  { value: 'example', label: 'Exemple (11 mois)' },
 ];
 
 const WORDS = {
@@ -89,17 +91,28 @@ export function usePreviewedStatsSource(source: StatsSource): StatsSource {
   return example ?? source;
 }
 
+/** A quiet card at the end of the profile, outside any list: the profile is built of cards. */
 export function StatsPreviewSection() {
   const chosen = useStatsPreviewChoice();
   return (
-    <ListSection title={WORDS.title} footer={WORDS.footer}>
-      <ChoiceRow
-        label={WORDS.label}
-        options={OPTIONS}
-        value={chosen}
-        onChange={setStatsPreviewChoice}
-        testID="profile-stats-preview"
-      />
-    </ListSection>
+    <Card tone="quiet" testID="profile-stats-preview-section">
+      <View style={styles.column}>
+        <AppText variant="subheadEmphasized">{WORDS.title}</AppText>
+        <SegmentedChoice
+          label={WORDS.label}
+          options={OPTIONS}
+          value={chosen}
+          onChange={setStatsPreviewChoice}
+          testID="profile-stats-preview"
+        />
+        <AppText variant="footnote" color="muted">
+          {WORDS.footer}
+        </AppText>
+      </View>
+    </Card>
   );
 }
+
+const styles = StyleSheet.create({
+  column: { rowGap: spacing.sm },
+});

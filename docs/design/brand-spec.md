@@ -33,7 +33,7 @@ règle d'Apple ou cette charte, la maquette l'emporte et l'écart est inscrit da
 | Surfaces et boutons | Cartes blanches arrondies avec l'ombre douce des maquettes (de jour) ; boutons en capsule dessinés (`ActionButton`)                                                     |
 | Pièces du système   | Gardées là où elles ne changent pas l'apparence : onglets, barres de navigation, menus, feuilles d'action, interrupteurs, champs, sélecteurs                            |
 | Écoute              | L'écran de reconnaissance garde la rosace validée (D27, D29)                                                                                                            |
-| Lancement           | La marque calligraphique sur l'eau profonde `#0B3C44` (`#072C33` en sombre) : écart 98                                                                                  |
+| Lancement           | La marque calligraphique animée sur l'eau profonde `#0B3C44` (`#072C33` en sombre) : écart 115                                                                          |
 | Jardin              | Vraie 3D qu'on fait tourner (D4) ; les images de D35 pour les vignettes et en repli                                                                                     |
 
 **Un seul système de design.** Toutes les valeurs vivent dans `src/ui/tokens.ts` : la palette

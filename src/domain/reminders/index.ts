@@ -3,6 +3,20 @@
  * See README.md for the model and the decisions taken on the specification.
  */
 export { planReminders } from './plan-reminders';
+export {
+  buildNotificationSlots,
+  diffNotifications,
+  isNotificationTarget,
+  isReminderIdentifier,
+  notificationSignature,
+  notificationTargetOf,
+} from './notification-schedule';
+export type {
+  NotificationDiff,
+  NotificationRef,
+  NotificationSlot,
+  NotificationTarget,
+} from './notification-schedule';
 export { REMINDER_PRIORITY, REMINDERS_CONFIG } from './config';
 export type {
   GardenReminderKind,

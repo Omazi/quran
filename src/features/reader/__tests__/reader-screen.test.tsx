@@ -211,6 +211,66 @@ describe('the 30-second rule, through the store', () => {
     expect(pagesOf(store)).toEqual([]);
   });
 
+  // iOS may end an app in the background without running any of its code: a page read long
+  // enough is recorded when the app leaves, not only at the next turn that may never come.
+  it('a page read long enough is recorded when the app goes to the background', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 10);
+    const onChange = jest
+      .mocked(AppState.addEventListener)
+      .mock.calls.filter(([event]) => event === 'change')
+      .map(([, handler]) => handler)
+      .at(-1)!;
+    await wait(READER_CONFIG.minimumSecondsOnPage);
+    await act(async () => onChange('background'));
+    expect(store.getState().journal).toEqual([{ khatm: 1, page: 10, date: TODAY }]);
+
+    // Back in the app, the same page then a turn: recorded once, told once.
+    await act(async () => onChange('active'));
+    await wait(READER_CONFIG.minimumSecondsOnPage);
+    await swipeTo(11);
+    expect(pagesOf(store)).toEqual([10]);
+  });
+
+  it('a page not read long enough keeps its time across the background', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 10);
+    const onChange = jest
+      .mocked(AppState.addEventListener)
+      .mock.calls.filter(([event]) => event === 'change')
+      .map(([, handler]) => handler)
+      .at(-1)!;
+    await wait(READER_CONFIG.minimumSecondsOnPage - 10);
+    await act(async () => onChange('background'));
+    expect(pagesOf(store)).toEqual([]);
+    await act(async () => onChange('active'));
+    await wait(10);
+    await swipeTo(11);
+    expect(pagesOf(store)).toEqual([10]);
+  });
+
+  // The rule as the spec writes it (one stay of 30 seconds), pinned down until the owner decides:
+  // a look back at the previous page starts the time of the page again.
+  it('a stay is one visit: a look back at the previous page starts the time again', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 10);
+    await wait(READER_CONFIG.minimumSecondsOnPage - 10);
+    await swipeTo(9);
+    await wait(5);
+    await swipeTo(10);
+    await wait(15);
+    await swipeTo(11);
+    expect(pagesOf(store)).toEqual([]);
+  });
+
+  it('asks the same time of every page, even the shortest (page 604)', async () => {
+    const store = createTestAppStore();
+    const view = await openReader(store, 604);
+    await wait(READER_CONFIG.minimumSecondsOnPage - 1);
+    await view.unmount();
+    expect(pagesOf(store)).toEqual([]);
+  });
+
   it('a page already read in the khatma changes nothing, and says nothing', async () => {
     const store = createTestAppStore({ journal: readPages([10]) });
     const journal = store.getState().journal;

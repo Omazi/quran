@@ -64,8 +64,17 @@ export interface GroupedListProps {
    * could never reach them (SKILLS.md, deviation 30).
    */
   header?: ReactNode;
+  /**
+   * `system` (default): the system's grouped backgrounds. `garden`: the warm canvas of the
+   * validated mockups under the list and its rows on white cards (`palette`), so a page of
+   * system rows (the settings) looks like the rest of the app. The rows and controls stay the
+   * system's; place the list on a `Screen` with the `canvas` background.
+   */
+  appearance?: GroupedListAppearance;
   testID?: string;
 }
+
+export type GroupedListAppearance = 'system' | 'garden';
 
 export interface ListSectionProps {
   /** Header of the section. */

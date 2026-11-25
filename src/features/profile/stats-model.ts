@@ -5,7 +5,7 @@
  * Every count comes from `src/domain/stats` (docs/specs/stats.md).
  */
 
-import type { ReadingJournal } from '@/domain/khatm';
+import { estimateFinishDate, type ReadingJournal } from '@/domain/khatm';
 import { addDays, parseLocalDate, type LocalDate } from '@/domain/shared/local-date';
 import {
   getDailyReadingStats,
@@ -54,6 +54,11 @@ export interface KhatmaSummary {
   readonly isComplete: boolean;
   /** Day of its last page read so far: the day it ended when it is complete. */
   readonly lastDate: LocalDate;
+  /**
+   * The day it would end at the pace of the daily goal (the estimate the home screen gave,
+   * `estimateFinishDate` of the khatm module); null once it is complete.
+   */
+  readonly estimatedFinishDate: LocalDate | null;
 }
 
 export interface ProfileStats {
@@ -73,6 +78,16 @@ export interface ProfileStatsInput {
   readonly period: StatsPeriod;
   readonly metric: StatsMetric;
   readonly today: LocalDate;
+  /** The person's daily goal, in pages: the pace of the estimated end of a khatma. */
+  readonly dailyGoalPages: number;
+}
+
+function assertDailyGoal(pages: number): void {
+  if (!Number.isInteger(pages) || pages < 1) {
+    throw new RangeError(
+      `Invalid daily goal: ${pages} (expected a whole number of pages, at least 1)`,
+    );
+  }
 }
 
 function assertMetric(metric: string): asserts metric is StatsMetric {
@@ -191,7 +206,12 @@ function buildChart(input: ProfileStatsInput): StatsChart {
   return { unit, bars, best };
 }
 
-function buildKhatmas(journal: ReadingJournal, table: PageStatsTable): KhatmaSummary[] {
+function buildKhatmas(
+  journal: ReadingJournal,
+  table: PageStatsTable,
+  today: LocalDate,
+  dailyGoalPages: number,
+): KhatmaSummary[] {
   const lastDates = new Map<number, LocalDate>();
   const pageCounts = new Map<number, number>();
   for (const entry of journal) {
@@ -201,24 +221,31 @@ function buildKhatmas(journal: ReadingJournal, table: PageStatsTable): KhatmaSum
   }
   return [...lastDates.keys()]
     .sort((a, b) => b - a)
-    .map((khatm) => ({
-      khatm,
-      counts: getKhatmStats(journal, table, khatm),
-      isComplete: pageCounts.get(khatm) === table.length,
-      // Present: the keys come from this map.
-      lastDate: lastDates.get(khatm) as LocalDate,
-    }));
+    .map((khatm) => {
+      const isComplete = pageCounts.get(khatm) === table.length;
+      return {
+        khatm,
+        counts: getKhatmStats(journal, table, khatm),
+        isComplete,
+        // Present: the keys come from this map.
+        lastDate: lastDates.get(khatm) as LocalDate,
+        estimatedFinishDate: isComplete
+          ? null
+          : estimateFinishDate(journal, khatm, today, { kind: 'daily-goal', dailyGoalPages }),
+      };
+    });
 }
 
 /** The whole statistics section for one period and one chart figure. */
 export function buildProfileStats(input: ProfileStatsInput): ProfileStats {
   assertMetric(input.metric);
-  const { journal, table, timeSpent, period, today } = input;
+  assertDailyGoal(input.dailyGoalPages);
+  const { journal, table, timeSpent, period, today, dailyGoalPages } = input;
   return {
     hasAnything: journal.length > 0 || Object.keys(timeSpent).length > 0,
     counts: getReadingStats(journal, table, period, today),
     time: getSecondsInPeriod(timeSpent, period, today),
     chart: buildChart(input),
-    khatmas: buildKhatmas(journal, table),
+    khatmas: buildKhatmas(journal, table, today, dailyGoalPages),
   };
 }

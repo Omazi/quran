@@ -140,16 +140,29 @@ export function useReader(
     rememberOpenedPage(page);
   }, [page, rememberOpenedPage]);
 
-  // Only the time with the app in the foreground counts.
+  // Only the time with the app in the foreground counts. A page already read long enough is
+  // recorded when the app leaves the foreground: iOS may end an app in the background without
+  // running any of its code, and the turn that would have recorded it would never come. The
+  // same page then starts a new visit, which records nothing more (D8).
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
       const current = visit.current;
       if (current === null) return;
       const now = latest.current.monotonicClock();
-      visit.current = isForeground(state) ? resumeVisit(current, now) : pauseVisit(current, now);
+      if (isForeground(state)) {
+        visit.current = resumeVisit(current, now);
+        return;
+      }
+      if (!finishVisit(current, now).counts) {
+        visit.current = pauseVisit(current, now);
+        return;
+      }
+      const told = endVisit();
+      visit.current = startVisit(current.page, now, false);
+      if (told !== null) setFeedback(told);
     });
     return () => subscription.remove();
-  }, []);
+  }, [endVisit]);
 
   // Leaving the reader ends the visit of the page on screen. A remount (React's strict mode
   // does one in development) starts a new visit of the same page.

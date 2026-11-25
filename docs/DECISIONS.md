@@ -80,7 +80,8 @@ modèles 3D ; **leur provenance et leur style restent à décider avec le propri
 
 Aucun serveur : le plan des rappels est calculé sur le téléphone à partir de l'état du
 jardin, puis programmé localement. L'autorisation est demandée à la fin du premier
-lancement, après explication.
+lancement, après explication. Programmation, déclencheurs et toucher d'une notification :
+[specs/reminders.md](specs/reminders.md), « Programmation ».
 
 ## D14 — Les skills d'abord
 
@@ -439,7 +440,8 @@ l'eau. Le mot fait pousser le jardin. Détail, couleurs, couches, pistes écart�
   l'`accent`, `#0E6B78`. La version 5 et sa scène 3D restent dans l'historique git (commit
   `c3e0467`).
 - **Écran de lancement** : inchangé, une couleur unie, sans logo (`launching.md › Launch screens`).
-  **Remplacé par D39** : la marque calligraphique sur l'eau profonde, à la demande du propriétaire.
+  Depuis le 25 novembre 2026 (demande du propriétaire, écart 115) : la couleur unie reste l'écran natif,
+  puis la marque s'anime par-dessus (`src/features/launch`) avant de se fondre dans le premier écran.
 - **Licences** : Gulzar, SIL Open Font License 1.1, qui permet tout usage, commercial compris ; la
   police n'est ni dans le dépôt ni dans l'appli, seuls les contours du mot y sont. Avis complet :
   `tools/app-icon/NOTICE.txt`. Outils non livrés : uharfbuzz (Apache-2.0), fontTools (MIT),
@@ -504,8 +506,10 @@ Décisions qui en découlent :
   onglets ; l'onglet Proches n'a plus de kit à lui pour ces pièces.
 - **Écran de lancement : la marque calligraphique** (`assets/images/splash-mark.png`, tirée des
   couches de l'icône) sur l'eau profonde `#0B3C44`, `#072C33` en sombre. Demande du propriétaire,
-  contre `launching.md › Launch screens` (pas de marque sur l'écran de lancement) : écart 98.
-  Remplace la ligne « Écran de lancement » de D38.
+  contre `launching.md › Launch screens` (pas de marque sur l'écran de lancement) : écart 115.
+  Remplace la ligne « Écran de lancement » de D38. Depuis, l'écran natif est de couleur unie et la
+  marque s'anime par-dessus (`src/features/launch`) ; ses couleurs sont les rôles `launch…` de la
+  palette.
 - **Le jardin sera en vraie 3D et pourra tourner** (pincer, glisser), comme décidé au départ (D4).
   Un autre agent le construit. Les images calculées à l'avance de D35 ne servent plus qu'aux
   vignettes (cartes des proches, « Jardins voisins ») et de repli quand la 3D n'est pas disponible.

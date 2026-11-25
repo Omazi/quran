@@ -35,6 +35,8 @@ export {
   chart,
   emphasisWeight,
   fontFamily,
+  launchColors,
+  launchMarkWidth,
   layout,
   pieceSizes,
   MINIMUM_FONT_SIZE,

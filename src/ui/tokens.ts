@@ -193,6 +193,14 @@ export const palette = {
   onFollowBar: { light: '#FFFFFF', dark: '#FFFFFF' },
   onFollowBarSecondary: { light: '#E4EFEB', dark: '#D6E6E1' },
   followBarControl: { light: '#FFFFFF2E', dark: '#FFFFFF29' },
+
+  // --- The launch (the app icon's layers; app.json's expo-splash-screen colours) --------------
+  /** The deep water behind the mark, a step deeper at night: `app.json` has the same two values. */
+  launchWater: { light: '#0B3C44', dark: '#072C33' },
+  /** The calligraphic word, the drops and the leaf of the mark, the same in both appearances. */
+  launchWord: { light: '#F6FBF9', dark: '#F6FBF9' },
+  launchDrops: { light: '#8FE0EA', dark: '#8FE0EA' },
+  launchLeaf: { light: '#8FDB6B', dark: '#8FDB6B' },
 } as const satisfies Record<string, ColorPair>;
 
 /** High-contrast values of the palette's words and actions (color.md › Best practices). */
@@ -295,6 +303,25 @@ export const elevation = {
     dark: '0px 8px 24px rgba(0, 0, 0, 0.4)',
   },
 } as const;
+
+/**
+/**
+ * The launch: the deep water of the app icon and the three colours of its layers (word, drops,
+ * leaf), the same in both appearances except the water, which is a step deeper at night. The two
+ * water values are those of `app.json` (expo-splash-screen), so that the native launch screen and
+ * the animation that takes over from it are one colour, with no flash between them
+ * (launching.md › Launch screens). Scripts of the icon: tools/app-icon/make_icon.py. The values
+ * are roles of `palette` (`launch…`), read here in the shape the launch animation takes.
+ */
+export const launchColors = {
+  water: palette.launchWater,
+  word: palette.launchWord.light,
+  drops: palette.launchDrops.light,
+  leaf: palette.launchLeaf.light,
+} as const;
+
+/** Width of the launch mark in points: the `imageWidth` the native launch screen used (app.json). */
+export const launchMarkWidth = 180;
 
 /**
  * A QR code: dark modules on a light ground in both appearances. Scanners are made for that
@@ -403,6 +430,10 @@ export type IconColorRole = Exclude<
   | 'followBarStart'
   | 'followBarEnd'
   | 'followBarControl'
+  | 'launchWater'
+  | 'launchWord'
+  | 'launchDrops'
+  | 'launchLeaf'
 >;
 
 /**
