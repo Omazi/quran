@@ -146,6 +146,33 @@ describe('Demonstration of accounts and friends', () => {
       ).toBe('Abu Omar');
     });
 
+    it('a friend sees the reading counters of the demonstration people, as numbers that fit their gardens', async () => {
+      const { demo } = await signedIn();
+
+      const seen = await demo.repository.getPersonView(taghread);
+      // Taghread has finished one whole khatma: 77,430 words and 6,236 verses.
+      expect(seen).toMatchObject({
+        level: { wordsRead: 77_430, versesRead: 6236, hasanatEstimate: 3_329_490 },
+      });
+      for (const person of [mustapha, sarah, taghread]) {
+        const view = await demo.repository.getPersonView(person);
+        if (view === null || view.kind !== 'friend' || view.level === null)
+          throw new Error('Expected a friend with a level');
+        expect(Number.isSafeInteger(view.level.wordsRead)).toBe(true);
+        expect(view.level.versesRead).toBeLessThan(view.level.wordsRead);
+        expect(view.level.hasanatEstimate).toBeGreaterThan(view.level.wordsRead);
+      }
+    });
+
+    it('hiding the level hides the reading counters from friends too (rule 4)', async () => {
+      const { demo } = await signedIn();
+      await demo.repository.updateMyProfile({ showLevel: false });
+
+      const seenBySarah = await demo.repositoryAs(sarah).getPersonView(omar);
+
+      expect(JSON.stringify(seenBySarah)).not.toMatch(/wordsRead|versesRead|hasanatEstimate/);
+    });
+
     it('hiding the garden hides it from friends at once (rule 4)', async () => {
       const { demo } = await signedIn();
       await demo.repository.updateMyProfile({ showGarden: false, showLevel: false });
@@ -563,6 +590,9 @@ describe('Demonstration of accounts and friends', () => {
         lastWateredOn: START,
         streakDays: 6,
         badgeCount: 1,
+        wordsRead: 99_367,
+        versesRead: 8000,
+        hasanatEstimate: 4_272_781,
       });
 
       const view = await demo.repositoryAs(mustapha).getPersonView(omar);
@@ -584,6 +614,9 @@ describe('Demonstration of accounts and friends', () => {
           lastWateredOn: START,
           streakDays: 6,
           badgeCount: 1,
+          wordsRead: 99_367,
+          versesRead: 8000,
+          hasanatEstimate: 4_272_781,
         }),
       ).rejects.toThrow(RangeError);
       await expect(

@@ -117,6 +117,13 @@ create table public.garden_summaries (
     constraint garden_summaries_streak_range check (streak_days >= 0),
   badge_count integer not null
     constraint garden_summaries_badge_count_range check (badge_count >= 0),
+  words_read bigint not null default 0
+    constraint garden_summaries_words_read_range check (words_read between 0 and 9007199254740991),
+  verses_read bigint not null default 0
+    constraint garden_summaries_verses_read_range check (verses_read between 0 and 9007199254740991),
+  hasanat_estimate bigint not null default 0
+    constraint garden_summaries_hasanat_range
+      check (hasanat_estimate between 0 and 9007199254740991),
   updated_on date not null default ((now() at time zone 'utc')::date)
 );
 comment on table public.garden_summaries is
@@ -475,9 +482,11 @@ create policy profiles_update_own on public.profiles for update to authenticated
 
 -- garden_summaries: mine only. Friends use list_friends(), which hides column by column.
 grant select, delete on public.garden_summaries to authenticated;
-grant insert (user_id, level, hizb_completed, health, last_watered_on, streak_days, badge_count, updated_on)
+grant insert (user_id, level, hizb_completed, health, last_watered_on, streak_days, badge_count,
+  words_read, verses_read, hasanat_estimate, updated_on)
   on public.garden_summaries to authenticated;
-grant update (level, hizb_completed, health, last_watered_on, streak_days, badge_count, updated_on)
+grant update (level, hizb_completed, health, last_watered_on, streak_days, badge_count,
+  words_read, verses_read, hasanat_estimate, updated_on)
   on public.garden_summaries to authenticated;
 create policy garden_summaries_select_own on public.garden_summaries for select to authenticated
   using (user_id = (select auth.uid()));
@@ -1114,8 +1123,8 @@ end
 $$;
 
 -- Rule 4: my accepted friends (nobody blocked) with their garden. Hidden values are null:
--- everything of the garden when show_garden is false; level and badge_count when
--- show_level is false. garden_visible / level_visible say which.
+-- everything of the garden when show_garden is false; level, badge_count and the reading
+-- counters (words_read, verses_read, hasanat_estimate) when show_level is false. garden_visible / level_visible say which.
 create function public.list_friends()
 returns table (
   friend_id uuid,
@@ -1128,6 +1137,9 @@ returns table (
   last_watered_on date,
   streak_days integer,
   badge_count integer,
+  words_read bigint,
+  verses_read bigint,
+  hasanat_estimate bigint,
   updated_on date
 )
 language plpgsql
@@ -1147,6 +1159,9 @@ begin
            case when p.show_garden then g.last_watered_on end,
            case when p.show_garden then g.streak_days end,
            case when p.show_level then g.badge_count end,
+           case when p.show_level then g.words_read end,
+           case when p.show_level then g.verses_read end,
+           case when p.show_level then g.hasanat_estimate end,
            case when p.show_garden or p.show_level then g.updated_on end
     from public.friendships f
     join public.profiles p
@@ -1172,6 +1187,9 @@ returns table (
   last_watered_on date,
   streak_days integer,
   badge_count integer,
+  words_read bigint,
+  verses_read bigint,
+  hasanat_estimate bigint,
   updated_on date
 )
 language sql

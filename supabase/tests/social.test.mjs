@@ -186,6 +186,9 @@ describe('structure', () => {
         'last_watered_on',
         'streak_days',
         'badge_count',
+        'words_read',
+        'verses_read',
+        'hasanat_estimate',
         'updated_on',
       ],
     );
@@ -345,7 +348,7 @@ describe('garden_summaries', () => {
   });
 
   t(
-    'bounds: level, hizb 0..60, health 0..1, streak, badge count, days not in the future',
+    'bounds: level, hizb 0..60, health 0..1, streak, badge count, reading counters, days not in the future',
     async (w) => {
       const upd = (set) =>
         w.omar.fails(
@@ -363,6 +366,11 @@ describe('garden_summaries', () => {
         `health = 'NaN'`,
         'streak_days = -1',
         'badge_count = -1',
+        'words_read = -1',
+        'verses_read = -1',
+        'hasanat_estimate = -1',
+        'words_read = 9007199254740992',
+        'hasanat_estimate = 9007199254740992',
         `last_watered_on = ${TODAY} + 5`,
         `updated_on = ${TODAY} + 5`,
       ])
@@ -372,6 +380,11 @@ describe('garden_summaries', () => {
         'hizb_completed = 60',
         'health = 0',
         'health = 1',
+        'words_read = 0',
+        'verses_read = 0',
+        'hasanat_estimate = 0',
+        'words_read = 9007199254740991',
+        'hasanat_estimate = 9007199254740991',
         `last_watered_on = null`,
         `last_watered_on = ${TODAY} + 1`,
       ])
@@ -444,8 +457,11 @@ describe('garden_summaries', () => {
         row.health,
         row.streak_days,
         row.badge_count,
+        String(row.words_read),
+        String(row.verses_read),
+        String(row.hasanat_estimate),
       ],
-      [true, true, 2, 14, 0.8, 5, 1],
+      [true, true, 2, 14, 0.8, 5, 1, '99367', '8000', '4272781'],
     );
     assert.deepEqual(
       Object.keys(row).filter((k) => /page|time|journal/.test(k)),
@@ -476,6 +492,12 @@ describe('garden_summaries', () => {
         ],
         [false, true, 2, 1, null, null, null, null, false],
       );
+      // the reading counters follow show_level, not show_garden
+      assert.deepEqual([row.words_read, row.verses_read, row.hasanat_estimate].map(String), [
+        '99367',
+        '8000',
+        '4272781',
+      ]);
       await w.omar.q(
         `update public.profiles set show_garden = true, show_level = false where id = $1`,
         [U.omar],
@@ -485,6 +507,7 @@ describe('garden_summaries', () => {
         [row.level, row.badge_count, row.hizb_completed, row.streak_days],
         [null, null, 14, 5],
       );
+      assert.deepEqual([row.words_read, row.verses_read, row.hasanat_estimate], [null, null, null]);
       await w.omar.q(`update public.profiles set show_garden = false where id = $1`, [U.omar]);
       row = await w.sarah.one(`select * from public.get_friend_garden($1)`, [U.omar]);
       assert.deepEqual(

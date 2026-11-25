@@ -50,6 +50,9 @@ export function toGardenSummary(
   }
   assertWhole(input.streakDays, 'streakDays', 0, Number.MAX_SAFE_INTEGER);
   assertWhole(input.badgeCount, 'badgeCount', 0, Number.MAX_SAFE_INTEGER);
+  assertWhole(input.wordsRead, 'wordsRead', 0, Number.MAX_SAFE_INTEGER);
+  assertWhole(input.versesRead, 'versesRead', 0, Number.MAX_SAFE_INTEGER);
+  assertWhole(input.hasanatEstimate, 'hasanatEstimate', 0, Number.MAX_SAFE_INTEGER);
   if (input.lastWateredOn !== null) assertNotAfter(input.lastWateredOn, today, 'lastWateredOn');
 
   return {
@@ -60,6 +63,9 @@ export function toGardenSummary(
     lastWateredOn: input.lastWateredOn,
     streakDays: input.streakDays,
     badgeCount: input.badgeCount,
+    wordsRead: input.wordsRead,
+    versesRead: input.versesRead,
+    hasanatEstimate: input.hasanatEstimate,
     updatedOn: today,
   };
 }

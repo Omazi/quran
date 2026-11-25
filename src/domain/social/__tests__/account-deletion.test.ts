@@ -27,6 +27,9 @@ function garden(userId: string): GardenSummary {
     lastWateredOn: TODAY,
     streakDays: 1,
     badgeCount: 0,
+    wordsRead: 0,
+    versesRead: 0,
+    hasanatEstimate: 0,
     updatedOn: TODAY,
   };
 }
