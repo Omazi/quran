@@ -16,13 +16,14 @@ import {
   type SurahEntry,
 } from './contents-model';
 import { READER_CONFIG } from './config';
+import { pageSurah } from './page-surah';
 import { useResumePage } from './use-resume-page';
 
 /** The two lists the segmented choice switches between (spec 1). */
 export type ContentsView = 'surahs' | 'juz';
 
 export interface ContentsModel {
-  /** The page to resume and the surah of its first verse. */
+  /** The page to resume and the surah it is named after (`pageSurah`). */
   readonly resume: { readonly page: number; readonly surah: number };
   /** Today's new pages toward the daily goal: the water given today, shown under "Reprendre". */
   readonly today: TodayProgress;
@@ -76,7 +77,7 @@ export function useContentsModel(
   const juzOpenings = useJuzOpenings(repository);
   return {
     model: {
-      resume: { page: resumePage, surah: quranStructure.firstVerseOfPage(resumePage).surah },
+      resume: { page: resumePage, surah: pageSurah(quranStructure, resumePage) },
       today,
       view,
       query,
@@ -85,7 +86,7 @@ export function useContentsModel(
           ? null
           : {
               page: goToPage,
-              surah: quranStructure.firstVerseOfPage(goToPage).surah,
+              surah: pageSurah(quranStructure, goToPage),
               juz: quranStructure.juzOfPage(goToPage),
             },
       surahs,

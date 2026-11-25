@@ -9,6 +9,7 @@ import { useReaderPresence } from '@/features/profile';
 import { useAppStore } from '@/store';
 
 import { READER_CONFIG } from './config';
+import { pageSurah } from './page-surah';
 import { readingFeedback, type ReadingFeedback } from './reading-feedback';
 import { finishVisit, pauseVisit, resumeVisit, startVisit, type PageVisit } from './reading-timer';
 import { useScreenReader } from './use-screen-reader';
@@ -26,7 +27,7 @@ export interface ReaderDependencies {
 /** Where the reader stands: the page shown and what the bars say about it. */
 export interface ReaderModel {
   readonly page: number;
-  /** The surah of the first verse of the page, like its juz and hizb. */
+  /** The surah the page is named after (`pageSurah`), then its juz and hizb. */
   readonly surah: number;
   readonly juz: number;
   readonly hizb: number;
@@ -169,7 +170,7 @@ export function useReader(
   return {
     model: {
       page,
-      surah: quranStructure.firstVerseOfPage(page).surah,
+      surah: pageSurah(quranStructure, page),
       juz: quranStructure.juzOfPage(page),
       hizb: quranStructure.hizbOfPage(page),
       barsVisible: areBarsShown || isScreenReaderRunning,

@@ -12,6 +12,7 @@ export {
 } from './components/confirm-action';
 export { Placeholder, type PlaceholderProps } from './components/placeholder';
 export { QrCode, qrCodeModules, type QrCodeProps } from './components/qr-code';
+export { ReaderSearchField, type ReaderSearchFieldProps } from './components/reader-search-field';
 export { QuranText, type QuranTextProps, type QuranTextRun } from './components/quran-text';
 export { Screen, type ScreenBackground, type ScreenProps } from './components/screen';
 export { useReducedMotion } from './device-settings';
@@ -26,9 +27,12 @@ export {
 } from './components/bar-chart';
 export {
   chart,
+  emphasisWeight,
   fontFamily,
   layout,
+  MINIMUM_FONT_SIZE,
   radius,
+  readerShapes,
   spacing,
   stateOpacity,
   type QuranTextStyleName,
@@ -40,4 +44,10 @@ export {
   type TextColorRole,
   type TextStyleName,
 } from './tokens';
-export { useColors, type Colors } from './use-colors';
+export {
+  useColors,
+  useReaderPalette,
+  useReaderPaletteValues,
+  type Colors,
+  type ReaderPalette,
+} from './use-colors';

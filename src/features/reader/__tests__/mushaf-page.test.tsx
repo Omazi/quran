@@ -17,7 +17,7 @@ import {
   styleOf,
   type RenderedElement,
 } from '@/ui/test-support/environment';
-import { appColors } from '@/ui/tokens';
+import { appColors, readerPalette } from '@/ui/tokens';
 
 import { MushafPageView } from '../mushaf-page-view';
 import { verseNumberText } from '../page-content';
@@ -84,7 +84,11 @@ describe('the page shows exactly the text of the repository', () => {
     expect(quranTexts().map(textOf)).toEqual(expected);
     // VoiceOver reads each text line as the same words, separated by single spaces, in Arabic.
     const spokenLines = screen.container
-      .queryAll((element) => element.props.accessibilityLanguage === 'ar')
+      .queryAll(
+        (element) =>
+          element.props.accessibilityLanguage === 'ar' &&
+          element.props.accessibilityRole !== 'header',
+      )
       .map((element) => element.props.accessibilityLabel as string | undefined)
       .filter((label): label is string => label !== undefined);
     const textLines = await expectedLines(mushafPage, false);
@@ -107,11 +111,14 @@ describe('the page shows exactly the text of the repository', () => {
     const mushafPage = await quranRepository.getPage(293);
     await renderPage(293);
     const header = screen.getByRole('header');
-    expect(header).toHaveTextContent(`سورة ${quranStructure.surah(18).nameArabic}`);
+    // VoiceOver hears the name first, then the place and the verses, as one heading.
+    expect(header.props.accessibilityLabel).toBe(
+      `سورة ${quranStructure.surah(18).nameArabic}، مكية، آياتها ١١٠`,
+    );
     expect(mushafPage.lines.findIndex((line) => line.kind === 'surah-header')).toBeGreaterThan(0);
   });
 
-  it('draws the surah name in the Quran font, in ink, between two rules of the ornament colour', async () => {
+  it('draws the cartouche of the mockup: the name in the title font, its place and verses, two medallions', async () => {
     // Outside iOS, colours are plain values that can be compared.
     setDeviceConditions({ os: 'android' });
     await showLanguage('fr');
@@ -119,22 +126,46 @@ describe('the page shows exactly the text of the repository', () => {
     const header = screen.getByTestId('surah-header-18');
     const title = within(header).getByText(`سورة ${quranStructure.surah(18).nameArabic}`);
     expect(styleOf(title)).toMatchObject({
-      fontFamily: fontFamily.quran,
+      fontFamily: fontFamily.quranTitle,
       color: appColors.ink.light,
     });
-    const rules = [header, ...header.queryAll((element) => element.type === 'View')].filter(
-      (element) => styleOf(element).borderWidth !== undefined,
-    );
-    expect(rules).toHaveLength(2);
-    for (const rule of rules) expect(styleOf(rule).borderColor).toBe(appColors.ornamentLine.light);
+    // Al-Kahf is Meccan and has 110 verses: the print writes both, in Arabic, whatever the
+    // language of the interface.
+    expect(within(header).getByText('مكية')).toBeOnTheScreen();
+    expect(within(header).getByText('آياتها ١١٠')).toBeOnTheScreen();
+    expect(within(header).getAllByTestId('surah-header-18-medallion')).toHaveLength(2);
+    expect(styleOf(within(header).getByTestId('surah-header-18-rule'))).toMatchObject({
+      borderTopColor: readerPalette.goldLight.light,
+      borderBottomColor: readerPalette.goldDeep.light,
+    });
   });
 
-  it('frames the page with one thin rule of the ornament colour, the same on every page', async () => {
+  it('says a Medinan surah is Medinan', async () => {
+    setDeviceConditions({ os: 'android' });
+    await showLanguage('en');
+    // Page 2 is Al-Baqarah: 286 verses, Medinan.
+    await renderPage(2);
+    const header = screen.getByTestId('surah-header-2');
+    expect(within(header).getByText('مدنية')).toBeOnTheScreen();
+    expect(within(header).getByText('آياتها ٢٨٦')).toBeOnTheScreen();
+  });
+
+  it('frames the page with the double golden rule of the mockup, the same on every page', async () => {
     setDeviceConditions({ os: 'android' });
     await showLanguage('fr');
     await renderPage(293);
     const frame = styleOf(screen.getByTestId('mushaf-page-293-frame'));
-    expect(frame.borderColor).toBe(appColors.ornamentLine.light);
+    expect(frame).toMatchObject({
+      borderColor: readerPalette.frameOuter.light,
+      backgroundColor: appColors.paper.light,
+    });
+    expect(styleOf(screen.getByTestId('mushaf-page-293-frame-inner')).borderColor).toBe(
+      readerPalette.frameInner.light,
+    );
+    // A band of small lozenges above and below the text, and a gold point in each corner.
+    expect(screen.getByTestId('mushaf-page-293-band-top')).toBeOnTheScreen();
+    expect(screen.getByTestId('mushaf-page-293-band-bottom')).toBeOnTheScreen();
+    expect(screen.getAllByTestId('mushaf-page-293-corner')).toHaveLength(4);
     await renderPage(1);
     expect(styleOf(screen.getByTestId('mushaf-page-1-frame'))).toEqual(frame);
   });

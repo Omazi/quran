@@ -326,7 +326,7 @@ describe('returning person', () => {
     const app = await openApp('/quran');
     await waitFor(() => expect(app.getPathname()).toBe('/quran'));
     expect(screen.getByRole('header', { name: 'Coran' })).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Reprendre, Al-Fatiha · Page 1' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Reprendre Al-Fatiha, page 1' })).toBeOnTheScreen();
     expect(screen.getAllByTestId(/^contents-surah-/)).toHaveLength(114);
   });
 
@@ -644,7 +644,7 @@ describe('isolation between tests', () => {
   it('ends on a page pushed on the root stack, over the tabs', async () => {
     const app = await openApp('/quran');
     await fireEvent.press(
-      await screen.findByRole('button', { name: 'Reprendre, Al-Fatiha · Page 1' }),
+      await screen.findByRole('button', { name: 'Reprendre Al-Fatiha, page 1' }),
     );
     await waitFor(() => expect(app.getPathname()).toBe('/reader/1'));
   });

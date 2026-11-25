@@ -11,15 +11,16 @@ import { deviceLocalDate } from '@/features/home';
 import { SCREEN_CONDITIONS, showLanguage } from '@/features/garden/test-support/screen-conditions';
 import { AppStoreProvider, type AppStore } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
-import { fontFamily } from '@/ui';
+import { fontFamily, readerShapes } from '@/ui';
 import {
   directionDependentStyles,
+  touchTargetHeight,
   renderOnIOS,
   resetDeviceConditions,
   setDeviceConditions,
   styleOf,
 } from '@/ui/test-support/environment';
-import { appColors, fallbackSystemColors, textStyles } from '@/ui/tokens';
+import { appColors, readerPalette, textStyles } from '@/ui/tokens';
 
 import { ContentsScreen } from '../contents-screen';
 import { useContentsModel } from '../use-contents-model';
@@ -46,17 +47,40 @@ beforeEach(() => {
 afterEach(resetDeviceConditions);
 
 describe('the Quran tab', () => {
-  it('opens page 1 for a new person, from the one prominent button, named by surah and page', async () => {
+  it('opens page 1 for a new person, from the cream resume card of the mockup', async () => {
     setDeviceConditions();
     await showLanguage('fr');
     await renderContents();
     expect(screen.getByRole('header', { name: 'Coran' })).toBeOnTheScreen();
-    // The label is the short action; the surah and the page are its second line.
-    const resume = screen.getByRole('button', { name: 'Reprendre, Al-Fatiha · Page 1' });
-    expect(within(resume).getByText('Reprendre')).toBeOnTheScreen();
-    expect(within(resume).getByText('Al-Fatiha · Page 1')).toBeOnTheScreen();
+    // docs/design/accueil.png: the surah, "Reprendre page n" under it, its Arabic name at the end.
+    const resume = screen.getByRole('button', { name: 'Reprendre Al-Fatiha, page 1' });
+    expect(within(resume).getByText('Al-Fatiha')).toBeOnTheScreen();
+    expect(within(resume).getByText('Reprendre page 1')).toBeOnTheScreen();
+    expect(within(resume).getByText('الفاتحة')).toBeOnTheScreen();
     await fireEvent.press(resume);
     expect(openPage).toHaveBeenCalledWith(1);
+  });
+
+  it('draws the resume card cream with its golden edge, inside a white card, on the warm ground', async () => {
+    setDeviceConditions({ os: 'android' });
+    await showLanguage('fr');
+    await renderContents();
+    expect(styleOf(screen.getByTestId('contents'))).toMatchObject({
+      backgroundColor: readerPalette.canvas.light,
+    });
+    expect(styleOf(screen.getByTestId('contents-today-card'))).toMatchObject({
+      backgroundColor: readerPalette.card.light,
+      borderRadius: readerShapes.cardRadius,
+    });
+    expect(styleOf(screen.getByTestId('contents-resume'))).toMatchObject({
+      backgroundColor: readerPalette.cardCream.light,
+      borderColor: readerPalette.cardCreamEdge.light,
+    });
+    const arabic = within(screen.getByTestId('contents-resume')).getByText('الفاتحة');
+    expect(styleOf(arabic)).toMatchObject({
+      fontFamily: fontFamily.quranTitle,
+      color: appColors.ornament.light,
+    });
   });
 
   it('puts "Reprendre" first, then the search field right under it, then the list', async () => {
@@ -81,13 +105,11 @@ describe('the Quran tab', () => {
       EMPTY_JOURNAL,
     );
     await renderContents(createTestAppStore({ journal }));
-    expect(
-      screen.getByRole('button', { name: 'Reprendre, Al-Baqarah · Page 4' }),
-    ).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Reprendre Al-Baqarah, page 4' })).toBeOnTheScreen();
 
     await renderContents(createTestAppStore({ journal, settings: { lastOpenedPage: 293 } }));
-    // Named, like its juz and hizb, by its first verse: page 293 opens on the end of Al-Isra.
-    expect(screen.getByRole('button', { name: 'Reprendre, Al-Isra · Page 293' })).toBeOnTheScreen();
+    // Named after the surah that begins on it, as the mockup does: "Al-Kahf · Reprendre page 293".
+    expect(screen.getByRole('button', { name: 'Reprendre Al-Kahf, page 293' })).toBeOnTheScreen();
   });
 
   it('shows, under "Reprendre", today\'s pages toward the daily goal, in water', async () => {
@@ -99,11 +121,15 @@ describe('the Quran tab', () => {
       EMPTY_JOURNAL,
     );
     await renderContents(createTestAppStore({ journal, settings: { dailyGoalPages: 5 } }));
-    const gauge = screen.getByTestId('contents-today');
-    expect(gauge).toHaveTextContent(/^Aujourd’hui3 pages sur 5$/);
-    expect(gauge.props.accessibilityValue).toEqual({ text: '3 pages sur 5' });
-    // Right under the button, in the same group (layout.md › Visual hierarchy).
-    const order = ['contents-resume', 'contents-today', 'contents-search'];
+    const card = screen.getByTestId('contents-today');
+    expect(card).toHaveTextContent(
+      /^Arrosage du jour3 pages sur 5Encore 2 pages pour ton objectif$/,
+    );
+    // The water ring of the mockup, filled to three fifths, in water.
+    const ring = screen.getByTestId('contents-today-ring', { includeHiddenElements: true });
+    expect(ring.props.accessibilityElementsHidden).toBe(true);
+    // In the same white card as the resume card, above it, as in accueil.png.
+    const order = ['contents-today', 'contents-resume', 'contents-search'];
     const all = screen.container.queryAll(
       (element) => typeof element.props.testID === 'string' && order.includes(element.props.testID),
     );
@@ -117,14 +143,16 @@ describe('the Quran tab', () => {
     const today = deviceLocalDate(new Date());
     const one = recordPageRead(EMPTY_JOURNAL, { page: 1, date: today });
     await renderContents(createTestAppStore({ journal: one, settings: { dailyGoalPages: 5 } }));
-    expect(screen.getByTestId('contents-today')).toHaveTextContent(/1 page sur 5$/);
+    expect(screen.getByTestId('contents-today')).toHaveTextContent(
+      /1 page sur 5Encore 4 pages pour ton objectif$/,
+    );
     const six = [1, 2, 3, 4, 5, 6].reduce(
       (current, page) => recordPageRead(current, { page, date: today }),
       EMPTY_JOURNAL,
     );
     await renderContents(createTestAppStore({ journal: six, settings: { dailyGoalPages: 5 } }));
     expect(screen.getByTestId('contents-today')).toHaveTextContent(
-      /6 pages sur 5, objectif atteint$/,
+      /6 pages sur 5Objectif du jour atteint$/,
     );
   });
 
@@ -140,15 +168,27 @@ describe('the Quran tab', () => {
     expect(openPage).toHaveBeenCalledWith(293);
   });
 
-  it('draws each Arabic name in the Quran font, in ink', async () => {
+  it('draws each Arabic name in gold, as the resume card does, in white cards', async () => {
     setDeviceConditions({ os: 'android' });
     await showLanguage('fr');
     await renderContents();
     const name = within(screen.getByTestId('contents-surah-18')).getByText('الكهف');
     expect(styleOf(name)).toMatchObject({
-      fontFamily: fontFamily.quran,
-      color: appColors.ink.light,
+      fontFamily: fontFamily.quranTitle,
+      color: appColors.ornament.light,
     });
+    expect(styleOf(screen.getByTestId('contents-surahs-card'))).toMatchObject({
+      backgroundColor: readerPalette.card.light,
+    });
+  });
+
+  it('gives every row 44 points to touch and a pressed state', async () => {
+    setDeviceConditions();
+    await showLanguage('fr');
+    await renderContents();
+    for (const id of ['contents-resume', 'contents-surah-1', 'contents-surah-114']) {
+      expect(touchTargetHeight(screen.getByTestId(id))).toBeGreaterThanOrEqual(44);
+    }
   });
 
   it('filters the surahs as the person types, and says when none matches', async () => {
@@ -212,7 +252,7 @@ describe('the Quran tab', () => {
     const row = screen.getByTestId('contents-page-result');
     // Above the surahs the number also matches (here none: 293 is no surah).
     expect(row).toHaveTextContent(/Page 293/);
-    expect(row).toHaveTextContent(/Al-Isra · Juz 15/);
+    expect(row).toHaveTextContent(/Al-Kahf · Juz 15/);
     await fireEvent.press(row);
     expect(openPage).toHaveBeenCalledWith(293);
   });
@@ -272,8 +312,9 @@ describe('the Quran tab', () => {
     await fireEvent.press(screen.getByRole('radio', { name: 'Juz' }));
     const title = screen.getByText('Juz 3');
     expect(styleOf(title)).toMatchObject({
-      fontSize: textStyles.headline.fontSize,
-      color: fallbackSystemColors.label.light,
+      fontFamily: fontFamily.serif,
+      fontSize: textStyles.title2.fontSize,
+      color: appColors.ink.light,
     });
   });
 
@@ -284,7 +325,8 @@ describe('the Quran tab', () => {
     await fireEvent.press(screen.getByRole('radio', { name: 'Juz' }));
     // Juz 2 opens with verse 2:142, "sayaqūlu s-sufahāʾu…".
     const words = await screen.findByText(/سَيَقُولُ/);
-    expect(styleOf(words)).toMatchObject({ fontFamily: fontFamily.quran });
+    // The words are a run of the Quran text component, which sets the font.
+    expect(styleOf(words.parent ?? words)).toMatchObject({ fontFamily: fontFamily.quran });
     expect(await screen.findByText(/^بِسۡمِ/)).toBeOnTheScreen();
   });
 
@@ -296,9 +338,8 @@ describe('the Quran tab', () => {
       await renderContents();
       if (conditions.language === 'ar') {
         expect(screen.getByRole('header', { name: 'القرآن' })).toBeOnTheScreen();
-        // In Arabic the label carries the number, the name is the row's value; no
-        // transliteration.
-        expect(screen.getByTestId('contents-surah-18')).toHaveTextContent(/^السورة 18.*الكهف/);
+        // In Arabic the row is named by its Arabic name alone; no transliteration.
+        expect(screen.getByTestId('contents-surah-18')).toHaveTextContent(/^18الكهف/);
         expect(screen.queryByText('Al-Kahf')).toBeNull();
       }
       expect(directionDependentStyles(screen.getByTestId('contents'))).toEqual([]);

@@ -1,29 +1,34 @@
 import { useTranslation } from 'react-i18next';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { PAGE_COUNT } from '@/domain/quran';
-import { getDisplayedLanguage } from '@/i18n';
 import {
   AppText,
-  ButtonRow,
-  ContentRow,
-  DetailRow,
-  Gauge,
-  GroupedList,
-  LabelRow,
-  ListSection,
+  Icon,
+  QuranText,
+  ReaderSearchField,
   Screen,
-  SearchFieldRow,
-  SegmentedChoice,
+  layout,
+  spacing,
+  stateOpacity,
   type IconSymbol,
 } from '@/ui';
 
 import { READER_CONFIG } from './config';
-
-import type { HizbEntry, SurahEntry } from './contents-model';
-import { surahDisplayName } from './reader-screen';
+import {
+  HizbRow,
+  ReaderCard,
+  ReaderSegmented,
+  SkyBand,
+  SurahRow,
+  TodayCard,
+  type ReaderChoiceOption,
+} from './contents-parts';
+import { surahDisplayName } from './surah-name';
 import type { ContentsActions, ContentsModel, ContentsView } from './use-contents-model';
 
 const NO_RESULT_SYMBOL: IconSymbol = { ios: 'magnifyingglass', android: 'search' };
+const PAGE_SYMBOL: IconSymbol = { ios: 'book.pages', android: 'auto_stories' };
 
 export interface ContentsScreenProps {
   model: ContentsModel;
@@ -33,201 +38,182 @@ export interface ContentsScreenProps {
 /**
  * The Quran tab: where do I resume, and how do I reach a surah or a page? (spec 1)
  *
- * One list of the system, so the whole tab scrolls as one (lists-and-tables.md › Style). In order
- * of importance (layout.md › Visual hierarchy):
+ * In the visual language of the validated mockups (docs/design/accueil.png and mushaf.png;
+ * deviations 80 and 83 of the register), on the warm ground, in order of importance
+ * (layout.md › Visual hierarchy):
  *
- * - the title;
- * - "Reprendre", the most likely action of the screen and its only prominent button, in the
- *   accent: a short verb, with the surah and the page it opens on a second line (buttons.md ›
- *   Style; writing.md › Be action oriented). Under it, in the same group (layout.md › Visual
- *   hierarchy: group related items), the water given today: the system gauge, filled in the
- *   accent, with today's new pages toward the daily goal in words (gauges.md: a value within a
- *   range; charter: the accent is water). It is what "Reprendre" is for, so it sits with it;
- * - the inline search field, directly under it, above the list it searches (search-fields.md ›
- *   Search as an inline field). It filters the surahs as the person types and takes a page
- *   number too: a number from 1 to 604 puts a "Page n" row at the top of the results. It is not
- *   pinned while scrolling, which the guideline only suggests: pinning is the system's
- *   `searchable` in a navigation bar, which the app does not have (deviation 36 of the register);
- * - the surahs or the juz, which a segmented control switches (segmented-controls.md › Mobile).
- *   While something is typed, the results replace both.
- *
- * Each row that opens a page says what it opens and ends with the disclosure indicator
- * (lists-and-tables.md › Mobile). The Arabic name of each surah is the character of its row: in
- * the Quran font, in ink; each juz header carries its opening words the same way.
+ * - the title, in the serif of the mockups' titles;
+ * - the white card of the day: the water ring with today's pages toward the goal, then the cream
+ *   card "Al-Kahf · Reprendre page 293" with the Arabic name in gold, the most likely action;
+ * - the inline search field, above the list it searches (search-fields.md › Search as an inline
+ *   field). A number from 1 to 604 puts a "Page n" row at the top of the results;
+ * - the surahs or the juz, switched by the mockup's two-part control (segmented-controls.md ›
+ *   Mobile), in white cards. While something is typed, the results replace both.
  */
 export function ContentsScreen({ model, actions }: ContentsScreenProps) {
   const { t } = useTranslation('reader');
-  const viewOptions = [
+  const viewOptions: readonly ReaderChoiceOption<ContentsView>[] = [
     { value: 'surahs', label: t('contents.view.surahs') },
     { value: 'juz', label: t('contents.view.juz') },
-  ] as const;
-  const { goTo } = model;
+  ];
   const isSearching = model.query.trim() !== '';
   return (
-    <Screen background="groupedBackground" testID="contents">
-      <GroupedList testID="contents-list">
-        <ListSection>
-          <ContentRow>
-            <AppText variant="largeTitle">{t('contents.title')}</AppText>
-          </ContentRow>
-        </ListSection>
-        <ListSection>
-          <ButtonRow
-            variant="primary"
-            label={t('contents.resume.action')}
-            detail={t('contents.resume.detail', {
-              surah: surahDisplayName(model.resume.surah),
-              page: model.resume.page,
-            })}
-            onPress={() => actions.openPage(model.resume.page)}
-            testID="contents-resume"
-          />
-          <TodayGauge today={model.today} />
-        </ListSection>
-        <ListSection>
-          <SearchFieldRow
-            label={t('contents.search.label')}
-            placeholder={t('contents.search.placeholder')}
-            value={model.query}
-            onChange={actions.setQuery}
-            clearLabel={t('contents.search.clear')}
-            testID="contents-search"
-          />
-        </ListSection>
-        <ListSection>
-          <SegmentedChoice<ContentsView>
-            label={t('contents.view.label')}
-            options={viewOptions}
-            value={model.view}
-            onChange={actions.setView}
-            testID="contents-view"
-          />
-        </ListSection>
+    <Screen background="readerCanvas" scroll testID="contents">
+      <SkyBand />
+      <View style={styles.content} testID="contents-list">
+        <AppText variant="largeTitle" color="ink">
+          {t('contents.title')}
+        </AppText>
+        <TodayCard
+          today={model.today}
+          resume={model.resume}
+          onResume={() => actions.openPage(model.resume.page)}
+        />
+        <ReaderSearchField
+          label={t('contents.search.label')}
+          placeholder={t('contents.search.placeholder')}
+          value={model.query}
+          onChange={actions.setQuery}
+          clearLabel={t('contents.search.clear')}
+          testID="contents-search"
+        />
         {isSearching ? (
-          <ListSection>
-            {goTo === null ? null : (
-              <DetailRow
-                label={t('contents.search.page', { page: goTo.page })}
-                detail={t('contents.search.pageDetail', {
-                  surah: surahDisplayName(goTo.surah),
-                  juz: goTo.juz,
-                })}
-                onPress={() => actions.openPage(goTo.page)}
-                testID="contents-page-result"
-              />
-            )}
-            {model.surahs.length === 0 ? (
-              goTo === null ? (
-                // Never a dead end: what to type instead, with an example (writing.md › Provide
-                // clear next steps on any blank screens; ux-writing › Empty states).
-                <LabelRow
-                  label={t('contents.search.empty', { query: model.query.trim() })}
-                  detail={t('contents.search.emptyHint', {
-                    example: surahDisplayName(READER_CONFIG.searchExampleSurah),
-                    last: PAGE_COUNT,
-                  })}
-                  symbol={NO_RESULT_SYMBOL}
-                  tone="secondaryLabel"
-                  testID="contents-search-empty"
-                />
-              ) : null
+          <SearchResults model={model} actions={actions} />
+        ) : (
+          <>
+            <ReaderSegmented
+              label={t('contents.view.label')}
+              options={viewOptions}
+              value={model.view}
+              onChange={actions.setView}
+              testID="contents-view"
+            />
+            {model.view === 'surahs' ? (
+              <ReaderCard testID="contents-surahs-card">
+                <View>
+                  {model.surahs.map((entry, index) => (
+                    <SurahRow
+                      key={entry.surah}
+                      entry={entry}
+                      isFirst={index === 0}
+                      onOpen={actions.openPage}
+                    />
+                  ))}
+                </View>
+              </ReaderCard>
             ) : (
-              model.surahs.map((entry) => (
-                <SurahRow key={entry.surah} entry={entry} onOpen={actions.openPage} />
+              model.juz.map((juz) => (
+                <View key={juz.juz} style={styles.juz}>
+                  <View style={styles.juzHeader} accessible accessibilityRole="header">
+                    <AppText variant="title2" color="ink">
+                      {t('contents.juz.title', { juz: juz.juz })}
+                    </AppText>
+                    {model.juzOpenings[juz.juz] === undefined ? null : (
+                      <QuranText
+                        runs={[{ text: model.juzOpenings[juz.juz] ?? '' }]}
+                        variant="openingWords"
+                        align="start"
+                      />
+                    )}
+                  </View>
+                  <ReaderCard>
+                    <View>
+                      {juz.hizbs.map((hizb, index) => (
+                        <HizbRow
+                          key={hizb.hizb}
+                          entry={hizb}
+                          isFirst={index === 0}
+                          onOpen={actions.openPage}
+                        />
+                      ))}
+                    </View>
+                  </ReaderCard>
+                </View>
               ))
             )}
-          </ListSection>
-        ) : model.view === 'surahs' ? (
-          <ListSection>
-            {model.surahs.map((entry) => (
-              <SurahRow key={entry.surah} entry={entry} onOpen={actions.openPage} />
-            ))}
-          </ListSection>
-        ) : (
-          model.juz.map((juz) => (
-            <ListSection
-              key={juz.juz}
-              title={t('contents.juz.title', { juz: juz.juz })}
-              titleQuran={model.juzOpenings[juz.juz]}
-            >
-              {juz.hizbs.map((hizb) => (
-                <HizbRow key={hizb.hizb} entry={hizb} onOpen={actions.openPage} />
-              ))}
-            </ListSection>
-          ))
+          </>
         )}
-      </GroupedList>
+      </View>
     </Screen>
   );
 }
 
-/**
- * Today's new pages toward the daily goal: a value in a range, so the system gauge (gauges.md),
- * in the accent of the host. The value says the goal ("3 pages sur 5"), so the ends of the range
- * are not labelled again under the main button (deviation 65 of the register).
- */
-function TodayGauge({ today }: { today: ContentsModel['today'] }) {
+/** The results of a search: the page it names first, then the surahs it matches, or a next step. */
+function SearchResults({ model, actions }: ContentsScreenProps) {
   const { t } = useTranslation('reader');
-  const value = t(today.goalReached ? 'contents.today.valueReached' : 'contents.today.value', {
-    count: today.pagesRead,
-    goal: today.goalPages,
-  });
-  // A bare row, like the button above it: the two read as one group, without a card of its own
-  // under a button that has none.
+  const { goTo } = model;
+  if (goTo === null && model.surahs.length === 0) {
+    // Never a dead end: what to type instead, with an example (writing.md › Provide clear next
+    // steps on any blank screens; ux-writing › Empty states).
+    return (
+      <View style={styles.empty} testID="contents-search-empty">
+        <Icon symbol={NO_RESULT_SYMBOL} textStyle="title2" color="inkSecondary" />
+        <AppText variant="headline" color="ink" align="center">
+          {t('contents.search.empty', { query: model.query.trim() })}
+        </AppText>
+        <AppText variant="subhead" color="inkSecondary" align="center">
+          {t('contents.search.emptyHint', {
+            example: surahDisplayName(READER_CONFIG.searchExampleSurah),
+            last: PAGE_COUNT,
+          })}
+        </AppText>
+      </View>
+    );
+  }
   return (
-    <ContentRow>
-      <Gauge
-        value={Math.min(1, today.pagesRead / today.goalPages)}
-        label={t('contents.today.label')}
-        valueLabel={value}
-        testID="contents-today"
-      />
-    </ContentRow>
+    <ReaderCard testID="contents-results">
+      <View>
+        {goTo === null ? null : (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => actions.openPage(goTo.page)}
+            testID="contents-page-result"
+            style={({ pressed }) => [styles.pageResult, pressed && styles.pressed]}
+          >
+            <Icon symbol={PAGE_SYMBOL} textStyle="headline" color="ink" />
+            <View style={styles.pageResultWords}>
+              <AppText variant="headline" color="ink">
+                {t('contents.search.page', { page: goTo.page })}
+              </AppText>
+              <AppText variant="footnote" color="inkSecondary">
+                {t('contents.search.pageDetail', {
+                  surah: surahDisplayName(goTo.surah),
+                  juz: goTo.juz,
+                })}
+              </AppText>
+            </View>
+          </Pressable>
+        )}
+        {model.surahs.map((entry, index) => (
+          <SurahRow
+            key={entry.surah}
+            entry={entry}
+            isFirst={goTo === null && index === 0}
+            onOpen={actions.openPage}
+          />
+        ))}
+      </View>
+    </ReaderCard>
   );
 }
 
-/**
- * One surah: its number and name, then whether it is Meccan or Medinan, its verses and its page.
- * Its Arabic name, in the Quran font and in ink, is the value of the row. Outside Arabic, the
- * label carries the transliteration; in Arabic, the label carries the number alone, since the
- * name is already the value.
- */
-function SurahRow({ entry, onOpen }: { entry: SurahEntry; onOpen: (page: number) => void }) {
-  const { t } = useTranslation('reader');
-  const isArabic = getDisplayedLanguage() === 'ar';
-  return (
-    <DetailRow
-      label={
-        isArabic
-          ? t('contents.surah.numberOnly', { number: entry.surah })
-          : t('contents.surah.label', { number: entry.surah, name: entry.nameTransliterated })
-      }
-      detail={t('contents.surah.detail', {
-        count: entry.verseCount,
-        place: t(`contents.surah.${entry.revelationPlace}`),
-        page: entry.page,
-      })}
-      value={entry.nameArabic}
-      valueStyle="quran"
-      onPress={() => onOpen(entry.page)}
-      testID={`contents-surah-${entry.surah}`}
-    />
-  );
-}
-
-/** One hizb: its number, then the surah and verse it starts with, and its page. */
-function HizbRow({ entry, onOpen }: { entry: HizbEntry; onOpen: (page: number) => void }) {
-  const { t } = useTranslation('reader');
-  return (
-    <DetailRow
-      label={t('contents.juz.hizb', { hizb: entry.hizb })}
-      detail={t('contents.juz.start', {
-        surah: surahDisplayName(entry.start.surah),
-        verse: entry.start.verse,
-        page: entry.page,
-      })}
-      onPress={() => onOpen(entry.page)}
-      testID={`contents-hizb-${entry.hizb}`}
-    />
-  );
-}
+const styles = StyleSheet.create({
+  content: {
+    gap: spacing.md,
+    paddingHorizontal: layout.screenMargin,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xl,
+  },
+  juz: { gap: spacing.sm },
+  juzHeader: { gap: spacing.xs, paddingTop: spacing.sm },
+  empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl },
+  pageResult: {
+    minHeight: layout.touchTarget,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  pageResultWords: { flex: 1 },
+  pressed: { opacity: stateOpacity.pressed },
+});

@@ -2,15 +2,16 @@
   "contents": {
     "title": "Quran",
     "resume": {
-      "action": "Continue",
-      "detail": "{{surah}} · Page {{page}}"
+      "detail": "Continue on page {{page}}",
+      "spoken": "Continue {{surah}}, page {{page}}"
     },
     "today": {
-      "label": "Today",
+      "label": "Today’s Watering",
       "value_one": "{{count}} page of {{goal}}",
       "value_other": "{{count}} pages of {{goal}}",
-      "valueReached_one": "{{count}} page of {{goal}}, goal reached",
-      "valueReached_other": "{{count}} pages of {{goal}}, goal reached"
+      "remaining_one": "{{count}} more page to reach your goal",
+      "remaining_other": "{{count}} more pages to reach your goal",
+      "reached": "Today’s goal reached"
     },
     "view": {
       "label": "Show",
@@ -27,12 +28,11 @@
       "pageDetail": "{{surah}} · Juz {{juz}}"
     },
     "surah": {
-      "label": "{{number}}. {{name}}",
       "detail_one": "{{place}} · {{count}} verse · Page {{page}}",
       "detail_other": "{{place}} · {{count}} verses · Page {{page}}",
       "meccan": "Meccan",
       "medinan": "Medinan",
-      "numberOnly": "Surah {{number}}"
+      "spoken": "{{number}}. {{name}}, {{arabic}}, {{detail}}"
     },
     "juz": {
       "title": "Juz {{juz}}",
@@ -41,8 +41,14 @@
     }
   },
   "page": {
-    "subtitle": "Juz {{juz}} · Hizb {{hizb}} · Page {{page}}",
+    "subtitle": "Juz {{juz}}, Hizb {{hizb}} · Page {{page}}",
     "surahTitle": "سورة {{name}}",
+    "cartouche": {
+      "verses": "آياتها {{count}}",
+      "meccan": "مكية",
+      "medinan": "مدنية",
+      "spoken": "{{title}}، {{place}}، {{verses}}"
+    },
     "loading": "Loading page {{page}}",
     "next": "Next Page",
     "previous": "Previous Page",
@@ -52,8 +58,12 @@
       "description": "The data of this page is incomplete, so it is not shown. The other pages can still be read."
     }
   },
+  "bar": {
+    "back": "Back",
+    "contents": "Contents"
+  },
   "feedback": {
-    "pageCounted": "Page read. Your garden is watered.",
+    "pageCounted": "+1 page, your garden is watered",
     "hizbCompleted": "Hizb complete. New in your garden: {{element}}"
   },
   "notFound": {

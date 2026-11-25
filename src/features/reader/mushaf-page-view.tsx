@@ -9,19 +9,17 @@ import {
   type LayoutChangeEvent,
 } from 'react-native';
 
-import { quranStructure } from '@/data/quran';
 import {
   ContentUnavailable,
   ProgressIndicator,
   fontFamily,
   layout,
-  radius,
-  spacing,
+  readerShapes,
   useColors,
   type IconSymbol,
 } from '@/ui';
 
-import { READER_CONFIG } from './config';
+import { MushafFrame } from './mushaf-frame';
 import type { PageLine, PageItem } from './page-content';
 import {
   computeOpeningPageMetrics,
@@ -32,13 +30,10 @@ import {
   type PageArea,
   type PageMetrics,
 } from './page-layout';
+import { SurahCartouche } from './surah-cartouche';
 import { useMushafPage } from './use-mushaf-page';
 
 const ERROR_SYMBOL: IconSymbol = { ios: 'exclamationmark.triangle', android: 'warning' };
-/** Space between the rule of the frame and the side of the screen. */
-const FRAME_INSET = spacing.sm;
-/** Space between the two rules of the cartouche. */
-const CARTOUCHE_RULE_GAP = spacing.xs - layout.outlineWidth;
 
 /** VoiceOver actions offered on every line: the page can be turned without a swipe. */
 export interface PageTurnActions {
@@ -56,10 +51,9 @@ export interface MushafPageViewProps {
 }
 
 /**
- * One page of the mushaf: its lines, in order, on the paper of the page, inside a single thin
- * rule in the ornament line colour (spec 2: no ornament drawn in code beyond a rule). The frame has
- * the same size and place on every page, right under the bar, so it does not move when a page
- * turns; pages 1 and 2 set their
+ * One page of the mushaf: its lines, in order, on the paper of the page, inside the double golden
+ * frame of the validated mockup (`MushafFrame`). The frame has the same size and place on every
+ * page, right under the bar, so it does not move when a page turns; pages 1 and 2 set their
  * few lines larger inside it (`computeOpeningPageMetrics`), as the print does. Memoised: the
  * pager mounts the current page and its neighbours, and a page already drawn does not draw again
  * while the person reads. Taps and zoom belong to `ZoomablePage`, around it.
@@ -70,7 +64,6 @@ export const MushafPageView = memo(function MushafPageView({
   area,
   turnActions,
 }: MushafPageViewProps) {
-  const colors = useColors();
   const { t } = useTranslation('reader');
   const state = useMushafPage(page);
   if (state.status === 'loading') {
@@ -98,16 +91,10 @@ export const MushafPageView = memo(function MushafPageView({
       style={[styles.page, { paddingTop: pageTopInset(area, metrics) }]}
       testID={`mushaf-page-${page}`}
     >
-      <View
-        testID={`mushaf-page-${page}-frame`}
-        style={[
-          styles.frame,
-          {
-            width: area.width - 2 * FRAME_INSET,
-            height: pageFrameHeight(metrics),
-            borderColor: colors.ornamentLine,
-          },
-        ]}
+      <MushafFrame
+        width={area.width - 2 * readerShapes.frameInset}
+        height={pageFrameHeight(metrics)}
+        testID={`mushaf-page-${page}`}
       >
         <View style={[styles.block, { width: lineMetrics.textWidth }]}>
           {state.lines.map((line, index) => (
@@ -121,7 +108,7 @@ export const MushafPageView = memo(function MushafPageView({
             />
           ))}
         </View>
-      </View>
+      </MushafFrame>
     </View>
   );
 });
@@ -134,48 +121,9 @@ interface MushafLineProps {
 }
 
 function MushafLine({ line, metrics, isCentred, turnActions }: MushafLineProps) {
-  const { t } = useTranslation('reader');
-  const colors = useColors();
   const row = { height: metrics.lineHeight };
   if (line.kind === 'surah-header') {
-    const name = quranStructure.surah(line.surah).nameArabic;
-    const height = metrics.lineHeight * READER_CONFIG.surahHeaderHeightRatio;
-    // The name, a little larger than the text of the page, in a line box as tall as the inner
-    // rule: the font's ascent is twice its descent, so only an explicit line height centres it.
-    const nameSize = metrics.fontSize * READER_CONFIG.surahNameScale;
-    const innerHeight = height - 2 * (CARTOUCHE_RULE_GAP + layout.outlineWidth);
-    return (
-      <View style={[styles.row, row]}>
-        {/* The cartouche: two thin rules in the ornament colour, the language of the page's
-            frame, around the name in the Quran font. An ornate cartouche needs an image (D12). */}
-        <View
-          accessible
-          accessibilityRole="header"
-          accessibilityLanguage="ar"
-          accessibilityActions={turnActions.actions}
-          onAccessibilityAction={turnActions.onAction}
-          testID={`surah-header-${line.surah}`}
-          style={[styles.cartouche, { height, borderColor: colors.ornamentLine }]}
-        >
-          <View style={[styles.cartoucheInner, { borderColor: colors.ornamentLine }]}>
-            <Text
-              allowFontScaling={false}
-              numberOfLines={1}
-              style={{
-                fontFamily: fontFamily.quran,
-                fontSize: nameSize,
-                lineHeight: innerHeight,
-                textAlignVertical: 'center',
-                includeFontPadding: false,
-                color: colors.ink,
-              }}
-            >
-              {t('page.surahTitle', { name })}
-            </Text>
-          </View>
-        </View>
-      </View>
-    );
+    return <SurahCartouche surah={line.surah} metrics={metrics} turnActions={turnActions} />;
   }
   if (line.kind === 'basmala') {
     return (
@@ -301,31 +249,10 @@ function QuranText({ text, fontSize, isVerseEnd = false, onLayout }: QuranTextPr
 const styles = StyleSheet.create({
   // Right under the bar (`pageTopInset`); a tall room leaves its rest under the page.
   page: { flex: 1, alignItems: 'center', justifyContent: 'flex-start' },
-  // One thin rule around the page, in the side margins: the text column keeps its width.
-  frame: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: layout.outlineWidth,
-  },
   // The page reads right to left whatever the language of the interface (spec 2).
   block: { direction: 'rtl' },
   centred: { flex: 1, justifyContent: 'center', paddingHorizontal: layout.screenMargin },
   row: { flexDirection: 'row', alignItems: 'center' },
   spreadRow: { justifyContent: 'space-between' },
   centredRow: { justifyContent: 'center' },
-  // The surah header: two rules, the inner one a little inside the outer, both with the radius
-  // of the charter. A drawn ornate frame needs an image, which does not exist (spec 2, D12).
-  cartouche: {
-    flex: 1,
-    padding: CARTOUCHE_RULE_GAP,
-    borderWidth: layout.outlineWidth,
-    borderRadius: radius.sm,
-  },
-  cartoucheInner: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: layout.outlineWidth,
-    borderRadius: radius.sm - spacing.xs,
-  },
 });

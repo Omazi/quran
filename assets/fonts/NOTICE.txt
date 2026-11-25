@@ -56,3 +56,27 @@ cannot warrant the performance or results you may obtain by using the Font. In
 no event shall KFGQPC be liable for any Claims, Damages or other Liability,
 including any Damages, arising from, out of the use or inability to use the Font
 or from other dealings in the Font.
+
+
+Fraunces SemiBold, version 1.000
+================================
+
+File:      Fraunces-SemiBold.ttf  (Fraunces SemiBold, Version 1.000;[b76b70a41], PostScript
+           name Fraunces-SemiBold)
+Owner:     The Fraunces Project Authors (github.com/undercasetype/Fraunces)
+SHA-256:   9f03c0fe70d1670d22f392a138ac02eceedc5eee5f1cd8d7486ba2aed843b8aa
+Size:      72504 bytes
+Copied, unmodified, from: the npm package @expo-google-fonts/fraunces 0.4.1, file
+           600SemiBold/Fraunces_600SemiBold.ttf (the Google Fonts build of the font). The
+           package was downloaded with `npm pack` on 25 November 2026 to take the file only: it
+           is not a dependency of the app. Only the file name was changed.
+Embedding: the font's OS/2 fsType field is 0 (installable embedding, no restriction).
+Licence:   SIL Open Font License 1.1 (permissive). The full text, as shipped with the font, is
+           in Fraunces-OFL.txt beside this file. The licence declares no Reserved Font Name.
+Use:       the serif titles of the interface (Large Title, Title 1, Title 2), as in the
+           validated mockups; owner's decision of 25 November 2026.
+
+From the font file itself (name table, records 0 and 13):
+  "Copyright 2020 The Fraunces Project Authors (github.com/undercasetype/Fraunces)"
+  "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license
+   is available with a FAQ at: https://scripts.sil.org/OFL"

@@ -2,15 +2,16 @@
   "contents": {
     "title": "Coran",
     "resume": {
-      "action": "Reprendre",
-      "detail": "{{surah}} · Page {{page}}"
+      "detail": "Reprendre page {{page}}",
+      "spoken": "Reprendre {{surah}}, page {{page}}"
     },
     "today": {
-      "label": "Aujourd’hui",
+      "label": "Arrosage du jour",
       "value_one": "{{count}} page sur {{goal}}",
       "value_other": "{{count}} pages sur {{goal}}",
-      "valueReached_one": "{{count}} page sur {{goal}}, objectif atteint",
-      "valueReached_other": "{{count}} pages sur {{goal}}, objectif atteint"
+      "remaining_one": "Encore {{count}} page pour ton objectif",
+      "remaining_other": "Encore {{count}} pages pour ton objectif",
+      "reached": "Objectif du jour atteint"
     },
     "view": {
       "label": "Afficher",
@@ -27,12 +28,11 @@
       "pageDetail": "{{surah}} · Juz {{juz}}"
     },
     "surah": {
-      "label": "{{number}}. {{name}}",
       "detail_one": "{{place}} · {{count}} verset · Page {{page}}",
       "detail_other": "{{place}} · {{count}} versets · Page {{page}}",
       "meccan": "Mecquoise",
       "medinan": "Médinoise",
-      "numberOnly": "Sourate {{number}}"
+      "spoken": "{{number}}. {{name}}, {{arabic}}, {{detail}}"
     },
     "juz": {
       "title": "Juz {{juz}}",
@@ -41,8 +41,14 @@
     }
   },
   "page": {
-    "subtitle": "Juz {{juz}} · Hizb {{hizb}} · Page {{page}}",
+    "subtitle": "Juz {{juz}}, Hizb {{hizb}} · Page {{page}}",
     "surahTitle": "سورة {{name}}",
+    "cartouche": {
+      "verses": "آياتها {{count}}",
+      "meccan": "مكية",
+      "medinan": "مدنية",
+      "spoken": "{{title}}، {{place}}، {{verses}}"
+    },
     "loading": "Chargement de la page {{page}}",
     "next": "Page suivante",
     "previous": "Page précédente",
@@ -52,8 +58,12 @@
       "description": "Les données de cette page sont incomplètes : elle n’est pas affichée. Les autres pages restent lisibles."
     }
   },
+  "bar": {
+    "back": "Retour",
+    "contents": "Sommaire"
+  },
   "feedback": {
-    "pageCounted": "Page lue, ton jardin est arrosé",
+    "pageCounted": "+1 page, ton jardin est arrosé",
     "hizbCompleted": "Hizb terminé. Nouveau dans ton jardin : {{element}}"
   },
   "notFound": {
