@@ -154,6 +154,37 @@ export interface ChoiceRowProps<Value extends string> {
   testID?: string;
 }
 
+export interface SegmentedChoiceProps<Value extends string> {
+  /**
+   * Names the choice for screen readers. It is not shown: segments with text need no
+   * introductory text (segmented-controls.md › Content).
+   */
+  label: string;
+  /**
+   * Two to five closely related options, written as short nouns (segmented-controls.md ›
+   * Best practices: about five at most on iPhone). Fewer than two is refused.
+   */
+  options: readonly ChoiceOption<Value>[];
+  /** Must be one of the options. */
+  value: Value;
+  onChange: (value: Value) => void;
+  testID?: string;
+}
+
+/**
+ * A row of two lines that opens something: what it is, a short detail under it, and an optional
+ * value at the trailing side.
+ */
+export interface DetailRowProps {
+  label: string;
+  /** One short line under the label, in the secondary label colour. */
+  detail: string;
+  /** Short value shown at the trailing side. */
+  value?: string;
+  onPress: () => void;
+  testID?: string;
+}
+
 /** A time of day on a 24-hour clock, in the device's time zone. */
 export interface TimeOfDay {
   /** 0 to 23. */
@@ -277,6 +308,8 @@ export interface NativeControls {
   StepperRow: (props: StepperRowProps) => ReactElement;
   ChoiceRow: <Value extends string>(props: ChoiceRowProps<Value>) => ReactElement;
   TimePickerRow: (props: TimePickerRowProps) => ReactElement;
+  SegmentedChoice: <Value extends string>(props: SegmentedChoiceProps<Value>) => ReactElement;
+  DetailRow: (props: DetailRowProps) => ReactElement;
   ProgressIndicator: (props: ProgressIndicatorProps) => ReactElement;
   Gauge: (props: GaugeProps) => ReactElement;
   ContentUnavailable: (props: ContentUnavailableProps) => ReactElement;

@@ -7,7 +7,7 @@
 
 import { createContext, useContext, type ReactElement } from 'react';
 
-import type { ChoiceRowProps, NativeControls } from './types';
+import type { ChoiceRowProps, NativeControls, SegmentedChoiceProps } from './types';
 
 export type NativeImplementationName = 'default' | 'ios';
 
@@ -47,6 +47,13 @@ export function switchableControls(
       return <ChoiceRow {...props} />;
     },
     TimePickerRow: switchable((controls) => controls.TimePickerRow),
+    SegmentedChoice: function SwitchableSegmentedChoice<Value extends string>(
+      props: SegmentedChoiceProps<Value>,
+    ) {
+      const { SegmentedChoice } = useControls();
+      return <SegmentedChoice {...props} />;
+    },
+    DetailRow: switchable((controls) => controls.DetailRow),
     ProgressIndicator: switchable((controls) => controls.ProgressIndicator),
     Gauge: switchable((controls) => controls.Gauge),
     ContentUnavailable: switchable((controls) => controls.ContentUnavailable),

@@ -1,1 +1,59 @@
-{}
+{
+  "contents": {
+    "title": "Quran",
+    "resume": {
+      "title": "Continue Reading",
+      "detail": "Page {{page}}"
+    },
+    "goTo": {
+      "title": "Go to Page",
+      "stepper": "Page",
+      "value": "Page {{page}}",
+      "open": "Open Page {{page}}",
+      "footer": "The mushaf has 604 pages. You can also start from a juz."
+    },
+    "view": {
+      "label": "Show",
+      "surahs": "Surahs",
+      "juz": "Juz"
+    },
+    "surah": {
+      "label": "{{number}}. {{name}}",
+      "detail_one": "{{place}} · {{count}} verse · page {{page}}",
+      "detail_other": "{{place}} · {{count}} verses · page {{page}}",
+      "meccan": "Meccan",
+      "medinan": "Medinan"
+    },
+    "juz": {
+      "title": "Juz {{juz}}",
+      "hizb": "Hizb {{hizb}}",
+      "page": "Page {{page}}"
+    }
+  },
+  "page": {
+    "subtitle": "Juz {{juz}} · Hizb {{hizb}} · Page {{page}}",
+    "surahTitle": "سورة {{name}}",
+    "loading": "Loading page {{page}}",
+    "next": "Next Page",
+    "previous": "Previous Page",
+    "pager": "Pages of the mushaf",
+    "error": {
+      "title": "Page Unreadable",
+      "description": "The data of this page is incomplete, so it is not shown. The other pages can still be read."
+    }
+  },
+  "feedback": {
+    "pageCounted": "Page read. Your garden is watered.",
+    "hizbCompleted": "Hizb complete. New in your garden: {{element}}"
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "description": "The mushaf has 604 pages. Choose a page from 1 to 604.",
+    "action": "Open Contents"
+  },
+  "fontMissing": {
+    "title": "Text Unavailable",
+    "description": "The Quran font could not be loaded. Close the app, then open it again.",
+    "action": "Open Contents"
+  }
+}

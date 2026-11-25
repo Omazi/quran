@@ -1,18 +1,17 @@
 import { router } from 'expo-router';
+import { useCallback } from 'react';
 
 import { HomeScreen, useHomeModel } from '@/features/home';
+import { useResumePage } from '@/features/reader';
 
 /**
- * "Lire et arroser" while the reader does not exist: it opens the Quran tab, which says that
- * reading is coming. It records nothing: no page is added to the journal, so the garden cannot
- * be watered by a page nobody read. When the reader exists, open it here on the page to read.
+ * The "Jardin" tab. It only composes: the hook builds the model, the screen shows it. "Lire et
+ * arroser" opens the reader on the page to resume (docs/specs/reader.md, section 4); opening it
+ * records nothing, only reading does.
  */
-function openReader(): void {
-  router.navigate('/quran');
-}
-
-/** The "Jardin" tab. It only composes: the hook builds the model, the screen shows it. */
 export default function HomeRoute() {
   const { model, retry } = useHomeModel();
-  return <HomeScreen model={model} actions={{ readAndWater: openReader, retry }} />;
+  const resumePage = useResumePage();
+  const readAndWater = useCallback(() => router.push(`/reader/${resumePage}`), [resumePage]);
+  return <HomeScreen model={model} actions={{ readAndWater, retry }} />;
 }

@@ -71,6 +71,8 @@ les tests, selon les usages de Material, sans imiter iOS.
 | `StepperRow`                  | `Stepper` à côté de sa valeur écrite (`valueLabel`)                       | `steppers.md › Best practices`                                                            |
 | `ChoiceRow`                   | `Picker` en menu : le bouton à choix du système                           | `pop-up-buttons.md › Best practices`                                                      |
 | `TimePickerRow`               | `DatePicker` compact, heures et minutes                                   | `pickers.md › Mobile (iOS, iPadOS)`                                                       |
+| `SegmentedChoice`             | `Picker` segmenté, libellé gardé pour VoiceOver ; seul ou dans une liste  | `segmented-controls.md › Best practices`, `› Content`, `› Mobile`                         |
+| `DetailRow`                   | bouton : libellé, ligne de détail, valeur, `chevron.forward`              | `lists-and-tables.md › Mobile`, `labels.md › Best practices` (voir l'écart 1)             |
 | `ProgressIndicator`           | `ProgressView` : barre si `value`, indicateur d'activité sinon            | `progress-indicators.md › Best practices`                                                 |
 | `Gauge`                       | `Gauge` linéaire de capacité, libellés de valeur et de bornes, `tone`     | `gauges.md › Anatomy`, `› Best practices`, `color.md › Best practices`                    |
 | `ContentUnavailable`          | `ContentUnavailableView` (iOS 17) ; réalisation par défaut sur iOS 16     | SwiftUI Pro, `design.md › Standard system styling`                                        |

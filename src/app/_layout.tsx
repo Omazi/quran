@@ -56,6 +56,17 @@ function RootStack() {
       <Stack.Screen name="index" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="+not-found" />
+      {/* The reader: the system navigation bar floats over the page (the reader hides and shows
+          it), with the system's back button, a chevron alone (toolbars.md › Navigation). */}
+      <Stack.Screen
+        name="reader/[page]"
+        options={{
+          headerShown: true,
+          headerTransparent: true,
+          headerTintColor: colors.accent,
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+      />
       {/* Its header, with the system's back button, is only shown when the introduction is
           opened again from the settings (see onboarding/index.tsx). */}
       <Stack.Screen

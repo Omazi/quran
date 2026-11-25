@@ -1,1 +1,59 @@
-{}
+{
+  "contents": {
+    "title": "Coran",
+    "resume": {
+      "title": "Reprendre",
+      "detail": "Page {{page}}"
+    },
+    "goTo": {
+      "title": "Aller à la page",
+      "stepper": "Page",
+      "value": "Page {{page}}",
+      "open": "Ouvrir la page {{page}}",
+      "footer": "Le mushaf compte 604 pages. Tu peux aussi commencer par un juz."
+    },
+    "view": {
+      "label": "Afficher",
+      "surahs": "Sourates",
+      "juz": "Juz"
+    },
+    "surah": {
+      "label": "{{number}}. {{name}}",
+      "detail_one": "{{place}} · {{count}} verset · page {{page}}",
+      "detail_other": "{{place}} · {{count}} versets · page {{page}}",
+      "meccan": "Mecquoise",
+      "medinan": "Médinoise"
+    },
+    "juz": {
+      "title": "Juz {{juz}}",
+      "hizb": "Hizb {{hizb}}",
+      "page": "Page {{page}}"
+    }
+  },
+  "page": {
+    "subtitle": "Juz {{juz}} · Hizb {{hizb}} · Page {{page}}",
+    "surahTitle": "سورة {{name}}",
+    "loading": "Chargement de la page {{page}}",
+    "next": "Page suivante",
+    "previous": "Page précédente",
+    "pager": "Pages du mushaf",
+    "error": {
+      "title": "Page illisible",
+      "description": "Les données de cette page sont incomplètes : elle n’est pas affichée. Les autres pages restent lisibles."
+    }
+  },
+  "feedback": {
+    "pageCounted": "Page lue, ton jardin est arrosé",
+    "hizbCompleted": "Hizb terminé. Nouveau dans ton jardin : {{element}}"
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "description": "Le mushaf compte 604 pages. Choisis une page entre 1 et 604.",
+    "action": "Ouvrir le sommaire"
+  },
+  "fontMissing": {
+    "title": "Texte indisponible",
+    "description": "La police du Coran n’a pas pu être chargée. Ferme l’appli, puis rouvre-la.",
+    "action": "Ouvrir le sommaire"
+  }
+}

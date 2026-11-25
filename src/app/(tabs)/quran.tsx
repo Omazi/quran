@@ -1,22 +1,12 @@
-import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
+import { useCallback } from 'react';
 
-import { ContentUnavailable, Screen, type IconSymbol } from '@/ui';
+import { ContentsScreen, useContentsModel } from '@/features/reader';
 
-const QURAN_SYMBOL: IconSymbol = { ios: 'book', android: 'menu_book' };
-
-/**
- * The Quran tab before the reader exists. The tab stays in the bar and says why it is empty
- * (tab-bars.md › Best practices), with the system's empty state.
- */
+/** The Quran tab: the table of contents. It only composes. */
 export default function QuranRoute() {
-  const { t } = useTranslation('common');
-  return (
-    <Screen testID="quran">
-      <ContentUnavailable
-        title={t('quran.unavailable.title')}
-        description={t('quran.unavailable.description')}
-        symbol={QURAN_SYMBOL}
-      />
-    </Screen>
-  );
+  const router = useRouter();
+  const openPage = useCallback((page: number) => router.push(`/reader/${page}`), [router]);
+  const { model, actions } = useContentsModel(openPage);
+  return <ContentsScreen model={model} actions={actions} />;
 }

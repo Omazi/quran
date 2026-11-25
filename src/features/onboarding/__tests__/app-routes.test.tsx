@@ -271,15 +271,25 @@ describe('returning person', () => {
     expect(reloadAppAsync).not.toHaveBeenCalled();
   });
 
-  it('explains why the Quran tab is still empty', async () => {
+  // docs/specs/reader.md, section 1: the tab is the table of contents of the mushaf.
+  it('finds the table of contents in the Quran tab', async () => {
     const app = await openApp('/quran');
     await waitFor(() => expect(app.getPathname()).toBe('/quran'));
-    expect(screen.getByText('La lecture arrive bientôt')).toBeOnTheScreen();
-    expect(
-      screen.getByText(
-        'Tu liras le Coran ici, page après page, et chaque nouvelle page arrosera ton jardin.',
-      ),
-    ).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Coran' })).toBeOnTheScreen();
+    expect(screen.getByText('Reprendre')).toBeOnTheScreen();
+    expect(screen.getAllByTestId(/^contents-surah-/)).toHaveLength(114);
+  });
+
+  it('opens the reader on a page', async () => {
+    const app = await openApp('/reader/293');
+    await waitFor(() => expect(app.getPathname()).toBe('/reader/293'));
+    expect(screen.getByTestId('reader')).toBeOnTheScreen();
+  });
+
+  it('says when a page of the reader does not exist', async () => {
+    const missing = await openApp('/reader/605');
+    await waitFor(() => expect(missing.getPathname()).toBe('/reader/605'));
+    expect(screen.getByText('Page introuvable')).toBeOnTheScreen();
   });
 
   it('finds the settings they made, and can change them', async () => {

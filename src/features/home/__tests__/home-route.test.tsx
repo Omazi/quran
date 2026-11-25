@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import HomeRoute from '@/app/(tabs)/index';
 import { quranStructure } from '@/data/quran';
 import { showLanguage } from '@/features/garden/test-support/screen-conditions';
+import { resolveResumePage } from '@/features/reader';
 import { AppStoreProvider, type AppStore } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
 import { resetDeviceConditions } from '@/ui/test-support/environment';
@@ -11,7 +12,7 @@ import { resetDeviceConditions } from '@/ui/test-support/environment';
 import { buildReadingHistory } from '../dev-preview/reading-histories';
 import { deviceLocalDate } from '../use-today';
 
-jest.mock('expo-router', () => ({ router: { navigate: jest.fn() } }));
+jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
 
 afterEach(resetDeviceConditions);
 
@@ -48,13 +49,19 @@ describe('the "Jardin" tab', () => {
     expect(screen.getByRole('image', { name: /^Jardin, 24 hizb sur 60/ })).toBeOnTheScreen();
   });
 
-  it('"Lire et arroser" opens the Quran tab and reads no page', async () => {
+  // docs/specs/reader.md, section 4: the reader opens on the page to resume.
+  it('"Lire et arroser" opens the reader on the page to resume and reads no page', async () => {
     const store = readerStore();
     const journal = store.getState().journal;
+    const resumePage = resolveResumePage({
+      lastOpenedPage: null,
+      journal,
+      hizbPageRanges: quranStructure.hizbPageRanges(),
+    });
     await renderRoute(store);
     await fireEvent.press(screen.getByRole('button', { name: 'Lire et arroser' }));
-    expect(router.navigate).toHaveBeenCalledTimes(1);
-    expect(router.navigate).toHaveBeenCalledWith('/quran');
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(router.push).toHaveBeenCalledWith(`/reader/${resumePage}`);
     // Nothing was added to the journal: the pages of the day are what they were.
     expect(store.getState().journal).toBe(journal);
     expect(screen.getByTestId('home-today-pages')).toHaveTextContent('Pages lues3 sur 5');
