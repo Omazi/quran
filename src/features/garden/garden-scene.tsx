@@ -6,7 +6,11 @@ import type { GardenState } from '@/domain/garden';
 import { Placeholder } from '@/ui';
 
 import { FadingLayer } from './fading-layer';
-import { GARDEN_PICTURE_ASPECT_RATIO, GARDEN_SCENE_BAND_MIN_HEIGHT } from './config';
+import {
+  GARDEN_PICTURE_ASPECT_RATIO,
+  GARDEN_PICTURE_POSITION,
+  GARDEN_SCENE_BAND_MIN_HEIGHT,
+} from './config';
 import { baseAsset, SHIPPED_GARDEN_IMAGES, waterAsset } from './garden-images';
 import { gardenPicture, pictureNames, type GardenImageNames } from './garden-picture';
 import { gardenSceneLabel, gardenSceneName } from './garden-words';
@@ -15,7 +19,8 @@ import { useGardenPictureSequence } from './use-garden-picture';
 /**
  * How much room the scene takes. `band`: the width it is given and the height its picture
  * needs, as on the home screen. `fill`: all the space of its parent, as on a page of the
- * first-launch flow; the picture is shown whole inside it.
+ * first-launch flow; the picture is shown whole inside it, resting on its bottom edge, so that
+ * what follows the scene sits right under the garden and the free space, if any, is above it.
  */
 export type GardenSceneSize = 'band' | 'fill';
 
@@ -35,6 +40,7 @@ function Layer({ asset, transitionMs }: { asset: number | undefined; transitionM
       source={asset}
       style={StyleSheet.absoluteFill}
       contentFit="contain"
+      contentPosition={GARDEN_PICTURE_POSITION}
       // The garden is described once, by the scene: the layers are not elements of their own.
       accessible={false}
       // A fade between two pictures; none when the picture comes at once.

@@ -129,6 +129,44 @@ export const ROSETTE_OPACITY = {
 export const LISTENING_LAYOUT = {
   /** The title's top, as a share of the screen height (`.title { top: 62.5% }`). */
   titleTop: 0.625,
+  /**
+   * Radius of the outer star of the small rosette above a result (found, several places):
+   * 40 points, a star 80 points wide, the size of a large symbol rather than a picture
+   * (judgement on the 8-point grid; the prototype has no result screen).
+   */
+  resultRosetteRadius: 40,
+} as const;
+
+/**
+ * The rosette at rest, once the listening is over. It is a still frame of the silent rosette of
+ * the prototype: the stars at their silent light, and the two silent petals that are alive at
+ * any moment of silence (one leaves every `silentPetalInterval`, each lives `petalLife`, so two
+ * overlap, half a life apart). Their shape, size and opacity come from `petalAppearance`.
+ */
+export const SETTLED_ROSETTE = {
+  /** The ages of the two petals, as shares of a petal's life (the phase is a judgement). */
+  petalAges: [0.25, 0.75],
+  /**
+   * The width of the screen the prototype's night light was drawn for (an iPhone of 393 points;
+   * the validated images are of that size). A rosette smaller than the one on that screen gets a
+   * proportionally smaller light, so a small rosette does not drown in its own glow.
+   */
+  lightReferenceScreenWidth: 393,
+} as const;
+
+/** What a result shows of the Quran text. */
+export const RESULT_TEXT = {
+  /**
+   * At most this many verses of a passage found: enough to recognise it, short enough for the
+   * button under them to stay in view at the default text size on an iPhone (judgement). The
+   * reader shows the rest.
+   */
+  maxVerses: 3,
+  /**
+   * The opening words of the verse of each place, when several places are possible: enough to
+   * tell the places apart, which differ by what surrounds the words heard (judgement).
+   */
+  openingWords: 6,
 } as const;
 
 /** Rhythm of a simulated recitation (`frame()` of the prototype, "the simulated voice"). */

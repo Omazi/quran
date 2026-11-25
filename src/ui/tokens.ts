@@ -227,6 +227,39 @@ export const appleTextStyles = {
   footnote: 'footnote',
 } as const satisfies Record<TextStyleName, AppleTextStyle>;
 
+export interface QuranTextStyleToken {
+  readonly fontFamily: string;
+  /** Size in points at the default text size. */
+  readonly fontSize: number;
+  readonly lineHeight: number;
+  /** The Dynamic Type ramp the text follows outside the mushaf page. */
+  readonly ramp: AppleTextStyle;
+}
+
+/**
+ * Quran text shown outside the mushaf page: a verse found by listening, the opening words of a
+ * place. The reader composes its page like an image and sizes its text itself (D19, reader
+ * spec 2); here the text is read on its own, so it follows the person's text size
+ * (typography.md › Supporting Dynamic Type). The fonts are the bundled ones (fonts.ts).
+ *
+ * Line heights: the Hafs font's own line height is 1.76 em (ascent 2,400, descent 1,200 for
+ * 2,048 units); 2 em keeps the marks of two lines apart, the reader's own margin
+ * (`minimumLineHeightInEm` 1.9) rounded up to the 8-point grid. Sizes: one step above the
+ * interface text around them (Title 1 for a verse, Title 2 for a row), because the vowel marks of
+ * the Uthmani script are small at body size. Amiri, for a surah's name above its name in the
+ * interface's language, at the size of a verse, so that the display title stays the one title.
+ */
+export const quranTextStyles = {
+  /** A verse read on its own. */
+  verse: { fontFamily: fontFamily.quran, fontSize: 28, lineHeight: 56, ramp: 'title1' },
+  /** The opening words of a verse, in a row that names its place. */
+  openingWords: { fontFamily: fontFamily.quran, fontSize: 22, lineHeight: 44, ramp: 'title2' },
+  /** A surah's Arabic name, as the reader's surah header writes it. */
+  surahName: { fontFamily: fontFamily.quranTitle, fontSize: 28, lineHeight: 48, ramp: 'title1' },
+} as const satisfies Record<string, QuranTextStyleToken>;
+
+export type QuranTextStyleName = keyof typeof quranTextStyles;
+
 /** Smallest text size the interface may use (typography.md › Ensuring legibility). */
 export const MINIMUM_FONT_SIZE = 11;
 

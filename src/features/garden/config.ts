@@ -74,6 +74,14 @@ export const GARDEN_PICTURE_SIZE = GARDEN_PICTURE_PIXELS;
 /** Width over height of a garden picture. */
 export const GARDEN_PICTURE_ASPECT_RATIO = GARDEN_PICTURE_SIZE.width / GARDEN_PICTURE_SIZE.height;
 
+/**
+ * Where a picture rests in a box taller than it (the scene's `fill` size): on the bottom edge, so
+ * that the words under the scene sit right under the garden (D31) and the free space is above
+ * it, as in the validated mockup (`docs/design/bienvenue.png`). A box of the picture's own
+ * proportions (`band`) leaves no room, so this changes nothing there.
+ */
+export const GARDEN_PICTURE_POSITION = 'bottom center';
+
 /** Number of foliage pictures per number of elements: full leaf, dull, half bare, all bare. */
 export const FOLIAGE_STAGE_COUNT = 4;
 

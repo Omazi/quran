@@ -12,9 +12,10 @@ import type { GroupedListProps, ListRowProps, ListSectionProps } from '../types'
  * a small header names each section, a hairline separates the sections, and there are no inset
  * cards and no disclosure chevrons, which are iOS conventions.
  */
-export function GroupedList({ children, testID }: GroupedListProps) {
+export function GroupedList({ children, header, testID }: GroupedListProps) {
   return (
     <ScrollView style={styles.list} testID={testID}>
+      {header}
       <GroupedListScope>{children}</GroupedListScope>
     </ScrollView>
   );

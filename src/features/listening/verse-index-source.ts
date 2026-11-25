@@ -1,4 +1,5 @@
 import { quranRepository, quranStructure } from '@/data/quran';
+import { formatVerseKey, type VerseRef } from '@/domain/quran';
 import { createVerseIndex, type VerseIndex } from '@/domain/recognition';
 
 let pending: Promise<VerseIndex> | null = null;
@@ -18,4 +19,12 @@ export function loadQuranVerseIndex(): Promise<VerseIndex> {
     if (pending === loading) pending = null;
   });
   return loading;
+}
+
+/**
+ * The text of one verse, exactly as the data layer stores it (Uthmani script), for a result of
+ * the listening. The verse file is already loaded by the passage search.
+ */
+export async function loadQuranVerseText(verse: VerseRef): Promise<string> {
+  return (await quranRepository.getVerse(formatVerseKey(verse))).text;
 }

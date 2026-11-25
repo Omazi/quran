@@ -5,26 +5,28 @@
     "stop": "Arrêter"
   },
   "surah": "Sourate {{name}}",
+  "surahArabic": "سورة {{name}}",
   "verse": "Verset {{verse}}",
   "verses": "Versets {{first}} à {{last}}",
   "acrossSurahs": "Du verset {{first}} au verset {{last}}",
   "page": "Page {{page}}",
   "found": {
-    "title": "Passage reconnu",
     "announcement": "Passage reconnu : {{surah}}, {{verses}}",
-    "open": "Ouvrir à la page {{page}}"
+    "open": "Ouvrir à la page {{page}}",
+    "where": "{{verses}} · page {{page}}",
+    "continues": "La suite s’ouvre dans le lecteur."
   },
   "several": {
     "title": "Plusieurs passages",
     "description_one": "Ces mots se trouvent à {{count}} endroit. Choisis celui que tu récitais.",
     "description_other": "Ces mots se trouvent à {{count}} endroits. Choisis celui que tu récitais.",
-    "places": "Endroits",
     "incomplete": "{{shown}} endroits sur {{count}}. Récite la suite pour réduire la liste.",
-    "rowValue": "Verset {{verse}} · page {{page}}"
+    "rowValue": "Verset {{verse}} · page {{page}}",
+    "rowHint": "Ouvre le lecteur à la page {{page}}."
   },
   "nothingHeard": {
     "title": "Rien entendu",
-    "description": "Récite à voix haute, près du téléphone, puis réessaie."
+    "description": "Récite à voix haute, près du téléphone, puis réessaie."
   },
   "tooFewWords": {
     "title": "Pas assez de mots",
@@ -35,7 +37,7 @@
     "description": "Récite à nouveau, un peu plus lentement."
   },
   "microphoneDenied": {
-    "title": "Le micro est coupé",
+    "title": "Accès au micro désactivé",
     "description": "Pour trouver un passage en le récitant, autorise le micro dans les réglages."
   },
   "failed": {

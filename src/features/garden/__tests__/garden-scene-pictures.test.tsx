@@ -91,6 +91,14 @@ describe('GardenScene with its pictures', () => {
     for (const image of images) expect(image.props.contentFit).toBe('contain');
   });
 
+  it('rests the picture on the bottom edge of a taller box, so the words follow the garden (D31)', async () => {
+    await showLanguage('fr');
+    await render(<GardenScene state={garden(24)} size="fill" />);
+    const images = drawnImages();
+    expect(images.length).toBeGreaterThan(1);
+    for (const image of images) expect(image.props.contentPosition).toBe('bottom center');
+  });
+
   it('shows a placeholder, not a broken image, when the set lacks the picture', async () => {
     await showLanguage('fr');
     const base = new Set(['h00-f0']);

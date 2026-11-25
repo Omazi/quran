@@ -6,6 +6,7 @@
 
 export { AppText, type AppTextProps, type TextAlignment } from './components/app-text';
 export { Placeholder, type PlaceholderProps } from './components/placeholder';
+export { QuranText, type QuranTextProps, type QuranTextRun } from './components/quran-text';
 export { Screen, type ScreenBackground, type ScreenProps } from './components/screen';
 export { useReducedMotion } from './device-settings';
 export { getWritingDirection, type WritingDirection } from './direction';
@@ -17,6 +18,7 @@ export {
   radius,
   spacing,
   stateOpacity,
+  type QuranTextStyleName,
   type AppColorRole,
   type ColorRole,
   type IconColorRole,

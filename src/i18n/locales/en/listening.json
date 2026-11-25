@@ -5,22 +5,24 @@
     "stop": "Stop"
   },
   "surah": "Surah {{name}}",
+  "surahArabic": "سورة {{name}}",
   "verse": "Verse {{verse}}",
   "verses": "Verses {{first}} to {{last}}",
   "acrossSurahs": "From verse {{first}} to verse {{last}}",
   "page": "Page {{page}}",
   "found": {
-    "title": "Passage Found",
     "announcement": "Passage found: {{surah}}, {{verses}}",
-    "open": "Open at Page {{page}}"
+    "open": "Open at Page {{page}}",
+    "where": "{{verses}} · Page {{page}}",
+    "continues": "The rest opens in the reader."
   },
   "several": {
     "title": "Several Passages",
     "description_one": "These words appear in {{count}} place. Choose the one you were reciting.",
     "description_other": "These words appear in {{count}} places. Choose the one you were reciting.",
-    "places": "Places",
     "incomplete": "{{shown}} of {{count}} places. Recite what follows to narrow the list.",
-    "rowValue": "Verse {{verse}} · page {{page}}"
+    "rowValue": "Verse {{verse}} · page {{page}}",
+    "rowHint": "Opens the reader at page {{page}}."
   },
   "nothingHeard": {
     "title": "Nothing Heard",
@@ -35,7 +37,7 @@
     "description": "Recite again, a little more slowly."
   },
   "microphoneDenied": {
-    "title": "Microphone Is Off",
+    "title": "Microphone Access Off",
     "description": "To find a passage by reciting it, allow the microphone in Settings."
   },
   "failed": {

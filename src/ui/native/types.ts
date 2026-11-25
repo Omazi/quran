@@ -48,6 +48,14 @@ export interface ButtonProps {
 export interface GroupedListProps {
   /** `ListSection` elements. */
   children: ReactNode;
+  /**
+   * React Native content above the sections, from one side edge of the screen to the other: the
+   * signature of a screen (a scene) and its title. The default list scrolls it with the rows. On
+   * iOS it sits above the system list, outside it, and stays in place while the rows scroll:
+   * the system's grouped list insets every row from the side edges, so a picture inside it
+   * could never reach them (SKILLS.md, deviation 30).
+   */
+  header?: ReactNode;
   testID?: string;
 }
 

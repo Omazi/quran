@@ -5,14 +5,16 @@
     "stop": "إيقاف"
   },
   "surah": "سورة {{name}}",
+  "surahArabic": "سورة {{name}}",
   "verse": "الآية {{verse}}",
   "verses": "الآيات {{first}} إلى {{last}}",
   "acrossSurahs": "من الآية {{first}} إلى الآية {{last}}",
   "page": "الصفحة {{page}}",
   "found": {
-    "title": "تم التعرّف على المقطع",
     "announcement": "تم التعرّف على المقطع: {{surah}}، {{verses}}",
-    "open": "افتح الصفحة {{page}}"
+    "open": "افتح الصفحة {{page}}",
+    "where": "{{verses}} · الصفحة {{page}}",
+    "continues": "تتمة المقطع في القارئ."
   },
   "several": {
     "title": "عدة مقاطع",
@@ -22,9 +24,9 @@
     "description_few": "هذه الكلمات توجد في {{count}} مواضع. اختر الموضع الذي كنت تتلوه.",
     "description_many": "هذه الكلمات توجد في {{count}} موضعًا. اختر الموضع الذي كنت تتلوه.",
     "description_other": "هذه الكلمات توجد في {{count}} موضع. اختر الموضع الذي كنت تتلوه.",
-    "places": "المواضع",
     "incomplete": "{{shown}} من أصل {{count}}. تابع التلاوة لتضييق القائمة.",
-    "rowValue": "الآية {{verse}} · الصفحة {{page}}"
+    "rowValue": "الآية {{verse}} · الصفحة {{page}}",
+    "rowHint": "يفتح القارئ على الصفحة {{page}}."
   },
   "nothingHeard": {
     "title": "لم يُسمع شيء",
@@ -39,7 +41,7 @@
     "description": "أعد التلاوة بتمهّل أكثر."
   },
   "microphoneDenied": {
-    "title": "الميكروفون مغلق",
+    "title": "الوصول إلى الميكروفون معطّل",
     "description": "للعثور على مقطع بتلاوته، اسمح باستخدام الميكروفون من الإعدادات."
   },
   "failed": {

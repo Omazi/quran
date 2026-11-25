@@ -24,7 +24,7 @@ import {
 
 import { ListeningScreen } from '../listening-screen';
 import { createScenarioEngine, type ScenarioName } from '../simulated/scenarios';
-import { loadQuranVerseIndex } from '../verse-index-source';
+import { loadQuranVerseIndex, loadQuranVerseText } from '../verse-index-source';
 
 // A mock factory runs before imports: `require` is the only way to load the stand-in here.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -51,6 +51,7 @@ function screenFor(engine: SpeechEngine) {
       engine={engine}
       loadVerseIndex={() => Promise.resolve(index)}
       structure={quranStructure}
+      loadVerseText={loadQuranVerseText}
       {...actions}
     />
   );
@@ -187,33 +188,81 @@ describe('listening, for everyone', () => {
   });
 });
 
+/** A surah's name as the screen prints it: the data's, with a typographic apostrophe. */
+function printedName(surah: number, isArabic: boolean): string {
+  const info = quranStructure.surah(surah);
+  return isArabic
+    ? `سورة ${info.nameArabic}`
+    : `Sourate ${info.nameTransliterated.replace(/'/g, '\u2019')}`;
+}
+
+/** Whether a button is the prominent one: its label is drawn on the accent. */
+function isProminent(name: string, conditions: ScreenConditions): boolean {
+  const appearance = conditions.scheme === 'dark' ? 'dark' : 'light';
+  return styleOf(screen.getByText(name)).color === appColors.onAccent[appearance];
+}
+
 describe.each(MATRIX)(
   'passage found ($language, $scheme, reduced motion: $reducedMotion)',
   (conditions) => {
     it(`${label(conditions)}: the surah, the verse, the page, and the reader one press away`, async () => {
       await showScenario('found', conditions);
       const isArabic = conditions.language === 'ar';
-      const title = isArabic ? 'تم التعرّف على المقطع' : 'Passage reconnu';
-      expect(screen.getByRole('header', { name: title })).toBeOnTheScreen();
-      // The surah's name as the data layer gives it.
-      const surah = quranStructure.surah(2);
-      expect(
-        screen.getByText(
-          isArabic ? `سورة ${surah.nameArabic}` : `Sourate ${surah.nameTransliterated}`,
-        ),
-      ).toBeOnTheScreen();
-      expect(screen.getByText(isArabic ? 'الآية 255' : 'Verset 255')).toBeOnTheScreen();
+      // The surah's name is the title, in the language of the interface.
+      expect(screen.getByRole('header', { name: printedName(2, isArabic) })).toBeOnTheScreen();
       const page = quranStructure.pageOfVerse({ surah: 2, verse: 255 });
-      await fireEvent.press(
-        screen.getByRole('button', {
-          name: isArabic ? `افتح الصفحة ${page}` : `Ouvrir à la page ${page}`,
-        }),
-      );
+      expect(
+        screen.getByText(isArabic ? `الآية 255 · الصفحة ${page}` : `Verset 255 · page ${page}`),
+      ).toBeOnTheScreen();
+      const open = isArabic ? `افتح الصفحة ${page}` : `Ouvrir à la page ${page}`;
+      await fireEvent.press(screen.getByRole('button', { name: open }));
       expect(actions.onOpenPage).toHaveBeenCalledWith(page);
+      // The listening rosette has stopped; the still one stays, on the same paper.
       expect(screen.queryByTestId('rosette', HIDDEN)).toBeNull();
+      expect(screen.getByTestId('still-rosette', HIDDEN)).toBeOnTheScreen();
+      const appearance = conditions.scheme === 'dark' ? 'dark' : 'light';
+      expect(styleOf(screen.getByTestId('listening-found')).backgroundColor).toBe(
+        appColors.paper[appearance],
+      );
+      // One prominent button: opening the page. Listening again and closing are plain.
+      const text = TEXT[language(conditions)];
+      expect(isProminent(open, conditions)).toBe(true);
+      expect(isProminent(text.again, conditions)).toBe(false);
+      expect(isProminent(text.close, conditions)).toBe(false);
     });
   },
 );
+
+describe('passage found, the verse', () => {
+  it('is shown exactly as the data layer gives it, in the Quran font, with its verse mark', async () => {
+    await showScenario('found', { language: 'fr' });
+    const verse = await loadQuranVerseText({ surah: 2, verse: 255 });
+    const block = screen.getByTestId('listening-verses');
+    const quran = withDescendants(block).find(
+      (element) => element.type === 'Text' && styleOf(element).fontFamily === 'KFGQPCHafsUthmanic',
+    );
+    expect(quran).toBeDefined();
+    const runs = withDescendants(quran as RenderedElement)
+      .filter((element) => element.type === 'Text' && typeof element.props.children === 'string')
+      .map((element) => element.props.children as string);
+    expect(runs).toEqual([verse, ' ٢٥٥']);
+    expect(quran?.props.accessibilityLanguage).toBe('ar');
+  });
+
+  it('in Arabic, the surah is named once, in the Quran’s script, as a heading', async () => {
+    await showScenario('found', { language: 'ar', rightToLeft: true });
+    const heading = screen.getByRole('header', { name: printedName(2, true) });
+    expect(styleOf(heading).fontFamily).toBe('Amiri_700Bold');
+    expect(screen.getAllByText(printedName(2, true))).toHaveLength(1);
+  });
+
+  it('in French, the Arabic name stands above the display title', async () => {
+    await showScenario('found', { language: 'fr' });
+    expect(styleOf(screen.getByTestId('listening-surah-arabic')).fontFamily).toBe('Amiri_700Bold');
+    const title = screen.getByRole('header', { name: printedName(2, false) });
+    expect(styleOf(title)).toMatchObject({ fontSize: 36, fontWeight: '400' });
+  });
+});
 
 describe.each(MATRIX)(
   'several passages ($language, $scheme, reduced motion: $reducedMotion)',
@@ -224,10 +273,7 @@ describe.each(MATRIX)(
       expect(
         screen.getByRole('header', { name: isArabic ? 'عدة مقاطع' : 'Plusieurs passages' }),
       ).toBeOnTheScreen();
-      const surahs = [1, 6, 10, 37, 39, 40].map((surah) => quranStructure.surah(surah));
-      const names = surahs.map((surah) =>
-        isArabic ? `سورة ${surah.nameArabic}` : `Sourate ${surah.nameTransliterated}`,
-      );
+      const names = [1, 6, 10, 37, 39, 40].map((surah) => printedName(surah, isArabic));
       const rows = screen
         .getAllByRole('button')
         .filter((button) =>
@@ -240,12 +286,26 @@ describe.each(MATRIX)(
       const firstPage = quranStructure.pageOfVerse({ surah: 1, verse: 2 });
       await fireEvent.press(rows[0] as RenderedElement);
       expect(actions.onOpenPage).toHaveBeenCalledWith(firstPage);
-      expect(
-        screen.getByRole('button', { name: TEXT[language(conditions)].again }),
-      ).toBeOnTheScreen();
+      // Choosing a place is the next step: no prominent button.
+      const text = TEXT[language(conditions)];
+      expect(isProminent(text.again, conditions)).toBe(false);
+      expect(isProminent(text.close, conditions)).toBe(false);
+      expect(screen.getByTestId('still-rosette', HIDDEN)).toBeOnTheScreen();
     });
   },
 );
+
+describe('several passages, the rows', () => {
+  it('begin with the opening words of their verse, whole words as the data gives them', async () => {
+    await showScenario('several', { language: 'fr' });
+    const verse = await loadQuranVerseText({ surah: 6, verse: 45 });
+    const row = screen.getByTestId('listening-place-6-45');
+    const opening = verse.split(' ').slice(0, 6).join(' ');
+    expect(hasText(row, opening)).toBe(true);
+    expect(row.props.accessibilityLabel).toBe('Sourate Al-An’am, Verset 45 · page 133');
+    expect(touchTargetHeight(row)).toBeGreaterThanOrEqual(44);
+  });
+});
 
 function hasText(element: RenderedElement, text: string): boolean {
   return withDescendants(element).some(
@@ -268,8 +328,8 @@ const OUTCOMES = [
   },
   {
     scenario: 'denied',
-    fr: 'Le micro est coupé',
-    ar: 'الميكروفون مغلق',
+    fr: 'Accès au micro désactivé',
+    ar: 'الوصول إلى الميكروفون معطّل',
     action: { fr: 'Ouvrir les réglages', ar: 'افتح الإعدادات' },
   },
   {
@@ -284,14 +344,36 @@ describe.each(OUTCOMES)('$scenario', (outcome) => {
   it.each(MATRIX)('%#: says what happened and what to do, without blame', async (conditions) => {
     await showScenario(outcome.scenario, conditions);
     const lang = language(conditions);
-    expect(screen.getByText(outcome[lang])).toBeOnTheScreen();
+    // The listening screen at rest: its paper, its rosette, still, and its display title.
+    const title = screen.getByRole('header', { name: outcome[lang] });
+    expect(styleOf(title)).toMatchObject({ fontSize: 36, fontWeight: '400' });
+    expect(screen.getByTestId('still-rosette', HIDDEN)).toBeOnTheScreen();
+    expect(screen.queryByTestId('rosette', HIDDEN)).toBeNull();
+    const appearance = conditions.scheme === 'dark' ? 'dark' : 'light';
+    expect(
+      styleOf(screen.getByTestId(`listening-${testIDOf(outcome.scenario)}`)).backgroundColor,
+    ).toBe(appColors.paper[appearance]);
     const action = screen.getByRole('button', { name: outcome.action[lang] });
     expect(screen.getByRole('button', { name: TEXT[lang].close })).toBeOnTheScreen();
+    // The one next step is prominent, closing is plain.
+    expect(isProminent(outcome.action[lang], conditions)).toBe(true);
+    expect(isProminent(TEXT[lang].close, conditions)).toBe(false);
     expect(touchTargetHeight(action)).toBeGreaterThanOrEqual(44);
     await fireEvent.press(action);
     if (outcome.scenario === 'denied') expect(actions.onOpenSettings).toHaveBeenCalledTimes(1);
   });
 });
+
+function testIDOf(scenario: (typeof OUTCOMES)[number]['scenario']): string {
+  switch (scenario) {
+    case 'denied':
+      return 'microphone-denied';
+    case 'failed':
+      return 'failed';
+    default:
+      return 'not-found';
+  }
+}
 
 describe('listen again', () => {
   it('after nothing found, listens again from nothing', async () => {
@@ -303,7 +385,7 @@ describe('listen again', () => {
 });
 
 describe('on an iPhone', () => {
-  it.each(['listening', 'found', 'several', 'nothing', 'denied'] as const)(
+  it.each(['listening', 'found', 'several', 'nothing', 'denied', 'failed'] as const)(
     '%s: every system view has a host, and no React Native view is left inside SwiftUI',
     async (scenario) => {
       setDeviceConditions({ os: 'ios' });

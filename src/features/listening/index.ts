@@ -5,4 +5,4 @@
 export { ListeningScreen, type ListeningScreenProps } from './listening-screen';
 export { createTrialEngine } from './simulated-engine-door';
 export { useListeningNavigation, readerHref } from './use-listening-navigation';
-export { loadQuranVerseIndex } from './verse-index-source';
+export { loadQuranVerseIndex, loadQuranVerseText } from './verse-index-source';

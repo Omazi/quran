@@ -5,10 +5,11 @@ import { AccessibilityInfo } from 'react-native';
 import type { ListeningState, NothingFoundReason, SpeechEngine } from '@/domain/listening';
 import type { QuranStructure } from '@/domain/quran';
 import type { VerseIndex } from '@/domain/recognition';
-import { useReducedMotion, type IconSymbol } from '@/ui';
+import { useReducedMotion } from '@/ui';
 
 import { describePassage } from './passage-words';
 import { useListening } from './use-listening';
+import type { LoadVerseText } from './use-verse-texts';
 import { FoundView } from './views/found-view';
 import { ListeningView } from './views/listening-view';
 import { OutcomeView } from './views/outcome-view';
@@ -18,6 +19,8 @@ export interface ListeningScreenProps {
   readonly engine: SpeechEngine;
   readonly loadVerseIndex: () => Promise<VerseIndex>;
   readonly structure: Pick<QuranStructure, 'pageOfVerse' | 'surah'>;
+  /** Reads a verse's text, shown exactly as stored: the verses found, the opening words of a place. */
+  readonly loadVerseText: LoadVerseText;
   /** Leaves the screen. */
   readonly onClose: () => void;
   /** Opens the reader at a page of the mushaf. */
@@ -26,16 +29,12 @@ export interface ListeningScreenProps {
   readonly onOpenSettings: () => void;
 }
 
-const NOT_FOUND: Readonly<Record<NothingFoundReason, { key: string; symbol: IconSymbol }>> = {
-  'nothing-heard': { key: 'nothingHeard', symbol: { ios: 'waveform', android: 'graphic_eq' } },
-  'too-few-words': {
-    key: 'tooFewWords',
-    symbol: { ios: 'text.word.spacing', android: 'short_text' },
-  },
-  'no-match': { key: 'noMatch', symbol: { ios: 'text.magnifyingglass', android: 'search_off' } },
+/** The words of each way a listening can end without a passage, in the `listening` namespace. */
+const NOT_FOUND: Readonly<Record<NothingFoundReason, string>> = {
+  'nothing-heard': 'nothingHeard',
+  'too-few-words': 'tooFewWords',
+  'no-match': 'noMatch',
 };
-const MICROPHONE_SYMBOL: IconSymbol = { ios: 'mic.slash', android: 'mic_off' };
-const FAILED_SYMBOL: IconSymbol = { ios: 'exclamationmark.triangle', android: 'warning' };
 
 /**
  * The listening screen (docs/specs/listening.md): one gesture, a whole screen that listens, a
@@ -46,6 +45,7 @@ export function ListeningScreen({
   engine,
   loadVerseIndex,
   structure,
+  loadVerseText,
   onClose,
   onOpenPage,
   onOpenSettings,
@@ -77,6 +77,7 @@ export function ListeningScreen({
       return (
         <FoundView
           passage={describe(state.passage)}
+          loadVerseText={loadVerseText}
           onOpenPage={onOpenPage}
           onListenAgain={listenAgain}
           onClose={onClose}
@@ -88,18 +89,18 @@ export function ListeningScreen({
           passages={state.passages.candidates.map(describe)}
           totalCount={state.passages.totalCount}
           isComplete={state.passages.isComplete}
+          loadVerseText={loadVerseText}
           onOpenPage={onOpenPage}
           onListenAgain={listenAgain}
           onClose={onClose}
         />
       );
     case 'not-found': {
-      const { key, symbol } = NOT_FOUND[state.reason];
+      const key = NOT_FOUND[state.reason];
       return (
         <OutcomeView
           title={t(`${key}.title`)}
           description={t(`${key}.description`)}
-          symbol={symbol}
           action={again}
           {...close}
           testID="listening-not-found"
@@ -111,7 +112,6 @@ export function ListeningScreen({
         <OutcomeView
           title={t('microphoneDenied.title')}
           description={t('microphoneDenied.description')}
-          symbol={MICROPHONE_SYMBOL}
           action={{ label: t('actions.openSettings'), onPress: onOpenSettings }}
           {...close}
           testID="listening-microphone-denied"
@@ -122,7 +122,6 @@ export function ListeningScreen({
         <OutcomeView
           title={t('failed.title')}
           description={t('failed.description')}
-          symbol={FAILED_SYMBOL}
           action={again}
           {...close}
           testID="listening-failed"
@@ -159,7 +158,7 @@ function announcementOf(
     case 'ambiguous':
       return t('several.title');
     case 'not-found':
-      return t(`${NOT_FOUND[state.reason].key}.title`);
+      return t(`${NOT_FOUND[state.reason]}.title`);
     case 'microphone-denied':
       return t('microphoneDenied.title');
     case 'failed':

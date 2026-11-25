@@ -124,7 +124,8 @@ export function ContentUnavailable({
 }: ContentUnavailableProps) {
   return (
     <View style={styles.contentUnavailable} testID={testID}>
-      <Icon symbol={symbol} textStyle="headline" color="secondaryLabel" />
+      {/* Large, as the system's empty state draws its symbol: it is the picture of the state. */}
+      <Icon symbol={symbol} textStyle="displayTitle" color="secondaryLabel" />
       <AppText variant="title2" align="center">
         {title}
       </AppText>

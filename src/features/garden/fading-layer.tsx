@@ -2,6 +2,8 @@ import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { Animated, Platform, StyleSheet } from 'react-native';
 
+import { GARDEN_PICTURE_POSITION } from './config';
+
 export interface FadingLayerProps {
   /** The picture, or undefined when this layer has nothing to show. */
   asset: number | undefined;
@@ -46,6 +48,7 @@ export function FadingLayer({ asset, transitionMs }: FadingLayerProps) {
         source={kept}
         style={StyleSheet.absoluteFill}
         contentFit="contain"
+        contentPosition={GARDEN_PICTURE_POSITION}
         accessible={false}
         transition={transitionMs > 0 ? { duration: transitionMs, effect: 'cross-dissolve' } : null}
         cachePolicy="memory"

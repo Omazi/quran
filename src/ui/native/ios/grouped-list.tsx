@@ -8,6 +8,7 @@ import {
   Text,
 } from '@expo/ui/swift-ui';
 import { accessibilityHidden, font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
+import { StyleSheet, View } from 'react-native';
 
 import { appleTextStyles, spacing } from '../../tokens';
 import { GroupedListScope, useGroupedListGuard } from '../grouped-list-scope';
@@ -22,15 +23,28 @@ const TERTIARY = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
  * The system's grouped list: headers, footers and space separate the groups
  * (lists-and-tables.md › Style). It scrolls by itself and fills the place it is given.
  */
-export function GroupedList({ children, testID }: GroupedListProps) {
-  return (
+export function GroupedList({ children, header, testID }: GroupedListProps) {
+  const list = (
     <SwiftUIHost size="fill">
       <Form testID={testID}>
         <GroupedListScope>{children}</GroupedListScope>
       </Form>
     </SwiftUIHost>
   );
+  if (header === undefined) return list;
+  // The header is React Native content outside the Form: the Form insets each of its rows from
+  // the side edges, which a row cannot undo (`listRowInsets` only moves content inside the row).
+  return (
+    <View style={styles.column}>
+      <View testID="grouped-list-header">{header}</View>
+      {list}
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  column: { flex: 1 },
+});
 
 export function ListSection({ title, footer, children }: ListSectionProps) {
   useGroupedListGuard('ListSection');

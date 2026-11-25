@@ -6,6 +6,7 @@ import {
   createTrialEngine,
   ListeningScreen,
   loadQuranVerseIndex,
+  loadQuranVerseText,
   useListeningNavigation,
 } from '@/features/listening';
 
@@ -24,6 +25,7 @@ export default function ListeningRoute() {
       engine={engine}
       loadVerseIndex={loadQuranVerseIndex}
       structure={quranStructure}
+      loadVerseText={loadQuranVerseText}
       onClose={navigation.close}
       onOpenPage={navigation.openPage}
       onOpenSettings={navigation.openSettings}

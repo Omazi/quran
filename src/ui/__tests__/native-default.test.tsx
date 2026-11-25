@@ -28,8 +28,16 @@ import {
   setDeviceConditions,
   styleOf,
   touchTargetHeight,
+  withDescendants,
 } from '../test-support/environment';
-import { appColors, fallbackSystemColors, layout, stateOpacity, touchTargets } from '../tokens';
+import {
+  appColors,
+  fallbackSystemColors,
+  layout,
+  stateOpacity,
+  textStyles,
+  touchTargets,
+} from '../tokens';
 
 const LANGUAGES = [
   { value: 'fr', label: 'Français' },
@@ -811,6 +819,15 @@ describe('default ContentUnavailable', () => {
       screen.getByText('La lecture sera disponible dans une prochaine version.'),
     ).toBeOnTheScreen();
     expect(screen.queryByRole('image')).not.toBeOnTheScreen();
+  });
+
+  it('draws its symbol large, as the picture of the state, not at the size of a label', async () => {
+    setDeviceConditions();
+    await render(<ContentUnavailable title="Rien ici" symbol={BOOK} testID="empty" />);
+    const sizes = withDescendants(screen.getByTestId('empty'))
+      .map((element) => element.props.size)
+      .filter((size): size is number => typeof size === 'number');
+    expect(sizes).toEqual([textStyles.displayTitle.fontSize]);
   });
 });
 

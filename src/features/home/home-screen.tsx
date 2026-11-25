@@ -11,7 +11,6 @@ import {
   AppText,
   Button,
   ButtonRow,
-  ContentRow,
   ContentUnavailable,
   GroupedList,
   ListSection,
@@ -39,9 +38,11 @@ export interface HomeScreenProps {
  * It only shows the model it receives. The whole screen is one list of the system
  * (lists-and-tables.md › Style), so it scrolls as one and nothing is cut at the largest text
  * sizes (layout.md › Adaptability). Its order is the order of importance (layout.md › Visual
- * hierarchy): the title and the streak, the scene under it, edge to edge, the state of the day, then what to read today
- * with the one coloured button right under it (buttons.md › Style), then the gauges and the
- * elements. The scene is its one signature; everything around it is the system's.
+ * hierarchy): the title and the streak, the scene under it, edge to edge, the state of the day,
+ * then what to read today with the one coloured button right under it (buttons.md › Style), then
+ * the gauges and the elements. The scene is its one signature; everything around it is the
+ * system's. On iOS the title and the scene sit above the system list, which cannot let a
+ * picture reach the side edges, and stay in place while the rows scroll (deviation 30).
  *
  * Nothing here moves by itself, so there is nothing to switch off for Reduce Motion.
  */
@@ -76,21 +77,19 @@ function ReadyHome({ model, actions }: { model: HomeReadyModel; actions: HomeAct
   const { garden, notice } = model;
   return (
     <Screen background="groupedBackground" testID="home">
-      <GroupedList testID="home-list">
-        <ListSection isBare>
-          <ContentRow>
+      <GroupedList
+        testID="home-list"
+        header={
+          // The garden is the signature of the screen, not a row of text: it runs from one side
+          // edge to the other under the title, with no frame and no divider around it.
+          <>
             <View style={styles.readyTitle}>
               <HomeTitle streakDays={model.streakDays} />
             </View>
-          </ContentRow>
-          {
-            // The garden is the signature of the screen, not a row of text: it runs from edge to
-            // edge under the title, with no frame and no divider around it.
-          }
-          <ContentRow isEdgeToEdge>
             <GardenScene state={garden} size="band" />
-          </ContentRow>
-        </ListSection>
+          </>
+        }
+      >
         <ListSection>
           {
             // The state of the day is said once: the message when there is one, which names
@@ -154,8 +153,8 @@ const styles = StyleSheet.create({
     rowGap: spacing.xs,
   },
   title: { flexShrink: 1 },
-  // The space the section used to give the title, now that the scene runs into it.
-  readyTitle: { paddingVertical: spacing.sm },
+  // The margins of a row of the list, which the title lines up with.
+  readyTitle: { paddingHorizontal: layout.screenMargin, paddingVertical: spacing.sm },
   unavailableTitle: {
     paddingHorizontal: layout.screenMargin,
     paddingTop: spacing.sm,

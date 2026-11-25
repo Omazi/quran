@@ -200,6 +200,45 @@ describe.each(STATES)('HomeScreen, $name', ({ model, notice }) => {
     await renderOnIOS(<HomeScreen model={model} actions={actionsSpy()} />);
     expect(reactNativeViewsInsideSwiftUI()).toEqual([]);
   });
+
+  it('on an iPhone, runs the garden from one side edge to the other, above the system list', async () => {
+    await showLanguage('fr');
+    await renderOnIOS(<HomeScreen model={model} actions={actionsSpy()} />);
+    const scene = screen.getByTestId('garden-scene');
+    const list = screen.getByTestId('home-list');
+    // Outside the Form: the system's grouped list insets every row from the side edges.
+    expect(withDescendants(list)).not.toContain(scene);
+    expect(withDescendants(screen.getByTestId('grouped-list-header'))).toContain(scene);
+    // Nothing between the screen and the scene takes a side margin, and the scene spans the
+    // width it is given at the picture's proportions.
+    const sideSpace = (element: typeof scene) => {
+      const style = styleOf(element);
+      return [
+        style.padding,
+        style.paddingHorizontal,
+        style.paddingStart,
+        style.paddingEnd,
+        style.paddingLeft,
+        style.paddingRight,
+        style.margin,
+        style.marginHorizontal,
+        style.marginStart,
+        style.marginEnd,
+        style.marginLeft,
+        style.marginRight,
+      ].filter((value) => value !== undefined && value !== 0);
+    };
+    for (let element: typeof scene | null = scene; element !== null; element = element.parent) {
+      expect(sideSpace(element)).toEqual([]);
+    }
+    expect(styleOf(scene)).toMatchObject({ alignSelf: 'stretch' });
+    expect(styleOf(scene).aspectRatio).toBeGreaterThan(1);
+    // The title keeps the margin of the rows and comes first.
+    const title = screen.getByRole('header', { name: 'Jardin' });
+    expect(readingOrder(['garden-scene'])[0]).toBeGreaterThan(
+      withDescendants(screen.container).indexOf(title),
+    );
+  });
 });
 
 describe('HomeScreen, the words of each state in French', () => {
