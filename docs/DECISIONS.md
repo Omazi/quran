@@ -325,3 +325,24 @@ Coran (`specs/reader.md`), le jardin en images dans le premier lancement et l'ac
 l'écran d'écoute (`specs/listening.md`), puis l'inscription et les proches
 (`specs/social.md`). Aucune nouvelle version ne lui est envoyée avant qu'un écran complet
 ait passé la revue de design (D28).
+
+## D35 — Le jardin en images calculées à l'avance, en attendant le moteur 3D
+
+Décidé par l'architecte le 24 novembre 2026, pour répondre à la demande du propriétaire
+(« mets le jardin comme il doit ressembler ») sans attendre l'essai du moteur 3D sur
+téléphone (D4), qui n'a pas eu lieu. Le jardin du niveau 1 est rendu hors de l'appli avec
+les modèles choisis (D22), sous une seule caméra : une image par nombre d'éléments et par
+état du feuillage, l'eau à part. `GardenScene` choisit l'image d'après le `GardenState`
+(`specs/garden-pictures.md`).
+
+Ce que cela donne : le jardin se voit, il pousse élément par élément, il sèche et revit par
+étapes (D26). Ce que cela ne donne pas : faire tourner le jardin, visiter en 3D celui d'un
+proche, les jardins des autres niveaux (D23). **À dire au propriétaire.**
+
+Licence des modèles, lue le 24 novembre 2026 sur les pages des auteurs : Quaternius,
+« Ultimate Stylized Nature Pack », CC0 (quaternius.com/packs/ultimatestylizednature.html) ;
+Kenney, CC0 (fichier de licence du kit). Les fichiers utilisés viennent de miroirs GitHub,
+pas des sites des auteurs, que cette machine ne peut pas joindre : à retélécharger à la
+source avant une publication sur l'App Store.
+_Changerait si_ le moteur 3D est validé sur téléphone : `GardenScene` est le seul composant
+à remplacer.
