@@ -1,9 +1,9 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { AppText } from '../../components/app-text';
 import { layout, spacing } from '../../tokens';
 import { OutsideGroupedList, useGroupedListGuard } from '../grouped-list-scope';
-import type { ButtonRowProps, ContentRowProps, LabelRowProps } from '../types';
+import type { ButtonPairRowProps, ButtonRowProps, ContentRowProps, LabelRowProps } from '../types';
 import { Button } from './button';
 import { Icon } from './icon';
 
@@ -39,6 +39,41 @@ export function ButtonRow(props: ButtonRowProps) {
   return (
     <View style={styles.row}>
       <Button {...props} fullWidth />
+    </View>
+  );
+}
+
+/**
+ * Default pair of buttons: the two buttons of this implementation side by side, sharing the width
+ * of the row, the preferred one filled (or outlined), the other a text button; stacked at large
+ * text sizes. Each has its own target of 48 dp on Android.
+ */
+export function ButtonPairRow({
+  preferred,
+  other,
+  preferredVariant = 'primary',
+}: ButtonPairRowProps) {
+  useGroupedListGuard('ButtonPairRow');
+  const { fontScale } = useWindowDimensions();
+  const isStacked = fontScale > layout.sideBySideMaxFontScale;
+  return (
+    <View style={[styles.row, isStacked ? styles.stacked : styles.sideBySide]}>
+      {[
+        { item: preferred, variant: preferredVariant },
+        { item: other, variant: 'plain' as const },
+      ].map(({ item, variant }) => (
+        <View key={item.testID ?? item.label} style={isStacked ? undefined : styles.half}>
+          <Button
+            label={item.label}
+            accessibilityLabel={item.accessibilityLabel}
+            onPress={item.onPress}
+            variant={variant}
+            disabled={item.disabled}
+            fullWidth
+            testID={item.testID}
+          />
+        </View>
+      ))}
     </View>
   );
 }
@@ -82,6 +117,9 @@ const styles = StyleSheet.create({
   twoLines: { alignItems: 'flex-start' },
   // The words take the width left by the icon and wrap at large text sizes.
   words: { flexGrow: 1, flexShrink: 1, gap: spacing.xs },
+  sideBySide: { flexDirection: 'row', gap: layout.controlGap },
+  stacked: { gap: layout.controlGap },
+  half: { flex: 1 },
   content: { alignSelf: 'stretch', paddingHorizontal: layout.screenMargin },
   edgeToEdge: { alignSelf: 'stretch' },
 });

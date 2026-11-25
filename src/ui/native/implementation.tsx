@@ -38,6 +38,7 @@ export function switchableControls(
     ListRow: switchable((controls) => controls.ListRow),
     LabelRow: switchable((controls) => controls.LabelRow),
     ButtonRow: switchable((controls) => controls.ButtonRow),
+    ButtonPairRow: switchable((controls) => controls.ButtonPairRow),
     ContentRow: switchable((controls) => controls.ContentRow),
     SwitchRow: switchable((controls) => controls.SwitchRow),
     StepperRow: switchable((controls) => controls.StepperRow),

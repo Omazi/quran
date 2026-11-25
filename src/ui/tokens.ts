@@ -53,6 +53,13 @@ export const appColors = {
 } as const satisfies Record<string, ColorPair>;
 
 /**
+ * A QR code: dark modules on a light ground in both appearances. Scanners are made for that
+ * contrast (a code drawn light on dark is not read by every camera), so it does not follow the
+ * dark appearance, as a code on a Wallet pass does not. SKILLS.md, deviation 56.
+ */
+export const qrCodeColors = { module: '#000000', ground: '#FFFFFF' } as const;
+
+/**
  * The values some app colours take when the person asks the device for more contrast (charter,
  * "Contraste élevé"; color.md › Best practices asks for one per custom colour). The colours the
  * charter does not list keep their standard value: `onAccent` on the stronger accent, and ink on
@@ -323,6 +330,12 @@ export const layout = {
   touchTarget: Platform.select(touchTargets),
   /** Outline of a default (non-iOS) control. */
   outlineWidth: 1,
+  /**
+   * Above this text scale (the person's text size divided by the default one), controls that sit
+   * side by side are stacked instead, so their labels keep whole words
+   * (typography.md › Supporting Dynamic Type).
+   */
+  sideBySideMaxFontScale: 1.35,
 } as const;
 
 /**

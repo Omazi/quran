@@ -26,6 +26,8 @@
     "requestDetail": "Wants to be your friend",
     "accept": "Accept {{name}}",
     "decline": "Decline {{name}}",
+    "acceptShort": "Accept",
+    "declineShort": "Decline",
     "gardensTitle": "Their Gardens",
     "noFriends": "No friends yet",
     "noFriendsNote": "Add someone by name, or with your code.",
@@ -106,9 +108,26 @@
     "enterPlaceholder": "ABCD EFGH",
     "enterSubmit": "Add This Friend",
     "qrTitle": "With a QR Code",
-    "qrSlot": "QR code of my invitation",
+    "qrLabel": "QR code of my invitation",
+    "qrLoading": "Preparing the QR code",
     "scan": "Scan a QR Code",
-    "qrNote": "Coming soon: the QR code of your invitation, and scanning one with the camera."
+    "qrNote": "Have your friend scan this code in Jannatuk, or scan theirs."
+  },
+  "scan": {
+    "title": "Scan a QR Code",
+    "instructions": "Point the camera at your friend’s QR code: they’re added as soon as it’s read.",
+    "preview": "Camera preview",
+    "adding": "Adding your friend…",
+    "notAnInvitation": "This QR code isn’t a Jannatuk invitation.",
+    "askTitle": "The Camera Reads the QR Code",
+    "askText": "Jannatuk uses it to read your friend’s code. No picture is kept.",
+    "continue": "Continue",
+    "deniedTitle": "Camera Access Off",
+    "deniedText": "To scan a friend’s QR code, allow the camera in Settings.",
+    "openSettings": "Open Settings",
+    "failedTitle": "The Camera Won’t Start",
+    "failedText": "Another app may be using it.",
+    "typeInstead": "You can also type their code on the previous page."
   },
   "group": {
     "period": "Leaderboard period",

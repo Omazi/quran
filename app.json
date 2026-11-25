@@ -36,6 +36,11 @@
       "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
+    "locales": {
+      "fr": "./assets/app-metadata/fr.json",
+      "en": "./assets/app-metadata/en.json",
+      "ar": "./assets/app-metadata/ar.json"
+    },
     "plugins": [
       "expo-router",
       [
@@ -58,6 +63,14 @@
         "expo-notifications",
         {
           "enableRemoteNotifications": false
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Jannatuk utilise l’appareil photo pour scanner le QR code d’invitation d’un proche. Aucune image n’est enregistrée.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
         }
       ]
     ],

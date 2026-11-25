@@ -207,6 +207,13 @@ une tâche d'écran** et rien n'est installé dans ce lot. Elle demandera :
 - Le texte lu par la caméra passe par `parseInviteLink` avant tout usage (entrée venue
   d'ailleurs) ; un refus se traduit « ce n'est pas une invitation ».
 
+**Fait le 25 novembre 2026 (onglet Proches)** : `expo-camera` 58.0.14 et `uqr` 0.1.3, licences
+MIT relues dans leur fichier `LICENSE` après installation (`NOTICE.txt`) ; texte d'autorisation
+en trois langues (`app.json`, réglages d'`expo-camera` et `locales`) ; la question de la caméra
+au toucher de « Scanner un QR code » ; la route `quranapp://invite/<CODE>`
+(`src/app/invite/[code].tsx`), qui remplit le champ du code sans l'accepter. Détails :
+`src/features/friends/README.md`.
+
 ## 7. Hors de ce lot
 
 Les écrans ; les notifications à distance ; les jardins partagés (khatma de groupe) ; le

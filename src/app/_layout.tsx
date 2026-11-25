@@ -54,33 +54,12 @@ function RootStack() {
   // The time spent in the app and in the reader, for the statistics (D37).
   useForegroundTimeRecording();
   const { t } = useTranslation('onboarding');
-  const { t: tFriends } = useTranslation('friends');
   const colors = useColors();
-  // The pages of the Proches tab open over the tabs, as the reader does, with the system bar, its
-  // title and its back button, a chevron alone (toolbars.md › Navigation; deviation 50). The bar
-  // takes the system's grouped background and label colours, which follow the dark appearance:
-  // without them the navigation library paints its own light theme.
-  const friendsPage = {
-    headerShown: true,
-    headerTintColor: colors.accent,
-    headerBackButtonDisplayMode: 'minimal',
-    headerStyle: { backgroundColor: colors.groupedBackground },
-    headerTitleStyle: { color: colors.label },
-    headerShadowVisible: false,
-    contentStyle: { backgroundColor: colors.groupedBackground },
-  } as const;
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="+not-found" />
-      <Stack.Screen name="friends/[id]" options={{ ...friendsPage, title: '' }} />
-      <Stack.Screen name="friends/add" options={{ ...friendsPage, title: tFriends('add.title') }} />
-      <Stack.Screen
-        name="friends/new-group"
-        options={{ ...friendsPage, title: tFriends('newGroup.title') }}
-      />
-      <Stack.Screen name="friends/group/[id]" options={{ ...friendsPage, title: '' }} />
       {/* The reader: the system navigation bar floats over the page (the reader hides and shows
           it), with the system's back button, a chevron alone (toolbars.md › Navigation). */}
       <Stack.Screen

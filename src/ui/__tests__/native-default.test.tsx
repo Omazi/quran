@@ -4,6 +4,7 @@ import { processColor, Text as RNText } from 'react-native';
 
 import {
   Button,
+  ButtonPairRow,
   ButtonRow,
   ChoiceRow,
   ContentRow,
@@ -672,6 +673,37 @@ describe('default LabelRow', () => {
       paddingHorizontal: layout.screenMargin,
       minHeight: layout.touchTarget,
     });
+  });
+});
+
+describe('default ButtonPairRow', () => {
+  const pair = (onAccept = jest.fn()) => (
+    <InList>
+      <ButtonPairRow
+        preferred={{ label: 'Accepter', accessibilityLabel: 'Accepter Yacine', onPress: onAccept }}
+        other={{ label: 'Refuser', accessibilityLabel: 'Refuser Yacine', onPress: jest.fn() }}
+      />
+    </InList>
+  );
+
+  it('shares the row between a filled button and a text button, 48 dp each on Android', async () => {
+    setDeviceConditions({ os: 'android', fontScale: 1 });
+    const onAccept = jest.fn();
+    await render(pair(onAccept));
+    const accept = screen.getByRole('button', { name: 'Accepter Yacine' });
+    const decline = screen.getByRole('button', { name: 'Refuser Yacine' });
+    expect(touchTargetHeight(accept)).toBeGreaterThanOrEqual(touchTargets.ios);
+    expect(touchTargetHeight(decline)).toBeGreaterThanOrEqual(touchTargets.ios);
+    expect(accept).toHaveStyle({ backgroundColor: expect.anything() });
+    expect(decline).not.toHaveStyle({ borderWidth: 1 });
+    await fireEvent.press(accept);
+    expect(onAccept).toHaveBeenCalledTimes(1);
+  });
+
+  it('stacks them at the largest text size', async () => {
+    setDeviceConditions({ os: 'android', fontScale: LARGEST_FONT_SCALE });
+    await render(pair());
+    expect(fixedHeightsAroundText(screen.container)).toEqual([]);
   });
 });
 

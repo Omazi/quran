@@ -1,17 +1,39 @@
-import { Group, Image, Label, Text, VStack } from '@expo/ui/swift-ui';
+import {
+  Button as SwiftUIButton,
+  Group,
+  HStack,
+  Image,
+  Label,
+  Text,
+  VStack,
+} from '@expo/ui/swift-ui';
 import {
   accessibilityHidden,
+  accessibilityLabel,
+  buttonStyle,
+  contentShape,
+  controlSize,
+  disabled as disabledModifier,
   font,
   foregroundStyle,
+  frame,
   listRowBackground,
   listRowInsets,
   listRowSeparator,
+  shapes,
 } from '@expo/ui/swift-ui/modifiers';
+import { useWindowDimensions } from 'react-native';
 
-import { appleTextStyles, spacing } from '../../tokens';
+import { appleTextStyles, layout, spacing } from '../../tokens';
 import { useColors } from '../../use-colors';
 import { OutsideGroupedList, useGroupedListGuard } from '../grouped-list-scope';
-import type { ButtonRowProps, ContentRowProps, LabelRowProps } from '../types';
+import type {
+  ButtonPairItem,
+  ButtonPairRowProps,
+  ButtonRowProps,
+  ContentRowProps,
+  LabelRowProps,
+} from '../types';
 import { Button } from './button';
 import { ReactNativeContent } from './swiftui-host';
 
@@ -84,6 +106,84 @@ export function ButtonRow({ variant = 'primary', ...button }: ButtonRowProps) {
     <Group modifiers={BARE_ROW}>
       <Button {...button} variant={variant} fullWidth />
     </Group>
+  );
+}
+
+/**
+ * Two system buttons in one row of the list, at the same width: the preferred one in the
+ * prominent (or bordered) style, the other borderless (buttons.md › Style). Each button states
+ * its style: in a row of a list, buttons without a style of their own would make the whole row
+ * one target that presses both. The borderless one gets a frame of 44 points and a rectangular
+ * hit shape (buttons.md › Best practices). At large text sizes the two are stacked, so that a
+ * label is never cut inside a word.
+ */
+export function ButtonPairRow({
+  preferred,
+  other,
+  preferredVariant = 'primary',
+}: ButtonPairRowProps) {
+  useGroupedListGuard('ButtonPairRow');
+  const colors = useColors();
+  const { fontScale } = useWindowDimensions();
+  const isStacked = fontScale > layout.sideBySideMaxFontScale;
+  const preferredLabelColor =
+    preferredVariant === 'primary' && preferred.disabled !== true
+      ? [foregroundStyle(colors.onAccent)]
+      : [];
+  const buttons = [
+    pairButton(
+      preferred,
+      [buttonStyle(SYSTEM_PAIR_STYLE[preferredVariant]), controlSize('large')],
+      [frame({ maxWidth: Infinity }), ...preferredLabelColor],
+    ),
+    pairButton(
+      other,
+      [buttonStyle('borderless'), controlSize('large')],
+      [
+        frame({ maxWidth: Infinity, minHeight: layout.touchTarget }),
+        contentShape(shapes.rectangle()),
+      ],
+    ),
+  ];
+  // An ordinary row of the list, with its background and insets: the answer sits in the same
+  // card as the request it answers.
+  return (
+    <Group>
+      {isStacked ? (
+        <VStack spacing={layout.controlGap}>{buttons}</VStack>
+      ) : (
+        // Centred: if one label wraps at a larger text size, the other stays beside its middle.
+        <HStack spacing={layout.controlGap} alignment="center">
+          {buttons}
+        </HStack>
+      )}
+    </Group>
+  );
+}
+
+/** The system styles a preferred button can take in a pair. */
+const SYSTEM_PAIR_STYLE = { primary: 'borderedProminent', secondary: 'bordered' } as const;
+
+function pairButton(
+  item: ButtonPairItem,
+  style: ReturnType<typeof buttonStyle | typeof controlSize>[],
+  labelModifiers: ReturnType<typeof foregroundStyle | typeof frame | typeof contentShape>[],
+) {
+  return (
+    <SwiftUIButton
+      key={item.testID ?? item.label}
+      onPress={item.onPress}
+      testID={item.testID}
+      modifiers={[
+        ...style,
+        disabledModifier(item.disabled === true),
+        ...(item.accessibilityLabel === undefined
+          ? []
+          : [accessibilityLabel(item.accessibilityLabel)]),
+      ]}
+    >
+      <Text modifiers={labelModifiers}>{item.label}</Text>
+    </SwiftUIButton>
   );
 }
 

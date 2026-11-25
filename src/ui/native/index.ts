@@ -11,6 +11,7 @@ const controls: NativeControls = defaultControls;
 
 export const {
   Button,
+  ButtonPairRow,
   ButtonRow,
   ChoiceRow,
   ContentRow,

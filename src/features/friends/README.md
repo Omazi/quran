@@ -1,8 +1,9 @@
 # Onglet Proches (`src/features/friends`)
 
-Connexion, proches et leurs jardins, page d'un proche, ajout d'un proche (D36), groupes et
-classements. Sur les fausses données de `src/data/social` (D33) : chaque écran le dit tant que
-`isDemonstration` est vrai. Spécification : `docs/specs/social.md` ; décisions D23, D33, D36, D37.
+Connexion, proches et leurs jardins, page d'un proche, ajout d'un proche (D36) par le nom, par
+un code ou par un QR code, groupes et classements. Sur les fausses données de `src/data/social`
+(D33) : la liste le dit une fois, sous le titre de l'onglet, tant que `isDemonstration` est vrai
+(et l'écran de connexion dit que la connexion est une démonstration). Spécification : `docs/specs/social.md` ; décisions D23, D33, D36, D37.
 
 ## Pièces
 
@@ -13,20 +14,39 @@ classements. Sur les fausses données de `src/data/social` (D33) : chaque écran
 | `social-store.tsx`                 | Le client (démonstration de l'appli par défaut, un autre dans les tests), le compteur qui fait relire les écrans, le code et les encouragements de la session |
 | `use-session.ts`, `use-friends.ts` | Les hooks : session et connexion ; liste, proche, ajout, groupe, nouveau groupe                                                                               |
 | `friends-pages.tsx`                | Hook + écran pour chaque page, avec chargement, échec, et l'écran de connexion quand personne n'est connecté                                                  |
+| `scan-invite-screen.tsx`           | Le scanner : aperçu de la caméra (`expo-camera`, QR seulement), consignes, refus ; caméra refusée → réglages ; jamais demandée → un seul bouton « Continuer » |
+| `test-support/camera.tsx`          | Un faux `expo-camera` pour les tests : permission qui répond comme le système, aperçu dont on déclenche la lecture                                            |
 | `*-screen.tsx`                     | Écrans de présentation : ils reçoivent un modèle et des actions                                                                                               |
 
-Routes : `src/app/(tabs)/friends.tsx` (l'onglet), `src/app/friends/*` (les pages, dans la pile
-principale, comme le lecteur : écart 50 de `docs/design/SKILLS.md`).
+Routes : `src/app/(tabs)/friends/` est une pile propre à l'onglet (`_layout.tsx`) : la racine de
+l'onglet (`index.tsx`), un proche (`[id].tsx`), ajouter (`add.tsx`), scanner (`scan.tsx`),
+nouveau groupe (`new-group.tsx`), un groupe (`group/[id].tsx`). La barre d'onglets reste visible
+sur chacune (`tab-bars.md › Best practices` ; l'écart 50 est résolu). Le lien
+`quranapp://invite/<CODE>` (`src/app/invite/[code].tsx`) ouvre « Ajouter un proche » avec le code
+dans son champ, sans l'accepter seul.
+
+## QR code (D36)
+
+- **Le mien** : `QrCode` (`src/ui`) dessine `inviteLink(code)` avec `uqr` (matrice) et
+  `react-native-svg`, noir sur blanc dans les deux apparences, marge de quatre modules (écart 56).
+- **Le sien** : « Scanner un QR code » pose la question de la caméra au toucher, et seulement là
+  (`privacy.md › Requesting permission`), puis ouvre le scanner. Le texte lu passe par
+  `parseInviteLink`, puis par la même acceptation qu'un code tapé. Une page poussée dans la pile,
+  barre d'onglets visible (écart 57).
+- **Texte d'autorisation** (iOS) : `app.json`, réglages du module `expo-camera`
+  (`cameraPermission`, en français, la langue de repli de l'appli) et `locales` (fr, en, ar,
+  fichiers `assets/app-metadata/*.json`). Le micro n'est pas demandé (`microphonePermission:
+false`, `recordAudioAndroid: false`).
+- **Licences** : `NOTICE.txt` à la racine (MIT pour `uqr` et `expo-camera` ; le scanner web
+  d'`expo-camera` embarque aussi du code Apache-2.0 et BSD-3-Clause).
 
 ## Ce qui manque
 
-- **Dessin du QR code** : un emplacement nommé. Bibliothèque proposée, non installée : `uqr`
-  (licence MIT d'après le registre npm, 79 Ko décompressés, aucune dépendance) ; elle rend une
-  matrice que `react-native-svg` (déjà dans l'appli) dessinerait. Autres : `qrcode` (MIT, 135 Ko,
-  trois dépendances dont `pngjs` et `yargs`), `react-native-qrcode-svg` (MIT, 979 Ko, dépend de
-  `qrcode`). À valider par l'architecte, licence à relire dans le paquet à l'installation.
-- **Scan** : bouton désactivé. Il demande `expo-camera` (MIT selon `docs/specs/social.md`, section 6),
-  le texte d'autorisation de la caméra en trois langues, et la route `quranapp://invite/<CODE>`.
+- **Pas vérifié sur un iPhone** : l'aperçu de la caméra, la lecture réelle d'un QR code, le
+  texte d'autorisation affiché par iOS dans chaque langue, le retour depuis Réglages.
+- **Image du jardin dans le classement d'un groupe** : non faite (un membre qui n'est pas mon
+  proche ne montre pas son jardin, règle 4 : à décider avec le modèle du groupe).
+- **Mentions des licences dans l'appli** : aucune page ne les montre encore (`NOTICE.txt`).
 - **Bouton « Continuer avec Apple » du système** : `expo-apple-authentication`, non installé (écart 46).
 - **Encouragements reçus** : le dépôt les donne (`listReceivedNudges`), aucun écran ne les montre.
 - Déconnexion et suppression du compte : à l'onglet Profil.

@@ -3,6 +3,7 @@ import { AccessibilityInfo, DynamicColorIOS, PlatformColor } from 'react-native'
 
 import { AppText } from '../components/app-text';
 import { Placeholder } from '../components/placeholder';
+import { QrCode, qrCodeModules } from '../components/qr-code';
 import { Screen } from '../components/screen';
 import {
   APPEARANCES_AND_DIRECTIONS,
@@ -534,5 +535,36 @@ describe('Placeholder', () => {
     expect(styleOf(screen.getByTestId('garden')).backgroundColor).toBe(
       fallbackSystemColors.secondaryBackground.dark,
     );
+  });
+});
+
+describe('QrCode', () => {
+  const LINK = 'quranapp://invite/ABCDEFGH';
+
+  it('encodes the text with a quiet zone of four light modules on every side', () => {
+    const modules = qrCodeModules(LINK);
+    expect(modules.length).toBeGreaterThan(21 + 8);
+    for (const row of modules) expect(row).toHaveLength(modules.length);
+    const lightBand = (index: number) =>
+      modules[index]?.every((isDark) => !isDark) === true &&
+      modules.every((row) => row[index] === false);
+    for (const index of [0, 1, 2, 3, modules.length - 1, modules.length - 4]) {
+      expect(lightBand(index)).toBe(true);
+    }
+    // The finder pattern starts right after the quiet zone.
+    expect(modules[4]?.[4]).toBe(true);
+  });
+
+  it('is one image for screen readers, labelled by its purpose, dark on light in both appearances', async () => {
+    for (const scheme of ['light', 'dark'] as const) {
+      setDeviceConditions({ scheme });
+      await render(<QrCode value={LINK} accessibilityLabel="QR code de mon invitation" />);
+      expect(screen.getByRole('image', { name: 'QR code de mon invitation' })).toBeOnTheScreen();
+      const [ground] = screen.container.queryAll(({ type }) => type === 'RNSVGRect');
+      const [path] = screen.container.queryAll(({ type }) => type === 'RNSVGPath');
+      // react-native-svg passes colours as ARGB numbers: opaque white, opaque black.
+      expect(ground?.props.fill).toMatchObject({ payload: 0xffffffff });
+      expect(path?.props.fill).toMatchObject({ payload: 0xff000000 });
+    }
   });
 });

@@ -70,6 +70,15 @@ function appSocialStore(): SocialStore {
   return appStore;
 }
 
+/**
+ * Replaces the demonstration the app runs on, or forgets it (`null`: a new one on the next
+ * visit). For tests of the whole app: the store outlives a render, so each test starts from its
+ * own, or the session of one test would be found by the next.
+ */
+export function replaceAppSocialStore(store: SocialStore | null): void {
+  appStore = store;
+}
+
 const SocialContext = createContext<SocialStore | null>(null);
 
 /** Gives the pages another store than the app's: tests use it. */

@@ -11,6 +11,7 @@ export {
   type ConfirmActionOptions,
 } from './components/confirm-action';
 export { Placeholder, type PlaceholderProps } from './components/placeholder';
+export { QrCode, qrCodeModules, type QrCodeProps } from './components/qr-code';
 export { QuranText, type QuranTextProps, type QuranTextRun } from './components/quran-text';
 export { Screen, type ScreenBackground, type ScreenProps } from './components/screen';
 export { useReducedMotion } from './device-settings';
