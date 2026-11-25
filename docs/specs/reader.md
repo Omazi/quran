@@ -68,7 +68,9 @@ données sont incohérentes donne un état d'erreur clair, jamais un texte parti
 - Une page compte quand la personne y est restée au moins `minimumSecondsOnPage` secondes,
   appli au premier plan, puis tourne la page ou quitte le lecteur. Valeur de départ :
   **30 secondes**, dans la configuration de la fonctionnalité. **À confirmer par le
-  propriétaire.** Feuilleter ne fait rien pousser.
+  propriétaire.** Feuilleter ne fait rien pousser. Une page déjà lue assez longtemps compte
+  aussi quand l'appli passe en arrière-plan : iOS peut fermer l'appli sans prévenir, et le
+  tour de page qui l'aurait comptée ne viendrait jamais.
 - L'enregistrement passe par le magasin (`recordPageRead`), à la date locale. Relire une
   page déjà lue dans la khatma en cours ne change rien : c'est le domaine qui le décide
   (D8), l'écran ne refait pas ce calcul.
