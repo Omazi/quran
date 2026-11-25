@@ -40,6 +40,20 @@ afterEach(() => {
 });
 
 describe('useLaunch', () => {
+  it('shows no overlay when it is skipped (the iOS check), and still hides the native screen', async () => {
+    const hideSplash = jest.fn();
+    const { result } = await renderHook(() =>
+      useLaunch({
+        isReady: true,
+        hideSplash,
+        readReducedMotion: () => Promise.resolve(false),
+        isSkipped: true,
+      }),
+    );
+    expect(result.current.isShown).toBe(false);
+    expect(hideSplash).toHaveBeenCalledTimes(1);
+  });
+
   it('shows the overlay at once and keeps the native launch screen until it is laid out', async () => {
     const { result, hideSplash } = await setup({ isReady: false });
     expect(result.current.isShown).toBe(true);

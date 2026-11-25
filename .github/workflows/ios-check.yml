@@ -6,7 +6,8 @@ name: iOS check
 #
 # Two jobs:
 #  - "iPhone build" says whether the app compiles. It decides the result of the workflow.
-#  - "First screen" starts the app in the iPhone simulator and keeps pictures of what it shows.
+#  - "First screen" starts the app in the iPhone simulator and keeps a picture of each screen (the
+#    pages of the introduction, the tabs, the reader in both scripts, the listening screen...).
 #    It is reported, never blocking: the pictures are there to be looked at. The workflow
 #    "iOS screens" then puts them on the branch `ci-screens`.
 #
@@ -28,6 +29,7 @@ on:
       - 'tsconfig.json'
       - 'tools/ci/select-xcode.sh'
       - 'tools/ci/pick-simulator.py'
+      - 'tools/ci/screens.py'
       - '.github/workflows/ios-check.yml'
   workflow_dispatch:
 
@@ -91,12 +93,16 @@ jobs:
   first-screen:
     name: First screen
     runs-on: macos-26
-    timeout-minutes: 60
+    # The build takes about 45 minutes, then each screen is launched and photographed once.
+    timeout-minutes: 120
     # Reported, not blocking: see the header.
     continue-on-error: true
     env:
       # The test build shows the preview of the garden's states (src/features/home/state-preview.ts).
       EXPO_PUBLIC_STATE_PREVIEW: '1'
+      # This build can open each screen by a launch argument and fill the app with a made-up history
+      # (src/features/screen-check). Set here only: never in a published build (docs/BUILD.md).
+      EXPO_PUBLIC_SCREEN_CHECK: '1'
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
@@ -126,7 +132,7 @@ jobs:
             -destination "platform=iOS Simulator,id=$SIM_UDID" -derivedDataPath build/SimData \
             build > build/sim-build.log 2>&1 \
             || { grep -E "error:" build/sim-build.log | sort -u | cut -c1-400 | head -60; tail -60 build/sim-build.log; exit 1; }
-      - name: Open the app and keep a picture of its first screen
+      - name: Open the app on each screen and keep a picture of it
         run: |
           APP=$(find build/SimData/Build/Products/Release-iphonesimulator -maxdepth 1 -name "*.app" | head -1)
           xcrun simctl install "$SIM_UDID" "$APP"
@@ -134,24 +140,43 @@ jobs:
           xcrun simctl launch "$SIM_UDID" com.omazi.quran || true
           sleep 40
           xcrun simctl terminate "$SIM_UDID" com.omazi.quran || true
-          shot() {  # name, appearance, language, locale
-            xcrun simctl ui "$SIM_UDID" appearance "$2"
-            sleep 3
-            xcrun simctl launch "$SIM_UDID" com.omazi.quran -AppleLanguages "($3)" -AppleLocale "$4"
-            sleep 15
-            xcrun simctl io "$SIM_UDID" screenshot "build/screens/$1.png"
+          # The list of pictures is tools/ci/screens.py (also what publish-screens.py keeps). A screen
+          # is opened by launch arguments that only this build understands (src/features/screen-check);
+          # a picture is taken whether or not the screen came up, and a failure never stops the loop.
+          CURRENT_LANG=en
+          CURRENT_LOOK=""
+          shot() {  # name appearance language locale screen page script seed seconds-to-wait
+            local name=$1 look=$2 lang=$3 locale=$4 screen=$5 page=$6 script=$7 seed=$8 wait=$9
+            if [ "$look" != "$CURRENT_LOOK" ]; then
+              xcrun simctl ui "$SIM_UDID" appearance "$look" || true
+              CURRENT_LOOK=$look
+              sleep 3
+            fi
+            # Arabic mirrors the layout and the app restarts itself once to do it, in both directions:
+            # a first launch brings the app to the writing direction, the next one is photographed.
+            if [ "$lang" != "$CURRENT_LANG" ] && { [ "$lang" = ar ] || [ "$CURRENT_LANG" = ar ]; }; then
+              xcrun simctl launch "$SIM_UDID" com.omazi.quran -AppleLanguages "($lang)" -AppleLocale "$locale" || true
+              sleep 15
+              xcrun simctl terminate "$SIM_UDID" com.omazi.quran || true
+              sleep 2
+            fi
+            CURRENT_LANG=$lang
+            local args=(-AppleLanguages "($lang)" -AppleLocale "$locale" -screenCheckGo "$screen")
+            [ "$page" = "-" ] || args+=(-screenCheckPage "$page")
+            [ "$script" = "-" ] || args+=(-screenCheckScript "$script")
+            [ "$seed" = "-" ] || args+=(-screenCheckSeed "$seed")
+            xcrun simctl launch "$SIM_UDID" com.omazi.quran "${args[@]}" || true
+            sleep "$wait"   # idle: the screen is drawn and its texts and fonts are loaded
+            xcrun simctl io "$SIM_UDID" screenshot "build/screens/$name.png" || true
             xcrun simctl terminate "$SIM_UDID" com.omazi.quran || true
           }
-          shot 1-francais-clair light fr fr_FR
-          shot 2-francais-sombre dark fr fr_FR
-          shot 3-anglais-clair light en en_US
-          # Arabic last: the app restarts itself once to mirror its layout, so the picture is taken
-          # on the second launch.
-          xcrun simctl launch "$SIM_UDID" com.omazi.quran -AppleLanguages "(ar)" -AppleLocale ar_SA || true
-          sleep 15
-          xcrun simctl terminate "$SIM_UDID" com.omazi.quran || true
-          shot 4-arabe-clair light ar ar_SA
-          ls -la build/screens
+          python3 tools/ci/screens.py plan > build/screens-plan.tsv
+          wc -l build/screens-plan.tsv
+          while IFS=$'\t' read -r name look lang locale screen page script seed wait; do
+            echo "== $name"
+            shot "$name" "$look" "$lang" "$locale" "$screen" "$page" "$script" "$seed" "$wait"
+          done < build/screens-plan.tsv
+          ls -la build/screens | tail -n +2 | wc -l
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:

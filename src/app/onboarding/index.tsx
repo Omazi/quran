@@ -1,4 +1,4 @@
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 
 import { deviceNotificationPermissions } from '@/data/notifications';
 import { GardenScene, previewGardenState } from '@/features/garden';
@@ -7,8 +7,10 @@ import {
   gardenOfScene,
   renderPlaceholderScene,
   useOnboarding,
+  ONBOARDING_PAGES,
   type SceneRenderer,
 } from '@/features/onboarding';
+import { screenCheckPage } from '@/features/screen-check';
 
 /**
  * The gardens of the introduction, drawn by the garden's own scene from the state its rules give,
@@ -26,8 +28,12 @@ const renderScene: SceneRenderer = (scene) => {
  */
 export default function OnboardingRoute() {
   const router = useRouter();
+  // `?page=N` opens a page of the flow, in the iOS check's build only (src/features/screen-check).
+  const { page } = useLocalSearchParams<{ page?: string }>();
+  const checkedPage = screenCheckPage(page, ONBOARDING_PAGES.length);
   const { model, actions } = useOnboarding({
     notifications: deviceNotificationPermissions,
+    initialPageIndex: checkedPage === null ? 0 : checkedPage - 1,
     onFinished: ({ isReplay }) => {
       // Opened by a link, the introduction has no screen behind it to go back to.
       if (isReplay && router.canGoBack()) router.back();

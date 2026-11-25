@@ -6,7 +6,7 @@ name: iOS screens
 # Why a separate workflow: this is the only job of the repository that may write to it, and it
 # runs none of the app's build. "iOS check" builds the app with read-only rights and leaves the
 # pictures in an artifact; this workflow, taken from `main`, reads that artifact as untrusted
-# data, keeps the PNG pictures it expects (tools/ci/publish-screens.py) and replaces one branch
+# data, keeps the PNG pictures it expects (tools/ci/publish-screens.py, the names of tools/ci/screens.py) and replaces one branch
 # that holds nothing else. See docs/SECURITY.md, "Dépôt public".
 on:
   workflow_run:
@@ -18,6 +18,7 @@ on:
     paths:
       - '.github/workflows/ios-screens.yml'
       - 'tools/ci/publish-screens.py'
+      - 'tools/ci/screens.py'
   workflow_dispatch:
     inputs:
       run_id:
@@ -102,7 +103,7 @@ jobs:
           git init -q -b ci-screens
           git add -A
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-            commit -q -m "First screen of ${SHA:0:7} (iOS check, run $RUN)"
+            commit -q -m "Screens of ${SHA:0:7} (iOS check, run $RUN)"
           # One commit, no history: the branch is replaced each time.
           BASIC=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')
           echo "::add-mask::$BASIC"

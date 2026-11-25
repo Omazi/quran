@@ -1,17 +1,21 @@
-"""Prepares the pictures of the app's first screen for the branch `ci-screens`.
+"""Prepares the pictures of the app's screens for the branch `ci-screens`.
 
     python3 tools/ci/publish-screens.py <downloaded artifact> <output folder> --run 123 --sha abc
 
 The artifact `ios-first-screen` comes from a job that ran the whole build, third-party tools
-included, so it is read as untrusted data: nothing in it is executed, only the four pictures the
-iOS check is known to take are kept, and each one must be a whole PNG file of a plausible size,
-read chunk by chunk to its end. The build log that travels in the same artifact is left behind.
+included, so it is read as untrusted data: nothing in it is executed, only the pictures listed in
+`tools/ci/screens.py` are kept (a fixed list of names, taken from this repository's `main`, not
+from the artifact), and each one must be a whole PNG file of a plausible size, read chunk by chunk
+to its end. The build log and any other file that travels in the same artifact are left behind.
 
-The output folder receives the pictures and a README.md that shows them with a label each. The
+The output folder receives the pictures and a README.md that shows them, grouped, with a caption
+under each. The
 workflow `.github/workflows/ios-screens.yml` then replaces the branch with that folder.
 """
 
 import argparse
+import html
+import importlib.util
 import os
 import pathlib
 import re
@@ -19,16 +23,25 @@ import struct
 import sys
 import zlib
 
-# File name -> label shown above the picture. The names are those of ios-check.yml.
-EXPECTED = {
-    "1-francais-clair.png": "Français, mode clair",
-    "2-francais-sombre.png": "Français, mode sombre",
-    "3-anglais-clair.png": "Anglais, mode clair",
-    "4-arabe-clair.png": "Arabe, mode clair (mise en page de droite à gauche)",
-}
+def _load_screens():
+    """The list of pictures, read from the file next to this one (its folder is not on the path
+    under `python3 -I`)."""
+    path = pathlib.Path(__file__).resolve().with_name("screens.py")
+    spec = importlib.util.spec_from_file_location("ci_screens", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+SCREENS = _load_screens()
+# File name -> caption shown under the picture. The names are those of ios-check.yml.
+EXPECTED = SCREENS.EXPECTED
+GROUP_OF = {shot.name: shot.group for shot in SCREENS.SHOTS}
+COLUMNS = 4
 
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 MAX_BYTES = 15 * 1024 * 1024
+MAX_TOTAL_BYTES = 200 * 1024 * 1024  # all the pictures together: the branch is pushed whole
 MAX_SIDE = 4000  # an iPhone screenshot is at most 1320 x 2868 pixels today
 
 
@@ -91,6 +104,7 @@ def main() -> int:
 
     args.out.mkdir(parents=True, exist_ok=False)
     kept = []
+    total = 0
     for name, label in EXPECTED.items():
         source = find(args.incoming, name)
         if source is None:
@@ -99,12 +113,16 @@ def main() -> int:
         if source.stat().st_size > MAX_BYTES:
             print(f"refused: {name} is too large")
             continue
+        if total + source.stat().st_size > MAX_TOTAL_BYTES:
+            print(f"refused: {name} would pass the total size allowed")
+            continue
         data = source.read_bytes()
         size = png_size(data)
         if size is None:
             print(f"refused: {name} is not a PNG picture")
             continue
         (args.out / name).write_bytes(data)
+        total += len(data)
         kept.append((name, label, size))
         print(f"kept: {name} {size[0]}x{size[1]}")
 
@@ -114,21 +132,36 @@ def main() -> int:
 
     repository = "https://github.com/" + os.environ.get("GITHUB_REPOSITORY", "Omazi/quran")
     lines = [
-        "# Premier écran de l'appli, dans le simulateur d'iPhone",
+        "# Les écrans de l'appli, dans le simulateur d'iPhone",
         "",
-        "Images prises automatiquement par la vérification iOS, sur un Mac de GitHub.",
+        "Images prises automatiquement par la vérification iOS, sur un Mac de GitHub, dans une version",
+        "faite pour ce contrôle (jardin de démonstration, proches de démonstration).",
         "",
         f"- Version du code : [`{args.sha[:7]}`]({repository}/commit/{args.sha})",
         f"- Exécution : [{args.run}]({repository}/actions/runs/{args.run})",
+        f"- Images : {len(kept)} sur {len(EXPECTED)}",
         "",
         "Cette branche ne contient que ces images. Elle est remplacée à chaque vérification :",
         "ne rien y écrire à la main.",
     ]
-    for name, label, (width, height) in kept:
-        lines += ["", f"## {label}", "", f'<img src="{name}" alt="{label}" width="320">', "", f"`{name}`, {width} × {height} pixels"]
-    missing = [label for name, label in EXPECTED.items() if name not in {k[0] for k in kept}]
+    by_group: dict[str, list] = {}
+    for name, label, size in kept:
+        by_group.setdefault(GROUP_OF[name], []).append((name, label, size))
+    for group, pictures in by_group.items():
+        lines += ["", f"## {group}", "", "<table>"]
+        for start in range(0, len(pictures), COLUMNS):
+            lines.append("<tr>")
+            for name, label, (width, height) in pictures[start : start + COLUMNS]:
+                caption = html.escape(label)
+                lines.append(
+                    f'<td valign="top"><img src="{name}" alt="{caption}" width="200"><br>'
+                    f"<sub>{caption}<br><code>{name}</code> {width}×{height}</sub></td>"
+                )
+            lines.append("</tr>")
+        lines.append("</table>")
+    missing = [name for name in EXPECTED if name not in {k[0] for k in kept}]
     if missing:
-        lines += ["", "## Images manquantes", ""] + [f"- {label}" for label in missing]
+        lines += ["", "## Images manquantes", ""] + [f"- `{name}` : {EXPECTED[name]}" for name in missing]
     (args.out / "README.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return 0
 
