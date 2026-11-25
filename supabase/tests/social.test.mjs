@@ -3,8 +3,13 @@
 // mustapha (stranger), taghread (blocked by omar), anon (signed-out visitor).
 // "refused" = SQLSTATE 42501 (privilege missing, or a row policy refuses the row).
 import { describe, it, before, after } from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { startDb, U, ACTORS } from './harness.mjs';
+
+const sharedNormalization = JSON.parse(
+  readFileSync(new URL('./search-normalization.json', import.meta.url), 'utf8'),
+);
 
 let db;
 before(async () => {
@@ -36,7 +41,7 @@ const count = async (w, sql, params) => Number((await w.suRows(sql, params))[0].
 // ---------------------------------------------------------------------------
 describe('structure', () => {
   t(
-    'every table of the public schema has row level security, and the 12 tables exist',
+    'every table of the public schema has row level security, and the 13 tables exist',
     async (w) => {
       const rows = await w.suRows(
         `select c.relname, c.relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace
@@ -57,6 +62,7 @@ describe('structure', () => {
           'nudges',
           'profiles',
           'reading_backups',
+          'search_attempts',
         ],
       );
       for (const r of rows) assert.equal(r.relrowsecurity, true, `${r.relname}: RLS off`);
@@ -139,7 +145,7 @@ describe('structure', () => {
         `select p.proname, p.prosecdef, p.proconfig from pg_proc p join pg_namespace n on n.oid = p.pronamespace
        where n.nspname = 'public'`,
       );
-      assert.equal(rows.length, 17);
+      assert.equal(rows.length, 18);
       for (const r of rows) {
         assert.equal(r.prosecdef, true, `${r.proname} is not security definer`);
         assert.ok(
@@ -160,7 +166,7 @@ describe('structure', () => {
       `select conrelid::regclass::text as t, confrelid::regclass::text as target, confdeltype
        from pg_constraint where contype = 'f' and connamespace = 'public'::regnamespace`,
     );
-    assert.equal(rows.length, 16);
+    assert.equal(rows.length, 17);
     for (const r of rows)
       assert.equal(r.confdeltype, 'c', `${r.t} -> ${r.target} does not cascade`);
   });
@@ -1929,6 +1935,7 @@ describe('account deletion (rule 10)', () => {
     ['blocks', 'blocked_id'],
     ['invites', 'owner_id'],
     ['invite_attempts', 'user_id'],
+    ['search_attempts', 'user_id'],
     ['nudges', 'from_id'],
     ['nudges', 'to_id'],
     ['groups', 'owner_id'],
@@ -1950,6 +1957,7 @@ describe('account deletion (rule 10)', () => {
     await w.omar.q(`select * from public.create_invite()`);
     await w.mustapha.q(`select public.accept_invite('AAAAAAAA')`);
     await w.su(`insert into public.invite_attempts (user_id) values ($1)`, [U.omar]);
+    await w.su(`insert into public.search_attempts (user_id) values ($1)`, [U.omar]);
     await w.su(`insert into public.blocks (blocker_id, blocked_id) values ($1, $2)`, [
       U.mustapha,
       U.omar,
@@ -1963,7 +1971,7 @@ describe('account deletion (rule 10)', () => {
   t('delete_my_account removes everything of the person and nothing of anybody else', async (w) => {
     await fill(w);
     const g = (await w.omar.one(`select public.create_group('Seul') as id`)).id; // owned alone: disappears
-    assert.ok((await traces(w, U.omar)).length >= 13);
+    assert.ok((await traces(w, U.omar)).length >= 14);
     await w.omar.q(`select public.delete_my_account()`);
     assert.deepEqual(await traces(w, U.omar), []);
     assert.equal(await count(w, `select count(*) n from auth.users where id = $1`, [U.omar]), 0);
@@ -2064,5 +2072,230 @@ describe('account deletion (rule 10)', () => {
       await count(w, `select count(*) n from public.group_members where group_id = $1`, [g]),
       1,
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+describe('search by name (rule 11, D36)', () => {
+  const search = (actor, query) => actor.rows(`select * from public.search_profiles($1)`, [query]);
+  const names = async (actor, query) => (await search(actor, query)).map((r) => r.display_name);
+  const rename = (w, n, name) =>
+    w.su(`update public.profiles set display_name = $2 where id = $1`, [idOf(n), name]);
+
+  t(
+    'the owner finds a friend with the relation, a stranger with none, never themself',
+    async (w) => {
+      assert.deepEqual(await search(w.omar, 'sa'), [
+        { id: U.sarah, display_name: 'Sarah', relation: 'friend' },
+      ]);
+      assert.deepEqual(await search(w.omar, 'mus'), [
+        { id: U.mustapha, display_name: 'Mustapha', relation: 'none' },
+      ]);
+      assert.deepEqual(await search(w.omar, 'om'), []); // omar himself
+    },
+  );
+
+  t('a stranger finds the owner by name: the name and the relation, no other column', async (w) => {
+    const found = await search(w.mustapha, 'om');
+    assert.deepEqual(found, [{ id: U.omar, display_name: 'Omar', relation: 'none' }]);
+    assert.deepEqual(Object.keys(found[0]), ['id', 'display_name', 'relation']);
+    assert.deepEqual(await names(w.mustapha, 'sar'), ['Sarah']);
+  });
+
+  t('a person whose request is waiting shows the direction', async (w) => {
+    await w.su(
+      `insert into public.friendships (requester_id, addressee_id, status) values ($1, $2, 'pending')`,
+      [U.mustapha, U.omar],
+    );
+    assert.equal((await search(w.omar, 'mus'))[0].relation, 'request-received');
+    assert.equal((await search(w.mustapha, 'om'))[0].relation, 'request-sent');
+  });
+
+  t('a declined request shows as none for both, nothing tells the sender', async (w) => {
+    await w.su(
+      `insert into public.friendships (requester_id, addressee_id, status, responded_on)
+       values ($1, $2, 'declined', private.today())`,
+      [U.mustapha, U.omar],
+    );
+    assert.equal((await search(w.mustapha, 'om'))[0].relation, 'none');
+    assert.equal((await search(w.omar, 'mus'))[0].relation, 'none');
+  });
+
+  t(
+    'the blocker does not find the blocked person, and the blocked person does not find the blocker',
+    async (w) => {
+      assert.deepEqual(await search(w.omar, 'tag'), []);
+      assert.deepEqual(await search(w.taghread, 'om'), []);
+      // Both directions at once, and the same answer as for a name nobody has.
+      await w.su(`insert into public.blocks (blocker_id, blocked_id) values ($1, $2)`, [
+        U.taghread,
+        U.omar,
+      ]);
+      assert.deepEqual(await search(w.omar, 'tag'), []);
+      assert.deepEqual(await search(w.taghread, 'om'), await search(w.taghread, 'zzzz'));
+      // Other people still find both.
+      assert.deepEqual(await names(w.mustapha, 'tag'), ['Taghread']);
+      assert.deepEqual(await names(w.mustapha, 'om'), ['Omar']);
+    },
+  );
+
+  t('someone blocked by a friend of mine is not hidden from me', async (w) => {
+    assert.deepEqual(await names(w.sarah, 'tag'), ['Taghread']);
+  });
+
+  t('anon cannot search, and a signed-in person without a profile is refused', async (w) => {
+    await w.anon.denied(`select * from public.search_profiles('om')`);
+    await w.su(`insert into auth.users (id) values ($1)`, [NEW_USER]);
+    await w
+      .as(NEW_USER)
+      .raises(`select * from public.search_profiles('om')`, [], 'profile_required');
+  });
+
+  t('the function is offered to signed-in users only and runs with its owner rights', async (w) => {
+    const r = await w.suRows(
+      `select prosecdef, has_function_privilege('anon', oid, 'EXECUTE') as anon_ok,
+              has_function_privilege('authenticated', oid, 'EXECUTE') as auth_ok,
+              has_function_privilege('public', oid, 'EXECUTE') as public_ok
+       from pg_proc where proname = 'search_profiles'`,
+    );
+    assert.deepEqual(r, [{ prosecdef: true, anon_ok: false, auth_ok: true, public_ok: false }]);
+  });
+
+  t('the query is trimmed, 2 to 30 characters, with no control character', async (w) => {
+    assert.deepEqual(await names(w.mustapha, '  om  '), ['Omar']);
+    assert.deepEqual(await names(w.mustapha, '　om '), ['Omar']);
+    for (const bad of [null, '', ' ', 'o', ' o ', '😀', 'ـ', '-.', 'é́-'])
+      await w.mustapha.raises(
+        `select * from public.search_profiles($1)`,
+        [bad],
+        'search_query_too_short',
+      );
+    await w.mustapha.raises(
+      `select * from public.search_profiles($1)`,
+      ['a'.repeat(31)],
+      'search_query_too_long',
+    );
+    assert.deepEqual(await search(w.mustapha, 'a'.repeat(30)), []);
+    for (const bad of ['om\nar', 'om\u0000'.replace('\u0000', '\u0007'), 'om‮ar', 'om\u0085'])
+      await w.mustapha.raises(
+        `select * from public.search_profiles($1)`,
+        [bad],
+        'search_query_forbidden_character',
+      );
+  });
+
+  t('case and accents are ignored, in the query and in the name', async (w) => {
+    await rename(w, 3, 'Éloïse');
+    assert.deepEqual(await names(w.omar, 'ELOI'), ['Éloïse']);
+    assert.deepEqual(await names(w.omar, 'éloï'), ['Éloïse']);
+    assert.deepEqual(await names(w.omar, 'élo'), ['Éloïse']);
+  });
+
+  t('Arabic: marks, alef forms, ya, ta marbuta and tatweel are ignored', async (w) => {
+    await rename(w, 3, 'أَحْمَد');
+    assert.deepEqual(await names(w.omar, 'احمد'), ['أَحْمَد']);
+    assert.deepEqual(await names(w.omar, 'إحم'), ['أَحْمَد']);
+    await rename(w, 3, 'فاطمة');
+    assert.deepEqual(await names(w.omar, 'فاطمه'), ['فاطمة']);
+    await rename(w, 3, 'مصطفى');
+    assert.deepEqual(await names(w.omar, 'مصطفي'), ['مصطفى']);
+    await rename(w, 3, 'محمد');
+    assert.deepEqual(await names(w.omar, 'محـم'), ['محمد']);
+    assert.deepEqual(await search(w.omar, 'omar'), []); // Latin does not match Arabic
+  });
+
+  t('the prefix of any word matches, the middle of a word does not', async (w) => {
+    await rename(w, 3, 'Mary Anne Al-Sayed');
+    for (const q of ['ma', 'mary', 'ann', 'sayed', 'al', 'mary an', 'anne   al-s', 'al sayed'])
+      assert.deepEqual(await names(w.omar, q), ['Mary Anne Al-Sayed'], q);
+    for (const q of ['ary', 'yed', 'nne', 'mary al', 'sayed mary'])
+      assert.deepEqual(await names(w.omar, q), [], q);
+    await rename(w, 3, "Sean O'Brien");
+    assert.deepEqual(await names(w.omar, 'brien'), ["Sean O'Brien"]);
+  });
+
+  t('the characters of a database pattern are plain characters', async (w) => {
+    for (const q of ['%%', 'm%', 'ma%', '\\\\m', '%ar'])
+      assert.deepEqual(await names(w.omar, q), [], q);
+  });
+
+  t('the server normalises exactly as the app does (shared list of cases)', async (w) => {
+    for (const [text, expected] of sharedNormalization.cases) {
+      const r = await w.suRows(`select private.search_normalize($1) as n`, [text]);
+      assert.equal(r[0].n, expected, JSON.stringify(text));
+    }
+  });
+
+  t('at most 20 results, the first 20 by name then id', async (w) => {
+    for (let n = 0; n < 25; n++) await addUser(w, 100 + n, `Sam ${String.fromCharCode(97 + n)}`);
+    const found = await search(w.omar, 'sam');
+    assert.equal(found.length, 20);
+    assert.equal(found[0].display_name, 'Sam a');
+    assert.equal(found[19].display_name, 'Sam t');
+    await addUser(w, 200, 'Sam');
+    await addUser(w, 201, 'Sam');
+    const ties = (await search(w.omar, 'sam')).slice(0, 2);
+    assert.deepEqual(
+      ties.map((r) => r.id),
+      [idOf(200), idOf(201)],
+    );
+  });
+
+  t('rate limit: 30 searches per minute per account, the 31st is refused', async (w) => {
+    for (let i = 0; i < 30; i++) await search(w.mustapha, 'om');
+    await w.mustapha.raises(`select * from public.search_profiles('om')`, [], 'too_many_searches');
+    await w.mustapha.raises(`select * from public.search_profiles('zz')`, [], 'too_many_searches');
+    // Another account is not affected.
+    assert.deepEqual(await names(w.sarah, 'om'), ['Omar']);
+    // A minute later the account can search again.
+    await w.su(
+      `update public.search_attempts set attempted_at = now() - interval '61 seconds' where user_id = $1`,
+      [U.mustapha],
+    );
+    assert.deepEqual(await names(w.mustapha, 'om'), ['Omar']);
+  });
+
+  t('rate limit: a refused query is not counted, and old attempts are forgotten', async (w) => {
+    for (let i = 0; i < 40; i++)
+      await w.mustapha.raises(
+        `select * from public.search_profiles('o')`,
+        [],
+        'search_query_too_short',
+      );
+    assert.equal(await count(w, `select count(*) n from public.search_attempts`), 0);
+    for (let i = 0; i < 30; i++) await search(w.mustapha, 'om');
+    assert.equal(
+      await count(w, `select count(*) n from public.search_attempts where user_id = $1`, [
+        U.mustapha,
+      ]),
+      30,
+    );
+    await w.su(`update public.search_attempts set attempted_at = now() - interval '2 hours'`);
+    await search(w.mustapha, 'om');
+    assert.equal(
+      await count(w, `select count(*) n from public.search_attempts where user_id = $1`, [
+        U.mustapha,
+      ]),
+      1,
+    );
+  });
+
+  t('the attempts table cannot be read or written by anyone', async (w) => {
+    await search(w.mustapha, 'om');
+    assert.equal(await count(w, `select count(*) n from public.search_attempts`), 1);
+    for (const actor of ACTORS) {
+      await w.as(actor).denied(`select * from public.search_attempts`);
+      await w.as(actor).denied(`delete from public.search_attempts`);
+      await w
+        .as(actor)
+        .denied(`insert into public.search_attempts (user_id) values ($1)`, [U.omar]);
+    }
+  });
+
+  t('a result has three columns: no flag, no creation day, no garden', async (w) => {
+    const r = await w.suRows(
+      `select pg_get_function_result(oid) as result from pg_proc where proname = 'search_profiles'`,
+    );
+    assert.equal(r[0].result, 'TABLE(id uuid, display_name text, relation text)');
   });
 });

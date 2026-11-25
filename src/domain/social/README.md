@@ -2,7 +2,7 @@
 
 Règles métier des comptes, des proches, des groupes et des classements, et interfaces
 (`AuthGateway`, `SocialRepository`) que `src/data/social` met en œuvre sur de fausses données.
-Spécification : `docs/specs/social.md` ; décisions D23, D25, D33.
+Spécification : `docs/specs/social.md` ; décisions D23, D25, D33, D36.
 
 TypeScript pur, fonctions pures, temps et hasard injectés. Tout passe par `index.ts`.
 
@@ -15,19 +15,20 @@ le `Bond` de la paire et rendent le `Bond` qu'elle devient. Qui stocke lit le li
 
 ## Règles → fonctions
 
-| Règle                    | Fonctions                                                                              |
-| ------------------------ | -------------------------------------------------------------------------------------- |
-| 1 Nom affiché            | `parseDisplayName`, `createProfile`, `applyProfileChanges`                             |
-| 2 Demande d'amitié       | `requestFriendship`, `acceptFriendRequest`, `declineFriendRequest`, `removeFriendship` |
-| 3 Blocage                | `blockPerson`, `unblockPerson`, `isBlockedEitherWay`, `hasBlocked`                     |
-| 4 Ce qu'un autre voit    | `viewOf(owner, viewerId, bond)` → `SelfView`, `FriendView`, `OtherView` ou `null`      |
-| 5 Résumé du jardin       | `toGardenSummary`, `toBadge`, `toBadges`                                               |
-| 6 Code d'invitation      | `parseInviteCode`, `generateInviteCode`, `createInvite`, `acceptInvite`                |
-| 7 Encouragement          | `sendNudge`                                                                            |
-| 8 Groupe                 | `createGroup`, `addGroupMember`, `leaveGroup`, `removeGroupMember`                     |
-| 9 Classement             | `periodRange`, `computeLeaderboard`, `toDailyReading`                                  |
-| 10 Suppression du compte | `deleteAccountData`                                                                    |
-| Connexion                | `parseEmail`, `parseEmailCode`, `signInProvidersFor`                                   |
+| Règle                    | Fonctions                                                                                                |
+| ------------------------ | -------------------------------------------------------------------------------------------------------- |
+| 1 Nom affiché            | `parseDisplayName`, `createProfile`, `applyProfileChanges`                                               |
+| 2 Demande d'amitié       | `requestFriendship`, `acceptFriendRequest`, `declineFriendRequest`, `removeFriendship`                   |
+| 3 Blocage                | `blockPerson`, `unblockPerson`, `isBlockedEitherWay`, `hasBlocked`                                       |
+| 4 Ce qu'un autre voit    | `viewOf(owner, viewerId, bond)` → `SelfView`, `FriendView`, `OtherView` ou `null`                        |
+| 5 Résumé du jardin       | `toGardenSummary`, `toBadge`, `toBadges`                                                                 |
+| 6 Code d'invitation      | `parseInviteCode`, `generateInviteCode`, `createInvite`, `acceptInvite`, `inviteLink`, `parseInviteLink` |
+| 7 Encouragement          | `sendNudge`                                                                                              |
+| 8 Groupe                 | `createGroup`, `addGroupMember`, `leaveGroup`, `removeGroupMember`                                       |
+| 9 Classement             | `periodRange`, `computeLeaderboard`, `toDailyReading`                                                    |
+| 10 Suppression du compte | `deleteAccountData`                                                                                      |
+| 11 Recherche par nom     | `parseSearchQuery`, `normalizeSearchText`, `matchesSearchQuery`, `searchRelation`, `searchPeople`        |
+| Connexion                | `parseEmail`, `parseEmailCode`, `signInProvidersFor`                                                     |
 
 Un refus de règle est une `SocialRuleError` (sous-classe de `RangeError`) avec une `reason`
 (`SocialRefusal`) que l'écran traduit. Une valeur que seul un bogue ou une donnée abîmée peut
@@ -53,6 +54,18 @@ simple. Rien n'est jamais corrigé en silence.
   injecté (`generateInviteCode(randomIndex)`) ; le vrai doit être cryptographique. Qui tape le
   code est le demandeur de la ligne, le propriétaire le destinataire ; un code passe outre une
   demande refusée (le propriétaire l'a donné).
+- **Lien du QR code (D36) :** `quranapp://invite/<CODE>` ; `parseInviteLink` accepte cette forme
+  exacte ou un code seul, et refuse tout le reste avec `invite-code-malformed` (pas de nouvelle
+  raison : l'écran dit « ce n'est pas une invitation »). Rien n'est rogné : un espace ou un saut de
+  ligne après le lien le fait refuser. Un test garde `INVITE_LINK_PREFIX` égal au schéma d'`app.json`.
+- **Recherche par nom (D36, règle 11) :** les mots d'un nom sont séparés par les espaces, `-`, `.`,
+  `,`, `_`, `'` et `’` ; la requête de plusieurs mots trouve des mots qui se suivent (« al s » trouve
+  « Omar Al-Sayed ») ; arabe : voyelles et tatweel ignorés, alef, ى, ة, ی, ک unifiés (les hamzas
+  tombent d'elles-mêmes à la décomposition NFD) ; relation d'une demande refusée = `none`. Pas
+  de réglage « ne pas me trouver » (option pour plus tard, D36). Le
+  démonstrateur ne limite pas le nombre de recherches : c'est une règle du serveur
+  (`too-many-searches`). Le tri est par nom normalisé puis identifiant, comparé en points de code
+  UTF-16 (côté serveur, en classement `"C"`).
 - **Encouragement :** un par ami et par jour **toutes sortes confondues** ; le jour est celui de
   l'expéditeur.
 - **Groupe :** l'invité est ajouté tout de suite (pas d'état « invitation en attente » : la
@@ -90,7 +103,9 @@ Voir `docs/specs/social-database.md` (livrable C). Points sensibles :
   serveur peut borner (jour = jour UTC du serveur ± 1) mais pas vérifier.
 - **Les pages lues** du classement ne se vérifient pas non plus (déjà noté en section 5).
 - **Le classement montre à tout membre** le nom et les pages de tous les autres membres, amis ou
-  non, même bloqués entre eux : plus que « le résumé du jardin » de la section 1. Décision du
-  propriétaire à prendre.
+  non, même bloqués entre eux : plus que « le résumé du jardin » de la section 1. **Accepté par le
+  propriétaire le 25 novembre 2026 (D36).**
 - **Ajout à un groupe sans accord** de l'invité : il expose son nom et ses pages à des membres
-  qu'il ne connaît pas.
+  qu'il ne connaît pas. **Accepté par le propriétaire (D36).**
+- **La recherche par nom** rend un nom trouvable sans connaître l'identifiant ; bornée, mais un
+  moissonnage lent par des comptes jetables reste possible (voir `docs/specs/social-database.md`, 3.6).

@@ -45,6 +45,31 @@ as $$
   end
 $$;
 
+-- Rule 11 (D36): a text as the search compares it. Mirror of normalizeSearchText in
+-- src/domain/social/search.ts, with the same lists: accents and Arabic marks removed, lower
+-- case, a few Arabic letters unified (alef wasla, alef maqsura, Persian ya, ta marbuta,
+-- Persian kaf), words separated by one space. The hamza seats need no entry: decomposed (NFD)
+-- they are a letter plus a hamza mark, which is removed. normalize() needs a UTF8 database.
+-- lower() follows the database locale: Latin and Arabic are covered whatever it is.
+create function private.search_normalize(p_text text)
+returns text
+language sql
+immutable
+parallel safe
+set search_path = ''
+as $$
+  select btrim(
+    regexp_replace(
+      translate(
+        lower(regexp_replace(
+          normalize(p_text, nfd),
+          '[\u0300-\u036f\u0610-\u061a\u0640\u064b-\u065f\u0670\u06d6-\u06ed]', '', 'g')),
+        U&'\0671\0649\06cc\0629\06a9',
+        U&'\0627\064a\064a\0647\0643'),
+      '[ \u00a0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff,.''_\u2019-]+', ' ', 'g'),
+    ' ')
+$$;
+
 -- Days are UTC days on the server. Apps send their local day where the model says
 -- so (see check_days below for the tolerance).
 create function private.today()
@@ -142,6 +167,15 @@ create table public.invite_attempts (
   attempted_at timestamptz not null default now()
 );
 create index invite_attempts_user_idx on public.invite_attempts (user_id, attempted_at);
+
+-- Searches by name, to limit them (D36): one row per search, per account. Not in the model of
+-- section 2; nobody can read or write it directly (RLS on, no policy, no privilege).
+create table public.search_attempts (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.profiles (id) on delete cascade,
+  attempted_at timestamptz not null default now()
+);
+create index search_attempts_user_idx on public.search_attempts (user_id, attempted_at);
 
 -- Nudge
 create table public.nudges (
@@ -410,7 +444,7 @@ create trigger profiles_hand_over_groups
 -- (NOT VERIFIED here, see the doc); start from nothing whatever the defaults are.
 revoke all on
   public.profiles, public.garden_summaries, public.friendships, public.blocks,
-  public.invites, public.invite_attempts, public.nudges, public.groups,
+  public.invites, public.invite_attempts, public.search_attempts, public.nudges, public.groups,
   public.group_members, public.daily_readings, public.badges, public.reading_backups
 from public, anon, authenticated;
 
@@ -420,6 +454,7 @@ alter table public.friendships enable row level security;
 alter table public.blocks enable row level security;
 alter table public.invites enable row level security;
 alter table public.invite_attempts enable row level security;
+alter table public.search_attempts enable row level security;
 alter table public.nudges enable row level security;
 alter table public.groups enable row level security;
 alter table public.group_members enable row level security;
@@ -472,7 +507,7 @@ create policy invites_select_owner on public.invites for select to authenticated
 create policy invites_delete_owner on public.invites for delete to authenticated
   using (owner_id = (select auth.uid()));
 
--- invite_attempts: no policy and no privilege: reachable by the functions only.
+-- invite_attempts, search_attempts: no policy and no privilege: reachable by the functions only.
 
 -- nudges: sender and recipient read; sending goes through send_nudge().
 grant select on public.nudges to authenticated;
@@ -1002,6 +1037,82 @@ begin
 end
 $$;
 
+-- Rule 11 (D36): search by name. Returns at most 20 people whose name starts like the query
+-- (any word, or several words in a row), by normalised name then id, with only the name and
+-- what we are to each other: friend, request-sent, request-received or none (a declined
+-- request shows as none, the sender is not told). Never me, never a pair where one blocks the
+-- other (no trace: same answer as for a name nobody has). Query: trimmed, 2 to 30
+-- characters, no control character, still 2 characters once normalised. At most 30 searches per
+-- account per minute (search_attempts); a refused query is not counted. Errors:
+-- too_many_searches, search_query_too_short, search_query_too_long,
+-- search_query_forbidden_character.
+-- The scan is over all profiles: fine for the first tens of thousands of accounts; beyond,
+-- store the normalised name in a column and index it (see docs/specs/social-database.md).
+create function public.search_profiles(p_query text)
+returns table (id uuid, display_name text, relation text)
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+declare
+  v_me uuid := private.require_profile();
+  v_query text;
+  v_wanted text;
+  c_edge_spaces constant text := '[ \u00a0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff]+';
+begin
+  -- One search at a time per account, so that two at once cannot both slip under the limit.
+  perform pg_advisory_xact_lock(hashtextextended('search_profiles:' || v_me::text, 0));
+  delete from public.search_attempts
+  where user_id = v_me and attempted_at < now() - interval '1 hour';
+  if (select count(*) from public.search_attempts
+      where user_id = v_me and attempted_at > now() - interval '1 minute') >= 30 then
+    raise exception 'too_many_searches';
+  end if;
+
+  if p_query is null then
+    raise exception 'search_query_too_short';
+  end if;
+  if p_query ~ '[\u0001-\u001f\u007f-\u009f\u2028\u2029\u202a-\u202e\u2066-\u2069]' then
+    raise exception 'search_query_forbidden_character';
+  end if;
+  v_query := regexp_replace(p_query, '^' || c_edge_spaces || '|' || c_edge_spaces || '$', '', 'g');
+  if char_length(v_query) > 30 then
+    raise exception 'search_query_too_long';
+  end if;
+  v_wanted := private.search_normalize(v_query);
+  if char_length(v_query) < 2 or char_length(v_wanted) < 2 then
+    raise exception 'search_query_too_short';
+  end if;
+
+  insert into public.search_attempts (user_id) values (v_me);
+
+  return query
+    select p.id,
+           p.display_name,
+           case
+             when f.status = 'accepted' then 'friend'
+             when f.status = 'pending' and f.requester_id = v_me then 'request-sent'
+             when f.status = 'pending' then 'request-received'
+             else 'none'
+           end
+    from public.profiles p
+    cross join lateral (select private.search_normalize(p.display_name) as canon) n
+    left join public.friendships f
+      on (f.requester_id = v_me and f.addressee_id = p.id)
+      or (f.requester_id = p.id and f.addressee_id = v_me)
+    where p.id <> v_me
+      and not exists (
+        select 1 from public.blocks b
+        where (b.blocker_id = v_me and b.blocked_id = p.id)
+           or (b.blocker_id = p.id and b.blocked_id = v_me))
+      and (starts_with(n.canon, v_wanted) or position(' ' || v_wanted in n.canon) > 0)
+    order by n.canon collate "C", p.id
+    limit 20;
+end
+$$;
+
 -- Rule 4: my accepted friends (nobody blocked) with their garden. Hidden values are null:
 -- everything of the garden when show_garden is false; level and badge_count when
 -- show_level is false. garden_visible / level_visible say which.
@@ -1167,6 +1278,7 @@ grant execute on function
   public.add_group_member(uuid, uuid),
   public.leave_group(uuid, uuid),
   public.get_public_profiles(uuid[]),
+  public.search_profiles(text),
   public.list_friends(),
   public.get_friend_garden(uuid),
   public.list_group_members(uuid),

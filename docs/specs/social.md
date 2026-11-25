@@ -5,6 +5,11 @@ on peut juste avoir des fausses données. C'est plus tard que je vais créer Sup
 moins tu auras les modèles, toute la logique pour la base de données, les tables nécessaires,
 les interactions. » (D33)
 
+Décision du propriétaire, 25 novembre 2026 (D36) : trois façons d'ajouter un proche (code,
+recherche par nom, scan d'un QR code) ; dans un groupe, tout membre voit les noms et les pages de
+tous les membres ; on ajoute quelqu'un à un groupe sans son accord. Voir la règle 11, la règle 6
+(lien du QR) et la section 6.
+
 Trois livrables, qui partent du même modèle (section 2) :
 
 | Livrable                    | Périmètre de fichiers                          | Qui                 |
@@ -34,8 +39,9 @@ Les noms ci-dessous sont ceux du code (anglais). Les tables portent les mêmes n
 `snake_case`.
 
 - **Profile** : `id` (celui du compte), `displayName`, `showGarden` (vrai par défaut),
-  `showLevel` (vrai par défaut), `createdOn`. Décision du propriétaire : niveau et jardin
-  visibles par défaut, avec un réglage pour les cacher (D23).
+  `showLevel` (vrai par défaut), `createdOn`.
+  Décision du propriétaire : niveau et jardin visibles par défaut, avec un réglage pour les
+  cacher (D23).
 - **GardenSummary**, une ligne par personne, publiée par son appli : `level` (numéro de la
   khatma en cours, 1 pour la première), `hizbCompleted` (0 à 60), `health` (0 à 1),
   `lastWateredOn` (jour, ou rien), `streakDays`, `badgeCount`, `updatedOn`. C'est tout ce
@@ -45,7 +51,7 @@ Les noms ci-dessous sont ceux du code (anglais). Les tables portent les mêmes n
   soit le sens.
 - **Block** : `blockerId`, `blockedId`, `createdOn`.
 - **Invite** : `code`, `ownerId`, `createdOn`, `expiresOn`. Sert à ajouter un proche sans
-  chercher son nom.
+  chercher son nom. Le code se donne tel quel, ou sous forme de lien dans un QR code (règle 6).
 - **Nudge** (encouragement entre proches) : `fromId`, `toId`, `kind` (`encourage`,
   `congratulate`), `sentOn`.
 - **Group** : `id`, `name`, `ownerId`, `createdOn`. **GroupMember** : `groupId`, `userId`,
@@ -82,10 +88,15 @@ Chaque règle a au moins un test qui porte son nom.
    numéro de khatma). Il ne contient aucun numéro de page ni aucune heure.
 6. **Code d'invitation** : forme fixe (`inviteCodeLength` caractères d'un alphabet sans
    caractères ambigus) ; refusé s'il est mal formé, expiré, ou si c'est le sien. Accepter un
-   code crée une amitié acceptée, sauf blocage.
+   code crée une amitié acceptée, sauf blocage. **Lien du QR code** (D36) : le QR porte
+   `quranapp://invite/<CODE>` (`inviteLink`) ; `parseInviteLink` accepte exactement cette forme,
+   ou un code seul valide, et refuse tout le reste (majuscule au schéma, chemin ou paramètre en
+   plus, espace autour : rien n'est corrigé). Un code lu par scan suit ensuite les mêmes règles
+   qu'un code tapé, y compris les essais limités du serveur.
 7. **Encouragement** : seulement vers un proche accepté ; un par proche et par jour local au
    plus.
-8. **Groupe** : nom validé comme un nom affiché ; le créateur en est le propriétaire ; on y
+8. **Groupe** (accepté par le propriétaire, D36 : tout membre voit les noms et les pages de tous
+   les membres, et on est ajouté sans donner son accord) : nom validé comme un nom affiché ; le créateur en est le propriétaire ; on y
    entre par invitation d'un membre qui est son proche ; `maxGroupMembers` membres au plus
    (configuration, 50 au départ) ; le propriétaire ne quitte pas un groupe qui a d'autres
    membres sans le confier à l'un d'eux.
@@ -98,6 +109,23 @@ Chaque règle a au moins un test qui porte son nom.
     et la sauvegarde. Un groupe dont le propriétaire part passe au plus ancien membre, ou
     disparaît s'il était seul.
 
+11. **Recherche par nom** (D36 ; `parseSearchQuery`, `searchPeople`). La requête est rognée,
+    de `searchMinLength` (2) à 30 caractères (points de code), sans caractère de contrôle, et
+    reste d'au moins 2 caractères une fois normalisée (une requête faite de seuls accents ou
+    traits d'union ne trouve pas tout le monde). Comparaison **sans casse ni accents** ; l'arabe
+    est normalisé (voyelles brèves et tatweel ignorés, toutes les formes de l'alef = ا, ى = ي,
+    ة = ه, ی = ي, ک = ك). Un nom correspond si la requête est le **début d'un de ses mots**, ou
+    de plusieurs mots à la suite (« al s » trouve « Omar Al-Sayed ») ; jamais le milieu d'un
+    mot. Les mots sont séparés par les espaces, le trait d'union, le point, la virgule, le tiret
+    bas et les apostrophes. Un résultat n'est **jamais soi-même, ni une personne bloquée dans un
+    sens ou dans l'autre** (rien ne distingue une personne bloquée d'un nom que personne ne
+    porte) ; il n'y a pas de réglage « ne pas me trouver » pour l'instant (D36, option pour plus
+    tard : colonne `profiles.discoverable`). Un résultat montre **le nom et la relation
+    seulement** (`friend`, `request-sent`, `request-received`, `none` ; une demande refusée
+    donne `none`, l'expéditeur n'est pas prévenu). Au plus `searchMaxResults` (20) résultats,
+    classés par nom normalisé puis identifiant. Le serveur compte les recherches : au plus 30 par
+    minute et par compte (`searchesPerMinute`), puis `too-many-searches`.
+
 ## 4. Les interfaces (livrable A) et les fausses données (livrable B)
 
 Le domaine déclare ce dont il a besoin ; `src/data/social` le met en œuvre.
@@ -107,7 +135,8 @@ Le domaine déclare ce dont il a besoin ; `src/data/social` le met en œuvre.
   proposé ⇒ Apple proposé aussi sur iOS ; compte créé dans l'appli ⇒ suppression possible
   dans l'appli.
 - `SocialRepository` : mon profil et ses réglages ; mes proches et les demandes en attente ;
-  le résumé du jardin d'un proche ; envoyer, accepter, refuser, retirer ; bloquer et
+  le résumé du jardin d'un proche ; **chercher une personne par son nom** (`searchPeople`,
+  règle 11) ; envoyer, accepter, refuser, retirer ; bloquer et
   débloquer ; créer et accepter un code ; encourager ; mes groupes, leurs membres, leur
   classement ; publier mon résumé et ma lecture du jour.
 
@@ -140,6 +169,11 @@ Dans `supabase/migrations/`, prêt à être appliqué le jour où le projet Supa
 - Les opérations qui touchent deux personnes (accepter une demande, accepter un code,
   bloquer, quitter un groupe en le confiant) passent par des fonctions du serveur qui
   vérifient elles-mêmes qui appelle.
+- **Recherche par nom** (règle 11) : la fonction `search_profiles(query)`, réservée à
+  `authenticated`, qui ne rend que le nom et la relation, jamais une paire bloquée, et refuse
+  au-delà de 30 recherches par minute et par compte (table `search_attempts`, comme
+  `invite_attempts`). Aucune colonne n'est ajoutée à `profiles` : un réglage « ne pas me trouver »
+  (`discoverable`) est une option pour plus tard (D36).
 - **Tests des règles d'accès**, exécutés pour de vrai sur un PostgreSQL (pas seulement
   relus) : pour chaque table, ce que peut et ne peut pas faire le propriétaire de la ligne,
   un proche, un inconnu, une personne bloquée, une personne non connectée.
@@ -151,7 +185,29 @@ Dans `supabase/migrations/`, prêt à être appliqué le jour où le projet Supa
   (`auth.uid()`, les rôles `anon` et `authenticated`, la création du profil à l'inscription)
   sont vérifiés dans la documentation en vigueur, avec la source citée.
 
-## 6. Hors de ce lot
+## 6. Le scan du QR code : ce que l'écran devra ajouter
+
+Le domaine fournit le lien (`inviteLink`) et sa lecture (`parseInviteLink`) ; **la caméra est
+une tâche d'écran** et rien n'est installé dans ce lot. Elle demandera :
+
+- **`expo-camera`** (`CameraView` avec la lecture des codes-barres limitée au QR). Licence :
+  **MIT**, lue le 25 novembre 2026 dans le registre npm (`npm view expo-camera license`, versions
+  55.0.22 et 55.0.23) ; les extraits de la recherche web ne portaient pas le texte de la licence,
+  et le paquet n'est pas installé ici : à revérifier dans `node_modules/expo-camera/package.json`
+  à l'installation (`docs/DECISIONS.md` impose les licences permissives, et
+  `compliance/THIRD_PARTY_NOTICES.md` si le dépôt le tient). Version à prendre avec
+  `npx expo install expo-camera` pour rester celle du SDK 58. Les noms exacts de l'interface et
+  du réglage d'`app.json` sont **de mémoire, non vérifiés**.
+- Le **texte d'autorisation de la caméra** (iOS) et la permission (Android), en trois langues.
+- Un **composant qui dessine** le QR code du lien (autre dépendance, à choisir, licence à
+  vérifier) : `expo-camera` lit les QR, il n'en dessine pas.
+- Une **route de lien** (`quranapp://invite/<CODE>`) pour qu'un scan fait avec l'appareil photo
+  du téléphone ouvre l'appli sur le code. Un schéma personnalisé n'ouvre rien si l'appli n'est pas
+  installée : un lien web (liens universels) viendrait plus tard, avec un domaine.
+- Le texte lu par la caméra passe par `parseInviteLink` avant tout usage (entrée venue
+  d'ailleurs) ; un refus se traduit « ce n'est pas une invitation ».
+
+## 7. Hors de ce lot
 
 Les écrans ; les notifications à distance ; les jardins partagés (khatma de groupe) ; le
 compteur de hasanat ; la visite du jardin en 3D.

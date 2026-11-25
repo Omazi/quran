@@ -1,0 +1,30 @@
+{
+  "comment": "Shared by src/domain/social/__tests__/search.test.ts (normalizeSearchText) and supabase/tests/social.test.mjs (private.search_normalize): [text, how the search compares it]. The app and the server must agree on every line.",
+  "cases": [
+    ["Éloïse Al-Sayed", "eloise al sayed"],
+    ["ÉLOÏSE", "eloise"],
+    ["René", "rene"],
+    ["İstanbul", "istanbul"],
+    ["Ömär 🌙", "omar 🌙"],
+    ["SARAH", "sarah"],
+    ["Sean O'Brien", "sean o brien"],
+    ["Sean O’Brien", "sean o brien"],
+    ["J.Smith", "j smith"],
+    ["a_b,c", "a b c"],
+    ["  x ", "x"],
+    ["a  b", "a b"],
+    ["--", ""],
+    ["أَحْمَد", "احمد"],
+    ["مُحَمَّد", "محمد"],
+    ["محـمد", "محمد"],
+    ["إبراهيم", "ابراهيم"],
+    ["آمنة", "امنه"],
+    ["ٱلله", "الله"],
+    ["مصطفى", "مصطفي"],
+    ["فاطمة", "فاطمه"],
+    ["سؤال", "سوال"],
+    ["کریم", "كريم"],
+    ["عبد الله", "عبد الله"],
+    ["😀 a", "😀 a"]
+  ]
+}

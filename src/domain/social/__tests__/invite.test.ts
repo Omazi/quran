@@ -1,5 +1,7 @@
 import { addDays } from '@/domain/shared/local-date';
 
+import appConfig from '../../../../app.json';
+
 import {
   acceptFriendRequest,
   acceptInvite,
@@ -8,8 +10,11 @@ import {
   declineFriendRequest,
   generateInviteCode,
   INVITE_CODE_ALPHABET,
+  INVITE_LINK_PREFIX,
+  inviteLink,
   NO_BOND,
   parseInviteCode,
+  parseInviteLink,
   removeFriendship,
   requestFriendship,
   SOCIAL_CONFIG,
@@ -188,5 +193,72 @@ describe('Rule 6 — invitation code (code d’invitation)', () => {
         acceptInvite(NO_BOND, { ...SARAHS_INVITE, expiresOn: day('2026-11-01') }, OMAR, TODAY),
       ).toThrow(RangeError);
     });
+  });
+});
+
+describe('Rule 6 — the code as a link, for a QR code (D36)', () => {
+  it('the link is the scheme of the app, the word invite and the code', () => {
+    expect(inviteLink(CODE)).toBe('quranapp://invite/K7M2QXP9');
+    expect(INVITE_LINK_PREFIX).toBe('quranapp://invite/');
+  });
+
+  it('the scheme is the one declared in app.json', () => {
+    expect(INVITE_LINK_PREFIX).toBe(`${appConfig.expo.scheme}://invite/`);
+  });
+
+  it('a link is never made from a bad code', () => {
+    expectRefusal(() => inviteLink('k7m2qxp9'), 'invite-code-malformed');
+    expectRefusal(() => inviteLink(''), 'invite-code-malformed');
+    expect(() => inviteLink(NOT_TEXT)).toThrow(TypeError);
+  });
+
+  it('reading the link gives back the code', () => {
+    expect(parseInviteLink(inviteLink(CODE))).toBe(CODE);
+    expect(parseInviteLink('quranapp://invite/K7M2QXP9')).toBe(CODE);
+  });
+
+  it('a bare valid code is accepted as it is', () => {
+    expect(parseInviteLink(CODE)).toBe(CODE);
+  });
+
+  it('refuses everything else: nothing is corrected, nothing is guessed', () => {
+    const refused = [
+      '',
+      ' ',
+      `${inviteLink(CODE)} `,
+      ` ${inviteLink(CODE)}`,
+      `${inviteLink(CODE)}\n`,
+      `${inviteLink(CODE)}/`,
+      `${inviteLink(CODE)}?from=qr`,
+      `${inviteLink(CODE)}#top`,
+      `${inviteLink(CODE)}${CODE}`,
+      'quranapp://invite/',
+      'quranapp://invite/K7M2QXP',
+      'quranapp://invite/k7m2qxp9',
+      'quranapp://invite/K7M2QXP0',
+      'quranapp://invite//K7M2QXP9',
+      'QURANAPP://invite/K7M2QXP9',
+      'quranapp://INVITE/K7M2QXP9',
+      'quranapp:/invite/K7M2QXP9',
+      'quranapp://friend/K7M2QXP9',
+      'quranapp://invite/K7M2QXP9/extra',
+      'quranapp://user@invite/K7M2QXP9',
+      'https://example.com/invite/K7M2QXP9',
+      'https://quranapp//invite/K7M2QXP9',
+      'otherapp://invite/K7M2QXP9',
+      'k7m2qxp9',
+      'K7M2QXP',
+      'K7M2QXP99',
+      'hello',
+      'javascript:alert(1)',
+    ];
+    for (const text of refused) {
+      expectRefusal(() => parseInviteLink(text), 'invite-code-malformed');
+    }
+  });
+
+  it('is a TypeError, not a refusal, when it is not text', () => {
+    expect(() => parseInviteLink(NOT_TEXT)).toThrow(TypeError);
+    expect(() => parseInviteLink(null as unknown as string)).toThrow(TypeError);
   });
 });

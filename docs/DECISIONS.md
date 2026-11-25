@@ -346,3 +346,33 @@ pas des sites des auteurs, que cette machine ne peut pas joindre : à retéléch
 source avant une publication sur l'App Store.
 _Changerait si_ le moteur 3D est validé sur téléphone : `GardenScene` est le seul composant
 à remplacer.
+
+## D36 — Trois façons d'ajouter un proche ; groupes ouverts aux noms et aux pages
+
+Décision du propriétaire, 25 novembre 2026, sur les points laissés ouverts par `specs/social.md`.
+
+1. **Ajouter un proche de trois façons** : le code d'invitation (existait), la **recherche par
+   nom** et le **scan d'un QR code**. Le QR porte le code sous forme de lien
+   `quranapp://invite/<CODE>` (le schéma `quranapp` est celui d'`app.json`) : le scanner revient à
+   taper le code, avec les mêmes règles (règle 6). La recherche est la règle 11.
+2. **Groupes : tout membre voit les noms et les pages de tous les membres** (le classement, règle 9),
+   amis ou non. Accepté tel que la spec l'écrit.
+3. **Ajouter quelqu'un à un groupe ne demande pas son accord.** Accepté tel que la spec l'écrit
+   (règle 8) ; la personne peut partir à tout moment.
+
+Recherche et vie privée. Le principe est « le moins de données possible » (`docs/SECURITY.md`) : un
+résultat de recherche ne montre que le **nom** et la **relation** (ami, demande envoyée ou reçue,
+rien), jamais le jardin, le niveau ni une date. Un inconnu pouvait déjà lire un nom, mais **en
+connaissant l'identifiant** (`get_public_profiles`, un `uuid` aléatoire que l'on n'obtient que par
+un groupe, un code ou une demande). La recherche change cela : un nom devient **trouvable sans
+identifiant**, par les premières lettres. C'est donc une exposition nouvelle, pas seulement un
+usage de l'ancienne ; elle est bornée : 2 caractères au moins, début de mot seulement, 20
+résultats, 30 recherches par minute et par compte, jamais soi-même ni une personne bloquée dans un
+sens ou dans l'autre. Reste le moissonnage lent par des comptes jetables : la limite de création
+de comptes de Supabase est à régler (non vérifié).
+
+**Réglage « Être trouvé par mon nom » : pas pour l'instant.** Le propriétaire a jugé qu'il n'est
+pas nécessaire (25 novembre 2026). Option pour plus tard : une colonne `profiles.discoverable`
+(vrai par défaut) et un filtre dans `search_profiles` qui cache un inconnu mais pas un ami ni une
+demande en attente ; le code et le QR fonctionneraient toujours. Sans ce réglage, toute personne
+dont le nom correspond est trouvable (hors blocages) : c'est l'exposition décrite ci-dessus.
