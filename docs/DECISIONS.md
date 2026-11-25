@@ -437,6 +437,8 @@ l'eau. Le mot fait pousser le jardin. Détail, couleurs, couches, pistes écart�
   l'`accent`, `#0E6B78`. La version 5 et sa scène 3D restent dans l'historique git (commit
   `c3e0467`).
 - **Écran de lancement** : inchangé, une couleur unie, sans logo (`launching.md › Launch screens`).
+  Depuis le 25 novembre 2026 (demande du propriétaire, écart 115) : la couleur unie reste l'écran natif,
+  puis la marque s'anime par-dessus (`src/features/launch`) avant de se fondre dans le premier écran.
 - **Licences** : Gulzar, SIL Open Font License 1.1, qui permet tout usage, commercial compris ; la
   police n'est ni dans le dépôt ni dans l'appli, seuls les contours du mot y sont. Avis complet :
   `tools/app-icon/NOTICE.txt`. Outils non livrés : uharfbuzz (Apache-2.0), fontTools (MIT),
