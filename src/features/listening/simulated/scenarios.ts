@@ -19,6 +19,7 @@ export const SCENARIOS = [
   'denied',
   'failed',
   'listening',
+  'follow',
 ] as const;
 
 export type ScenarioName = (typeof SCENARIOS)[number];
@@ -41,6 +42,16 @@ const PRAISE = 'الحمد لله رب العالمين'.split(' ');
 /** "I went to the market this morning to buy bread": not from the Quran. */
 const UNRELATED = 'ذهبت إلى السوق صباحا لشراء الخبز'.split(' ');
 
+/**
+ * 18:10 as recited for the voice-following screen (voix.png): « إذ », then « الفتية », the
+ * word after « أوى », which was left out; then the voice goes on without a word the follower
+ * can place, for a minute.
+ */
+const FOLLOW_WORDS = ['إذ', 'الفتية'];
+const FOLLOW_VOICE_MS = 60000;
+/** Plain syllables of voice, for the time after the last word. */
+const VOICE_ONLY = Array.from({ length: 80 }, () => 'و');
+
 function recitation(words: readonly string[], seed: number): SimulatedScript {
   const steps = recitationSteps(words, { startAt: LEAD_IN_MS, seed });
   const last = steps[steps.length - 1]?.at ?? LEAD_IN_MS;
@@ -61,6 +72,17 @@ function scriptOf(name: ScenarioName): SimulatedScript {
       return { permission: 'undetermined', answer: 'denied', steps: [] };
     case 'failed':
       return { permission: 'granted', steps: [], startFails: true };
+    case 'follow': {
+      const words = recitationSteps(FOLLOW_WORDS, { startAt: LEAD_IN_MS, seed: 5 });
+      const last = words[words.length - 1]?.at ?? LEAD_IN_MS;
+      const voice = recitationSteps(VOICE_ONLY, { startAt: last + LEAD_IN_MS, seed: 6 }).filter(
+        (step) => 'level' in step,
+      );
+      return {
+        permission: 'undetermined',
+        steps: [...words, ...voice, { at: last + FOLLOW_VOICE_MS, end: 'finished' }],
+      };
+    }
     case 'listening': {
       // The voice of a recitation without its words: the screen keeps listening.
       const voice = recitationSteps(AYAT_AL_KURSI, { startAt: LEAD_IN_MS, seed: 4 });

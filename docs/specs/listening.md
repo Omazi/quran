@@ -10,6 +10,15 @@ branche ensuite sans toucher à l'écran.
 Tout ce document applique [la règle des skills](../design/SKILLS.md) et
 [la charte](../design/brand-spec.md) : les lire d'abord.
 
+## Mise à jour du 25 novembre 2026
+
+L'écran de reconnaissance **reste la rosace validée sur le papier** (D27, D29 : jour validé, nuit
+« même dessin aux valeurs de nuit » validée le 24 novembre) : la maquette `shazam.png` ne
+s'applique pas à lui (décision du propriétaire). Le suivi de la voix (`docs/design/voix.png`)
+existe en écran d'essai, `/voice-follow?page=294&from=18:10`, avec la règle du domaine
+`followRecitation` ; ses couleurs et tailles sont dans `src/ui/listening-tokens.ts`. Écarts et
+questions au propriétaire : `design/SKILLS.md`, écarts 85 à 87.
+
 ## Références
 
 - Le dessin validé : `/home/claude/gen/ecoute/styles/site/index.html` (prototype animé,

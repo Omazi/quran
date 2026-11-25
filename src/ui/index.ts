@@ -14,8 +14,15 @@ export { Placeholder, type PlaceholderProps } from './components/placeholder';
 export { QrCode, qrCodeModules, type QrCodeProps } from './components/qr-code';
 export { QuranText, type QuranTextProps, type QuranTextRun } from './components/quran-text';
 export { Screen, type ScreenBackground, type ScreenProps } from './components/screen';
-export { useReducedMotion } from './device-settings';
+export { useHighContrast, useReducedMotion } from './device-settings';
 export { useSafeInsets } from './safe-insets';
+export {
+  listeningOpacity,
+  listeningShape,
+  useListeningColors,
+  useUpcomingInk,
+  type ListeningColors,
+} from './listening-tokens';
 export { getWritingDirection, type WritingDirection } from './direction';
 export { appFonts } from './fonts';
 // The palette of the validated mockups, used by the Proches tab (see visit-palette.ts), with the

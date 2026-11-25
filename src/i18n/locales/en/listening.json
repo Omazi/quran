@@ -47,6 +47,16 @@
   "actions": {
     "listenAgain": "Listen Again",
     "openSettings": "Open Settings",
-    "close": "Close"
+    "close": "Close",
+    "back": "Back"
+  },
+  "follow": {
+    "title": "Listening",
+    "reread": "Read this word again:",
+    "rereadLabel": "Read this word again: {{word}}",
+    "following": "Your recitation is followed on the page",
+    "where": "Juz {{juz}}, page {{page}}",
+    "stop": "Stop Listening",
+    "announcement": "Read this word again"
   }
 }

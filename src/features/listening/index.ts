@@ -3,6 +3,8 @@
  * speech engine (D5) does not exist: it opens by its route, for trials.
  */
 export { ListeningScreen, type ListeningScreenProps } from './listening-screen';
-export { createTrialEngine } from './simulated-engine-door';
+export { createFollowTrialEngine, createTrialEngine } from './simulated-engine-door';
+export { parseFollowParams, type FollowParams } from './follow/follow-params';
+export { VoiceFollowScreen, type VoiceFollowScreenProps } from './follow/voice-follow-screen';
 export { useListeningNavigation, readerHref } from './use-listening-navigation';
-export { loadQuranVerseIndex, loadQuranVerseText } from './verse-index-source';
+export { loadQuranPage, loadQuranVerseIndex, loadQuranVerseText } from './verse-index-source';

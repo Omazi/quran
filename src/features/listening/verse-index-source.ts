@@ -1,5 +1,5 @@
 import { quranRepository, quranStructure } from '@/data/quran';
-import { formatVerseKey, type VerseRef } from '@/domain/quran';
+import { formatVerseKey, type MushafPage, type VerseRef } from '@/domain/quran';
 import { createVerseIndex, type VerseIndex } from '@/domain/recognition';
 
 let pending: Promise<VerseIndex> | null = null;
@@ -27,4 +27,9 @@ export function loadQuranVerseIndex(): Promise<VerseIndex> {
  */
 export async function loadQuranVerseText(verse: VerseRef): Promise<string> {
   return (await quranRepository.getVerse(formatVerseKey(verse))).text;
+}
+
+/** A page of the mushaf as printed, with its words exactly as the data layer stores them. */
+export function loadQuranPage(page: number): Promise<MushafPage> {
+  return quranRepository.getPage(page);
 }

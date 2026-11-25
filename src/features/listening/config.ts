@@ -154,6 +154,24 @@ export const SETTLED_ROSETTE = {
   lightReferenceScreenWidth: 393,
 } as const;
 
+/**
+ * The voice meter of the following bar (voix.png draws it still; how it moves is a judgement).
+ * At rest each bar has its share of the meter's height, the outline of a voice as the mockup
+ * draws it; with the voice each bar reaches up to its full share, a little out of step with its
+ * neighbours.
+ */
+export const METER_MOTION = {
+  shape: [0.55, 0.9, 0.45, 0.7, 0.4, 0.6, 0.4, 0.7, 0.45, 0.85, 1],
+  /** The smallest a bar becomes, as a share of its height at rest. */
+  floor: 0.45,
+  /** How strongly the level lifts the bars. */
+  gain: 1.6,
+  /** The share of a bar's reach that waves, and how fast, in radians per second and per bar. */
+  waveShare: 0.4,
+  waveSpeed: 9,
+  waveStep: 1.7,
+} as const;
+
 /** What a result shows of the Quran text. */
 export const RESULT_TEXT = {
   /**

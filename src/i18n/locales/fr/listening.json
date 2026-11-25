@@ -47,6 +47,16 @@
   "actions": {
     "listenAgain": "Écouter à nouveau",
     "openSettings": "Ouvrir les réglages",
-    "close": "Fermer"
+    "close": "Fermer",
+    "back": "Retour"
+  },
+  "follow": {
+    "title": "J’écoute",
+    "reread": "Relis ce mot :",
+    "rereadLabel": "Relis ce mot : {{word}}",
+    "following": "Suis ta récitation sur la page",
+    "where": "Juz {{juz}}, page {{page}}",
+    "stop": "Arrêter l’écoute",
+    "announcement": "Relis ce mot"
   }
 }
