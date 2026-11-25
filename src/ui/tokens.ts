@@ -291,6 +291,23 @@ export const readerPalette = {
 export type ReaderPaletteRole = keyof typeof readerPalette;
 
 /**
+ * The launch: the deep water of the app icon and the three colours of its layers (word, drops,
+ * leaf), the same in both appearances except the water, which is a step deeper at night. The two
+ * water values are those of `app.json` (expo-splash-screen), so that the native launch screen and
+ * the animation that takes over from it are one colour, with no flash between them
+ * (launching.md › Launch screens). Scripts of the icon: tools/app-icon/make_icon.py.
+ */
+export const launchColors = {
+  water: { light: '#0B3C44', dark: '#072C33' },
+  word: '#F6FBF9',
+  drops: '#8FE0EA',
+  leaf: '#8FDB6B',
+} as const;
+
+/** Width of the launch mark in points: the `imageWidth` the native launch screen used (app.json). */
+export const launchMarkWidth = 180;
+
+/**
  * A QR code: dark modules on a light ground in both appearances. Scanners are made for that
  * contrast (a code drawn light on dark is not read by every camera), so it does not follow the
  * dark appearance, as a code on a Wallet pass does not. SKILLS.md, deviation 56.
