@@ -56,7 +56,7 @@ export interface MushafPageViewProps {
 
 /**
  * One page of the mushaf: its lines, in order, on the paper of the page, inside a single thin
- * rule in the ornament colour (spec 2: no ornament drawn in code beyond a rule). The frame has
+ * rule in the ornament line colour (spec 2: no ornament drawn in code beyond a rule). The frame has
  * the same size on every page, so it does not move when a page turns; pages 1 and 2 set their
  * few lines larger inside it (`computeOpeningPageMetrics`), as the print does. Memoised: the
  * pager mounts the current page and its neighbours, and a page already drawn does not draw again
@@ -100,7 +100,7 @@ export const MushafPageView = memo(function MushafPageView({
           {
             width: area.width - 2 * FRAME_INSET,
             height: LINES_PER_PAGE * metrics.lineHeight + 2 * (spacing.sm + layout.outlineWidth),
-            borderColor: colors.ornament,
+            borderColor: colors.ornamentLine,
           },
         ]}
       >
@@ -135,6 +135,10 @@ function MushafLine({ line, metrics, isCentred, turnActions }: MushafLineProps) 
   if (line.kind === 'surah-header') {
     const name = quranStructure.surah(line.surah).nameArabic;
     const height = metrics.lineHeight * READER_CONFIG.surahHeaderHeightRatio;
+    // The name, a little larger than the text of the page, in a line box as tall as the inner
+    // rule: the font's ascent is twice its descent, so only an explicit line height centres it.
+    const nameSize = metrics.fontSize * READER_CONFIG.surahNameScale;
+    const innerHeight = height - 2 * (CARTOUCHE_RULE_GAP + layout.outlineWidth);
     return (
       <View style={[styles.row, row]}>
         {/* The cartouche: two thin rules in the ornament colour, the language of the page's
@@ -146,15 +150,18 @@ function MushafLine({ line, metrics, isCentred, turnActions }: MushafLineProps) 
           accessibilityActions={turnActions.actions}
           onAccessibilityAction={turnActions.onAction}
           testID={`surah-header-${line.surah}`}
-          style={[styles.cartouche, { height, borderColor: colors.ornament }]}
+          style={[styles.cartouche, { height, borderColor: colors.ornamentLine }]}
         >
-          <View style={[styles.cartoucheInner, { borderColor: colors.ornament }]}>
+          <View style={[styles.cartoucheInner, { borderColor: colors.ornamentLine }]}>
             <Text
               allowFontScaling={false}
               numberOfLines={1}
               style={{
                 fontFamily: fontFamily.quran,
-                fontSize: metrics.fontSize,
+                fontSize: nameSize,
+                lineHeight: innerHeight,
+                textAlignVertical: 'center',
+                includeFontPadding: false,
                 color: colors.ink,
               }}
             >

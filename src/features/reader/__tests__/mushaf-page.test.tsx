@@ -126,7 +126,7 @@ describe('the page shows exactly the text of the repository', () => {
       (element) => styleOf(element).borderWidth !== undefined,
     );
     expect(rules).toHaveLength(2);
-    for (const rule of rules) expect(styleOf(rule).borderColor).toBe(appColors.ornament.light);
+    for (const rule of rules) expect(styleOf(rule).borderColor).toBe(appColors.ornamentLine.light);
   });
 
   it('frames the page with one thin rule of the ornament colour, the same on every page', async () => {
@@ -134,7 +134,7 @@ describe('the page shows exactly the text of the repository', () => {
     await showLanguage('fr');
     await renderPage(293);
     const frame = styleOf(screen.getByTestId('mushaf-page-293-frame'));
-    expect(frame.borderColor).toBe(appColors.ornament.light);
+    expect(frame.borderColor).toBe(appColors.ornamentLine.light);
     await renderPage(1);
     expect(styleOf(screen.getByTestId('mushaf-page-1-frame'))).toEqual(frame);
   });

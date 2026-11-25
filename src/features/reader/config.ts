@@ -50,7 +50,19 @@ export const READER_CONFIG = Object.freeze({
    * maximum and minimum scale values). A double tap toggles between the page's size and the
    * second factor (gestures.md › Standard gestures: double tap zooms in, then out).
    */
-  zoom: { maximumScale: 3, doubleTapScale: 2, animationMs: 250 },
+  zoom: {
+    maximumScale: 3,
+    doubleTapScale: 2,
+    animationMs: 250,
+    /**
+     * A drag that reaches the edge of an enlarged page turns the page once the finger went this
+     * far beyond it, in points; the page follows the finger by this share only, a small
+     * resistance so that a drag stopping at the edge does not turn it by accident. Judgment,
+     * no skill sets it.
+     */
+    edgeTurnDistance: 72,
+    edgeResistance: 0.4,
+  },
 
   /**
    * Distance between two lines, in ems: about the proportion of the printed Medina page (a text
@@ -72,6 +84,13 @@ export const READER_CONFIG = Object.freeze({
    */
   surahHeaderHeightRatio: 0.84,
 
+  /**
+   * The surah name in the cartouche, as a share of the page's text size: the design review found
+   * it small in its frame; 10 % larger fills it better and still fits the narrowest names
+   * (checked on the longest, page 293 and 604). Judgment.
+   */
+  surahNameScale: 1.1,
+
   /** The normal space between two words, in ems: the space of the font (450 / 2,048 units). */
   wordGapInEm: 0.22,
 
@@ -88,4 +107,7 @@ export const READER_CONFIG = Object.freeze({
    * app bar. Not verified on iOS 26.
    */
   navigationBarHeight: { ios: 44, default: 64 },
+
+  /** Words of the verse a juz starts with that its header shows, in the Quran font. Judgment. */
+  juzOpeningWords: 3,
 });

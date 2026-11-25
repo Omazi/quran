@@ -2,16 +2,8 @@
   "contents": {
     "title": "Coran",
     "resume": {
-      "action": "Reprendre · {{surah}} · Page {{page}}"
-    },
-    "goTo": {
-      "title": "Aller à la page",
-      "open": "Ouvrir · Page {{page}}",
-      "footer": "Le mushaf compte {{last}} pages. Tu peux aussi commencer par un juz.",
-      "field": "Page",
-      "placeholder": "{{first}} à {{last}}",
-      "openNone": "Ouvrir",
-      "invalid": "Écris un numéro de page de {{first}} à {{last}}."
+      "action": "Reprendre",
+      "detail": "{{surah}} · Page {{page}}"
     },
     "view": {
       "label": "Afficher",
@@ -19,10 +11,12 @@
       "juz": "Juz"
     },
     "search": {
-      "label": "Rechercher une sourate",
-      "placeholder": "Nom ou numéro de sourate",
+      "label": "Rechercher une sourate ou une page",
+      "placeholder": "Sourate ou numéro de page",
       "clear": "Effacer la recherche",
-      "empty": "Aucune sourate pour « {{query}} »"
+      "empty": "Aucune sourate pour « {{query}} »",
+      "page": "Page {{page}}",
+      "pageDetail": "{{surah}} · Juz {{juz}}"
     },
     "surah": {
       "label": "{{number}}. {{name}}",

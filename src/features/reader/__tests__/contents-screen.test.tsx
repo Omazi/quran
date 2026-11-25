@@ -50,16 +50,19 @@ describe('the Quran tab', () => {
     await showLanguage('fr');
     await renderContents();
     expect(screen.getByRole('header', { name: 'Coran' })).toBeOnTheScreen();
-    const resume = screen.getByRole('button', { name: 'Reprendre · Al-Fatiha · Page 1' });
+    // The label is the short action; the surah and the page are its second line.
+    const resume = screen.getByRole('button', { name: 'Reprendre, Al-Fatiha · Page 1' });
+    expect(within(resume).getByText('Reprendre')).toBeOnTheScreen();
+    expect(within(resume).getByText('Al-Fatiha · Page 1')).toBeOnTheScreen();
     await fireEvent.press(resume);
     expect(openPage).toHaveBeenCalledWith(1);
   });
 
-  it('puts "Reprendre" first, then "Aller à la page", then the list', async () => {
+  it('puts "Reprendre" first, then the search field right under it, then the list', async () => {
     setDeviceConditions();
     await showLanguage('fr');
     await renderContents();
-    const order = ['contents-resume', 'contents-go-to-page', 'contents-view', 'contents-search'];
+    const order = ['contents-resume', 'contents-search', 'contents-view', 'contents-surah-1'];
     const all = screen.container.queryAll(
       (element) => typeof element.props.testID === 'string' && order.includes(element.props.testID),
     );
@@ -78,14 +81,12 @@ describe('the Quran tab', () => {
     );
     await renderContents(createTestAppStore({ journal }));
     expect(
-      screen.getByRole('button', { name: 'Reprendre · Al-Baqarah · Page 4' }),
+      screen.getByRole('button', { name: 'Reprendre, Al-Baqarah · Page 4' }),
     ).toBeOnTheScreen();
 
     await renderContents(createTestAppStore({ journal, settings: { lastOpenedPage: 293 } }));
     // Named, like its juz and hizb, by its first verse: page 293 opens on the end of Al-Isra.
-    expect(
-      screen.getByRole('button', { name: 'Reprendre · Al-Isra · Page 293' }),
-    ).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Reprendre, Al-Isra · Page 293' })).toBeOnTheScreen();
   });
 
   it('lists the 114 surahs with their number, names, place, verses and page', async () => {
@@ -115,7 +116,7 @@ describe('the Quran tab', () => {
     setDeviceConditions();
     await showLanguage('fr');
     await renderContents();
-    const search = screen.getByLabelText('Rechercher une sourate');
+    const search = screen.getByLabelText('Rechercher une sourate ou une page');
     await fireEvent.changeText(search, 'kahf');
     expect(screen.getAllByTestId(/^contents-surah-/).map((row) => row.props.testID)).toEqual([
       'contents-surah-18',
@@ -150,33 +151,86 @@ describe('the Quran tab', () => {
     expect(openPage).toHaveBeenCalledWith(1);
   });
 
-  it('opens a page typed by its number, between 1 and 604', async () => {
+  it('has no separate "Aller à la page" section any more', async () => {
     setDeviceConditions();
     await showLanguage('fr');
     await renderContents();
-    const field = screen.getByLabelText('Page');
-    expect(screen.getByRole('button', { name: 'Ouvrir' })).toBeDisabled();
-    await fireEvent.changeText(field, '293');
-    await fireEvent.press(screen.getByRole('button', { name: 'Ouvrir · Page 293' }));
+    expect(screen.queryByText('Aller à la page')).toBeNull();
+    expect(screen.queryByTestId('contents-go-to-page')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Ouvrir' })).toBeNull();
+  });
+
+  it('shows a "Page n" row first when a number from 1 to 604 is typed, and opens that page', async () => {
+    setDeviceConditions();
+    await showLanguage('fr');
+    await renderContents();
+    const search = screen.getByLabelText('Rechercher une sourate ou une page');
+    await fireEvent.changeText(search, '293');
+    const row = screen.getByTestId('contents-page-result');
+    // Above the surahs the number also matches (here none: 293 is no surah).
+    expect(row).toHaveTextContent(/Page 293/);
+    expect(row).toHaveTextContent(/Al-Isra · Juz 15/);
+    await fireEvent.press(row);
     expect(openPage).toHaveBeenCalledWith(293);
   });
 
-  it('refuses a page outside 1 to 604, and says the range', async () => {
+  it('lists the page before the surah of the same number', async () => {
     setDeviceConditions();
     await showLanguage('fr');
     await renderContents();
-    const field = screen.getByLabelText('Page');
-    for (const text of ['0', '605']) {
-      await fireEvent.changeText(field, text);
-      const open = screen.getByRole('button', { name: 'Ouvrir' });
-      expect(open).toBeDisabled();
-      await fireEvent.press(open);
-      expect(screen.getByText('Écris un numéro de page de 1 à 604.')).toBeOnTheScreen();
+    await fireEvent.changeText(screen.getByLabelText('Rechercher une sourate ou une page'), '18');
+    const order = screen.container
+      .queryAll(
+        (element) =>
+          element.props.testID === 'contents-page-result' ||
+          element.props.testID === 'contents-surah-18',
+      )
+      .map((element) => element.props.testID);
+    expect(order[0]).toBe('contents-page-result');
+    expect(order).toContain('contents-surah-18');
+  });
+
+  it('reads a page typed in Arabic-Indic digits', async () => {
+    setDeviceConditions();
+    await showLanguage('fr');
+    await renderContents();
+    await fireEvent.changeText(screen.getByLabelText('Rechercher une sourate ou une page'), '٢٩٣');
+    await fireEvent.press(screen.getByTestId('contents-page-result'));
+    expect(openPage).toHaveBeenCalledWith(293);
+  });
+
+  it('shows no page row outside 1 to 604', async () => {
+    setDeviceConditions();
+    await showLanguage('fr');
+    await renderContents();
+    const search = screen.getByLabelText('Rechercher une sourate ou une page');
+    for (const text of ['0', '605', 'kahf']) {
+      await fireEvent.changeText(search, text);
+      expect(screen.queryByTestId('contents-page-result')).toBeNull();
     }
-    await fireEvent.changeText(field, '604');
-    await fireEvent.press(screen.getByRole('button', { name: 'Ouvrir · Page 604' }));
-    expect(openPage).toHaveBeenCalledTimes(1);
+    await fireEvent.changeText(search, '604');
+    await fireEvent.press(screen.getByTestId('contents-page-result'));
     expect(openPage).toHaveBeenCalledWith(604);
+  });
+
+  it('shows the search results whichever list is chosen', async () => {
+    setDeviceConditions();
+    await showLanguage('fr');
+    await renderContents();
+    await fireEvent.press(screen.getByRole('radio', { name: 'Juz' }));
+    await fireEvent.changeText(screen.getByLabelText('Rechercher une sourate ou une page'), 'kahf');
+    expect(screen.getByTestId('contents-surah-18')).toBeOnTheScreen();
+  });
+
+  it('gives each juz its opening words in the Quran font', async () => {
+    setDeviceConditions({ os: 'android' });
+    await showLanguage('fr');
+    await renderContents();
+    await fireEvent.press(screen.getByRole('radio', { name: 'Juz' }));
+    // Juz 2 opens with verse 2:142, "sayaqūlu s-sufahāʾu…".
+    const words = await screen.findByText(/سَيَقُولُ/);
+    expect(styleOf(words)).toMatchObject({ fontFamily: fontFamily.quran });
+    expect(await screen.findByText(/^بِسۡمِ/)).toBeOnTheScreen();
   });
 
   it.each(SCREEN_CONDITIONS)(

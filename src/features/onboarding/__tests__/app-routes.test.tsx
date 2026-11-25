@@ -276,9 +276,7 @@ describe('returning person', () => {
     const app = await openApp('/quran');
     await waitFor(() => expect(app.getPathname()).toBe('/quran'));
     expect(screen.getByRole('header', { name: 'Coran' })).toBeOnTheScreen();
-    expect(
-      screen.getByRole('button', { name: 'Reprendre · Al-Fatiha · Page 1' }),
-    ).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Reprendre, Al-Fatiha · Page 1' })).toBeOnTheScreen();
     expect(screen.getAllByTestId(/^contents-surah-/)).toHaveLength(114);
   });
 

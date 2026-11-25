@@ -10,7 +10,13 @@ import { PAGE_COUNT } from '@/domain/quran';
 import { parseLocalDate } from '@/domain/shared/local-date';
 
 import { READER_CONFIG } from '../config';
-import { buildJuzEntries, buildSurahEntries, filterSurahs, parseGoToPage } from '../contents-model';
+import {
+  buildJuzEntries,
+  buildSurahEntries,
+  filterSurahs,
+  openingWords,
+  parseGoToPage,
+} from '../contents-model';
 import {
   isPageNumber,
   nextPage,
@@ -428,5 +434,15 @@ describe('the size of pages 1 and 2 (spec 2)', () => {
 
   it('refuses a page without lines', () => {
     expect(() => computeOpeningPageMetrics(SIZES[0]!, 0)).toThrow(RangeError);
+  });
+});
+
+describe('the opening words of a juz', () => {
+  it('keeps the first words of a verse, as they are written', () => {
+    expect(openingWords('سَيَقُولُ ٱلسُّفَهَآءُ مِنَ ٱلنَّاسِ مَا وَلَّىٰهُمْ', 3)).toBe('سَيَقُولُ ٱلسُّفَهَآءُ مِنَ');
+  });
+
+  it('keeps a short verse whole, and ignores the spaces around it', () => {
+    expect(openingWords('  بِسْمِ ٱللَّهِ  ', 3)).toBe('بِسْمِ ٱللَّهِ');
   });
 });

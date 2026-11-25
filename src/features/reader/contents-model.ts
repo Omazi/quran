@@ -133,7 +133,7 @@ const ARABIC_INDIC_DIGITS = /[\u0660-\u0669]/g;
 const ARABIC_INDIC_ZERO = 0x0660;
 
 /**
- * The page typed in "Aller à la page": a whole number from 1 to 604, in Western or Arabic-Indic
+ * The page typed in the search field of the Quran tab: a whole number from 1 to 604, in Western or Arabic-Indic
  * digits, spaces around it allowed. Anything else is null: the field then says the range and the
  * button that opens the page is unavailable (text-fields.md › Best practices: validate fields).
  */
@@ -144,4 +144,14 @@ export function parseGoToPage(text: string): number | null {
   if (!DIGITS_ONLY.test(western)) return null;
   const page = Number(western);
   return isPageNumber(page) ? page : null;
+}
+
+const WHITESPACE = /\s+/;
+
+/**
+ * The first `count` words of a verse, joined by a single space: the opening words of a juz. The
+ * words themselves are the data layer's, untouched.
+ */
+export function openingWords(text: string, count: number): string {
+  return text.trim().split(WHITESPACE).slice(0, count).join(' ');
 }

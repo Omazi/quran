@@ -17,9 +17,44 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { READER_CONFIG } from './config';
-import { clampOffset, clampScale, offsetAfterZoom, toggledScale } from './zoom';
+import {
+  arrivalOffset,
+  clampOffset,
+  clampScale,
+  offsetAfterZoom,
+  pageTurnAtEdge,
+  panWithOverscroll,
+  resistedOverscroll,
+  toggledScale,
+  type PageTurnDirection,
+} from './zoom';
+
+/**
+ * What the pages of the reader share: how much the page is enlarged and where the person looks
+ * vertically, so that both stay when the page turns (spec 2). The horizontal position belongs to
+ * each page (see `ZoomablePage`).
+ */
+export interface ZoomState {
+  scale: SharedValue<number>;
+  offsetY: SharedValue<number>;
+  isZoomed: SharedValue<boolean>;
+}
+
+export function useZoomState(): ZoomState {
+  return { scale: useSharedValue(1), offsetY: useSharedValue(0), isZoomed: useSharedValue(false) };
+}
 
 export interface ZoomablePageProps {
+  zoom: ZoomState;
+  /** Whether this is the page on screen: only it moves under the finger. */
+  isCurrent: boolean;
+  /**
+   * For a page that is not on screen: which side of the current page it is on. A page that
+   * waits shows the edge it will arrive by, so that a turn needs no jump.
+   */
+  side: PageTurnDirection;
+  /** A drag went far enough beyond the edge of the enlarged page: turn the page. */
+  onEdgeTurn: (direction: PageTurnDirection) => void;
   /** Size of the page: the zoom is centred on it and the pan stays inside it. */
   width: number;
   height: number;
@@ -49,6 +84,10 @@ const ZOOMED_EPSILON = 0.01;
  * waits for a double tap to fail before it shows or hides the bars.
  */
 export function ZoomablePage({
+  zoom,
+  isCurrent,
+  side,
+  onEdgeTurn,
   width,
   height,
   onTap,
@@ -57,15 +96,18 @@ export function ZoomablePage({
   testID,
   children,
 }: ZoomablePageProps) {
-  const scale = useSharedValue(1);
+  const { scale, offsetY, isZoomed } = zoom;
   const offsetX = useSharedValue(0);
-  const offsetY = useSharedValue(0);
+  // What the finger went beyond the edge, and the part of it the page shows.
+  const overscroll = useSharedValue(0);
+  const shownOverscroll = useSharedValue(0);
+  const isCurrentValue = useSharedValue(isCurrent);
+  const sideValue = useSharedValue(side);
   const startScale = useSharedValue(1);
   const startX = useSharedValue(0);
   const startY = useSharedValue(0);
   const focalX = useSharedValue(0);
   const focalY = useSharedValue(0);
-  const isZoomed = useSharedValue(false);
   const reduced = useSharedValue(isMotionReduced);
   useEffect(() => {
     reduced.value = isMotionReduced;
@@ -74,12 +116,26 @@ export function ZoomablePage({
   const halfWidth = width / 2;
   const halfHeight = height / 2;
 
+  // A page that becomes the current one goes on from the edge it was showing while it waited;
+  // one that is left shows the edge it will come back by.
+  useEffect(() => {
+    if (isCurrent) {
+      if (!isCurrentValue.value) {
+        offsetX.value = arrivalOffset(sideValue.value, scale.value, halfWidth);
+        isCurrentValue.value = true;
+      }
+      return;
+    }
+    isCurrentValue.value = false;
+    sideValue.value = side;
+  }, [halfWidth, isCurrent, isCurrentValue, offsetX, scale, side, sideValue]);
+
   /** Tells the reader, once per change, whether the page is enlarged. */
   function settle(nextScale: number) {
     'worklet';
     const zoomed = nextScale > 1 + ZOOMED_EPSILON;
     if (zoomed !== isZoomed.value) {
-      isZoomed.value = zoomed;
+      isZoomed.set(zoomed);
       scheduleOnRN(onZoomChange, zoomed);
     }
   }
@@ -103,16 +159,10 @@ export function ZoomablePage({
     onUpdate: (event) => {
       const next = clampScale(startScale.value * event.scale, READER_CONFIG.zoom.maximumScale);
       const ratio = next / startScale.value;
-      scale.value = next;
-      offsetX.value = clampOffset(
-        offsetAfterZoom(startX.value, focalX.value, ratio),
-        next,
-        halfWidth,
-      );
-      offsetY.value = clampOffset(
-        offsetAfterZoom(startY.value, focalY.value, ratio),
-        next,
-        halfHeight,
+      scale.set(next);
+      offsetX.set(clampOffset(offsetAfterZoom(startX.value, focalX.value, ratio), next, halfWidth));
+      offsetY.set(
+        clampOffset(offsetAfterZoom(startY.value, focalY.value, ratio), next, halfHeight),
       );
     },
     onDeactivate: () => {
@@ -136,8 +186,27 @@ export function ZoomablePage({
       startY.value = offsetY.value;
     },
     onUpdate: (event) => {
-      offsetX.value = clampOffset(startX.value + event.translationX, scale.value, halfWidth);
-      offsetY.value = clampOffset(startY.value + event.translationY, scale.value, halfHeight);
+      const horizontal = panWithOverscroll(
+        startX.value + event.translationX,
+        scale.value,
+        halfWidth,
+      );
+      offsetX.set(horizontal.offset);
+      overscroll.value = horizontal.overscroll;
+      // Past the edge the page follows the finger, with resistance.
+      shownOverscroll.value = resistedOverscroll(
+        horizontal.overscroll,
+        READER_CONFIG.zoom.edgeResistance,
+      );
+      offsetY.set(clampOffset(startY.value + event.translationY, scale.value, halfHeight));
+    },
+    onDeactivate: (event) => {
+      const direction = event.canceled
+        ? null
+        : pageTurnAtEdge(overscroll.value, READER_CONFIG.zoom.edgeTurnDistance);
+      overscroll.value = 0;
+      moveTo(shownOverscroll, 0);
+      if (direction !== null) scheduleOnRN(onEdgeTurn, direction);
     },
   });
 
@@ -184,7 +253,12 @@ export function ZoomablePage({
 
   const zoomStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateX: offsetX.value },
+      {
+        translateX:
+          (isCurrentValue.value
+            ? offsetX.value
+            : arrivalOffset(sideValue.value, scale.value, halfWidth)) + shownOverscroll.value,
+      },
       { translateY: offsetY.value },
       { scale: scale.value },
     ],

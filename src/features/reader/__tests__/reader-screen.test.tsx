@@ -6,6 +6,7 @@
 
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { AccessibilityInfo, AppState } from 'react-native';
+import { State } from 'react-native-gesture-handler';
 import { fireGestureHandler, getByGestureTestId } from 'react-native-gesture-handler/jest-utils';
 
 import { quranStructure } from '@/data/quran';
@@ -157,10 +158,8 @@ describe('the 30-second rule, through the store', () => {
     await wait(5);
     await swipeTo(11);
     expect(pagesOf(store)).toEqual([]);
-    // An empty line keeps its height and is hidden from screen readers.
-    expect(
-      screen.getByTestId('reader-feedback', { includeHiddenElements: true }),
-    ).toHaveTextContent('\u00a0');
+    // Nothing to say: nothing is drawn, so the pill reserves no room.
+    expect(screen.queryByTestId('reader-feedback', { includeHiddenElements: true })).toBeNull();
   });
 
   it('a page read for 30 seconds is recorded on the local day when the page turns', async () => {
@@ -249,6 +248,64 @@ describe('the zoom of the page (deviation 34)', () => {
       ]);
     });
     await waitFor(() => expect(pager().props.scrollEnabled).toBe(true));
+  });
+});
+
+describe('the enlarged page across turns and edges', () => {
+  async function zoomIn(page: number) {
+    await act(async () => {
+      fireGestureHandler(getByGestureTestId(`reader-page-${page}-double-tap`), [
+        { x: WIDTH / 2, y: HEIGHT / 2 },
+      ]);
+    });
+    await waitFor(() => expect(screen.getByTestId('book-pager').props.scrollEnabled).toBe(false));
+  }
+
+  /** A drag of one finger, `dx` points to the right, from the middle of the page. */
+  async function drag(page: number, dx: number) {
+    await act(async () => {
+      fireGestureHandler(getByGestureTestId(`reader-page-${page}-pan`), [
+        { state: State.BEGAN, x: WIDTH / 2, y: HEIGHT / 2, translationX: 0, translationY: 0 },
+        { state: State.ACTIVE, x: WIDTH / 2, y: HEIGHT / 2, translationX: 0, translationY: 0 },
+        { translationX: dx / 2, translationY: 0 },
+        { translationX: dx, translationY: 0 },
+        { state: State.END, translationX: dx, translationY: 0 },
+      ]);
+    });
+  }
+
+  beforeEach(async () => {
+    setDeviceConditions({ reducedMotion: true });
+    await showLanguage('fr');
+  });
+
+  it('keeps the zoom when the page turns', async () => {
+    await openReader(createTestAppStore(), 20);
+    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
+    await zoomIn(20);
+    await swipeTo(21);
+    // Still enlarged on the next page: the pager stays still.
+    expect(screen.getByTestId('book-pager').props.scrollEnabled).toBe(false);
+  });
+
+  it('turns the page when a drag goes far enough beyond the edge', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 20);
+    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
+    await zoomIn(20);
+    // Far enough to reach the left edge, then past it by more than the distance of a turn.
+    await drag(20, WIDTH + READER_CONFIG.zoom.edgeTurnDistance + 10);
+    // Dragging right past the left edge brings the next page, 21, in from the left.
+    await waitFor(() => expect(store.getState().settings.lastOpenedPage).toBe(21));
+  });
+
+  it('does not turn the page for a short push beyond the edge', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 20);
+    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
+    await zoomIn(20);
+    await drag(20, WIDTH / 2 + READER_CONFIG.zoom.edgeTurnDistance / 2);
+    expect(store.getState().settings.lastOpenedPage).toBe(20);
   });
 });
 

@@ -1,16 +1,17 @@
-import { Button as SwiftUIButton, Text } from '@expo/ui/swift-ui';
+import { Button as SwiftUIButton, Text, VStack } from '@expo/ui/swift-ui';
 import {
   buttonStyle,
   contentShape,
   controlSize,
   disabled as disabledModifier,
+  font,
   foregroundStyle,
   frame,
   shapes,
   tint,
 } from '@expo/ui/swift-ui/modifiers';
 
-import { layout } from '../../tokens';
+import { appleTextStyles, layout } from '../../tokens';
 import { useColors } from '../../use-colors';
 import type { ButtonProps, ButtonVariant } from '../types';
 import { assertButtonRole } from '../validation';
@@ -32,6 +33,7 @@ const SYSTEM_STYLE = {
  */
 export function Button({
   label,
+  detail,
   onPress,
   variant = 'primary',
   role,
@@ -67,7 +69,17 @@ export function Button({
         testID={testID}
         modifiers={[...systemStyle, ...roleColor, disabledModifier(disabled)]}
       >
-        <Text modifiers={[...labelColor, ...labelWidth, ...labelTarget]}>{label}</Text>
+        {detail === undefined ? (
+          <Text modifiers={[...labelColor, ...labelWidth, ...labelTarget]}>{label}</Text>
+        ) : (
+          // Two lines in the one label: the action, then where it leads, in the subhead size.
+          <VStack modifiers={[...labelWidth]}>
+            <Text modifiers={[...labelColor]}>{label}</Text>
+            <Text modifiers={[font({ textStyle: appleTextStyles.subhead }), ...labelColor]}>
+              {detail}
+            </Text>
+          </VStack>
+        )}
       </SwiftUIButton>
     </SwiftUIHost>
   );

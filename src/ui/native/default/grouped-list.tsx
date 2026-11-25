@@ -1,8 +1,15 @@
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppText } from '../../components/app-text';
-import { layout, spacing, stateOpacity } from '../../tokens';
+import {
+  appleTextStyles,
+  fontFamily,
+  layout,
+  spacing,
+  stateOpacity,
+  textStyles,
+} from '../../tokens';
 import { useColors } from '../../use-colors';
 import { GroupedListScope, useGroupedListGuard } from '../grouped-list-scope';
 import type { GroupedListProps, ListRowProps, ListSectionProps } from '../types';
@@ -20,7 +27,13 @@ export function GroupedList({ children, testID }: GroupedListProps) {
   );
 }
 
-export function ListSection({ title, footer, children, isBare = false }: ListSectionProps) {
+export function ListSection({
+  title,
+  titleQuran,
+  footer,
+  children,
+  isBare = false,
+}: ListSectionProps) {
   useGroupedListGuard('ListSection');
   const colors = useColors();
   return (
@@ -30,14 +43,20 @@ export function ListSection({ title, footer, children, isBare = false }: ListSec
       }
     >
       {title === undefined ? null : (
-        <AppText
-          accessibilityRole="header"
-          variant="footnote"
-          color="secondaryLabel"
-          style={styles.sectionText}
-        >
-          {title}
-        </AppText>
+        <View style={styles.header} accessible accessibilityRole="header">
+          <AppText variant="footnote" color="secondaryLabel" style={styles.headerTitle}>
+            {title}
+          </AppText>
+          {titleQuran === undefined ? null : (
+            <Text
+              accessibilityLanguage="ar"
+              dynamicTypeRamp={appleTextStyles.title2}
+              style={[styles.quranTitle, { color: colors.ink }]}
+            >
+              {titleQuran}
+            </Text>
+          )}
+        </View>
       )}
       {children}
       {footer === undefined ? null : (
@@ -109,6 +128,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenMargin,
     paddingVertical: spacing.sm,
   },
+  header: {
+    paddingHorizontal: layout.screenMargin,
+    paddingVertical: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    columnGap: spacing.md,
+  },
+  headerTitle: { flexShrink: 1 },
+  quranTitle: { fontFamily: fontFamily.quran, fontSize: textStyles.title2.fontSize },
   row: {
     minHeight: layout.touchTarget,
     paddingHorizontal: layout.screenMargin,

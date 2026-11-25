@@ -2,16 +2,8 @@
   "contents": {
     "title": "القرآن",
     "resume": {
-      "action": "متابعة · {{surah}} · صفحة {{page}}"
-    },
-    "goTo": {
-      "title": "الانتقال إلى صفحة",
-      "open": "فتح · صفحة {{page}}",
-      "footer": "في المصحف {{last}} صفحات. يمكنك أيضًا البدء من جزء.",
-      "field": "الصفحة",
-      "placeholder": "من {{first}} إلى {{last}}",
-      "openNone": "فتح",
-      "invalid": "اكتب رقم صفحة من {{first}} إلى {{last}}."
+      "action": "متابعة",
+      "detail": "{{surah}} · صفحة {{page}}"
     },
     "view": {
       "label": "عرض",
@@ -19,10 +11,12 @@
       "juz": "الأجزاء"
     },
     "search": {
-      "label": "البحث عن سورة",
-      "placeholder": "اسم السورة أو رقمها",
+      "label": "البحث عن سورة أو صفحة",
+      "placeholder": "اسم السورة أو رقم الصفحة",
       "clear": "مسح البحث",
-      "empty": "لا توجد سورة تطابق «{{query}}»"
+      "empty": "لا توجد سورة تطابق «{{query}}»",
+      "page": "صفحة {{page}}",
+      "pageDetail": "{{surah}} · الجزء {{juz}}"
     },
     "surah": {
       "label": "{{number}}. {{name}}",

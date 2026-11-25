@@ -5,7 +5,16 @@
  */
 
 import { READER_CONFIG } from '../config';
-import { clampOffset, clampScale, offsetAfterZoom, toggledScale } from '../zoom';
+import {
+  arrivalOffset,
+  clampOffset,
+  clampScale,
+  offsetAfterZoom,
+  panWithOverscroll,
+  pageTurnAtEdge,
+  resistedOverscroll,
+  toggledScale,
+} from '../zoom';
 
 describe('the zoom of the page', () => {
   it('keeps the scale between the page size and the maximum', () => {
@@ -45,5 +54,44 @@ describe('the zoom of the page', () => {
     expect(toggledScale(level, level)).toBe(1);
     // A page enlarged by a pinch goes back to its size.
     expect(toggledScale(2.6, level)).toBe(1);
+  });
+
+  describe('at the edge of the enlarged page', () => {
+    // At scale 2, a page 200 points wide (half 100) can move 100 points each way.
+    it('moves freely inside the page, with no overscroll', () => {
+      expect(panWithOverscroll(30, 2, 100)).toEqual({ offset: 30, overscroll: 0 });
+      expect(panWithOverscroll(100, 2, 100)).toEqual({ offset: 100, overscroll: 0 });
+    });
+
+    it('holds the page at its edge and reports what the finger went beyond', () => {
+      expect(panWithOverscroll(130, 2, 100)).toEqual({ offset: 100, overscroll: 30 });
+      expect(panWithOverscroll(-175, 2, 100)).toEqual({ offset: -100, overscroll: -75 });
+    });
+
+    it('shows only part of the overscroll: a small resistance', () => {
+      const { edgeResistance } = READER_CONFIG.zoom;
+      expect(edgeResistance).toBeGreaterThan(0);
+      expect(edgeResistance).toBeLessThan(1);
+      expect(resistedOverscroll(100, edgeResistance)).toBeCloseTo(100 * edgeResistance, 10);
+      expect(resistedOverscroll(-40, edgeResistance)).toBeCloseTo(-40 * edgeResistance, 10);
+    });
+
+    it('turns the page only once the finger went far enough beyond the edge', () => {
+      const distance = READER_CONFIG.zoom.edgeTurnDistance;
+      expect(pageTurnAtEdge(distance - 1, distance)).toBeNull();
+      expect(pageTurnAtEdge(-(distance - 1), distance)).toBeNull();
+      expect(pageTurnAtEdge(0, distance)).toBeNull();
+      // Beyond the left edge the next page comes in from the left, as in the pager.
+      expect(pageTurnAtEdge(distance, distance)).toBe('next');
+      expect(pageTurnAtEdge(-distance, distance)).toBe('previous');
+    });
+
+    it('shows the new page from the side the reader comes from', () => {
+      // The next page arrives from the left: its right edge shows first. The previous one
+      // arrives from the right: its left edge shows first.
+      expect(arrivalOffset('next', 2, 100)).toBe(-100);
+      expect(arrivalOffset('previous', 2, 100)).toBe(100);
+      expect(arrivalOffset('next', 1, 100)).toBe(0);
+    });
   });
 });
