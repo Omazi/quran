@@ -7,16 +7,18 @@ un code ou par un QR code, groupes et classements. Sur les fausses données de `
 
 ## Pièces
 
-| Fichier                            | Rôle                                                                                                                                                          |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `friend-garden.ts`                 | Résumé publié → `GardenState` pour `GardenScene` (la santé publiée, relue par la règle du module jardin) ; jours depuis l'arrosage                            |
-| `friends-model.ts`                 | Modèles purs des écrans : liste, page d'un proche, groupe                                                                                                     |
-| `social-store.tsx`                 | Le client (démonstration de l'appli par défaut, un autre dans les tests), le compteur qui fait relire les écrans, le code et les encouragements de la session |
-| `use-session.ts`, `use-friends.ts` | Les hooks : session et connexion ; liste, proche, ajout, groupe, nouveau groupe                                                                               |
-| `friends-pages.tsx`                | Hook + écran pour chaque page, avec chargement, échec, et l'écran de connexion quand personne n'est connecté                                                  |
-| `scan-invite-screen.tsx`           | Le scanner : aperçu de la caméra (`expo-camera`, QR seulement), consignes, refus ; caméra refusée → réglages ; jamais demandée → un seul bouton « Continuer » |
-| `test-support/camera.tsx`          | Un faux `expo-camera` pour les tests : permission qui répond comme le système, aperçu dont on déclenche la lecture                                            |
-| `*-screen.tsx`                     | Écrans de présentation : ils reçoivent un modèle et des actions                                                                                               |
+| Fichier                            | Rôle                                                                                                                                                                                                                                                                |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `friends-kit.tsx`                  | Les pièces visuelles des maquettes validées (`docs/design/visite.png`, `accueil.png`, `bienvenue.png`) : ciel, cartes, titres serif, boutons en capsule, avatars, soixante points, champ de texte. Couleurs et tailles : `src/ui/visit-palette.ts` (écarts 90 à 94) |
+| `friend-avatar.ts`                 | La couleur d'un proche (toujours la même, tirée de son identifiant) et son initiale                                                                                                                                                                                 |
+| `friend-garden.ts`                 | Résumé publié → `GardenState` pour `GardenScene` (la santé publiée, relue par la règle du module jardin) ; jours depuis l'arrosage                                                                                                                                  |
+| `friends-model.ts`                 | Modèles purs des écrans : liste, page d'un proche, groupe                                                                                                                                                                                                           |
+| `social-store.tsx`                 | Le client (démonstration de l'appli par défaut, un autre dans les tests), le compteur qui fait relire les écrans, le code et les encouragements de la session                                                                                                       |
+| `use-session.ts`, `use-friends.ts` | Les hooks : session et connexion ; liste, proche, ajout, groupe, nouveau groupe                                                                                                                                                                                     |
+| `friends-pages.tsx`                | Hook + écran pour chaque page, avec chargement, échec, et l'écran de connexion quand personne n'est connecté                                                                                                                                                        |
+| `scan-invite-screen.tsx`           | Le scanner : aperçu de la caméra (`expo-camera`, QR seulement), consignes, refus ; caméra refusée → réglages ; jamais demandée → un seul bouton « Continuer »                                                                                                       |
+| `test-support/camera.tsx`          | Un faux `expo-camera` pour les tests : permission qui répond comme le système, aperçu dont on déclenche la lecture                                                                                                                                                  |
+| `*-screen.tsx`                     | Écrans de présentation : ils reçoivent un modèle et des actions                                                                                                                                                                                                     |
 
 Routes : `src/app/(tabs)/friends/` est une pile propre à l'onglet (`_layout.tsx`) : la racine de
 l'onglet (`index.tsx`), un proche (`[id].tsx`), ajouter (`add.tsx`), scanner (`scan.tsx`),
@@ -24,6 +26,17 @@ nouveau groupe (`new-group.tsx`), un groupe (`group/[id].tsx`). La barre d'ongle
 sur chacune (`tab-bars.md › Best practices` ; l'écart 50 est résolu). Le lien
 `quranapp://invite/<CODE>` (`src/app/invite/[code].tsx`) ouvre « Ajouter un proche » avec le code
 dans son champ, sans l'accepter seul.
+
+## Apparence (règle du propriétaire, 25 novembre 2026)
+
+Les maquettes validées sont la référence. La page d'un proche suit `docs/design/visite.png` : le
+jardin dans le ciel, puis la carte blanche (initiale, nom, « 38 hizb sur 60, arrosé depuis 21
+jours », soixante points, « Encourager » et « Lire et arroser »). Les « … » de la barre sont le
+menu Plus du système (iOS et Android ; sur le web, les deux boutons rouges restent en bas de la
+page). La liste, l'ajout, les groupes, la connexion et le scanner reprennent les cartes de
+`accueil.png` et les boutons de `bienvenue.png`. Restent ceux du système : la barre d'onglets, la
+barre de navigation et son retour, le menu, les feuilles d'action, le partage, la caméra et le
+contrôle segmenté.
 
 ## QR code (D36)
 

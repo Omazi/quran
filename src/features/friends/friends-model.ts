@@ -22,6 +22,8 @@ export interface FriendCard {
   readonly garden: GardenState | null;
   readonly hizbCompleted: number | null;
   readonly water: WaterStatus | null;
+  /** Days in a row they have watered; null when the garden is hidden. */
+  readonly streakDays: number | null;
 }
 
 export interface PendingRequest {
@@ -61,6 +63,7 @@ export function friendCardOf(friend: FriendView, today: LocalDate): FriendCard {
     garden: garden === null ? null : gardenStateOf(garden, today),
     hizbCompleted: garden === null ? null : garden.hizbCompleted,
     water: garden === null ? null : waterStatusOf(garden.lastWateredOn, today),
+    streakDays: garden === null ? null : garden.streakDays,
   };
 }
 

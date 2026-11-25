@@ -5,7 +5,7 @@ import type { GroupId, UserId } from '@/domain/social';
 import type { ConfirmAction } from '@/ui';
 
 import { AddFriendScreen } from './add-friend-screen';
-import { FriendScreen } from './friend-screen';
+import { FriendScreen, type FriendOptionsMenu } from './friend-screen';
 import { FriendsListScreen } from './friends-list-screen';
 import { GroupScreen, NewGroupScreen } from './group-screen';
 import { ScanInviteScreen } from './scan-invite-screen';
@@ -21,6 +21,8 @@ import {
   type FriendsListNavigation,
 } from './use-friends';
 import { useSession, useSignIn } from './use-session';
+
+export type { FriendOptionsItem, FriendOptionsMenu } from './friend-screen';
 
 /**
  * Each page of the tab: its hook, then its screen, with a loading and a failed state between
@@ -81,11 +83,17 @@ function FriendPageContent({
   goBack,
   confirm,
   onTitle,
+  openReader,
+  renderOptions,
 }: {
   userId: UserId;
   goBack(): void;
   confirm?: ConfirmAction;
   onTitle?: (title: string) => void;
+  /** "Lire et arroser": the reader, where the person left off. */
+  openReader?: () => void;
+  /** Draws the More menu in the navigation bar (see `FriendScreen`). */
+  renderOptions?: (menu: FriendOptionsMenu) => ReactNode;
 }) {
   const { t } = useTranslation('friends');
   const { state, refusal, actions } = useFriendPage(userId, { goBack, confirm });
@@ -100,7 +108,15 @@ function FriendPageContent({
   useTitle(name === null ? null : t('friend.gardenTitle', { name }), onTitle);
   if (state.status === 'loading') return <FriendsLoading testID="friend-loading" />;
   if (state.status === 'failed') return <Failed />;
-  return <FriendScreen model={state.value} refusal={refusal} actions={actions} />;
+  return (
+    <FriendScreen
+      model={state.value}
+      refusal={refusal}
+      actions={actions}
+      openReader={openReader}
+      renderOptions={renderOptions}
+    />
+  );
 }
 
 function AddFriendPageContent({

@@ -29,6 +29,7 @@ import {
   GroupPage,
   NewGroupPage,
   ScanInvitePage,
+  type FriendOptionsMenu,
 } from '../friends-pages';
 import { cameraQuestionsShown, setCamera, type FakeCameraViewProps } from '../test-support/camera';
 import { demoForTest, signedInDemoForTest, withStore } from '../test-support/demo';
@@ -218,6 +219,64 @@ describe("a friend's page", () => {
     expect(await demo.repository.listBlockedPeople()).toEqual([
       expect.objectContaining({ userId: DEMO_USERS.taghread }),
     ]);
+  });
+
+  it('says the hizb and the water as the visit does, with sixty dots for the hizb', async () => {
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    await render(withStore(store, <FriendPage userId={DEMO_USERS.mustapha} goBack={jest.fn()} />));
+    const dots = await screen.findByTestId('friend-hizb');
+    expect(dots).toHaveProp('accessibilityRole', 'progressbar');
+    expect(dots.props.accessibilityValue).toMatchObject({ min: 0, max: 60 });
+    expect(screen.getByTestId('friend-summary')).toHaveTextContent(/^\d+ hizb sur 60, /);
+    expect(screen.getAllByTestId(/^friend-hizb-dot-/)).toHaveLength(60);
+  });
+
+  it('opens the reader from its second button', async () => {
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    const openReader = jest.fn();
+    await render(
+      withStore(
+        store,
+        <FriendPage userId={DEMO_USERS.sarah} goBack={jest.fn()} openReader={openReader} />,
+      ),
+    );
+    await fireEvent.press(await screen.findByRole('button', { name: 'Lire et arroser' }));
+    expect(openReader).toHaveBeenCalledTimes(1);
+  });
+
+  it('puts removing and blocking in the More menu of the bar when the route gives one', async () => {
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    const asked: ConfirmActionOptions[] = [];
+    const menus: FriendOptionsMenu[] = [];
+    await render(
+      withStore(
+        store,
+        <FriendPage
+          userId={DEMO_USERS.sarah}
+          goBack={jest.fn()}
+          confirm={(options) => asked.push(options)}
+          renderOptions={(menu) => {
+            menus.push(menu);
+            return null;
+          }}
+        />,
+      ),
+    );
+    await screen.findByTestId('friend');
+    // Not on the page: in the menu, both destructive (pull-down-buttons.md › Best practices).
+    expect(screen.queryByRole('button', { name: 'Retirer de mes proches' })).toBeNull();
+    const menu = menus.at(-1);
+    expect(menu?.label).toBe('Plus d’options');
+    expect(menu?.items.map(({ label, isDestructive }) => [label, isDestructive])).toEqual([
+      ['Retirer de mes proches', true],
+      ['Bloquer Sarah', true],
+    ]);
+    // Choosing an item still asks first, with an action sheet.
+    menu?.items[0]?.onPress();
+    expect(asked[0]).toMatchObject({ title: 'Retirer Sarah de tes proches ?' });
   });
 
   it('shows only the name of someone who is not a friend', async () => {

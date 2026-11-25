@@ -17,6 +17,11 @@ export { Screen, type ScreenBackground, type ScreenProps } from './components/sc
 export { useReducedMotion } from './device-settings';
 export { getWritingDirection, type WritingDirection } from './direction';
 export { appFonts } from './fonts';
+// The palette of the validated mockups, used by the Proches tab (see visit-palette.ts), with the
+// charter's text styles and field behaviours its own components are built from.
+export * from './visit-palette';
+export { appleTextStyles, textStyles } from './tokens';
+export { TEXT_FIELD_BEHAVIOURS } from './native/text-field-kinds';
 export * from './native';
 export {
   BarChart,

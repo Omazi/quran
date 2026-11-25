@@ -36,7 +36,8 @@
     "members_one": "{{count}} member",
     "members_other": "{{count}} members",
     "noGroups": "No groups yet",
-    "createGroup": "Create a Group"
+    "createGroup": "Create a Group",
+    "seeAll": "See All"
   },
   "card": {
     "hizb_one": "{{count}} hizb",
@@ -48,7 +49,10 @@
     "neverWatered": "not watered yet",
     "hidden": "Garden not shared",
     "label": "{{name}}, {{details}}",
-    "hiddenLabel": "{{name}}, garden not shared"
+    "hiddenLabel": "{{name}}, garden not shared",
+    "wateredSince_one": "watered for {{count}} day",
+    "wateredSince_other": "watered for {{count}} days",
+    "details": "{{hizb}}, {{water}}"
   },
   "friend": {
     "gardenTitle": "{{name}}’s garden",
@@ -82,7 +86,14 @@
     "cancel": "Cancel",
     "notFriend": "{{name}} isn’t one of your friends.",
     "unavailableTitle": "No One to Show",
-    "unavailableText": "This account isn’t available."
+    "unavailableText": "This account isn’t available.",
+    "hizbOutOf_one": "{{count}} hizb of 60",
+    "hizbOutOf_other": "{{count}} hizb of 60",
+    "hizbProgress": "Hizb read",
+    "read": "Read and Water",
+    "readHint": "Opens the Quran where you left off.",
+    "options": "More Options",
+    "encourageShort": "Encourage"
   },
   "add": {
     "title": "Add a Friend",
@@ -145,7 +156,8 @@
     "addNote": "Your friends join without having to accept, and can leave whenever they like. Every member sees everyone’s names and pages.",
     "noOneToAdd": "All your friends are already in this group.",
     "notFoundTitle": "Group Not Found",
-    "notFoundText": "You aren’t, or are no longer, a member of this group."
+    "notFoundText": "You aren’t, or are no longer, a member of this group.",
+    "addShort": "Add"
   },
   "newGroup": {
     "title": "New Group",

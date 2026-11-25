@@ -1,18 +1,17 @@
 import { CameraView } from 'expo-camera';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+
+import { layout, visitShape, type IconSymbol } from '@/ui';
 
 import {
-  ButtonRow,
-  ContentRow,
-  GroupedList,
-  LabelRow,
-  ListSection,
-  Screen,
-  radius,
-  type IconSymbol,
-} from '@/ui';
-
+  FriendsButton,
+  FriendsCard,
+  FriendsPage,
+  FriendsRow,
+  FriendsSymbol,
+  FriendsText,
+} from './friends-kit';
 import { FriendsLoading } from './screen-states';
 import type { ScanInviteActions, ScanInviteModel } from './use-friends';
 
@@ -41,32 +40,38 @@ export function ScanInviteScreen({ model, actions }: ScanInviteScreenProps) {
     const state =
       model.camera === 'askable' ? 'ask' : model.camera === 'blocked' ? 'denied' : 'failed';
     return (
-      <Screen background="groupedBackground" testID={`scan-${state}`}>
-        <GroupedList>
-          <ListSection footer={t('scan.typeInstead')}>
-            <LabelRow
-              label={t(`scan.${state}Title`)}
-              detail={t(`scan.${state}Text`)}
-              symbol={state === 'ask' ? CAMERA_SYMBOL : CAMERA_OFF_SYMBOL}
-              tone="secondaryLabel"
+      <FriendsPage isUnderBar testID={`scan-${state}`}>
+        <FriendsCard>
+          <FriendsRow
+            label={t(`scan.${state}Title`)}
+            detail={t(`scan.${state}Text`)}
+            leading={
+              <FriendsSymbol
+                symbol={state === 'ask' ? CAMERA_SYMBOL : CAMERA_OFF_SYMBOL}
+                color="inkSecondary"
+              />
+            }
+          />
+          {state === 'ask' ? (
+            <FriendsButton
+              kind="primary"
+              label={t('scan.continue')}
+              onPress={actions.askForCamera}
+              testID="scan-continue"
             />
-            {state === 'ask' ? (
-              <ButtonRow
-                label={t('scan.continue')}
-                onPress={actions.askForCamera}
-                testID="scan-continue"
-              />
-            ) : state === 'denied' ? (
-              <ButtonRow
-                label={t('scan.openSettings')}
-                onPress={actions.openSettings}
-                variant="plain"
-                testID="scan-open-settings"
-              />
-            ) : null}
-          </ListSection>
-        </GroupedList>
-      </Screen>
+          ) : state === 'denied' ? (
+            <FriendsButton
+              kind="soft"
+              label={t('scan.openSettings')}
+              onPress={actions.openSettings}
+              testID="scan-open-settings"
+            />
+          ) : null}
+          <FriendsText variant="footnote" color="inkSecondary">
+            {t('scan.typeInstead')}
+          </FriendsText>
+        </FriendsCard>
+      </FriendsPage>
     );
   }
   const footer = model.isBusy
@@ -77,24 +82,30 @@ export function ScanInviteScreen({ model, actions }: ScanInviteScreenProps) {
         ? t('scan.notAnInvitation')
         : t(`refusals.${model.note}`);
   return (
-    <Screen background="groupedBackground" testID="scan">
-      <GroupedList>
-        <ListSection isBare footer={footer}>
-          <ContentRow accessibilityLabel={t('scan.preview')} testID="scan-camera">
-            <CameraView
-              style={styles.camera}
-              facing="back"
-              barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-              onBarcodeScanned={model.isBusy ? undefined : ({ data }) => actions.scanned(data)}
-              onMountError={actions.cameraFailed}
-            />
-          </ContentRow>
-        </ListSection>
-      </GroupedList>
-    </Screen>
+    <FriendsPage isUnderBar testID="scan">
+      <View
+        accessible
+        accessibilityRole="image"
+        accessibilityLabel={t('scan.preview')}
+        style={styles.frame}
+        testID="scan-camera"
+      >
+        <CameraView
+          style={styles.camera}
+          facing="back"
+          barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+          onBarcodeScanned={model.isBusy ? undefined : ({ data }) => actions.scanned(data)}
+          onMountError={actions.cameraFailed}
+        />
+      </View>
+      <FriendsText variant="subhead" color="inkSecondary" align="center">
+        {footer}
+      </FriendsText>
+    </FriendsPage>
   );
 }
 
 const styles = StyleSheet.create({
-  camera: { aspectRatio: 1, width: '100%', borderRadius: radius.lg, overflow: 'hidden' },
+  frame: { borderRadius: visitShape.cardRadius, overflow: 'hidden', minHeight: layout.touchTarget },
+  camera: { aspectRatio: 1, width: '100%' },
 });

@@ -1,22 +1,25 @@
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { ContentUnavailable, ProgressIndicator, Screen, type IconSymbol } from '@/ui';
+import { ContentUnavailable, ProgressIndicator, type IconSymbol } from '@/ui';
+
+import { FriendsPage } from './friends-kit';
 
 const FAILED_SYMBOL: IconSymbol = { ios: 'person.2', android: 'group' };
 
 /**
  * While the data comes: the system's activity indicator, without a duration it cannot know
- * (progress-indicators.md › Best practices). With the demonstration it lasts a moment.
+ * (progress-indicators.md › Best practices), on the sky of the tab's pages so that nothing
+ * flashes grey before the page. With the demonstration it lasts a moment.
  */
 export function FriendsLoading({ testID }: { testID?: string }) {
   const { t } = useTranslation('friends');
   return (
-    <Screen background="groupedBackground" testID={testID}>
+    <FriendsPage isBare testID={testID}>
       <View style={styles.centre}>
         <ProgressIndicator accessibilityLabel={t('loading')} />
       </View>
-    </Screen>
+    </FriendsPage>
   );
 }
 
@@ -31,9 +34,9 @@ export function FriendsUnavailable({
   testID?: string;
 }) {
   return (
-    <Screen background="groupedBackground" testID={testID}>
+    <FriendsPage isBare testID={testID}>
       <ContentUnavailable title={title} description={description} symbol={FAILED_SYMBOL} />
-    </Screen>
+    </FriendsPage>
   );
 }
 
