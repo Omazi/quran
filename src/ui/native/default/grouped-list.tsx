@@ -179,6 +179,7 @@ export function ListRow({
   value,
   valueAccessibilityLabel,
   onPress,
+  onLongPress,
   testID,
 }: ListRowProps) {
   useGroupedListGuard('ListRow');
@@ -193,6 +194,19 @@ export function ListRow({
   // An abbreviated value is read in words: the row, one element, says the label and that value.
   const spokenLabel =
     valueAccessibilityLabel === undefined ? undefined : `${label}, ${valueAccessibilityLabel}`;
+  if (onPress === undefined && onLongPress !== undefined) {
+    // A hidden gesture: the row keeps the look and the role of a row that cannot be pressed.
+    return (
+      <Pressable
+        accessible
+        accessibilityLabel={spokenLabel}
+        onLongPress={onLongPress}
+        testID={testID}
+      >
+        {content}
+      </Pressable>
+    );
+  }
   if (onPress === undefined) {
     return (
       <View accessible accessibilityLabel={spokenLabel} testID={testID}>

@@ -1,9 +1,11 @@
 import type { PassageCandidate, SearchResult } from '../../recognition';
 import {
   INITIAL_LISTENING_STATE,
+  listeningPhase,
   transition,
   type ListeningEvent,
   type ListeningState,
+  type SpeechActivity,
 } from '../index';
 
 /** A passage of one verse, from its first word to the given one. */
@@ -52,6 +54,18 @@ function heard(heardWordCount: number, result: SearchResult): ListeningEvent {
 
 const LISTENING = [OPENED, STARTED] as const;
 
+/** A listening state with nothing happening besides the words counted. */
+function listeningWith(heardWordCount: number, latestResult: SearchResult | null): ListeningState {
+  return {
+    status: 'listening',
+    heardWordCount,
+    latestResult,
+    voice: false,
+    transcribing: false,
+    partial: [],
+  };
+}
+
 describe('before listening', () => {
   it('starts idle: nothing is heard and nothing is asked', () => {
     expect(INITIAL_LISTENING_STATE).toEqual({ status: 'idle' });
@@ -66,20 +80,20 @@ describe('before listening', () => {
   });
 
   it('starting → listening once the engine listens, with nothing heard yet', () => {
-    expect(after(...LISTENING)).toEqual({
-      status: 'listening',
-      heardWordCount: 0,
-      latestResult: null,
-    });
+    expect(after(...LISTENING)).toEqual(listeningWith(0, null));
   });
 
   it('starting → failed when the engine or the text could not be started', () => {
-    expect(after(OPENED, { type: 'start-failed' })).toEqual({ status: 'failed' });
+    expect(after(OPENED, { type: 'start-failed' })).toEqual({
+      status: 'failed',
+      failure: 'unknown',
+    });
   });
 
   it('starting → failed when the engine gives up before it listens', () => {
     expect(after(OPENED, { type: 'engine-ended', reason: 'failed' })).toEqual({
       status: 'failed',
+      failure: 'unknown',
     });
   });
 
@@ -94,11 +108,7 @@ describe('while listening', () => {
   });
 
   it('stays listening on an ambiguous result: more words may tell the places apart', () => {
-    expect(after(...LISTENING, heard(4, AMBIGUOUS))).toEqual({
-      status: 'listening',
-      heardWordCount: 4,
-      latestResult: AMBIGUOUS,
-    });
+    expect(after(...LISTENING, heard(4, AMBIGUOUS))).toEqual(listeningWith(4, AMBIGUOUS));
   });
 
   it('listening → found when more words settle an ambiguous start', () => {
@@ -109,16 +119,10 @@ describe('while listening', () => {
   });
 
   it('stays listening while too few words were heard or no passage fits', () => {
-    expect(after(...LISTENING, heard(2, TOO_FEW))).toEqual({
-      status: 'listening',
-      heardWordCount: 2,
-      latestResult: TOO_FEW,
-    });
-    expect(after(...LISTENING, heard(2, TOO_FEW), heard(7, NO_MATCH))).toEqual({
-      status: 'listening',
-      heardWordCount: 7,
-      latestResult: NO_MATCH,
-    });
+    expect(after(...LISTENING, heard(2, TOO_FEW))).toEqual(listeningWith(2, TOO_FEW));
+    expect(after(...LISTENING, heard(2, TOO_FEW), heard(7, NO_MATCH))).toEqual(
+      listeningWith(7, NO_MATCH),
+    );
   });
 
   it('forgets the tied places when later words no longer fit them', () => {
@@ -196,7 +200,10 @@ describe('when the engine stops by itself', () => {
 
   it('listening → failed when the engine breaks down', () => {
     const failed: ListeningEvent = { type: 'engine-ended', reason: 'failed' };
-    expect(after(...LISTENING, heard(4, AMBIGUOUS), failed)).toEqual({ status: 'failed' });
+    expect(after(...LISTENING, heard(4, AMBIGUOUS), failed)).toEqual({
+      status: 'failed',
+      failure: 'unknown',
+    });
   });
 });
 
@@ -283,5 +290,80 @@ describe('invalid events', () => {
     // A result the search cannot produce, built on purpose.
     const empty = { status: 'found', candidates: [], tiedCount: 1 } as SearchResult;
     expect(() => after(...LISTENING, heard(4, empty))).toThrow(TypeError);
+  });
+});
+
+describe('what the listening screen says while it listens', () => {
+  const activity = (change: Partial<SpeechActivity>): ListeningEvent => ({
+    type: 'activity',
+    activity: { voice: false, transcribing: false, partial: [], ...change },
+  });
+  const phaseAfter = (...events: ListeningEvent[]) => {
+    const state = after(...events);
+    if (state.status !== 'listening') throw new Error(`not listening: ${state.status}`);
+    return listeningPhase(state);
+  };
+
+  it('listening while the microphone is open and no voice came yet', () => {
+    expect(phaseAfter(...LISTENING)).toBe('listening');
+  });
+
+  it('listening → hearing as soon as a voice is detected', () => {
+    expect(phaseAfter(...LISTENING, activity({ voice: true }))).toBe('hearing');
+  });
+
+  it('hearing → searching when the voice pauses while its words are read', () => {
+    expect(
+      phaseAfter(...LISTENING, activity({ voice: true }), activity({ transcribing: true })),
+    ).toBe('searching');
+  });
+
+  it('stays searching after a pause once words were heard, until a result or the end', () => {
+    expect(
+      phaseAfter(...LISTENING, activity({ voice: true }), heard(3, TOO_FEW), activity({})),
+    ).toBe('searching');
+  });
+
+  it('back to listening after a pause that gave no word at all', () => {
+    expect(phaseAfter(...LISTENING, activity({ voice: true }), activity({}))).toBe('listening');
+  });
+
+  it('searching → hearing when the voice comes back', () => {
+    expect(
+      phaseAfter(...LISTENING, heard(3, TOO_FEW), activity({ voice: true, transcribing: true })),
+    ).toBe('hearing');
+  });
+
+  it('keeps the words heard so far, to show them while it listens', () => {
+    const state = after(...LISTENING, activity({ voice: true, partial: ['قل', 'هو'] }));
+    expect(state).toMatchObject({ status: 'listening', partial: ['قل', 'هو'] });
+  });
+
+  it('searching → found, or → not-found at the end', () => {
+    const searching = [...LISTENING, activity({ transcribing: true })] as const;
+    expect(after(...searching, heard(4, FOUND)).status).toBe('found');
+    expect(after(...searching, heard(4, NO_MATCH), ENDED)).toEqual({
+      status: 'not-found',
+      reason: 'no-match',
+    });
+  });
+
+  it('activity outside a listening changes nothing', () => {
+    const starting = after(OPENED);
+    expect(transition(starting, activity({ voice: true }))).toBe(starting);
+  });
+});
+
+describe('failures say what went wrong', () => {
+  it('starting → failed with the reason the engine gave', () => {
+    expect(after(OPENED, { type: 'start-failed', failure: 'model-missing' })).toEqual({
+      status: 'failed',
+      failure: 'model-missing',
+    });
+  });
+
+  it('listening → failed with the reason of the breakdown', () => {
+    const noSound: ListeningEvent = { type: 'engine-ended', reason: 'failed', failure: 'no-audio' };
+    expect(after(...LISTENING, noSound)).toEqual({ status: 'failed', failure: 'no-audio' });
   });
 });

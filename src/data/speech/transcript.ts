@@ -42,6 +42,8 @@ export interface TranscriptStabilizer {
   update(words: readonly string[]): string[];
   /** The phrase is over: returns every word of this last pass not given yet, then starts afresh. */
   close(words: readonly string[]): string[];
+  /** How many words of the current phrase were given already. */
+  given(): number;
 }
 
 export function createTranscriptStabilizer(): TranscriptStabilizer {
@@ -73,5 +75,6 @@ export function createTranscriptStabilizer(): TranscriptStabilizer {
       previous = [];
       return final;
     },
+    given: () => given,
   };
 }

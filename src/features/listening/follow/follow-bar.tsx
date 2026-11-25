@@ -23,12 +23,17 @@ import {
 } from '../rosette/rosette-motion';
 
 const STOP_SYMBOL: IconSymbol = { ios: 'stop.fill', android: 'stop' };
+const NO_WORDS: readonly string[] = [];
 
 export interface FollowBarProps {
   readonly subscribeToLevel: ((listener: (level: number) => void) => Unsubscribe) | null;
   readonly reducedMotion: boolean;
   /** The word to read again, exactly as the data writes it, or null. */
   readonly rereadWord: string | null;
+  /** A voice is heard right now: the bar says "Je t'entends". Default false. */
+  readonly isHearing?: boolean;
+  /** The latest words heard, shown faintly when there is no word to read again. */
+  readonly heardWords?: readonly string[];
   readonly onStop: () => void;
 }
 
@@ -38,9 +43,18 @@ export interface FollowBarProps {
  * a round stop button. The meter is an ornament; the bar's words say the state, and VoiceOver
  * hears the word to read again as one sentence.
  */
-export function FollowBar({ subscribeToLevel, reducedMotion, rereadWord, onStop }: FollowBarProps) {
+export function FollowBar({
+  subscribeToLevel,
+  reducedMotion,
+  rereadWord,
+  isHearing = false,
+  heardWords = NO_WORDS,
+  onStop,
+}: FollowBarProps) {
   const { t } = useTranslation('listening');
   const colors = useColorValues();
+  const title = isHearing ? t('follow.hearing') : t('follow.title');
+  const heard = heardWords.join(' ');
   return (
     <View style={[styles.bar, { shadowColor: colors.shadow }]} testID="follow-bar">
       <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
@@ -67,6 +81,8 @@ export function FollowBar({ subscribeToLevel, reducedMotion, rereadWord, onStop 
       <View
         style={styles.words}
         accessible
+        // Only the word to read again is announced: the voice and the words heard change too
+        // often to be spoken (feedback.md: no chatter).
         accessibilityLabel={
           rereadWord === null
             ? t('follow.title')
@@ -74,13 +90,30 @@ export function FollowBar({ subscribeToLevel, reducedMotion, rereadWord, onStop 
         }
         accessibilityLiveRegion="polite"
       >
-        <SceneText variant="headline" color={colors.onFollowBar} numberOfLines={1}>
-          {t('follow.title')}
+        <SceneText
+          variant="headline"
+          color={colors.onFollowBar}
+          numberOfLines={1}
+          testID="follow-title"
+        >
+          {title}
         </SceneText>
         <View style={styles.hint}>
-          <SceneText variant="footnote" color={colors.onFollowBarSecondary} numberOfLines={1}>
-            {rereadWord === null ? t('follow.following') : t('follow.reread')}
-          </SceneText>
+          {rereadWord === null && heard !== '' ? (
+            // The words heard, faint, in the writing of the voice (right to left).
+            <Text
+              accessibilityLanguage="ar"
+              numberOfLines={1}
+              style={[styles.heardWords, { color: colors.onFollowBarSecondary }]}
+              testID="follow-heard"
+            >
+              {heard}
+            </Text>
+          ) : (
+            <SceneText variant="footnote" color={colors.onFollowBarSecondary} numberOfLines={1}>
+              {rereadWord === null ? t('follow.following') : t('follow.reread')}
+            </SceneText>
+          )}
           {rereadWord === null ? null : (
             // The word exactly as the data writes it, in the Quran font, right to left.
             <Text
@@ -221,6 +254,12 @@ const styles = StyleSheet.create({
   },
   words: { flex: 1, gap: spacing.xs },
   hint: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  heardWords: {
+    flexShrink: 1,
+    fontSize: listeningShape.barWordSize * 0.75,
+    writingDirection: 'rtl',
+    opacity: 0.85,
+  },
   quranWord: {
     fontFamily: fontFamily.quran,
     fontSize: listeningShape.barWordSize,

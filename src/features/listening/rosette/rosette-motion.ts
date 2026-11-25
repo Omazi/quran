@@ -170,8 +170,15 @@ export function lineOpacities(
   };
 }
 
-/** How much the whole drawing grows with the voice; not at all with reduced motion. */
-export function rosetteScale(level: number, reducedMotion: boolean): number {
+/**
+ * How much the whole drawing grows: with the voice, and a faint breath in silence that the voice
+ * replaces as it rises. Not at all with reduced motion.
+ */
+export function rosetteScale(level: number, reducedMotion: boolean, time = 0): number {
   'worklet';
-  return reducedMotion ? 1 : 1 + ROSETTE_GEOMETRY.levelGrowth * level;
+  if (reducedMotion) return 1;
+  const voice = Math.min(1, Math.max(0, level));
+  const breath =
+    ROSETTE_MOTION.idleBreath * (1 - voice) * Math.sin(time * ROSETTE_MOTION.breatheSpeed);
+  return 1 + ROSETTE_GEOMETRY.levelGrowth * voice + breath;
 }

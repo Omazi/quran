@@ -18,8 +18,11 @@ import { ResultActions, ScrollEdgeFade } from './result-layout';
 export interface OutcomeViewProps {
   readonly title: string;
   readonly description: string;
-  /** The next step: listen again, or open the settings. The one prominent button. */
-  readonly action: { readonly label: string; readonly onPress: () => void };
+  /**
+   * The next step: listen again, or open the settings. The one prominent button. Absent when no
+   * step here can help (a missing voice model): closing is then the one button.
+   */
+  readonly action?: { readonly label: string; readonly onPress: () => void };
   readonly closeLabel: string;
   readonly onClose: () => void;
   readonly testID: string;
@@ -75,10 +78,17 @@ export function OutcomeView({
           <ScrollEdgeFade />
         </View>
         <SafeAreaView edges={{ bottom: 'maximum' }} style={styles.actions}>
-          <ResultActions
-            primary={<Button label={action.label} variant="primary" onPress={action.onPress} />}
-            plain={<Button label={closeLabel} variant="plain" onPress={onClose} />}
-          />
+          {action === undefined ? (
+            <ResultActions
+              primary={<Button label={closeLabel} variant="primary" onPress={onClose} />}
+              plain={null}
+            />
+          ) : (
+            <ResultActions
+              primary={<Button label={action.label} variant="primary" onPress={action.onPress} />}
+              plain={<Button label={closeLabel} variant="plain" onPress={onClose} />}
+            />
+          )}
         </SafeAreaView>
       </View>
     </Screen>

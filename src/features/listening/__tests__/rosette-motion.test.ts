@@ -1,4 +1,4 @@
-import { ROSETTE_MOTION, ROSETTE_OPACITY } from '../config';
+import { ROSETTE_GEOMETRY, ROSETTE_MOTION, ROSETTE_OPACITY } from '../config';
 import {
   heartTips,
   insidePath,
@@ -219,5 +219,38 @@ describe('the light of the lines', () => {
     expect(lineOpacities(0, peak, 'dark', false).heart).toBeGreaterThan(
       lineOpacities(0, peak, 'dark', true).heart,
     );
+  });
+});
+
+describe('the rosette with a real voice (deviation 123: the owner must see the phone hears him)', () => {
+  it('swells visibly at full voice: several times the prototype’s 2 %', () => {
+    expect(rosetteScale(1, false) - 1).toBeGreaterThanOrEqual(0.06);
+    expect(rosetteScale(0.5, false)).toBeGreaterThan(rosetteScale(0.1, false));
+  });
+
+  it('breathes faintly in silence, and the voice takes over from the breath', () => {
+    const quarter = Math.PI / 2 / ROSETTE_MOTION.breatheSpeed;
+    expect(rosetteScale(0, false, quarter)).toBeCloseTo(1 + ROSETTE_MOTION.idleBreath);
+    expect(rosetteScale(0, false, 3 * quarter)).toBeCloseTo(1 - ROSETTE_MOTION.idleBreath);
+    expect(rosetteScale(1, false, quarter)).toBeCloseTo(1 + ROSETTE_GEOMETRY.levelGrowth);
+    expect(rosetteScale(0, true, quarter)).toBe(1);
+  });
+
+  it('a stream of levels at 25 a second drives the drawn level up with the voice and down after', () => {
+    const motion = createRosetteMotion();
+    // 1 s of voice at 0.8, levels every 40 ms, frames every 16 ms.
+    for (let ms = 0; ms < 1000; ms += 16) {
+      if (ms % 40 < 16) receiveLevel(motion, 0.8, true);
+      advance(motion, 0.016, true);
+    }
+    expect(motion.level).toBeGreaterThan(0.6);
+    const loud = rosetteScale(motion.level, false, motion.time);
+    // Then 1 s of silence.
+    for (let ms = 0; ms < 1000; ms += 16) {
+      if (ms % 40 < 16) receiveLevel(motion, 0, true);
+      advance(motion, 0.016, true);
+    }
+    expect(motion.level).toBeLessThan(0.15);
+    expect(rosetteScale(motion.level, false, motion.time)).toBeLessThan(loud);
   });
 });

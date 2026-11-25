@@ -2,8 +2,10 @@ import { useCallback, useEffect, useReducer, useRef } from 'react';
 
 import {
   INITIAL_LISTENING_STATE,
+  failureOf,
   searchHeardWords,
   transition,
+  type ListeningEvent,
   type ListeningState,
   type SpeechEngine,
 } from '@/domain/listening';
@@ -22,10 +24,39 @@ export interface ListeningDependencies {
 
 export interface Listening {
   readonly state: ListeningState;
+  /**
+   * The words heard so far in this listening, the final ones then those not final yet, as the
+   * engine wrote them: shown faintly while it listens, so the person sees the voice arrive.
+   */
+  readonly heardWords: readonly string[];
   /** Listens again from nothing: after a result, a refusal or a failure. */
   readonly listenAgain: () => void;
   /** The person pressed "Stop". */
   readonly stop: () => void;
+}
+
+const EMPTY_WORDS: readonly string[] = [];
+
+/** The domain's state, and the words heard in this listening, to show them. */
+interface ScreenState {
+  readonly listening: ListeningState;
+  readonly words: readonly string[];
+}
+
+/** A domain event; words heard carry the words themselves, for the screen. */
+type ScreenEvent = ListeningEvent & { readonly words?: readonly string[] };
+
+const INITIAL_SCREEN: ScreenState = { listening: INITIAL_LISTENING_STATE, words: EMPTY_WORDS };
+
+/** The domain's rule (`transition`), and the words kept alongside: emptied by a new listening. */
+function reduce(state: ScreenState, event: ScreenEvent): ScreenState {
+  const listening = transition(state.listening, event);
+  let { words } = state;
+  if (event.type === 'opened' && listening !== state.listening) words = EMPTY_WORDS;
+  if (event.type === 'words-heard' && state.listening.status === 'listening') {
+    words = event.words ?? words;
+  }
+  return listening === state.listening && words === state.words ? state : { listening, words };
 }
 
 /** The states in which the engine may be listening. */
@@ -47,7 +78,8 @@ export function useListening({
   loadVerseIndex,
   autoStart,
 }: ListeningDependencies): Listening {
-  const [state, dispatch] = useReducer(transition, INITIAL_LISTENING_STATE);
+  const [screen, dispatch] = useReducer(reduce, INITIAL_SCREEN);
+  const state = screen.listening;
   /** Each listening has its number: what a previous one says late is ignored. */
   const session = useRef(0);
 
@@ -76,15 +108,25 @@ export function useListening({
       enqueue(async () => {
         const result = searchHeardWords(await index, snapshot);
         if (isCurrent()) {
-          dispatch({ type: 'words-heard', heardWordCount: snapshot.length, result });
+          dispatch({
+            type: 'words-heard',
+            heardWordCount: snapshot.length,
+            result,
+            words: snapshot,
+          });
         }
       });
     });
-    const unsubscribeEnd = engine.onEnd((reason) => {
+    const unsubscribeEnd = engine.onEnd((reason, failure) => {
       enqueue(() => {
-        if (isCurrent()) dispatch({ type: 'engine-ended', reason });
+        if (isCurrent()) dispatch({ type: 'engine-ended', reason, failure });
       });
     });
+    // What the engine does, at once: it is what tells the person the phone hears them.
+    const unsubscribeActivity =
+      engine.onActivity?.((activity) => {
+        if (isCurrent()) dispatch({ type: 'activity', activity });
+      }) ?? (() => undefined);
 
     dispatch({ type: 'opened' });
     void (async () => {
@@ -103,14 +145,15 @@ export function useListening({
         enqueue(async () => {
           await index;
         });
-      } catch {
-        if (isCurrent()) dispatch({ type: 'start-failed' });
+      } catch (error) {
+        if (isCurrent()) dispatch({ type: 'start-failed', failure: failureOf(error) });
       }
     })();
 
     return () => {
       unsubscribeWords();
       unsubscribeEnd();
+      unsubscribeActivity();
     };
   }, [engine, loadVerseIndex]);
 
@@ -141,5 +184,7 @@ export function useListening({
     dispatch({ type: 'stop-requested' });
   }, []);
 
-  return { state, listenAgain, stop };
+  const partial = state.status === 'listening' ? state.partial : EMPTY_WORDS;
+  const heardWords = partial.length === 0 ? screen.words : [...screen.words, ...partial];
+  return { state, heardWords, listenAgain, stop };
 }

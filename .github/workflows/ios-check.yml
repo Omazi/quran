@@ -82,6 +82,8 @@ jobs:
           test -s "$APP/main.jsbundle"
           # The Quran font travels with the app: without it the text would fall back to a system font.
           find "$APP" -name "KFGQPC-HAFS-Uthmanic-Script-v0.18.ttf" | grep -q .
+          # The voice model, byte for byte: without it recognition fails on the phone.
+          bash tools/ci/check-voice-model.sh "$APP"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:

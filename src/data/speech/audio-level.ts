@@ -13,15 +13,23 @@ export interface Loudness {
 
 const FULL_SCALE = 32768;
 
+/**
+ * The loudness of an RMS value given as a share of full scale (0 to 1), as the native module
+ * measures it: the same scale as `chunkLoudness`, so both levels look alike on screen.
+ */
+export function loudnessOfRms(rms: number): Loudness {
+  if (!(rms > 0)) return { db: -Infinity, level: 0 };
+  const db = 20 * Math.log10(Math.min(1, rms));
+  const { levelFloorDb, levelCeilingDb } = SPEECH_ENGINE_CONFIG;
+  const share = (db - levelFloorDb) / (levelCeilingDb - levelFloorDb);
+  return { db, level: Math.min(1, Math.max(0, share)) };
+}
+
 export function chunkLoudness(samples: Int16Array): Loudness {
   if (samples.length === 0) return { db: -Infinity, level: 0 };
   let sum = 0;
   for (const sample of samples) sum += sample * sample;
-  const rms = Math.sqrt(sum / samples.length) / FULL_SCALE;
-  const db = rms === 0 ? -Infinity : 20 * Math.log10(rms);
-  const { levelFloorDb, levelCeilingDb } = SPEECH_ENGINE_CONFIG;
-  const share = (db - levelFloorDb) / (levelCeilingDb - levelFloorDb);
-  return { db, level: Math.min(1, Math.max(0, share)) };
+  return loudnessOfRms(Math.sqrt(sum / samples.length) / FULL_SCALE);
 }
 
 export interface VoiceActivity {

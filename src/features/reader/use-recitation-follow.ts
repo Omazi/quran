@@ -2,10 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
 import {
+  failureOf,
   followRecitation,
   startFollowing,
   type FollowState,
   type SpeechEngine,
+  type SpeechFailure,
   type Unsubscribe,
 } from '@/domain/listening';
 import type { VerseRef } from '@/domain/quran';
@@ -26,6 +28,12 @@ export interface RecitationFollow {
   readonly rereadWord: string | null;
   /** The level of the voice, for the meter, while following. */
   readonly subscribeToLevel: ((listener: (level: number) => void) => Unsubscribe) | null;
+  /** A voice is heard right now (the bar says "Je t'entends"). */
+  readonly isHearing: boolean;
+  /** The latest words heard, final then not final yet, shown faintly in the bar. */
+  readonly heardWords: readonly string[];
+  /** What broke, when `status` is `failed`. */
+  readonly failure: SpeechFailure | null;
   /** Asks for the microphone if needed, then follows from `from`. */
   readonly start: (from: VerseRef) => void;
   readonly stop: () => void;
@@ -47,6 +55,9 @@ export interface RecitationFollowDependencies {
 
 const SECOND_MS = 1000;
 const NOTHING_YET: FollowState = startFollowing(0);
+/** How many of the latest words heard the bar keeps. */
+const HEARD_WORDS_KEPT = 6;
+const NO_WORDS: readonly string[] = [];
 
 /**
  * Follows a recitation in the vertical reader (spec 3b): opens the microphone when the person
@@ -62,6 +73,10 @@ export function useRecitationFollow({
   autoStartFrom = null,
 }: RecitationFollowDependencies): RecitationFollow {
   const [status, setStatus] = useState<RecitationStatus>('idle');
+  const [failure, setFailure] = useState<SpeechFailure | null>(null);
+  const [isHearing, setIsHearing] = useState(false);
+  const [finalWords, setFinalWords] = useState<readonly string[]>(NO_WORDS);
+  const [partialWords, setPartialWords] = useState<readonly string[]>(NO_WORDS);
   // The engine listening, for the meter; the ref is the same engine for the callbacks.
   const [listening, setListening] = useState<SpeechEngine | null>(null);
   const [followed, setFollowed] = useState<{
@@ -77,7 +92,7 @@ export function useRecitationFollow({
     latest.current = { uthmaniTextOf, onPagesFollowed };
   });
 
-  const close = useCallback((next: RecitationStatus) => {
+  const close = useCallback((next: RecitationStatus, why: SpeechFailure | null = null) => {
     if (silence.current !== null) clearTimeout(silence.current);
     silence.current = null;
     for (const stopListening of unsubscribe.current) stopListening();
@@ -86,6 +101,9 @@ export function useRecitationFollow({
     engine.current = null;
     if (open !== null) void open.stop();
     setListening(null);
+    setIsHearing(false);
+    setPartialWords(NO_WORDS);
+    setFailure(next === 'failed' ? (why ?? 'unknown') : null);
     setStatus(next);
   }, []);
 
@@ -104,6 +122,7 @@ export function useRecitationFollow({
       const textOf = latest.current.uthmaniTextOf;
       if (textOf === null) return;
       listenForSilence();
+      setFinalWords((kept) => [...kept, ...words].slice(-HEARD_WORDS_KEPT));
       setFollowed(({ track, state }) => {
         let longer = track;
         const last = track.at(-1);
@@ -146,9 +165,17 @@ export function useRecitationFollow({
         state: NOTHING_YET,
       });
       setStatus('starting');
+      setFailure(null);
+      setFinalWords(NO_WORDS);
+      setPartialWords(NO_WORDS);
       unsubscribe.current = [
         created.onWords(hear),
-        created.onEnd((reason) => close(reason === 'failed' ? 'failed' : 'idle')),
+        created.onEnd((reason, why) => close(reason === 'failed' ? 'failed' : 'idle', why ?? null)),
+        created.onActivity?.((activity) => {
+          if (engine.current !== created) return;
+          setIsHearing(activity.voice);
+          setPartialWords(activity.partial);
+        }) ?? (() => undefined),
       ];
       void (async () => {
         try {
@@ -166,18 +193,21 @@ export function useRecitationFollow({
           setListening(created);
           setStatus('following');
           listenForSilence();
-        } catch {
-          if (engine.current === created) close('failed');
+        } catch (error) {
+          if (engine.current === created) close('failed', failureOf(error));
         }
       })();
     },
     [close, createEngine, hear, listenForSilence],
   );
 
-  // Leaving the foreground ends the listening: a call, the home screen, the phone locked.
+  // Leaving for the background ends the listening: the home screen, the phone locked. Only the
+  // background: the system's own microphone question makes the app `inactive` while it shows,
+  // and ending there closed the very first follow the moment the person said yes. A call is
+  // told by the engine itself (an interruption ends it).
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state !== 'active' && engine.current !== null) close('idle');
+      if (state === 'background' && engine.current !== null) close('idle');
     });
     return () => subscription.remove();
   }, [close]);
@@ -202,6 +232,9 @@ export function useRecitationFollow({
     target: isActive ? (track[Math.min(targetIndex, track.length - 1)] ?? null) : null,
     rereadWord: isActive && state.reread !== null ? (track[state.reread]?.text ?? null) : null,
     subscribeToLevel: status === 'following' ? (listening?.onLevel ?? null) : null,
+    isHearing: isActive && isHearing,
+    heardWords: isActive ? [...finalWords, ...partialWords].slice(-HEARD_WORDS_KEPT) : NO_WORDS,
+    failure,
     start,
     stop,
   };

@@ -2,6 +2,26 @@
 const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
 
+/** The globals of Jest and Node, for the tests of the config plugins (plain JavaScript). */
+const JEST_AND_NODE_GLOBALS = Object.fromEntries(
+  [
+    'jest',
+    'describe',
+    'it',
+    'test',
+    'expect',
+    'beforeAll',
+    'beforeEach',
+    'afterAll',
+    'afterEach',
+    'Buffer',
+    '__dirname',
+    'process',
+    'require',
+    'module',
+  ].map((name) => [name, 'readonly']),
+);
+
 // The dependency rule of the architecture (see docs/ARCHITECTURE.md):
 // the domain is pure TypeScript and must not know about React, Expo, storage or UI.
 const FORBIDDEN_IN_DOMAIN = [
@@ -31,6 +51,11 @@ const FORBIDDEN_IN_DOMAIN = [
 module.exports = defineConfig([
   expoConfig,
   { ignores: ['dist/*', 'node_modules/*', '.expo/*', 'assets/data/*'] },
+  {
+    // The tests of the config plugins run in Node, under Jest.
+    files: ['modules/**/__tests__/**/*.js'],
+    languageOptions: { globals: JEST_AND_NODE_GLOBALS },
+  },
   {
     rules: {
       'no-console': ['warn', { allow: ['warn', 'error'] }],
