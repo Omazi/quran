@@ -1,6 +1,7 @@
 import { Image, type ImageContentPosition } from 'expo-image';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 
 import type { GardenState } from '@/domain/garden';
 import { Placeholder } from '@/ui';
@@ -14,6 +15,8 @@ import {
 import { baseAsset, SHIPPED_GARDEN_IMAGES, waterAsset } from './garden-images';
 import { gardenPicture, pictureNames, type GardenImageNames } from './garden-picture';
 import { gardenSceneLabel, gardenSceneName } from './garden-words';
+import { GrowingSprite } from './growing-sprite';
+import { growingTarget } from './growth-motion';
 import { useGardenPictureSequence } from './use-garden-picture';
 
 /**
@@ -66,8 +69,9 @@ function Layer({
  * a size, nothing else: the day a 3D engine exists, only this component changes.
  *
  * It shows the picture of the level-1 garden that matches the state (`gardenPicture`): the dry
- * garden and the water laid over it. An element appears only when its hizb is complete: nothing
- * is drawn half-grown (D35); the growth in progress is in the words. Only those images are loaded. When the state jumps
+ * garden and the water laid over it. The element of the hizb in progress is drawn over it from
+ * its first counted page, smaller while it grows, one step per stage (owner, 25 November 2026,
+ * replacing D35's "only when its hizb is complete"; `GrowingSprite`). Only those images are loaded. When the state jumps
  * several steps the pictures in between are shown in order (D26); with "reduce motion" the final
  * one comes at once. When the set lacks a picture the state needs, a neutral named placeholder
  * stands in, never a broken image. The accessibility label says the state in words either way
@@ -84,6 +88,12 @@ export function GardenScene({
   const { picture, transitionMs } = useGardenPictureSequence(target, images);
   const label = gardenSceneLabel(state, t);
   const position = anchor === 'center' ? 'center' : GARDEN_PICTURE_POSITION;
+  const [box, setBox] = useState({ width: 0, height: 0 });
+  const onLayout = (event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    setBox({ width, height });
+  };
+  const growing = growingTarget(state);
 
   if (picture === null) {
     return (
@@ -103,6 +113,7 @@ export function GardenScene({
       accessibilityRole="image"
       accessibilityLabel={label}
       style={styles[size]}
+      onLayout={onLayout}
       testID="garden-scene"
     >
       <Layer asset={baseAsset(names.base)} transitionMs={transitionMs} position={position} />
@@ -111,6 +122,12 @@ export function GardenScene({
         transitionMs={transitionMs}
         position={position}
       />
+      {
+        // Drawn once the pictures show every element before it (not during a walk of steps).
+        growing !== null && picture.stage.count === growing.hizb - 1 ? (
+          <GrowingSprite hizb={growing.hizb} growth={growing.growth} box={box} anchor={anchor} />
+        ) : null
+      }
     </View>
   );
 }

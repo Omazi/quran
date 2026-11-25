@@ -36,6 +36,8 @@ describe('Rule 10 — what the garden receives (ce que reçoit le jardin)', () =
       khatm: 1,
       hizbCompleted: 0,
       currentHizbProgress: 0,
+      currentHizbPagesRead: 0,
+      currentHizbPageCount: 11,
       startDate: null,
       wateredDays: new Set(),
       firstHizbCompletedOn: null,
@@ -65,6 +67,25 @@ describe('Rule 10 — what the garden receives (ce que reçoit le jardin)', () =
 
     expect(feed.hizbCompleted).toBe(progress.hizbCompleted);
     expect(feed.currentHizbProgress).toBe(progress.currentHizbProgress);
+  });
+
+  it('counts the pages of the hizb in progress: the growth is pages read over pages of the hizb', () => {
+    // Hizb 2 is pages 11..21 (11 pages); page 11 also ends hizb 1.
+    let journal = readPages(EMPTY_JOURNAL, 1, pageRange(1, 10), day('2026-11-20'));
+    let feed = getGardenFeed(journal, HIZB_PAGE_RANGES);
+    expect([feed.currentHizbPagesRead, feed.currentHizbPageCount]).toEqual([10, 11]);
+
+    // The page shared by hizb 1 and 2 completes the first and is the first counted page of the second.
+    journal = recordPageRead(journal, { page: 11, date: day('2026-11-20') });
+    feed = getGardenFeed(journal, HIZB_PAGE_RANGES);
+    expect(feed.hizbCompleted).toBe(1);
+    expect([feed.currentHizbPagesRead, feed.currentHizbPageCount]).toEqual([1, 11]);
+    expect(feed.currentHizbProgress).toBe(feed.currentHizbPagesRead / feed.currentHizbPageCount);
+
+    journal = readPages(journal, 1, [12, 13], day('2026-11-21'));
+    feed = getGardenFeed(journal, HIZB_PAGE_RANGES);
+    expect([feed.currentHizbPagesRead, feed.currentHizbPageCount]).toEqual([3, 11]);
+    expect(feed.currentHizbProgress).toBeCloseTo(3 / 11);
   });
 
   it('D10 — between two hizb, the next element grows with every new page', () => {
@@ -124,6 +145,9 @@ describe('Rule 10 — what the garden receives (ce que reçoit le jardin)', () =
       khatm: 1,
       hizbCompleted: 60,
       currentHizbProgress: 0,
+      // Nothing is left to grow.
+      currentHizbPagesRead: 0,
+      currentHizbPageCount: 0,
       startDate: '2026-09-01',
       wateredDays: new Set([day('2026-09-01'), day('2026-11-20')]),
       // The 59 first hizb were completed in September, the khatma with its last page.
@@ -144,6 +168,8 @@ describe('Rule 10 — what the garden receives (ce que reçoit le jardin)', () =
       hizbCompleted: 0,
       // Hizb 1 is pages 1..11: one page read.
       currentHizbProgress: 1 / 11,
+      currentHizbPagesRead: 1,
+      currentHizbPageCount: 11,
       startDate: '2026-11-25',
       wateredDays: new Set([day('2026-11-25')]),
       // The new garden has its own days: nothing is inherited from the completed khatma.
@@ -218,6 +244,8 @@ describe('Rule 10 — what the garden receives (ce que reçoit le jardin)', () =
       khatm: 1,
       hizbCompleted: 60,
       currentHizbProgress: 0,
+      currentHizbPagesRead: 0,
+      currentHizbPageCount: 0,
       startDate: '2026-11-18',
       wateredDays: new Set([day('2026-11-18'), day('2026-11-20')]),
       firstHizbCompletedOn: '2026-11-18',

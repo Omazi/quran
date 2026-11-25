@@ -764,3 +764,49 @@ l'instant : le chiffrer dans l'appli avec une clé que seule la personne a (une 
 une progression perdue).
 _Changerait si_ le propriétaire choisit le chiffrement côté appli, ou un autre serveur : seules la
 migration et `createSupabaseSyncBackend` seraient à refaire, les règles de fusion restent.
+
+## D44 — Le jardin pousse page par page, sous les yeux
+
+Exigence du propriétaire (25 novembre 2026) : « Si un hizb fait environ 10 pages et que j'en ai lu
+2 ou 3, je dois voir une petite pousse, quelque chose ; pas : je lis tout le hizb et, pop, un
+changement. Le changement doit apparaître petit à petit selon le nombre de pages lues, et il doit
+être animé. L'arbre ne doit pas apparaître d'un coup : il commence jeune, puis grandit, puis ses
+feuilles apparaissent, comme un vrai arbre. » Remplace la précision de D35 « un élément
+n'apparaît que lorsque son hizb est terminé ».
+
+- **La croissance** est celle qui existait : `GrowingElement.growth`, pages comptées du hizb en
+  cours sur ses pages (une page ne compte qu'après son temps de lecture, règle inchangée). La
+  plante existe dès la première page comptée. Le module khatm donne aussi les pages
+  (`currentHizbPagesRead`, `currentHizbPageCount`), pour « 3 pages sur 10 ». Les étapes sont
+  nommées dans `domain/garden/growth.ts` : pousse (0 à 0,15), jeune arbre au tronc fin (0,15 à
+  0,45), tronc qui s'épaissit et branches (0,45 à 0,75), feuillage (0,75 à 1), fleurs ou fruits en
+  dernier. Sécheresse et flétrissement : inchangés.
+- **En 3D** (`garden3d/growth-three.ts`) : l'élément qui pousse est dessiné à part avec les
+  morceaux du modèle cuit (tronc et feuilles y sont déjà des maillages séparés) : une butte de
+  terre et sa pousse (modèles Kenney, CC0, cuits dans le GLB, +7 Ko) dès la première page, puis
+  l'arbre grandit depuis son pied, son tronc d'abord fin ; ses branches poussent depuis le tronc,
+  ses feuilles gonflent grappe par grappe (décalées, avec un léger rebond), ses fleurs ou fruits à
+  la fin. Une plante sort de terre touffe après touffe ; un élément construit monte morceau par
+  morceau, l'eau en dernier. À 1, c'est exactement l'élément de l'étape suivante : pas de saut.
+- **Écart voulu au découpage demandé** : quelques premières feuilles viennent avec le jeune arbre
+  (jusqu'à 35 % du feuillage à 0,75), le gros du feuillage reste entre 0,75 et 1. Un jeune arbre
+  sans aucune feuille ressemblait aux arbres nus d'un jardin qui sèche (feuillage 2 et 3) : on
+  l'aurait cru mourant. **À confirmer par le propriétaire.**
+- **L'animation** : quand l'accueil revient au premier plan (retour du lecteur compris), la plante
+  pousse depuis la croissance montrée la dernière fois jusqu'à celle d'aujourd'hui, une seule
+  fois (1,2 à 2,5 s, courbe de sortie forte du skill animate), dans la boucle de rendu, sans rendu
+  React par image. La croissance montrée est gardée sur l'appareil, par plante
+  (`garden-growth-shown`). Un hizb fini entre-temps : la plante finit sa croissance, puis la
+  suivante sort de terre. « Réduire les animations » : la plante à sa croissance, sans animation.
+  Le jardin d'un proche montre sa croissance sans l'animer.
+- **Sans GL** (image de repli, vignettes) : l'élément, découpé des images (`grow/eNN.webp`,
+  650 Ko, `tools/garden-pictures/growth-sprites.py`), est posé sur le jardin, plus petit, depuis
+  son pied, un palier par étape. Feuillage vert seulement (pas de version fanée).
+
+**Vérifié** : tests (pages et croissance, étapes, pose continue, mémoire, lecteur d'animation avec
+horloge de test, scène three.js sans GL, surface avec un faux moteur de rendu) ; rendu hors écran
+des arbres (grenadier, palmier, cyprès), fleurs, canaux et murs à 0,1, 0,3, 0,6, 0,9 et 1, regardé.
+**Pas vérifié** : la fluidité sur iPhone (aucun iPhone ici, D24), en particulier l'ombre recalculée
+à chaque image pendant la pousse (environ 2 s).
+
+_Changerait si_ le propriétaire veut un arbre sans feuilles jusqu'à 75 %, ou d'autres seuils.

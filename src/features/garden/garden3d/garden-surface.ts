@@ -8,10 +8,12 @@ import type { ExpoWebGLRenderingContext } from 'expo-gl';
 import type * as THREE from 'three';
 
 import type { GardenStage } from '../garden-picture';
+import type { GrowthSegment } from '../growth-motion';
 import type { FrameAnchor } from './camera-rig';
 import type { GardenModel } from './garden-model';
 import type * as Renderer from './garden-renderer';
 import type * as Three from './garden-three';
+import { GrowthPlayer, type ShownGrowthFrame } from './growth-player';
 import { OrbitController, type FrameScheduler, type ViewSize } from './orbit-controller';
 
 export interface GardenSurfaceOptions {
@@ -52,8 +54,17 @@ export class GardenSurface {
   private motionReduced = false;
   private onUse: () => void = () => undefined;
   private failed = false;
+  /** The element growing on screen, and how far: what the player or `setGrowth` last said. */
+  private growth: ShownGrowthFrame | null = null;
+  private readonly player: GrowthPlayer;
 
   constructor(private readonly options: GardenSurfaceOptions) {
+    this.player = new GrowthPlayer({
+      frames: options.frames,
+      onFrame: (frame) => this.showGrowthFrame(frame),
+      // The stage takes the finished plant back.
+      onDone: () => this.refresh(),
+    });
     this.controller = new OrbitController({
       size: () => this.size,
       onChange: () => this.draw(),
@@ -84,7 +95,9 @@ export class GardenSurface {
       const modules = engineModules();
       const renderer = modules.renderer.createGardenRenderer(gl);
       const three = modules.three.buildGardenThree(model);
-      if (this.stage !== null) three.showStage(this.stage);
+      const stage = this.shownStage();
+      if (stage !== null) three.showStage(stage);
+      three.showGrowth(this.growth);
       this.engine = { gl, renderer, three, drawFrame: modules.renderer.drawFrame };
       this.draw();
       if (this.engine !== null) this.options.onReady();
@@ -96,10 +109,59 @@ export class GardenSurface {
   /** A new stage: new ranges, new colours, and the shadows drawn again. */
   setStage(stage: GardenStage): void {
     this.stage = stage;
+    this.refresh();
+  }
+
+  /**
+   * The element of the hizb in progress, shown at once at its growth (or nothing). A growth
+   * playing towards the same place goes on; any other stops.
+   */
+  setGrowth(growth: ShownGrowthFrame | null): void {
+    const destination = this.player.destination;
+    if (
+      destination !== null &&
+      growth !== null &&
+      destination.hizb === growth.hizb &&
+      destination.to === growth.growth
+    ) {
+      return;
+    }
+    this.player.stop();
+    this.showGrowthFrame(growth);
+  }
+
+  /** Plays a growth (growth-motion.ts `growthSegments`), drawn frame by frame. */
+  playGrowth(segments: readonly GrowthSegment[]): void {
+    this.player.play(segments);
+  }
+
+  /**
+   * The stage to draw. While a plant whose hizb was just finished ends its growth, the stage
+   * waits without it: the growing plant stands in for it, then the stage takes over at growth 1,
+   * where the two are the same.
+   */
+  private shownStage(): GardenStage | null {
+    const stage = this.stage;
+    const growth = this.growth;
+    if (stage === null || growth === null || !this.player.isPlaying) return stage;
+    return stage.count >= growth.hizb ? { ...stage, count: growth.hizb - 1 } : stage;
+  }
+
+  private showGrowthFrame(frame: ShownGrowthFrame | null): void {
+    this.growth = frame;
+    this.refresh();
+  }
+
+  /** Shows the stage and the growing element, and draws if anything changed. */
+  private refresh(): void {
     const engine = this.engine;
-    if (engine === null) return;
+    const stage = this.shownStage();
+    if (engine === null || stage === null) return;
     try {
-      if (engine.three.showStage(stage)) {
+      const stageChanged = engine.three.showStage(stage);
+      const growthChanged = engine.three.showGrowth(this.growth);
+      if (stageChanged || growthChanged) {
+        // The growing element casts its shadow too: drawn again with it.
         engine.renderer.shadowMap.needsUpdate = true;
         this.draw();
       }
@@ -131,6 +193,7 @@ export class GardenSurface {
 
   dispose(): void {
     this.controller.dispose();
+    this.player.stop();
     const engine = this.engine;
     this.engine = null;
     if (engine === null) return;

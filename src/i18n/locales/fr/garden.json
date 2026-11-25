@@ -175,5 +175,11 @@
     "turnLeft": "Tourner vers la gauche",
     "turnRight": "Tourner vers la droite",
     "reset": "Revenir à la vue de départ"
+  },
+  "growthStage": {
+    "sprout": "une pousse sort de terre",
+    "sapling": "un jeune arbre",
+    "branches": "ses branches poussent",
+    "foliage": "ses feuilles arrivent"
   }
 }

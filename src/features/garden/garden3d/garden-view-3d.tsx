@@ -25,6 +25,7 @@ import { GardenSurface } from './garden-surface';
 import { useGardenGestures } from './use-garden-gestures';
 import { useGardenHint } from './use-garden-hint';
 import { useGardenModel } from './use-garden-model';
+import { useGrowthPlayback } from './use-growth-playback';
 
 /** Where the first-time hint goes: over the bottom of the garden, or in a row under it. */
 export type GardenHintPlacement = 'overlay' | 'below';
@@ -38,6 +39,13 @@ export interface GardenView3DProps {
    * is then centred in it, and what a zoom shows beyond the picture dissolves at the edges.
    */
   fill?: boolean;
+  /**
+   * The person's own garden: the plant of the hizb in progress grows on screen from where it was
+   * last seen, once (owner, 25 November 2026). Off for a friend's garden, shown as it is.
+   */
+  playsGrowth?: boolean;
+  /** The screen is in front: false while the reader is pushed over it. A growth waits for it. */
+  isActive?: boolean;
   testID?: string;
 }
 
@@ -61,12 +69,19 @@ const TURN_SYMBOL: IconSymbol = { ios: 'arrow.clockwise', android: 'rotate_right
  * - **A first-time hint**, gone after the first turn or zoom on any garden, for good (onboarding.md
  *   › context-specific tips, near the area they refer to). Hidden from VoiceOver, which has the
  *   actions instead.
- * - **Drawn only when something changes**: a gesture, a glide, a new stage. Idle, it costs nothing.
+ * - **The plant of the hizb in progress grows with its pages** (owner, 25 November 2026): a
+ *   sprout from the first counted page, then a young tree, its branches, its leaves. On the
+ *   person's own garden the growth since it was last seen plays once when the garden comes into
+ *   view, in the render loop (no React render per frame); with Reduce Motion it is shown at once.
+ * - **Drawn only when something changes**: a gesture, a glide, a new stage, a growth. Idle, it
+ *   costs nothing.
  */
 export function GardenView3D({
   state,
   hintPlacement = 'overlay',
   fill = false,
+  playsGrowth = false,
+  isActive = true,
   testID = 'garden-3d',
 }: GardenView3DProps) {
   const { t } = useTranslation('garden');
@@ -98,6 +113,13 @@ export function GardenView3D({
   const stage = picture?.stage ?? target;
 
   useEffect(() => surface.setStage(stage), [stage, surface]);
+  // The plant of the hizb in progress, growing with its pages: played in the render loop.
+  useGrowthPlayback(surface, state, {
+    remembers: playsGrowth,
+    isActive,
+    isReady: isReady && !hasFailed,
+    isMotionReduced,
+  });
   useEffect(() => surface.setMotionReduced(isMotionReduced), [isMotionReduced, surface]);
   useEffect(() => surface.setOnUse(hint.retire), [hint.retire, surface]);
   useEffect(() => () => surface.dispose(), [surface]);

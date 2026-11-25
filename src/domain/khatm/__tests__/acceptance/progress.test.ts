@@ -45,6 +45,8 @@ describe('Règle 3 — progression', () => {
       hizbCompleted: 0,
       currentHizb: 1,
       currentHizbProgress: 0,
+      currentHizbPagesRead: 0,
+      currentHizbPageCount: 11,
       firstUnreadPage: 1,
       isComplete: false,
     });
@@ -60,6 +62,8 @@ describe('Règle 3 — progression', () => {
       hizbCompleted: 0,
       currentHizb: 1,
       currentHizbProgress: 1 / 11,
+      currentHizbPagesRead: 1,
+      currentHizbPageCount: 11,
       firstUnreadPage: 2,
       isComplete: false,
     });
@@ -75,6 +79,8 @@ describe('Règle 3 — progression', () => {
       hizbCompleted: 0,
       currentHizb: 1,
       currentHizbProgress: 0,
+      currentHizbPagesRead: 0,
+      currentHizbPageCount: 11,
       firstUnreadPage: 1,
       isComplete: false,
     });
@@ -254,6 +260,8 @@ describe('Règle 4 — khatma terminée', () => {
       hizbCompleted: 60,
       currentHizb: null,
       currentHizbProgress: 0,
+      currentHizbPagesRead: 0,
+      currentHizbPageCount: 0,
       firstUnreadPage: null,
       isComplete: true,
     });
@@ -268,6 +276,8 @@ describe('Règle 4 — khatma terminée', () => {
       hizbCompleted: 0,
       currentHizb: 1,
       currentHizbProgress: 0,
+      currentHizbPagesRead: 0,
+      currentHizbPageCount: 11,
       firstUnreadPage: 1,
       isComplete: false,
     });
@@ -303,6 +313,8 @@ describe('Règle 4 — khatma terminée', () => {
       hizbCompleted: 1,
       currentHizb: 1,
       currentHizbProgress: 0,
+      currentHizbPagesRead: 0,
+      currentHizbPageCount: 11,
       firstUnreadPage: 1,
       isComplete: false,
     });

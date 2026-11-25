@@ -109,3 +109,59 @@ describe('buildGardenThree', () => {
     garden.dispose();
   });
 });
+
+describe('the element growing with the hizb in progress', () => {
+  const growingGroup = (three: ReturnType<typeof buildGardenThree>) =>
+    three.scene.getObjectByName('growing-element');
+  const visibleMeshes = (object: THREE.Object3D | undefined): THREE.Mesh[] => {
+    const found: THREE.Mesh[] = [];
+    object?.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.visible) found.push(child);
+    });
+    return found;
+  };
+
+  it('one page: the seed mound and its sprout only', () => {
+    const three = buildGardenThree(MODEL);
+    three.showStage(stage(4, 2, 0));
+    expect(three.showGrowth({ hizb: 5, growth: 0.1 })).toBe(true);
+    const shown = visibleMeshes(growingGroup(three));
+    expect(shown.length).toBe((MODEL.props.sprout ?? []).length);
+    three.dispose();
+  });
+
+  it('then the tree itself, its trunk first, and at the end exactly the tree of the next stage', () => {
+    const three = buildGardenThree(MODEL);
+    three.showStage(stage(4, 2, 0));
+    three.showGrowth({ hizb: 5, growth: 0.3 });
+    const young = visibleMeshes(growingGroup(three)).map((mesh) => mesh.material);
+    expect(young.length).toBeGreaterThan(0);
+    three.showGrowth({ hizb: 5, growth: 1 });
+    const grown = visibleMeshes(growingGroup(three));
+    // Two pieces, trunk and leaves, each at the very place the stage draws them.
+    expect(grown.length).toBe(2);
+    for (const mesh of grown) expect(mesh.matrix.determinant()).toBeGreaterThan(0);
+    three.dispose();
+  });
+
+  it('nothing when the stage does not show every element before it', () => {
+    const three = buildGardenThree(MODEL);
+    three.showStage(stage(3, 2, 0));
+    three.showGrowth({ hizb: 5, growth: 0.5 });
+    expect(growingGroup(three)).toBeUndefined();
+    three.showStage(stage(4, 2, 0));
+    three.showGrowth({ hizb: 5, growth: 0.5 });
+    expect(growingGroup(three)).toBeDefined();
+    three.showGrowth(null);
+    expect(growingGroup(three)).toBeUndefined();
+    three.dispose();
+  });
+
+  it('nothing changes when the same growth is shown again', () => {
+    const three = buildGardenThree(MODEL);
+    three.showStage(stage(4, 2, 0));
+    expect(three.showGrowth({ hizb: 5, growth: 0.4 })).toBe(true);
+    expect(three.showGrowth({ hizb: 5, growth: 0.4 })).toBe(false);
+    three.dispose();
+  });
+});

@@ -118,6 +118,8 @@ export function getGardenFeed(
     khatm,
     hizbCompleted: progress.hizbCompleted,
     currentHizbProgress: progress.currentHizbProgress,
+    currentHizbPagesRead: progress.currentHizbPagesRead,
+    currentHizbPageCount: progress.currentHizbPageCount,
     startDate,
     wateredDays,
     firstHizbCompletedOn: findFirstHizbCompletionDay(

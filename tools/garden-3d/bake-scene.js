@@ -49,6 +49,26 @@ const FOLIAGE = [{}, { wilt: 0.5 }, { wilt: 0.8, leafless: 0.5 }, { wilt: 1.0, l
 const WATER = [false, 'low', true];
 /** Size of the baked textures: enough for a garden on a phone screen, zoomed in. */
 const TEXTURE_SIZE = { cutout: 256, plain: 128 };
+/**
+ * Pieces outside the stages, that the app places itself: the seed mound and its sprout, drawn at
+ * the foot of a tree from the first page of its hizb (owner, 25 November 2026: "2 or 3 pages
+ * read, he must see a small sprout"). Kenney's nature kit, CC0, like the rest of the garden. Each
+ * is baked standing on y = 0, centred, at its own size in metres; the app scales it.
+ */
+const PROPS = [
+  {
+    name: 'sprout',
+    // Kenney's own colours are a teal green and a pink earth: the garden's soil and a leaf green
+    // close to the trees' instead, so that the sprout belongs to the tree it becomes.
+    colors: { dirt: COLORS.soil, dirtDark: 0x86653f, grass: 0x74ad3c },
+    files: [
+      'packs/kenney-shorepine/3d/nature/crops_dirtSingle.glb',
+      'packs/kenney-shorepine/3d/nature/crops_leafsStageA.glb',
+    ],
+  },
+];
+/** A prop's material that is earth: it does not wilt with the plants. */
+const isEarth = (material) => /dirt|soil/i.test(material.name);
 
 // ---------------------------------------------------------------------------------------------
 // Loading (lib.js of the picture builder, same matte material for every pack)
@@ -1019,6 +1039,36 @@ async function bake(layout, pack, sourcePrefix) {
     }));
     meshes.push({ kind: 'merged', material: group.material, parts });
   }
+  // The props: merged per material, each with its name, outside the stages.
+  for (const prop of PROPS) {
+    const template = await buildTemplate(
+      { anchor: 'center', parts: prop.files.map((file) => ({ file })) },
+      pack,
+    );
+    const byMaterial = new Map();
+    template.meshes.forEach(({ mesh, matrix }) => {
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      materials.forEach((material, slot) => {
+        const spec = {
+          kind: 'model',
+          mesh,
+          slot,
+          material,
+          local: matrix,
+          living: !isEarth(material),
+          cast: true,
+          receive: true,
+        };
+        let m = materialOf(spec);
+        const color = prop.colors?.[m.name];
+        if (color !== undefined) m = { ...m, color, key: materialKey({ ...m, color }) };
+        if (!byMaterial.has(m.key)) byMaterial.set(m.key, { material: m, parts: [] });
+        byMaterial.get(m.key).parts.push({ piece: null, geometry: geometryOf(spec, m, matrix) });
+      });
+    });
+    for (const group of byMaterial.values())
+      meshes.push({ kind: 'prop', prop: prop.name, material: group.material, parts: group.parts });
+  }
   for (const list of instanced) {
     list.sort(byStages);
     const first = list[0].spec;
@@ -1089,7 +1139,7 @@ async function bake(layout, pack, sourcePrefix) {
     return json.accessors.length - 1;
   };
 
-  const report = { triangles: { stored: 0, fullGarden: 0 }, instanced: 0, merged: 0 };
+  const report = { triangles: { stored: 0, fullGarden: 0 }, instanced: 0, merged: 0, props: 0 };
   for (const mesh of meshes) {
     const m = mesh.material;
     const parts = mesh.parts;
@@ -1225,7 +1275,14 @@ async function bake(layout, pack, sourcePrefix) {
         receiveShadow: m.receive,
       },
     };
-    if (mesh.kind === 'merged') {
+    if (mesh.kind === 'prop') {
+      // Placed by the app (the sprout): no stage, its name instead.
+      report.props += 1;
+      node.name = `${mesh.prop}-${m.name}`;
+      node.scale = [scale, scale, scale];
+      node.extras.prop = mesh.prop;
+      node.extras.items = [];
+    } else if (mesh.kind === 'merged') {
       report.merged += 1;
       report.triangles.fullGarden += fullGardenTriangles(items);
       node.scale = [scale, scale, scale];

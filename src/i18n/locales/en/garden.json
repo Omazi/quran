@@ -175,5 +175,11 @@
     "turnLeft": "Turn left",
     "turnRight": "Turn right",
     "reset": "Back to the starting view"
+  },
+  "growthStage": {
+    "sprout": "a sprout is coming up",
+    "sapling": "a young tree",
+    "branches": "its branches are growing",
+    "foliage": "its leaves are coming"
   }
 }

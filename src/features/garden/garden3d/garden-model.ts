@@ -122,6 +122,12 @@ export interface ModelTexture {
 export interface GardenModel {
   readonly meshes: readonly ModelMesh[];
   readonly textures: readonly ModelTexture[];
+  /**
+   * Pieces outside the stages, that the app places itself, by name: `sprout`, the seed mound and
+   * its first leaves at the foot of a tree that has just started. Each stands on y = 0, centred,
+   * at its size in metres.
+   */
+  readonly props: Readonly<Record<string, readonly ModelMesh[]>>;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -177,6 +183,80 @@ export function stageDrawCalls(model: GardenModel, stage: GardenStage): number {
     else if (visibleInstances(mesh.instances.items, stage).length > 0) draws += 1;
   }
   return draws;
+}
+
+// ---------------------------------------------------------------------------------------------
+// The element growing with the hizb in progress (owner, 25 November 2026)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * What a piece of a growing element is: a trunk (and its branches), leaves, flowers or fruit, or
+ * something built (a wall, a channel, a pavilion).
+ */
+export type PieceRole = 'trunk' | 'foliage' | 'bloom' | 'built';
+
+/** How an element grows: a tree from its sprout, a plant from the ground, a built thing piece by piece. */
+export type PlantForm = 'tree' | 'plant' | 'structure';
+
+/** One piece of the growing element: an instance of an instanced mesh, or a range of a merged one. */
+export interface GrowingPiece {
+  /** Index into `GardenModel.meshes`. */
+  readonly mesh: number;
+  readonly role: PieceRole;
+  /** The instance, for an instanced mesh; null for a merged one. */
+  readonly instance: number | null;
+  /** The range of indices, for a merged mesh; null for an instanced one. */
+  readonly range: { readonly start: number; readonly count: number } | null;
+}
+
+const TRUNK = /bark|trunk/i;
+const BLOOM = /flower|petal|colorred/i;
+const FOLIAGE = /lea(f|ves)|leafs|grass|bush/i;
+
+function roleOf(mesh: ModelMesh): PieceRole {
+  const name = mesh.material.name;
+  if (!mesh.material.wilts) return 'built';
+  if (TRUNK.test(name)) return 'trunk';
+  if (BLOOM.test(name)) return 'bloom';
+  if (FOLIAGE.test(name)) return 'foliage';
+  return 'built';
+}
+
+/**
+ * The pieces the next element adds to a stage: what the stage with one more element shows, with
+ * the same water and foliage, and the stage itself does not. Empty once the garden is complete.
+ */
+export function growingPieces(model: GardenModel, stage: GardenStage): GrowingPiece[] {
+  const next: GardenStage = { ...stage, count: stage.count + 1 };
+  const pieces: GrowingPiece[] = [];
+  model.meshes.forEach((mesh, index) => {
+    const role = roleOf(mesh);
+    if (mesh.instances !== null) {
+      const before = new Set(visibleInstances(mesh.instances.items, stage));
+      for (const instance of visibleInstances(mesh.instances.items, next)) {
+        if (!before.has(instance)) pieces.push({ mesh: index, role, instance, range: null });
+      }
+      return;
+    }
+    for (const item of mesh.items) {
+      if (isItemShown(item, next) && !isItemShown(item, stage)) {
+        pieces.push({
+          mesh: index,
+          role,
+          instance: null,
+          range: { start: item.start, count: item.count },
+        });
+      }
+    }
+  });
+  return pieces;
+}
+
+/** A tree has a trunk; a plant has leaves or flowers and no trunk; anything else is built. */
+export function plantFormOf(pieces: readonly GrowingPiece[]): PlantForm {
+  if (pieces.some((piece) => piece.role === 'trunk')) return 'tree';
+  if (pieces.some((piece) => piece.role === 'foliage' || piece.role === 'bloom')) return 'plant';
+  return 'structure';
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -355,6 +435,7 @@ export function readGardenModel(glb: Glb): GardenModel {
   });
 
   const meshes: ModelMesh[] = [];
+  const props: Record<string, ModelMesh[]> = {};
   for (const node of json.nodes ?? []) {
     if (node.mesh === undefined) continue;
     const mesh = json.meshes?.[node.mesh];
@@ -387,7 +468,7 @@ export function readGardenModel(glb: Glb): GardenModel {
         items: instanceItems(numbersOf(extras, 'instanceItems')),
       };
     }
-    meshes.push({
+    const modelMesh: ModelMesh = {
       name,
       material,
       vertexCount: position.count,
@@ -401,7 +482,10 @@ export function readGardenModel(glb: Glb): GardenModel {
       receiveShadow: extras.receiveShadow === true,
       items: instances === null ? mergedItems(numbersOf(extras, 'items')) : [],
       instances,
-    });
+    };
+    const prop = extras.prop;
+    if (typeof prop === 'string') (props[prop] ??= []).push(modelMesh);
+    else meshes.push(modelMesh);
   }
-  return { meshes, textures };
+  return { meshes, textures, props };
 }

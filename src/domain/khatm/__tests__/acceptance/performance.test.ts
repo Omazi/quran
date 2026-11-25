@@ -186,6 +186,8 @@ describe('Long journal — the answers are still right after hundreds of khatmas
         khatm: 401,
         hizbCompleted: 0,
         currentHizbProgress: 10 / 11,
+        currentHizbPagesRead: 10,
+        currentHizbPageCount: 11,
         startDate: today,
         wateredDays: new Set([today]),
         firstHizbCompletedOn: null,

@@ -196,8 +196,57 @@ describe('HomeScreen, the validated home (accueil.png) at hizb 24', () => {
     const percent = Math.round(next.growth * 100);
     expect(screen.getByTestId('home-growing')).toHaveProp(
       'accessibilityLabel',
-      expect.stringMatching(new RegExp(`^Hizb 25, .+ pousse, ${percent}\\s% du hizb lu$`)),
+      expect.stringMatching(new RegExp(`^Hizb 25, .+ pousse, .+, ${percent}\\s% du hizb lu$`)),
     );
+  });
+
+  it('says how many pages of the hizb are read, and how far the plant has come', async () => {
+    await showLanguage('fr');
+    const next = model.garden.nextElement;
+    if (next === null) throw new Error('hizb 24 has a next element');
+    const growing = {
+      ...model,
+      garden: {
+        ...model.garden,
+        nextElement: { ...next, element: { ...next.element, kind: 'olive' as const }, growth: 0.3 },
+      },
+      growingPages: { read: 3, total: 10 },
+    };
+    await render(<HomeScreen {...propsOf(growing)} />);
+    expect(screen.getByText('3 pages sur 10 · un jeune arbre')).toBeOnTheScreen();
+    expect(screen.getByTestId('home-growing')).toHaveProp(
+      'accessibilityLabel',
+      expect.stringMatching(
+        /^Hizb 25, un olivier pousse, 3 pages sur 10, un jeune arbre, 30\s% du hizb lu$/,
+      ),
+    );
+  });
+
+  it('one page: a sprout; for what is built, only the pages', async () => {
+    await showLanguage('fr');
+    const next = model.garden.nextElement;
+    if (next === null) throw new Error('hizb 24 has a next element');
+    const sprouting = {
+      ...model,
+      garden: {
+        ...model.garden,
+        nextElement: { ...next, element: { ...next.element, kind: 'fig' as const }, growth: 0.1 },
+      },
+      growingPages: { read: 1, total: 10 },
+    };
+    const { unmount } = await render(<HomeScreen {...propsOf(sprouting)} />);
+    expect(screen.getByText('1 page sur 10 · une pousse sort de terre')).toBeOnTheScreen();
+    await unmount();
+    const building = {
+      ...sprouting,
+      garden: {
+        ...sprouting.garden,
+        nextElement: { ...next, element: { ...next.element, kind: 'wall' as const }, growth: 0.4 },
+      },
+      growingPages: { read: 4, total: 10 },
+    };
+    await render(<HomeScreen {...propsOf(building)} />);
+    expect(screen.getByText('4 pages sur 10')).toBeOnTheScreen();
   });
 
   it('counts the hizb in words and in sixty dots, and how long the water has run', async () => {

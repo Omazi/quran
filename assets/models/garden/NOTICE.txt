@@ -35,7 +35,9 @@ stones, lilies, cascade rock)
   3694c6879e487c108f55677be7dd2ca75b07cc3b. Models: fountain-round-detail, lantern
   (fantasy-town); wall-narrow, wall-narrow-gate, tower-square-arch,
   tower-square-top-roof-rounded (castle); rugRectangle, pillow, pillowBlue (furniture);
-  lily_large, lily_small, path_stone, path_stoneCircle, cliff_waterfallTop_stone (nature).
+  lily_large, lily_small, path_stone, path_stoneCircle, cliff_waterfallTop_stone,
+  crops_dirtSingle, crops_leafsStageA (nature; the seed mound and sprout of a growing tree,
+  recoloured, D44).
 
 Not from a pack
 ---------------

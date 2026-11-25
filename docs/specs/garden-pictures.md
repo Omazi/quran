@@ -40,21 +40,22 @@ seule caméra : deux états se superposent exactement.
 
 Une fonction pure, testée, dans `src/features/garden` : `gardenPicture(state)`.
 
-| Ce que dit `GardenState`             | Ce qu'on montre                                               |
-| ------------------------------------ | ------------------------------------------------------------- |
-| `visibleElements.length`             | `NN`                                                          |
-| `droughtDays` 0 à 2                  | feuillage 0                                                   |
-| `droughtDays` 3 à 5                  | feuillage 1                                                   |
-| `droughtDays` 6 à 7                  | feuillage 2                                                   |
-| `droughtDays` 8 et plus              | feuillage 3                                                   |
-| `water` : coule, immobile, à sec     | eau 2, eau 1, pas d'eau                                       |
-| aucun élément visible et jardin mort | `h00-f3`                                                      |
-| `nextElement` avec sa croissance     | rien : un élément n'apparaît que lorsque son hizb est terminé |
+| Ce que dit `GardenState`             | Ce qu'on montre                                                    |
+| ------------------------------------ | ------------------------------------------------------------------ |
+| `visibleElements.length`             | `NN`                                                               |
+| `droughtDays` 0 à 2                  | feuillage 0                                                        |
+| `droughtDays` 3 à 5                  | feuillage 1                                                        |
+| `droughtDays` 6 à 7                  | feuillage 2                                                        |
+| `droughtDays` 8 et plus              | feuillage 3                                                        |
+| `water` : coule, immobile, à sec     | eau 2, eau 1, pas d'eau                                            |
+| aucun élément visible et jardin mort | `h00-f3`                                                           |
+| `nextElement` avec sa croissance     | l'élément découpé (`grow/eNN.webp`), plus petit, par paliers (D44) |
 
 Les seuils viennent de la configuration du jardin et de `docs/specs/garden.md`, « Ce qu'on
 voit, étape par étape » : ils ne sont pas recopiés en dur. L'élément qui pousse ne se dessine
-pas (décision du 25 novembre 2026 : une image à moitié transparente faisait un fantôme) ; sa
-croissance reste dans `GardenState.nextElement`, pour les mots. Une image
+pas en transparence (une image à moitié transparente faisait un fantôme) ; depuis D44 il est posé
+sur le jardin dès sa première page comptée, entier mais plus petit, depuis son pied, un palier par
+étape de sa croissance (`GrowingSprite`). Une image
 absente du jeu donne l'emplacement neutre, jamais une image cassée ni une erreur.
 
 ## 3. À l'écran

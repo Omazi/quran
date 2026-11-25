@@ -64,7 +64,9 @@ Deux idées indépendantes :
 
 Fichiers : `catalog.ts` (les 60 éléments, donnée), `variant.ts` (un jardin par khatma),
 `config.ts` (les nombres de la spécification), `day-history.ts` (les dates deviennent une
-liste de jours), `drought.ts` (l'effet d'un jour), `garden-state.ts` (l'assemblage).
+liste de jours), `drought.ts` (l'effet d'un jour), `garden-state.ts` (l'assemblage),
+`growth.ts` (les étapes de l'élément qui pousse : pousse, jeune arbre, branches, feuillage ; la
+plante existe dès sa première page comptée, `hasSprouted` ; D44).
 
 ## Décisions
 

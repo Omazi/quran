@@ -12,7 +12,7 @@ import { resetDeviceConditions } from '@/ui/test-support/environment';
 import { buildReadingHistory } from '../dev-preview/reading-histories';
 import { deviceLocalDate } from '../use-today';
 
-jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('expo-router', () => ({ router: { push: jest.fn() }, useIsFocused: () => true }));
 
 afterEach(resetDeviceConditions);
 

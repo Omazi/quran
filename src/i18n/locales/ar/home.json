@@ -9,7 +9,14 @@
   "profile": "الملف الشخصي",
   "growing": {
     "title": "الحزب {{hizb}}",
-    "value": "قُرئ {{percent}}٪ من الحزب"
+    "value": "قُرئ {{percent}}٪ من الحزب",
+    "pages_zero": "{{count}} صفحة من {{total}}",
+    "pages_one": "صفحة واحدة من {{total}}",
+    "pages_two": "صفحتان من {{total}}",
+    "pages_few": "{{count}} صفحات من {{total}}",
+    "pages_many": "{{count}} صفحة من {{total}}",
+    "pages_other": "{{count}} صفحة من {{total}}",
+    "detail": "{{pages}} · {{stage}}"
   },
   "progress": {
     "watered_zero": "مَسقيّة منذ {{count}} ي",

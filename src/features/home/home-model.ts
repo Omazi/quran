@@ -134,6 +134,11 @@ export interface HomeReadyModel {
   readonly completedKhatma: HomeCompletedKhatma | null;
   /** The garden to show, for `GardenScene` and for its readout. */
   readonly garden: GardenState;
+  /**
+   * The pages of the hizb whose element grows ("3 pages sur 10"): counted, and in all. Null once
+   * the garden on display is complete.
+   */
+  readonly growingPages: { readonly read: number; readonly total: number } | null;
   readonly notice: HomeNotice | null;
   /** Days read in a row. 0 when there is no streak to show. */
   readonly streakDays: number;
@@ -328,6 +333,10 @@ export function buildHomeModel({
           }
         : null,
     garden,
+    growingPages:
+      feed.currentHizbPageCount > 0
+        ? { read: feed.currentHizbPagesRead, total: feed.currentHizbPageCount }
+        : null,
     notice,
     streakDays,
     today: getTodayProgress(journal, today, dailyGoalPages),

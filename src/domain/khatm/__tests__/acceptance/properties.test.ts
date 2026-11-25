@@ -199,6 +199,8 @@ describe('Property — everything is derived from the journal', () => {
       khatm: 3,
       hizbCompleted: 6,
       currentHizbProgress: 1 / 11,
+      currentHizbPagesRead: 1,
+      currentHizbPageCount: 11,
       startDate: day('2026-03-07'),
       wateredDays: new Set(
         ['07', '08', '09', '13', '14', '15'].map((dayOfMarch) => day(`2026-03-${dayOfMarch}`)),

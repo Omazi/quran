@@ -18,6 +18,7 @@ import {
   type Orbit,
 } from './camera-rig';
 import { GARDEN_3D } from './config';
+import { buildGrowthView, injectGrowth, type GrowthView, type GrowUniforms } from './growth-three';
 import {
   visibleInstances,
   visibleRanges,
@@ -33,6 +34,12 @@ export interface GardenThree {
   readonly camera: THREE.OrthographicCamera;
   /** Shows a stage. Returns false when nothing changed (no need to draw again). */
   showStage(stage: GardenStage): boolean;
+  /**
+   * Shows the element of `hizb` growing at `growth` (0 to 1), or nothing (null). It is drawn only
+   * while the stage shows every element before it: `hizb` is the stage's count plus one. Returns
+   * false when nothing changed.
+   */
+  showGrowth(growing: { readonly hizb: number; readonly growth: number } | null): boolean;
   setOrbit(orbit: Orbit, aspect: number, anchor?: FrameAnchor): void;
   /**
    * The overlay that dissolves the edges of the view (drawn after `scene`, over it): drawn only
@@ -180,8 +187,12 @@ export function buildGardenThree(model: GardenModel): GardenThree {
 
   const materialCache = new Map<ModelMaterial, THREE.MeshLambertMaterial>();
   const tinted: { material: THREE.MeshLambertMaterial; source: ModelMaterial }[] = [];
-  const materialOf = (source: ModelMaterial): THREE.MeshLambertMaterial => {
-    const cached = materialCache.get(source);
+  /**
+   * The material of a model mesh, made once. With `grows`, a material of its own whose vertices
+   * move with the growth (growth-three.ts): the caller disposes of it.
+   */
+  const materialOf = (source: ModelMaterial, grows?: GrowUniforms): THREE.MeshLambertMaterial => {
+    const cached = grows === undefined ? materialCache.get(source) : undefined;
     if (cached !== undefined) return cached;
     const material = new THREE.MeshLambertMaterial({
       name: source.name,
@@ -198,19 +209,34 @@ export function buildGardenThree(model: GardenModel): GardenThree {
       material.emissive.setHex(source.emissive);
       material.emissiveIntensity = source.emissiveIntensity;
     }
-    if (source.wilts) {
+    if (source.wilts || grows !== undefined) {
       material.onBeforeCompile = (shader) => {
-        shader.uniforms.uWilt = wilt;
-        shader.fragmentShader = shader.fragmentShader
-          .replace('#include <common>', '#include <common>\nuniform float uWilt;')
-          .replace('#include <color_fragment>', WILT_CHUNK);
+        if (source.wilts) {
+          shader.uniforms.uWilt = wilt;
+          shader.fragmentShader = shader.fragmentShader
+            .replace('#include <common>', '#include <common>\nuniform float uWilt;')
+            .replace('#include <color_fragment>', WILT_CHUNK);
+        }
+        if (grows !== undefined) injectGrowth(shader, grows);
       };
-      material.customProgramCacheKey = () => 'garden-wilt';
+      const key = `garden${source.wilts ? '-wilt' : ''}${grows === undefined ? '' : '-grow'}`;
+      material.customProgramCacheKey = () => key;
     }
+    if (grows !== undefined) return material;
     if (source.tint !== null) tinted.push({ material, source });
     materialCache.set(source, material);
     disposables.push(material);
     return material;
+  };
+  const geometryCache = new Map<ModelMesh, THREE.BufferGeometry>();
+  const geometryFor = (source: ModelMesh): THREE.BufferGeometry => {
+    let geometry = geometryCache.get(source);
+    if (geometry === undefined) {
+      geometry = geometryOf(source);
+      geometryCache.set(source, geometry);
+      disposables.push(geometry);
+    }
+    return geometry;
   };
 
   interface Shown {
@@ -223,8 +249,7 @@ export function buildGardenThree(model: GardenModel): GardenThree {
   const scale = new THREE.Vector3();
 
   for (const source of model.meshes) {
-    const geometry = geometryOf(source);
-    disposables.push(geometry);
+    const geometry = geometryFor(source);
     const material = materialOf(source.material);
     const instances = source.instances;
     if (instances === null) {
@@ -293,6 +318,11 @@ export function buildGardenThree(model: GardenModel): GardenThree {
 
   const fade = buildFade(disposables);
   let shownKey = '';
+  let shownStage: GardenStage | null = null;
+  // The growing element: built for one stage and one hizb, moved with the growth.
+  let growth: { key: string; view: GrowthView | null } | null = null;
+  let growthValue = -1;
+  const growthResources = { model, scene, geometryOf: geometryFor, materialOf };
   return {
     scene,
     fade,
@@ -301,6 +331,7 @@ export function buildGardenThree(model: GardenModel): GardenThree {
       const key = `${stage.count}-${stage.water}-${stage.foliage}`;
       if (key === shownKey) return false;
       shownKey = key;
+      shownStage = stage;
       for (const part of parts) part.update(stage);
       const amount = GARDEN_3D.wiltByFoliage[stage.foliage];
       wilt.value = amount;
@@ -311,6 +342,22 @@ export function buildGardenThree(model: GardenModel): GardenThree {
         const towards = source.tint === 'wilt' ? amount : isDeadEarth ? 1 : 0;
         material.color.copy(lerpedColor(source.color, source.colorAlt, towards));
       }
+      return true;
+    },
+    showGrowth(growing) {
+      const stage = shownStage;
+      const fits = growing !== null && stage !== null && growing.hizb === stage.count + 1;
+      const key = fits ? `${shownKey}|${growing.hizb}` : '';
+      if (growth?.key !== key) {
+        growth?.view?.dispose();
+        growth =
+          fits && stage !== null ? { key, view: buildGrowthView(growthResources, stage) } : null;
+        growthValue = -1;
+      }
+      const value = fits ? growing.growth : -1;
+      if (value === growthValue) return false;
+      growthValue = value;
+      growth?.view?.update(value);
       return true;
     },
     setOrbit(orbit, aspect, anchor = 'bottom') {
@@ -331,6 +378,8 @@ export function buildGardenThree(model: GardenModel): GardenThree {
       camera.updateProjectionMatrix();
     },
     dispose() {
+      growth?.view?.dispose();
+      growth = null;
       for (const item of disposables) item.dispose();
     },
   };

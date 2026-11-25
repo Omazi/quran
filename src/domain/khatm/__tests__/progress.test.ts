@@ -37,6 +37,39 @@ describe('Rule 2 — completed hizb (hizb terminé)', () => {
     expect(progress.currentHizbProgress).toBeCloseTo(1 / 11);
   });
 
+  it('counts the pages read of the current hizb and its pages, the shared page in both', () => {
+    const none = getKhatmProgress(EMPTY_JOURNAL, 1, HIZB_PAGE_RANGES);
+    expect([none.currentHizbPagesRead, none.currentHizbPageCount]).toEqual([0, 11]);
+
+    const threePages = getKhatmProgress(
+      readPages(EMPTY_JOURNAL, 1, pageRange(1, 3), MONDAY),
+      1,
+      HIZB_PAGE_RANGES,
+    );
+    expect([threePages.currentHizbPagesRead, threePages.currentHizbPageCount]).toEqual([3, 11]);
+
+    const acrossTheBoundary = getKhatmProgress(
+      readPages(EMPTY_JOURNAL, 1, pageRange(1, 12), MONDAY),
+      1,
+      HIZB_PAGE_RANGES,
+    );
+    // Pages 11 and 12 of hizb 2 (11..21): page 11 has also completed hizb 1.
+    expect(acrossTheBoundary.currentHizb).toBe(2);
+    expect([
+      acrossTheBoundary.currentHizbPagesRead,
+      acrossTheBoundary.currentHizbPageCount,
+    ]).toEqual([2, 11]);
+  });
+
+  it('a complete khatma has no hizb in progress: no page to count', () => {
+    const progress = getKhatmProgress(
+      readPages(EMPTY_JOURNAL, 1, allPagesOutOfOrder(), MONDAY),
+      1,
+      HIZB_PAGE_RANGES,
+    );
+    expect([progress.currentHizbPagesRead, progress.currentHizbPageCount]).toEqual([0, 0]);
+  });
+
   it('hizb with a shared page: reading it once is enough to complete both neighbours', () => {
     const journal = readPages(EMPTY_JOURNAL, 1, pageRange(1, 21), MONDAY);
 
@@ -112,6 +145,8 @@ describe('Rule 3 — progress (progression)', () => {
       hizbCompleted: 0,
       currentHizb: 1,
       currentHizbProgress: 0,
+      currentHizbPagesRead: 0,
+      currentHizbPageCount: 11,
       firstUnreadPage: 1,
       isComplete: false,
     });
@@ -214,6 +249,8 @@ describe('Rule 4 — completed khatma (khatma terminée)', () => {
       hizbCompleted: 60,
       currentHizb: null,
       currentHizbProgress: 0,
+      currentHizbPagesRead: 0,
+      currentHizbPageCount: 0,
       firstUnreadPage: null,
       isComplete: true,
     });

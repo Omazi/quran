@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useIsFocused } from 'expo-router';
 import { useMemo } from 'react';
 
 import { HomeScreen, useHomeScreen, type HomeActions } from '@/features/home';
@@ -13,6 +13,8 @@ export default function HomeRoute() {
   const { model, today, neighbours, avatarInitial, arrival, retry, dismissArrival, share } =
     useHomeScreen();
   const resumePage = useResumePage();
+  // The tab stays mounted under the reader: the garden's growth plays when it is in front again.
+  const isFocused = useIsFocused();
   const actions = useMemo<HomeActions>(
     () => ({
       readAndWater: () => router.push(`/reader/${resumePage}`),
@@ -34,6 +36,7 @@ export default function HomeRoute() {
       neighbours={neighbours}
       avatarInitial={avatarInitial}
       arrival={arrival}
+      isFocused={isFocused}
     />
   );
 }

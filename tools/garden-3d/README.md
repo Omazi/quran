@@ -22,6 +22,9 @@ dans un GLB standard (`lib/glb.mjs`) : positions quantifiées (KHR_mesh_quantiza
 (EXT_mesh_gpu_instancing), textures en pixels bruts (pas d'image à décoder sur le téléphone),
 étapes de chaque morceau dans les `extras`. Le JSON est en ASCII seul.
 
+Le fichier contient aussi des pièces hors étapes, que l'appli place elle-même (`PROPS`) : la butte
+de terre et la pousse d'un arbre qui commence (D44), nœuds marqués `extras.prop`.
+
 L'appli lit ce fichier sans chargeur glTF (`garden3d/glb.ts`, `garden3d/garden-model.ts`) :
 montrer une étape, c'est choisir des plages de triangles et des instances.
 

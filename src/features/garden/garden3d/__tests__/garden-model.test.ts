@@ -1,7 +1,9 @@
 import type { GardenStage } from '../../garden-picture';
 import {
   comboOf,
+  growingPieces,
   isItemShown,
+  plantFormOf,
   readGardenModel,
   stageDrawCalls,
   visibleInstances,
@@ -181,5 +183,53 @@ describe('the garden that ships with the app', () => {
 
   it('keeps the drawing of the full garden under 80 draws', () => {
     expect(stageDrawCalls(MODEL, stage(60, 2, 0))).toBeLessThanOrEqual(80);
+  });
+});
+
+describe('the element growing with the hizb in progress (owner, 25 November 2026)', () => {
+  const meshNamed = (index: number): string => MODEL.meshes[index]?.material.name ?? '';
+
+  it('is what the next element count adds to the stage: a tree is its trunk and its leaves', () => {
+    // Element 5 is the first tree of the catalogue (a pomegranate).
+    const pieces = growingPieces(MODEL, stage(4, 2, 0));
+
+    expect(pieces.map((piece) => meshNamed(piece.mesh)).sort()).toEqual([
+      'NormalTree_Bark',
+      'NormalTree_Leaves',
+    ]);
+    expect(pieces.every((piece) => piece.instance !== null)).toBe(true);
+    expect(plantFormOf(pieces)).toBe('tree');
+  });
+
+  it('names each piece by what it is: trunk, foliage, flowers, or built', () => {
+    const roles = growingPieces(MODEL, stage(4, 2, 0)).map((piece) => piece.role);
+    expect(roles.sort()).toEqual(['foliage', 'trunk']);
+    expect(growingPieces(MODEL, stage(0, 2, 0)).every((piece) => piece.role === 'built')).toBe(
+      true,
+    );
+  });
+
+  it('a bed of flowers is a plant, the channels are built', () => {
+    expect(plantFormOf(growingPieces(MODEL, stage(11, 2, 0)))).toBe('plant');
+    expect(plantFormOf(growingPieces(MODEL, stage(0, 2, 0)))).toBe('structure');
+  });
+
+  it('follows the water and the foliage of the stage: a bare tree grows no leaves', () => {
+    const halfBare = growingPieces(MODEL, stage(4, 2, 3)).map((piece) => meshNamed(piece.mesh));
+    expect(halfBare).toEqual(['NormalTree_Bark']);
+  });
+
+  it('is nothing once the garden is complete', () => {
+    expect(growingPieces(MODEL, stage(60, 2, 0))).toEqual([]);
+  });
+});
+
+describe('props placed by the app', () => {
+  it('has the seed mound and its sprout, outside the stages', () => {
+    const sprout = MODEL.props.sprout ?? [];
+    expect(sprout.length).toBeGreaterThan(0);
+    expect(sprout.every((mesh) => mesh.items.length === 0 && mesh.instances === null)).toBe(true);
+    // Not part of what a stage draws.
+    expect(MODEL.meshes.some((mesh) => sprout.includes(mesh))).toBe(false);
   });
 });

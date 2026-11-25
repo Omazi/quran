@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { DEFAULT_GARDEN_CONFIG, type GardenState } from '@/domain/garden';
 import { resetDeviceConditions, setDeviceConditions } from '@/ui/test-support/environment';
@@ -6,6 +6,8 @@ import { resetDeviceConditions, setDeviceConditions } from '@/ui/test-support/en
 import { GARDEN_PICTURE_ASPECT_RATIO, MAX_TRANSITION_MS, STEP_DURATION_MS } from '../config';
 import { baseAsset, waterAsset } from '../garden-images';
 import { previewGardenState } from '../garden-preview';
+import { GARDEN_SPRITES } from '../garden-sprites.generated';
+import { pictureStep } from '../growth-pose';
 import { GardenScene } from '../garden-scene';
 import { showLanguage } from '../test-support/screen-conditions';
 
@@ -61,13 +63,32 @@ describe('GardenScene with its pictures', () => {
     expect(drawnAssets()).toEqual([baseAsset('h00-f0')]);
   });
 
-  it('draws no half-grown element: only the elements of the hizb already complete', async () => {
+  it('draws the element of the hizb in progress from its first page, smaller while it grows', async () => {
     await showLanguage('fr');
     const base = garden(24);
     if (base.nextElement === null) throw new Error('The test needs a next element.');
     const state = { ...base, nextElement: { ...base.nextElement, growth: 0.4 } };
     await render(<GardenScene state={state} size="band" />);
-    expect(screen.queryByTestId('garden-growing')).toBeNull();
+    await fireEvent(screen.getByTestId('garden-scene'), 'layout', {
+      nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 272 } },
+    });
+    expect(drawnAssets()).toEqual([
+      baseAsset('h24-f0'),
+      waterAsset('h24-f0-w2'),
+      GARDEN_SPRITES[25]?.asset,
+    ]);
+    expect(screen.getByTestId('garden-growing-sprite')).toHaveStyle({
+      transform: [{ scale: pictureStep(0.4)?.scale }],
+    });
+  });
+
+  it('draws nothing growing before the first counted page', async () => {
+    await showLanguage('fr');
+    await render(<GardenScene state={garden(24)} size="band" />);
+    await fireEvent(screen.getByTestId('garden-scene'), 'layout', {
+      nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 272 } },
+    });
+    expect(screen.queryByTestId('garden-growing-sprite')).toBeNull();
     expect(drawnAssets()).toEqual([baseAsset('h24-f0'), waterAsset('h24-f0-w2')]);
   });
 

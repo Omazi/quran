@@ -178,6 +178,8 @@ function expectedProgress(
     hizbCompleted: ranges.length - unfinished.length,
     currentHizb: current ? current.hizb : null,
     currentHizbProgress: current ? readIn(current) / sizeOf(current) : 0,
+    currentHizbPagesRead: current ? readIn(current) : 0,
+    currentHizbPageCount: current ? sizeOf(current) : 0,
     firstUnreadPage: pagesFrom(FIRST_PAGE, LAST_PAGE).find((page) => !read.has(page)) ?? null,
     isComplete: read.size === LAST_PAGE,
   };
@@ -228,6 +230,8 @@ function expectedGardenFeed(
     khatm,
     hizbCompleted: progress.hizbCompleted,
     currentHizbProgress: progress.currentHizbProgress,
+    currentHizbPagesRead: progress.currentHizbPagesRead,
+    currentHizbPageCount: progress.currentHizbPageCount,
     startDate,
     wateredDays: new Set(
       [...expectedWateredDays(journal, minPages)].filter(

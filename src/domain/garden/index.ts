@@ -10,6 +10,13 @@ export {
 } from './garden-state';
 export { DEFAULT_GARDEN_CONFIG } from './config';
 export {
+  GROWTH_STAGE_STARTS,
+  growthStageOf,
+  hasSprouted,
+  stageProgressOf,
+  type GrowthStage,
+} from './growth';
+export {
   assertValidCatalog,
   displayableVerse,
   GARDEN_CATALOG,

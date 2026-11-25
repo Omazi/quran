@@ -53,6 +53,8 @@ export interface HomeScreenProps {
   neighbours: NeighbourGardens;
   avatarInitial: string | null;
   arrival: Arrival | null;
+  /** The screen is in front (not under the reader): the garden's growth plays when it is. */
+  isFocused?: boolean;
 }
 
 /**
@@ -134,6 +136,7 @@ function GardenHome({
   today,
   neighbours,
   avatarInitial,
+  isFocused = true,
 }: HomeScreenProps & { model: HomeReadyModel }) {
   const { garden, layout: homeLayout } = model;
   const insets = useSafeInsets();
@@ -157,10 +160,15 @@ function GardenHome({
         {homeLayout === 'dead' ? (
           // The dry earth in the middle of the room left, as on the mockup.
           <View style={styles.deadEarth}>
-            <GardenStage garden={garden} showsGrowing={false} />
+            <GardenStage garden={garden} showsGrowing={false} isActive={isFocused} />
           </View>
         ) : (
-          <GardenStage garden={garden} showsGrowing={homeLayout === 'growing'} />
+          <GardenStage
+            garden={garden}
+            showsGrowing={homeLayout === 'growing'}
+            growingPages={model.growingPages}
+            isActive={isFocused}
+          />
         )}
         {homeLayout === 'dead' ? null : (
           <GardenProgress hizb={model.hizb} waterRun={model.waterRun} />

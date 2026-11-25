@@ -87,6 +87,14 @@ export interface KhatmProgress {
   readonly currentHizb: number | null;
   /** Fraction (0 to 1) of the pages of `currentHizb` already read; 0 when there is none. */
   readonly currentHizbProgress: number;
+  /**
+   * Pages of `currentHizb` already counted (a page is in the journal only once it was read long
+   * enough, `requiredReadingSeconds`); 0 when there is none. A page shared with the previous hizb
+   * counts here too.
+   */
+  readonly currentHizbPagesRead: number;
+  /** Pages of `currentHizb`, from its first to its last; 0 when there is none. */
+  readonly currentHizbPageCount: number;
   /** Lowest page number not read yet, or null when the khatma is complete. */
   readonly firstUnreadPage: number | null;
   /** True when the 604 pages are read. */
@@ -151,6 +159,13 @@ export interface GardenFeed {
    * 1, and 0 for a complete garden (nothing is left to grow).
    */
   readonly currentHizbProgress: number;
+  /**
+   * The same growth in pages: the counted pages of that hizb, and its number of pages, so that
+   * `currentHizbProgress` is `currentHizbPagesRead / currentHizbPageCount`. Both 0 for a complete
+   * garden.
+   */
+  readonly currentHizbPagesRead: number;
+  readonly currentHizbPageCount: number;
   /**
    * Day the garden starts: the date of the first page read in that khatma. Null only while
    * no page has ever been read: the garden is then a bare ground.

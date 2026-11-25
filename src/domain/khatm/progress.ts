@@ -38,6 +38,8 @@ export function measureKhatmProgress(
   let hizbCompleted = 0;
   let currentHizb: number | null = null;
   let currentHizbProgress = 0;
+  let currentHizbPagesRead = 0;
+  let currentHizbPageCount = 0;
   for (const range of hizbPageRanges) {
     const pagesInHizb = countPagesInRange(range);
     const readPagesInHizb = countReadPagesInRange(readPages, range);
@@ -48,6 +50,8 @@ export function measureKhatmProgress(
       // not necessarily the last one the user opened.
       currentHizb = range.hizb;
       currentHizbProgress = readPagesInHizb / pagesInHizb;
+      currentHizbPagesRead = readPagesInHizb;
+      currentHizbPageCount = pagesInHizb;
     }
   }
 
@@ -60,6 +64,8 @@ export function measureKhatmProgress(
     hizbCompleted,
     currentHizb,
     currentHizbProgress,
+    currentHizbPagesRead,
+    currentHizbPageCount,
     firstUnreadPage: findFirstUnreadPage(readPages),
     isComplete: pagesRead === PAGE_COUNT,
   };

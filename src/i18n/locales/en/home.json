@@ -5,7 +5,10 @@
   "profile": "Profile",
   "growing": {
     "title": "Hizb {{hizb}}",
-    "value": "{{percent}}% of the hizb read"
+    "value": "{{percent}}% of the hizb read",
+    "pages_one": "{{count}} page of {{total}}",
+    "pages_other": "{{count}} pages of {{total}}",
+    "detail": "{{pages}} · {{stage}}"
   },
   "progress": {
     "watered_one": "Watered for {{count}} d",
