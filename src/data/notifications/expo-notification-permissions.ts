@@ -6,6 +6,7 @@ import {
   type NotificationPermissionsStatus,
 } from 'expo-notifications';
 
+import { announcePermissionChange } from './permission-changes';
 import type { NotificationPermissionStatus, NotificationPermissions } from './types';
 
 /**
@@ -33,10 +34,14 @@ function toStatus(response: NotificationPermissionsStatus): NotificationPermissi
 export const expoNotificationPermissions: NotificationPermissions = {
   getStatus: async () => toStatus(await getPermissionsAsync()),
   // The reminders are alerts with a sound; the app shows no badge.
-  request: async () =>
-    toStatus(
+  request: async () => {
+    const status = toStatus(
       await requestPermissionsAsync({
         ios: { allowAlert: true, allowSound: true, allowBadge: false },
       }),
-    ),
+    );
+    // The reminders switched on before the answer are scheduled, or dropped, now.
+    announcePermissionChange();
+    return status;
+  },
 };

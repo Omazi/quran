@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 import { createDeviceProgressBackup, deviceStorage } from '@/data/storage';
 import { useForegroundTimeRecording } from '@/features/profile';
+import { useNotificationTaps, useReminderSync } from '@/features/reminders';
 import {
   deviceWritingDirection,
   useAppStartup,
@@ -28,8 +29,8 @@ const STARTUP: StartupDependencies = {
 
 /**
  * Root of the app. It starts everything the first screen needs (the Quran fonts, the saved
- * settings, the language and the writing direction), counts the time spent in the app, then
- * hands over to the routes: `index`
+ * settings, the language and the writing direction), counts the time spent in the app, keeps the
+ * reminders scheduled, then hands over to the routes: `index`
  * sends a first launch to the introduction and everyone else to the tabs.
  */
 export default function RootLayout() {
@@ -53,6 +54,10 @@ export default function RootLayout() {
 function RootStack() {
   // The time spent in the app and in the reader, for the statistics (D37).
   useForegroundTimeRecording();
+  // The reminders of the settings, scheduled as local notifications, and where a tap on one leads
+  // (D13, docs/specs/reminders.md).
+  useReminderSync();
+  useNotificationTaps();
   const { t } = useTranslation('onboarding');
   const { t: tSettings } = useTranslation('settings');
   const colors = useColors();

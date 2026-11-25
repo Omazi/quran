@@ -80,7 +80,8 @@ modèles 3D ; **leur provenance et leur style restent à décider avec le propri
 
 Aucun serveur : le plan des rappels est calculé sur le téléphone à partir de l'état du
 jardin, puis programmé localement. L'autorisation est demandée à la fin du premier
-lancement, après explication.
+lancement, après explication. Programmation, déclencheurs et toucher d'une notification :
+[specs/reminders.md](specs/reminders.md), « Programmation ».
 
 ## D14 — Les skills d'abord
 

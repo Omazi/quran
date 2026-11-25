@@ -1,7 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { reloadAppAsync } from 'expo';
 import { getLocales } from 'expo-localization';
-import { getPermissionsAsync, PermissionStatus, requestPermissionsAsync } from 'expo-notifications';
+import {
+  getPermissionsAsync,
+  PermissionStatus,
+  requestPermissionsAsync,
+  scheduleNotificationAsync,
+} from 'expo-notifications';
 import { router } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 import * as SplashScreen from 'expo-splash-screen';
@@ -36,6 +41,16 @@ jest.mock('expo-notifications', () => ({
     .loadQuietly(),
   getPermissionsAsync: jest.fn(),
   requestPermissionsAsync: jest.fn(),
+  // The root layout keeps the reminders scheduled and listens to taps: no system behind it here.
+  getAllScheduledNotificationsAsync: jest.fn(async () => []),
+  scheduleNotificationAsync: jest.fn(async () => 'id'),
+  cancelScheduledNotificationAsync: jest.fn(async () => {}),
+  setNotificationChannelAsync: jest.fn(async () => null),
+  setNotificationCategoryAsync: jest.fn(async () => ({})),
+  setNotificationHandler: jest.fn(),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  getLastNotificationResponseAsync: jest.fn(async () => null),
+  clearLastNotificationResponse: jest.fn(),
 }));
 jest.mock(
   'expo-camera',
@@ -271,6 +286,8 @@ describe('first launch', () => {
     expect(requestPermissionsAsync).toHaveBeenCalledTimes(1);
     expect(tabs()).toHaveLength(4);
     expect((await storedSettings()).onboardingCompleted).toBe(true);
+    // The reminders chosen in the introduction are scheduled once it is finished and allowed.
+    await waitFor(() => expect(scheduleNotificationAsync).toHaveBeenCalled());
   });
 
   it('ends on the tabs as well when the person refuses the notifications', async () => {
@@ -281,6 +298,7 @@ describe('first launch', () => {
     await fireEvent.press(await screen.findByRole('button', { name: 'Continuer' }));
     await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
     expect((await storedSettings()).onboardingCompleted).toBe(true);
+    expect(scheduleNotificationAsync).not.toHaveBeenCalled();
   });
 
   it('does not let a link into the tabs skip the introduction', async () => {
