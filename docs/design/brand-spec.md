@@ -141,7 +141,9 @@ ou de l'eau. Fichiers produits par `tools/app-icon/make_icon.py` (contours du mo
 **L'idée.** Le nom, جنتك, en nastaliq. Le long trait montant du kaf traverse l'icône et finit en
 feuille : le mot fait pousser le jardin. Les points des lettres sont de l'eau, de sa couleur. Les
 lettres sont celles de la police Gulzar (licence OFL), mises en forme par HarfBuzz, sans retouche :
-ni redessinées, ni déformées, points gardés, lecture de droite à gauche. La feuille part de
+ni redessinées, ni déformées, points gardés, lecture de droite à gauche. Le kaf final est le kaf
+arabe (ك) : son petit signe intérieur (la « sharta ») vient de Noto Nastaliq Urdu (OFL), au trait
+de Gulzar ; choix du propriétaire, 25 novembre 2026 (D38). La feuille part de
 l'intérieur de la fin du trait, qui s'y prolonge ; elle cache la pointe du trait (le levé de la
 plume), rien d'autre.
 
@@ -151,12 +153,12 @@ Gulzar ont déjà une forme de goutte.
 
 **Couleurs, par rôle** (les mêmes en apparence claire et sombre, sauf le fond).
 
-| Rôle           | Où         | Valeur                                                                                             |
-| -------------- | ---------- | -------------------------------------------------------------------------------------------------- |
-| Eau (fond)     | Fond       | `#13808C` → `#0A515B`, autour de l'`accent` `#0E6B78` ; apparence sombre `#0B3C44` → `#05222A`     |
-| Lettres        | Le mot     | `#F6FBF9`, blanc froid (ni papier, ni crème)                                                       |
-| Eau (`accent`) | Les points | `#8FE0EA`, la valeur de l'`accent` en sombre et contraste élevé                                    |
-| Jardin         | La feuille | `#8FDB6B`, un vert jeune, plus jaune que l'eau pour ne pas se confondre avec les points (écart 51) |
+| Rôle           | Où         | Valeur                                                                                              |
+| -------------- | ---------- | --------------------------------------------------------------------------------------------------- |
+| Eau (fond)     | Fond       | Eau profonde `#0B3C44` → `#05222A` (choix du propriétaire) ; apparence sombre `#072C33` → `#02151A` |
+| Lettres        | Le mot     | `#F6FBF9`, blanc froid (ni papier, ni crème)                                                        |
+| Eau (`accent`) | Les points | `#8FE0EA`, la valeur de l'`accent` en sombre et contraste élevé                                     |
+| Jardin         | La feuille | `#8FDB6B`, un vert jeune, plus jaune que l'eau pour ne pas se confondre avec les points (écart 51)  |
 
 Aucun reflet, aucune ombre, aucun dégradé dans les couches : le système les fait
 (`app-icons.md › Visual effects`).

@@ -55,7 +55,7 @@ FIELD_DARK = ("#0B3C44", "#05222A")
 # Variant "deep" (the owner liked the dark one, 25 November 2026): that deep water in the default
 # appearance as well; at night a step deeper, the same hue, so the two appearances stay distinct.
 FIELDS = {"water": (FIELD, FIELD_DARK), "deep": (FIELD_DARK, ("#072C33", "#02151A"))}
-FIELD_STYLE = "water"  # the committed icon
+FIELD_STYLE = "deep"  # the committed icon (owner, 25 Nov 2026)
 # Foreground colours, the same in every appearance (only the background darkens).
 WORD = "#F6FBF9"  # the letters: near white, cool (not paper, not cream)
 WATER = "#8FE0EA"  # the dots: water, the accent's high-contrast value in dark mode
@@ -84,7 +84,7 @@ OPTICAL_SHIFT = (-0.025, -0.03)  # shares of the canvas
 # its foot a quarter of the way up), moved 17 units right to sit in the middle of Gulzar's open
 # bowl, whose left serif is shorter. It is part of the letter, not a dot: it takes the word's
 # colour, not the water's.
-KAF = "persian"  # the committed icon
+KAF = "arabic"  # the committed icon (owner, 25 Nov 2026)
 KAF_MARK = {"glyph": "SharetKafNS", "wght": 700, "scale": 0.81, "centre": (395, 455)}
 
 LAYERS = ("word", "water", "leaf")  # bottom first

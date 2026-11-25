@@ -456,14 +456,13 @@ l'eau. Le mot fait pousser le jardin. Détail, couleurs, couches, pistes écart�
 - **Risques connus** : du texte dans une icône, ce qu'Apple déconseille hors marque
   (`app-icons.md › Design` ; écart 51 de `design/SKILLS.md`) ; un lecteur non arabophone y voit un
   signe calligraphique et une feuille, pas un mot.
-- **Deux variantes en attente du choix du propriétaire** (25 novembre 2026, rien de changé dans les
-  fichiers livrés) : le kaf final arabe (ك), avec son petit signe intérieur, la « sharta » du
-  nastaliq, prise dans Noto Nastaliq Urdu (OFL), dont la propre mise en forme l'ajoute au kaf final
-  d'un texte arabe ; les lettres de Gulzar restent les mêmes. Et le fond d'eau profonde (celui de
-  l'apparence sombre, qu'il a préféré) en apparence par défaut, l'apparence sombre d'un cran plus
-  profonde. `make_icon.py --kaf arabic --field deep --out DIR` ; contours dans
-  `tools/app-icon/word-arabic.svg`, provenance dans `NOTICE.txt`. Pour en adopter une : `KAF` ou
-  `FIELD_STYLE` dans `make_icon.py`, puis relancer l'outil.
+- **Choix du propriétaire (25 novembre 2026)** : le kaf final arabe (ك), avec son petit signe
+  intérieur, la « sharta » du nastaliq, prise dans Noto Nastaliq Urdu (OFL), dont la propre mise en
+  forme l'ajoute au kaf final d'un texte arabe ; les lettres de Gulzar restent les mêmes. Et le fond
+  d'eau profonde en apparence par défaut (il a préféré celui de l'apparence sombre), l'apparence
+  sombre d'un cran plus profonde ; couleur de repli Android `#0B3C44`. Contours dans
+  `tools/app-icon/word-arabic.svg`, provenance dans `NOTICE.txt` ; réglages `KAF` et `FIELD_STYLE`
+  en tête de `make_icon.py`.
 
 _Changerait si_ le propriétaire préfère une autre écriture ou une autre couleur, ou si le rendu sur
 iPhone déçoit : les réglages sont en tête de `make_icon.py`, et on relance l'outil.
