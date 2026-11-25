@@ -14,8 +14,12 @@ export const ROSETTE_GEOMETRY = {
   /** Radius of the outer star: the smaller of these shares of the width and height (`drawRosette`). */
   radiusOfWidth: 0.262,
   radiusOfHeight: 0.168,
-  /** How much the whole drawing grows at full voice (`1 + 0.02 * level`). */
-  levelGrowth: 0.02,
+  /**
+   * How much the whole drawing grows at full voice. The prototype had `1 + 0.02 * level`, fed by
+   * a simulated voice; on the iPhone the owner could not tell whether the phone heard him
+   * (deviation 123): the rosette now swells visibly with the real voice.
+   */
+  levelGrowth: 0.08,
   /**
    * Where the two squares cross, as a share of the radius (`HOLLOW`): cos(45°) / cos(22.5°).
    * Written out because it is the definition, not a tuned value.
@@ -80,6 +84,19 @@ export const ROSETTE_MOTION = {
    */
   syllableMinimum: 0.3,
   syllableRise: 0.15,
+  /**
+   * In silence the drawing breathes, very little (this share of its size, at `breatheSpeed`), so
+   * it never looks frozen; the voice takes over from the breath as it rises (deviation 123).
+   */
+  idleBreath: 0.012,
+  /**
+   * Before the microphone is open (the model loading) the rosette is drawn at this opacity and
+   * sends no petal; it lights up when the phone starts to listen (deviation 123).
+   */
+  notLiveOpacity: 0.35,
+  /** That lighting up: a state change, a short ease-out (skill animate: 150–250 ms, strong ease-out). */
+  liveFadeMs: 250,
+  liveFadeCurve: [0.23, 1, 0.32, 1] as const,
 } as const;
 
 /**
@@ -206,4 +223,12 @@ export const SIMULATED_VOICE = {
     { afterMs: 90, share: 0.45 },
     { afterMs: 180, share: 0.1 },
   ],
+} as const;
+
+/** The words heard, shown faintly under the title while the screen listens (deviation 123). */
+export const HEARD_WORDS = {
+  /** The latest words only: enough to see the voice arrive, never a transcript to read. */
+  shown: 8,
+  /** A new line fades in (skill animate: a state change, short). */
+  fadeInMs: 200,
 } as const;

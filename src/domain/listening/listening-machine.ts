@@ -11,7 +11,7 @@
  */
 import type { PassageCandidate, SearchResult } from '../recognition';
 
-import type { SpeechEndReason } from './types';
+import type { SpeechActivity, SpeechEndReason, SpeechFailure } from './types';
 
 /**
  * Why no passage is shown.
@@ -42,13 +42,19 @@ export type ListeningState =
       readonly heardWordCount: number;
       /** What the search answered for those words; null while no word came. */
       readonly latestResult: SearchResult | null;
+      /** A voice is heard right now (`SpeechActivity`). */
+      readonly voice: boolean;
+      /** The engine is reading what it heard. */
+      readonly transcribing: boolean;
+      /** Words of the phrase in progress, not final yet: shown, never searched. */
+      readonly partial: readonly string[];
     }
   | { readonly status: 'found'; readonly passage: PassageCandidate }
   | { readonly status: 'ambiguous'; readonly passages: TiedPassages }
   | { readonly status: 'not-found'; readonly reason: NothingFoundReason }
   | { readonly status: 'microphone-denied' }
-  /** The engine or the text of the Quran could not be used. */
-  | { readonly status: 'failed' }
+  /** The engine or the text of the Quran could not be used; `failure` says what broke. */
+  | { readonly status: 'failed'; readonly failure: SpeechFailure }
   /** The person stopped with nothing to show: the screen has nothing left to say. */
   | { readonly status: 'closed' };
 
@@ -64,16 +70,33 @@ export type ListeningEvent =
       /** The answer of the passage search for all those words. */
       readonly result: SearchResult;
     }
-  | { readonly type: 'engine-ended'; readonly reason: SpeechEndReason }
+  | {
+      readonly type: 'engine-ended';
+      readonly reason: SpeechEndReason;
+      readonly failure?: SpeechFailure;
+    }
+  /** What the engine does right now: a voice, a reading, words not final yet. */
+  | { readonly type: 'activity'; readonly activity: SpeechActivity }
   /** The person pressed "Stop". */
   | { readonly type: 'stop-requested' }
-  | { readonly type: 'start-failed' };
+  | { readonly type: 'start-failed'; readonly failure?: SpeechFailure };
+
+/**
+ * What the screen says while it listens.
+ * - `listening`: the microphone is open, no voice yet (or a pause that gave no word);
+ * - `hearing`: a voice is heard right now;
+ * - `searching`: the voice paused and its words are being read or searched.
+ */
+export type ListeningPhase = 'listening' | 'hearing' | 'searching';
 
 export const INITIAL_LISTENING_STATE: ListeningState = { status: 'idle' };
 
 const STARTING: ListeningState = { status: 'starting' };
 const CLOSED: ListeningState = { status: 'closed' };
-const FAILED: ListeningState = { status: 'failed' };
+const failed = (failure: SpeechFailure = 'unknown'): ListeningState => ({
+  status: 'failed',
+  failure,
+});
 const MICROPHONE_DENIED: ListeningState = { status: 'microphone-denied' };
 
 type Listening = Extract<ListeningState, { status: 'listening' }>;
@@ -100,13 +123,20 @@ export function transition(state: ListeningState, event: ListeningEvent): Listen
 function fromStarting(state: ListeningState, event: ListeningEvent): ListeningState {
   switch (event.type) {
     case 'listening-started':
-      return { status: 'listening', heardWordCount: 0, latestResult: null };
+      return {
+        status: 'listening',
+        heardWordCount: 0,
+        latestResult: null,
+        voice: false,
+        transcribing: false,
+        partial: [],
+      };
     case 'microphone-denied':
       return MICROPHONE_DENIED;
     case 'start-failed':
-      return FAILED;
+      return failed(event.failure);
     case 'engine-ended':
-      return event.reason === 'failed' ? FAILED : state;
+      return event.reason === 'failed' ? failed(event.failure) : state;
     case 'stop-requested':
       return CLOSED;
     default:
@@ -118,8 +148,12 @@ function fromListening(state: Listening, event: ListeningEvent): ListeningState 
   switch (event.type) {
     case 'words-heard':
       return afterWords(state, event);
+    case 'activity': {
+      const { voice, transcribing, partial } = event.activity;
+      return { ...state, voice, transcribing, partial };
+    }
     case 'engine-ended':
-      return event.reason === 'failed' ? FAILED : conclude(state);
+      return event.reason === 'failed' ? failed(event.failure) : conclude(state);
     case 'stop-requested':
       // Stopping before a single word was heard is leaving: there is nothing to tell.
       return state.heardWordCount === 0 ? CLOSED : conclude(state);
@@ -135,11 +169,26 @@ function afterWords(state: Listening, { heardWordCount, result }: WordsHeard): L
     );
   }
   if (result.status !== 'found') {
-    return { status: 'listening', heardWordCount, latestResult: result };
+    return { ...state, heardWordCount, latestResult: result };
   }
   const [passage] = result.candidates;
   if (passage === undefined) throw new TypeError('A "found" result must name its passage');
   return { status: 'found', passage };
+}
+
+/**
+ * What the screen says while it listens: hearing while a voice is heard; searching while the
+ * engine reads, or after a pause once words came (a result may still follow); listening otherwise.
+ */
+export function listeningPhase({
+  voice,
+  transcribing,
+  heardWordCount,
+  partial,
+}: Listening): ListeningPhase {
+  if (voice) return 'hearing';
+  if (transcribing || heardWordCount > 0 || partial.length > 0) return 'searching';
+  return 'listening';
 }
 
 /** What to show when the listening is over without a passage found. */

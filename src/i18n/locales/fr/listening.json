@@ -1,8 +1,11 @@
 {
   "listening": {
-    "title": "À l’écoute…",
-    "announcement": "À l’écoute",
-    "stop": "Arrêter"
+    "title": "J’écoute…",
+    "announcement": "J’écoute",
+    "stop": "Arrêter",
+    "preparing": "Un instant…",
+    "hearing": "Je t’entends",
+    "searching": "Je cherche le passage…"
   },
   "surah": "Sourate {{name}}",
   "surahArabic": "سورة {{name}}",
@@ -25,24 +28,46 @@
     "rowHint": "Ouvre le lecteur à la page {{page}}."
   },
   "nothingHeard": {
-    "title": "Rien entendu",
-    "description": "Récite à voix haute, près du téléphone, puis réessaie."
+    "title": "Je ne t’ai pas entendu",
+    "description": "Récite à voix haute, près du téléphone."
   },
   "tooFewWords": {
-    "title": "Pas assez de mots",
-    "description": "Récite un peu plus longtemps : quelques mots suffisent à trouver le passage."
+    "title": "Je n’ai pas reconnu ce passage",
+    "description": "Récite un peu plus longtemps."
   },
   "noMatch": {
-    "title": "Aucun passage trouvé",
-    "description": "Récite à nouveau, un peu plus lentement."
+    "title": "Je n’ai pas reconnu ce passage",
+    "description": "Récite un peu plus longtemps."
   },
   "microphoneDenied": {
-    "title": "Accès au micro désactivé",
-    "description": "Pour trouver un passage en le récitant, autorise le micro dans les réglages."
+    "title": "Micro refusé",
+    "description": "Autorise le micro dans Réglages pour retrouver un passage en le récitant."
   },
   "failed": {
-    "title": "L’écoute s’est arrêtée",
-    "description": "Réessaie dans un instant."
+    "microphoneUnavailable": {
+      "title": "Micro indisponible",
+      "description": "Un appel ou une autre app l’utilise peut-être. Réessaie dans un instant."
+    },
+    "noAudio": {
+      "title": "Le micro ne donne aucun son",
+      "description": "Vérifie qu’aucune autre app ne l’utilise, puis réessaie."
+    },
+    "modelMissing": {
+      "title": "Modèle vocal absent",
+      "description": "Réinstalle l’app depuis TestFlight pour retrouver la reconnaissance."
+    },
+    "modelFailed": {
+      "title": "Le modèle vocal ne s’est pas chargé",
+      "description": "Ferme complètement l’app, puis rouvre-la."
+    },
+    "transcriptionFailed": {
+      "title": "La reconnaissance s’est arrêtée",
+      "description": "Réessaie. Si ça se répète, ferme l’app et rouvre-la."
+    },
+    "unknown": {
+      "title": "L’écoute s’est arrêtée",
+      "description": "Réessaie dans un instant."
+    }
   },
   "ready": {
     "title": "Prêt quand tu l’es",
@@ -62,6 +87,8 @@
     "following": "Suis ta récitation sur la page",
     "where": "Juz {{juz}}, page {{page}}",
     "stop": "Arrêter l’écoute",
-    "announcement": "Relis ce mot"
+    "announcement": "Relis ce mot",
+    "hearing": "Je t’entends",
+    "heard": "Mots entendus : {{words}}"
   }
 }

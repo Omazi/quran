@@ -9,7 +9,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import { AccessibilityInfo, AppState, FlatList } from 'react-native';
 
 import { quranRepository, quranStructure } from '@/data/quran';
-import type { SpeechEngine } from '@/domain/listening';
+import { SpeechEngineError, type SpeechActivity, type SpeechEngine } from '@/domain/listening';
 import { splitVerseWords, type VerseRef } from '@/domain/quran';
 import { showLanguage } from '@/features/garden/test-support/screen-conditions';
 import {
@@ -46,8 +46,11 @@ let now = 0;
 let script: SimulatedScript = { permission: 'granted', steps: [] };
 let engines: SpeechEngine[] = [];
 
+/** When set, the next engines are made by it instead of the simulation. */
+let makeEngine: (() => SpeechEngine) | null = null;
+
 function createEngine(): SpeechEngine {
-  const engine = createSimulatedSpeechEngine(script);
+  const engine = makeEngine?.() ?? createSimulatedSpeechEngine(script);
   engines.push(engine);
   return engine;
 }
@@ -108,6 +111,7 @@ async function uthmaniWords(from: VerseRef, to: VerseRef): Promise<string[]> {
 beforeEach(async () => {
   now = 0;
   engines = [];
+  makeEngine = null;
   forgetReadingProgress();
   Object.defineProperty(AppState, 'currentState', { value: 'active', configurable: true });
   jest.mocked(AppState.addEventListener).mockClear();
@@ -269,6 +273,50 @@ describe('the microphone follows the recitation (voix.png)', () => {
       for (const handler of handlers) handler('background');
     });
     expect(screen.queryByTestId('follow-bar')).toBeNull();
+  });
+
+  it('keeps following while the system asks for the microphone (the app is only inactive)', async () => {
+    script = { permission: 'granted', steps: [] };
+    await openReader(createTestAppStore(), 294, { surah: 18, verse: 10 });
+    await waitFor(() => expect(screen.getByTestId('follow-bar')).toBeOnTheScreen());
+    const handlers = jest
+      .mocked(AppState.addEventListener)
+      .mock.calls.filter(([event]) => event === 'change')
+      .map(([, handler]) => handler as (state: string) => void);
+    await act(async () => {
+      for (const handler of handlers) handler('inactive');
+    });
+    expect(screen.getByTestId('follow-bar')).toBeOnTheScreen();
+  });
+
+  it('says it hears the voice, and shows the words heard, faintly', async () => {
+    let tell: (activity: SpeechActivity) => void = () => undefined;
+    makeEngine = () => {
+      const engine = createSimulatedSpeechEngine({ permission: 'granted', steps: [] });
+      return {
+        ...engine,
+        onActivity: (listener) => {
+          tell = listener;
+          return () => undefined;
+        },
+      };
+    };
+    await openReader(createTestAppStore(), 294, { surah: 18, verse: 10 });
+    await waitFor(() => expect(screen.getByTestId('follow-bar')).toBeOnTheScreen());
+    expect(screen.getByTestId('follow-title')).toHaveTextContent('J’écoute');
+    await act(async () => tell({ voice: true, transcribing: false, partial: ['إذ', 'أوى'] }));
+    expect(screen.getByTestId('follow-title')).toHaveTextContent('Je t’entends');
+    expect(screen.getByTestId('follow-heard')).toHaveTextContent('إذ أوى');
+  });
+
+  it('names the fix when the voice model is missing', async () => {
+    makeEngine = () => ({
+      ...createSimulatedSpeechEngine({ permission: 'granted', steps: [] }),
+      start: () => Promise.reject(new SpeechEngineError('model-missing', 'absent')),
+    });
+    await openReader(createTestAppStore(), 294, { surah: 18, verse: 10 });
+    await waitFor(() => expect(screen.getByTestId('reader-follow-message')).toBeOnTheScreen());
+    expect(screen.getByTestId('reader-follow-message')).toHaveTextContent(/Modèle vocal absent/);
   });
 
   it('stops after a silence', async () => {

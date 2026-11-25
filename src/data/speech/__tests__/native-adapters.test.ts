@@ -1,4 +1,4 @@
-import type { SpeechEndReason } from '@/domain/listening';
+import { SpeechEngineError, type SpeechEndReason } from '@/domain/listening';
 
 import { createNativeAudioCapture, type NativeVoiceCapture } from '../native-audio-capture';
 import { createWhisperTranscriber, type WhisperBinding } from '../whisper-transcriber';
@@ -97,6 +97,34 @@ describe('the native microphone', () => {
     expect(appState.isListening()).toBe(false);
   });
 
+  it('gives the level the module measures, on the same scale as the chunks', async () => {
+    const native = fakeNative('granted');
+    const capture = createNativeAudioCapture(native as unknown as NativeVoiceCapture);
+    const levels: number[] = [];
+    await capture.start({
+      onAudio: () => undefined,
+      onLevel: (level) => levels.push(level),
+      onEnd: () => undefined,
+    });
+    // Silence, the floor (−55 dB), half way (−35 dB), the ceiling (−15 dB) and beyond.
+    for (const rms of [0, 10 ** (-55 / 20), 10 ** (-35 / 20), 10 ** (-15 / 20), 1]) {
+      native.emit('onLevel', { rms, peak: rms } as unknown as Record<string, string>);
+    }
+    expect(levels.map((level) => Math.round(level * 100) / 100)).toEqual([0, 0, 0.5, 1, 1]);
+  });
+
+  it('passes on why the module failed', async () => {
+    const native = fakeNative('granted');
+    const capture = createNativeAudioCapture(native as unknown as NativeVoiceCapture);
+    const ends: [SpeechEndReason, string | undefined][] = [];
+    await capture.start({
+      onAudio: () => undefined,
+      onEnd: (reason, message) => ends.push([reason, message]),
+    });
+    native.emit('onEnd', { reason: 'failed', message: 'conversion failed 5 times' });
+    expect(ends).toEqual([['failed', 'conversion failed 5 times']]);
+  });
+
   it('removes its listeners when stopped', async () => {
     const native = fakeNative('granted');
     const appState = fakeAppState();
@@ -139,6 +167,58 @@ describe('Whisper', () => {
     await expect(transcriber.prepare()).rejects.toThrow('missing');
     await transcriber.prepare();
     expect(binding.initWhisper).toHaveBeenCalledTimes(2);
+  });
+
+  it('says model-failed when Whisper cannot load the model', async () => {
+    const { binding } = fakeWhisper();
+    binding.initWhisper.mockRejectedValueOnce(new Error('Failed to load the model'));
+    const transcriber = createWhisperTranscriber(() => binding as unknown as WhisperBinding);
+    await expect(transcriber.prepare()).rejects.toMatchObject({ failure: 'model-failed' });
+  });
+
+  it('says model-missing, without opening Whisper, when the file is not in the app', async () => {
+    const { binding } = fakeWhisper();
+    const checkModel = jest.fn(async () => {
+      throw new SpeechEngineError('model-missing', 'not in the app');
+    });
+    const transcriber = createWhisperTranscriber(() => binding as unknown as WhisperBinding, {
+      checkModel,
+    });
+    await expect(transcriber.prepare()).rejects.toMatchObject({ failure: 'model-missing' });
+    expect(binding.initWhisper).not.toHaveBeenCalled();
+  });
+
+  it('reads one piece of audio at a time: whisper.rn refuses a second reading on a busy context', async () => {
+    const answers: ((text: string) => void)[] = [];
+    let running = 0;
+    let mostAtOnce = 0;
+    const context = {
+      transcribeData: jest.fn(() => {
+        running += 1;
+        mostAtOnce = Math.max(mostAtOnce, running);
+        return {
+          stop: async () => undefined,
+          promise: new Promise<{ result: string }>((resolve) => {
+            answers.push((result) => {
+              running -= 1;
+              resolve({ result });
+            });
+          }),
+        };
+      }),
+    };
+    const binding = { initWhisper: async () => context };
+    const transcriber = createWhisperTranscriber(() => binding as unknown as WhisperBinding);
+    const first = transcriber.transcribe(new Int16Array(4));
+    const second = transcriber.transcribe(new Int16Array(4));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(context.transcribeData).toHaveBeenCalledTimes(1);
+    answers[0]!('one');
+    expect(await first).toBe('one');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    answers[1]!('two');
+    expect(await second).toBe('two');
+    expect(mostAtOnce).toBe(1);
   });
 
   it('transcribes the samples in Arabic, as 16-bit PCM', async () => {

@@ -1,11 +1,12 @@
 /**
  * The microphone through the app's own native module (`modules/voice-capture`, Swift). The module
  * converts the microphone to 16 kHz mono 16-bit samples and sends them as base64, every
- * `chunkMs`. Nothing is written to disk; nothing leaves the phone.
+ * `chunkMs`, and the level of the microphone about 25 times a second. Nothing is written to disk;
+ * nothing leaves the phone.
  */
 import type { MicrophonePermission, SpeechEndReason } from '@/domain/listening';
 
-import { decodePcm16Base64 } from './audio-level';
+import { decodePcm16Base64, loudnessOfRms } from './audio-level';
 import { SPEECH_ENGINE_CONFIG } from './config';
 import type { AudioCapture, AudioListeners } from './whisper-speech-engine';
 
@@ -16,6 +17,9 @@ interface Subscription {
   remove(): void;
 }
 
+/** What the native module says of itself, for the diagnostics. */
+export type NativeVoiceDiagnostics = Record<string, string | number | boolean>;
+
 /** What the native module offers. */
 export interface NativeVoiceCapture {
   /** `undetermined`, `granted` or `denied`. */
@@ -23,8 +27,20 @@ export interface NativeVoiceCapture {
   requestPermission(): Promise<string>;
   start(sampleRate: number, chunkMs: number): Promise<void>;
   stop(): Promise<void>;
+  /**
+   * Whether `modelFile` is in the app and its size, the microphone's format and counters. Absent
+   * from a build made before it existed.
+   */
+  getDiagnostics?(modelFile: string): Promise<NativeVoiceDiagnostics>;
   addListener(event: 'onAudio', listener: (event: { pcm: string }) => void): Subscription;
-  addListener(event: 'onEnd', listener: (event: { reason: string }) => void): Subscription;
+  addListener(
+    event: 'onLevel',
+    listener: (event: { rms: number; peak: number }) => void,
+  ): Subscription;
+  addListener(
+    event: 'onEnd',
+    listener: (event: { reason: string; message?: string }) => void,
+  ): Subscription;
 }
 
 /** The part of React Native's `AppState` this file needs. */
@@ -57,15 +73,16 @@ export function createNativeAudioCapture(
     async start(listeners: AudioListeners) {
       release();
       let ended = false;
-      const endWith = (reason: SpeechEndReason) => {
+      const endWith = (reason: SpeechEndReason, message?: string) => {
         if (ended) return;
         ended = true;
         release();
-        listeners.onEnd(reason);
+        listeners.onEnd(reason, message);
       };
       subscriptions.push(
         native.addListener('onAudio', ({ pcm }) => listeners.onAudio(decodePcm16Base64(pcm))),
-        native.addListener('onEnd', ({ reason }) => endWith(reasonOf(reason))),
+        native.addListener('onLevel', ({ rms }) => listeners.onLevel?.(loudnessOfRms(rms).level)),
+        native.addListener('onEnd', ({ reason, message }) => endWith(reasonOf(reason), message)),
       );
       if (appState !== undefined) {
         // The module stops by itself in the background too; this is the same rule, said twice.

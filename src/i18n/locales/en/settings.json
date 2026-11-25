@@ -52,5 +52,30 @@
   },
   "introduction": {
     "replay": "See the Introduction Again"
+  },
+  "version": {
+    "label": "Version"
+  },
+  "voiceDiagnostics": {
+    "title": "Voice Diagnostics",
+    "footer": "What recognition saw on this phone. Nothing is sent.",
+    "model": "Voice model",
+    "modelPresent": "present, {{megabytes}} MB ({{bytes}} bytes)",
+    "modelAbsent": "missing",
+    "whisper": "Whisper",
+    "loaded": "loaded",
+    "notLoaded": "not loaded",
+    "notTried": "not tried yet",
+    "microphone": "Microphone",
+    "granted": "allowed",
+    "denied": "denied",
+    "undetermined": "not asked yet",
+    "level": "Last level",
+    "audio": "Audio pieces received",
+    "transcript": "Last transcription",
+    "error": "Last error",
+    "native": "Microphone (native)",
+    "refresh": "Refresh",
+    "unknown": "unknown"
   }
 }

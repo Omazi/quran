@@ -122,6 +122,9 @@
   },
   "follow": {
     "denied": "Le micro n’est pas autorisé. Autorise-le dans les Réglages pour que l’appli suive ta récitation.",
-    "failed": "L’écoute n’a pas pu démarrer. Réessaie dans un instant."
+    "failed": "L’écoute n’a pas pu démarrer. Réessaie dans un instant.",
+    "failedModelMissing": "Modèle vocal absent. Réinstalle l’app depuis TestFlight.",
+    "failedNoAudio": "Le micro ne donne aucun son. Vérifie qu’aucune autre app ne l’utilise, puis réessaie.",
+    "failedMicrophone": "Micro indisponible. Un appel ou une autre app l’utilise peut-être."
   }
 }

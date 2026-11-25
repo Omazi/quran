@@ -112,8 +112,18 @@ Le fichier n'est pas dans le dépôt. Pendant `npx expo prebuild`, le plugin
 `modules/voice-capture/voice-model.json`, vérifie sa taille et son SHA-256
 (`ef01ab44…8b52`), le garde dans `node_modules/.cache/voice-model` et le place dans le projet
 iOS. Un fichier qui ne correspond pas est refusé et la compilation s'arrête, avec l'adresse et la
-raison. Le Mac de GitHub le télécharge à chaque compilation (43,5 Mo) ; aucun script de
-`.github/workflows` n'a eu à changer.
+raison. Le Mac de GitHub le télécharge à chaque compilation (43,5 Mo).
+
+On voit qu'il est entré, à trois endroits :
+
+- le journal de `expo prebuild` affiche `voice model ok: 43537433 ef01ab44…` une fois le fichier
+  placé **et revérifié** dans `ios/<App>/` ; le plugin vérifie aussi que le projet Xcode le copie
+  dans l'appli (« Copy Bundle Resources ») et arrête la compilation sinon ;
+- après la compilation, `tools/ci/check-voice-model.sh` vérifie le fichier **dans l'appli
+  construite** (taille et SHA-256), dans `ios-check.yml` et `testflight-build.yml` ;
+- sur l'iPhone, Réglages → appui long sur « Version » : le diagnostic de la voix dit si le
+  fichier est dans l'appli et sa taille, si Whisper l'a chargé, l'état du micro, le dernier
+  niveau, la dernière transcription et la dernière erreur.
 
 - Hors ligne : `VOICE_MODEL_FILE=/chemin/ggml-quran-tiny-q8_0.bin` (toujours vérifié).
 - Derrière un proxy (la session de l'assistant) : `NODE_USE_ENV_PROXY=1`.

@@ -16,6 +16,69 @@ export type MicrophonePermission = 'undetermined' | 'granted' | 'denied';
  */
 export type SpeechEndReason = 'finished' | 'interrupted' | 'failed';
 
+/**
+ * What broke, when an engine fails, so the screen can name the fix instead of a vague "try again".
+ *
+ * - `microphone-unavailable`: the microphone could not be opened (a call, another app, no input).
+ * - `no-audio`: the microphone opened but gave no sound at all.
+ * - `model-missing`: the speech model is not in the app (a broken install).
+ * - `model-failed`: the speech model is there but could not be loaded.
+ * - `transcription-failed`: the recogniser broke down or stopped answering.
+ * - `unknown`: anything else.
+ */
+export type SpeechFailure =
+  | 'microphone-unavailable'
+  | 'no-audio'
+  | 'model-missing'
+  | 'model-failed'
+  | 'transcription-failed'
+  | 'unknown';
+
+const FAILURES: ReadonlySet<string> = new Set<SpeechFailure>([
+  'microphone-unavailable',
+  'no-audio',
+  'model-missing',
+  'model-failed',
+  'transcription-failed',
+  'unknown',
+]);
+
+/** An engine's refusal or breakdown, with what broke. */
+export class SpeechEngineError extends Error {
+  readonly failure: SpeechFailure;
+
+  constructor(failure: SpeechFailure, message: string) {
+    super(message);
+    this.name = 'SpeechEngineError';
+    this.failure = failure;
+  }
+}
+
+/** What broke, from anything an engine threw: `unknown` when it does not say. */
+export function failureOf(error: unknown): SpeechFailure {
+  if (typeof error === 'object' && error !== null && 'failure' in error) {
+    const failure = (error as { failure: unknown }).failure;
+    if (typeof failure === 'string' && FAILURES.has(failure)) return failure as SpeechFailure;
+  }
+  return 'unknown';
+}
+
+/**
+ * What the engine is doing right now, beyond the level: the screen shows it so the person always
+ * knows the voice reaches the phone.
+ */
+export interface SpeechActivity {
+  /** A voice is being heard right now. */
+  readonly voice: boolean;
+  /** The engine is reading what it heard (the recogniser is working). */
+  readonly transcribing: boolean;
+  /**
+   * The words the latest reading gave for the phrase in progress, not final yet (they may still
+   * change); empty between phrases. Only shown, never searched.
+   */
+  readonly partial: readonly string[];
+}
+
 /** Ends a subscription. Calling it twice is harmless. */
 export type Unsubscribe = () => void;
 
@@ -36,7 +99,8 @@ export interface SpeechEngine {
   requestMicrophonePermission(): Promise<MicrophonePermission>;
   /**
    * Opens the microphone and starts listening. Resolves once the engine listens; rejects when it
-   * cannot (microphone not granted, engine not ready).
+   * cannot (microphone not granted, engine not ready), with a `SpeechEngineError` when it knows
+   * what broke.
    */
   start(): Promise<void>;
   /**
@@ -55,6 +119,11 @@ export interface SpeechEngine {
    * change. Words are Arabic text, raw or normalised; the passage search normalises them.
    */
   onWords(listener: (words: readonly string[]) => void): Unsubscribe;
-  /** The engine stopped by itself. Not called after `stop`. */
-  onEnd(listener: (reason: SpeechEndReason) => void): Unsubscribe;
+  /** The engine stopped by itself, with what broke when it failed. Not called after `stop`. */
+  onEnd(listener: (reason: SpeechEndReason, failure?: SpeechFailure) => void): Unsubscribe;
+  /**
+   * What the engine is doing (voice heard, reading, words not final yet), each time it changes.
+   * Optional: an engine without it shows the level only.
+   */
+  onActivity?(listener: (activity: SpeechActivity) => void): Unsubscribe;
 }

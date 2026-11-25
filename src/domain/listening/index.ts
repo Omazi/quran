@@ -3,9 +3,10 @@
  * listening screen, and where a recognised passage is. Everything else in this folder is
  * private. See docs/specs/listening.md and ./README.md.
  */
-export { INITIAL_LISTENING_STATE, transition } from './listening-machine';
+export { INITIAL_LISTENING_STATE, listeningPhase, transition } from './listening-machine';
 export type {
   ListeningEvent,
+  ListeningPhase,
   ListeningState,
   NothingFoundReason,
   TiedPassages,
@@ -15,4 +16,12 @@ export { locatePassage } from './passage-location';
 export { followRecitation, startFollowing } from './recitation-follow';
 export type { FollowState } from './recitation-follow';
 export type { PassageLocation } from './passage-location';
-export type { MicrophonePermission, SpeechEndReason, SpeechEngine, Unsubscribe } from './types';
+export { SpeechEngineError, failureOf } from './types';
+export type {
+  MicrophonePermission,
+  SpeechActivity,
+  SpeechEndReason,
+  SpeechEngine,
+  SpeechFailure,
+  Unsubscribe,
+} from './types';

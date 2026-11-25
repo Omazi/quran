@@ -122,6 +122,9 @@
   },
   "follow": {
     "denied": "The microphone is not allowed. Allow it in Settings so the app can follow your recitation.",
-    "failed": "Listening could not start. Try again in a moment."
+    "failed": "Listening could not start. Try again in a moment.",
+    "failedModelMissing": "Voice model missing. Reinstall the app from TestFlight.",
+    "failedNoAudio": "No sound from the microphone. Make sure no other app is using it, then try again.",
+    "failedMicrophone": "Microphone unavailable. A call or another app may be using it."
   }
 }

@@ -16,6 +16,7 @@ import {
   foregroundStyle,
   headerProminence,
   listRowBackground,
+  onLongPressGesture,
   scrollContentBackground,
 } from '@expo/ui/swift-ui/modifiers';
 import { StyleSheet, View } from 'react-native';
@@ -135,6 +136,7 @@ export function ListRow({
   value,
   valueAccessibilityLabel,
   onPress,
+  onLongPress,
   testID,
 }: ListRowProps) {
   useGroupedListGuard('ListRow');
@@ -151,11 +153,15 @@ export function ListRow({
         {value}
       </Text>
     );
+  // A hidden gesture adds no look of its own (the version row opens the voice diagnostics).
+  const hidden = onLongPress === undefined ? undefined : [onLongPressGesture(onLongPress)];
   if (onPress === undefined && symbol === undefined) {
     return value === undefined ? (
-      <Text testID={testID}>{label}</Text>
+      <Text modifiers={hidden} testID={testID}>
+        {label}
+      </Text>
     ) : (
-      <LabeledContent label={label} testID={testID}>
+      <LabeledContent label={label} modifiers={hidden} testID={testID}>
         {valueText}
       </LabeledContent>
     );

@@ -88,7 +88,7 @@ export function ReaderScreen({
     follow.status === 'denied'
       ? t('follow.denied')
       : follow.status === 'failed'
-        ? t('follow.failed')
+        ? t(followFailureKey(follow.failure))
         : null;
   const { track, state } = follow;
   const script = texts.status === 'ready' ? texts.script : model.script;
@@ -216,12 +216,28 @@ export function ReaderScreen({
             subscribeToLevel={follow.subscribeToLevel}
             reducedMotion={isMotionReduced}
             rereadWord={rereadWord}
+            isHearing={follow.isHearing}
+            heardWords={follow.heardWords}
             onStop={follow.stop}
           />
         </View>
       ) : null}
     </Screen>
   );
+}
+
+/** The message of a follow that failed: the fix when the failure names one. */
+function followFailureKey(failure: RecitationFollow['failure']): string {
+  switch (failure) {
+    case 'model-missing':
+      return 'follow.failedModelMissing';
+    case 'no-audio':
+      return 'follow.failedNoAudio';
+    case 'microphone-unavailable':
+      return 'follow.failedMicrophone';
+    default:
+      return 'follow.failed';
+  }
 }
 
 /** What the page just left gave, in words, or null when there is nothing to say. */

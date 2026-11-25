@@ -97,8 +97,8 @@ const label = ({ language, scheme, reducedMotion }: (typeof MATRIX)[number]) =>
   `${language}, ${scheme}, ${reducedMotion ? 'reduced motion' : 'motion'}`;
 
 const TEXT = {
-  fr: { title: 'À l’écoute…', stop: 'Arrêter', again: 'Écouter à nouveau', close: 'Fermer' },
-  ar: { title: 'جارٍ الاستماع…', stop: 'إيقاف', again: 'استمع مجددًا', close: 'إغلاق' },
+  fr: { title: 'J’écoute…', stop: 'Arrêter', again: 'Écouter à nouveau', close: 'Fermer' },
+  ar: { title: 'أستمع إليك…', stop: 'إيقاف', again: 'استمع مجددًا', close: 'إغلاق' },
 } as const;
 
 /** A colour as react-native-svg hands it to the native side. */
@@ -171,7 +171,7 @@ describe('listening, for everyone', () => {
   it('announces that it listens, then the passage it found', async () => {
     const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility');
     await showScenario('found', { language: 'fr' });
-    expect(announce).toHaveBeenCalledWith('À l’écoute');
+    expect(announce).toHaveBeenCalledWith('J’écoute');
     expect(announce).toHaveBeenLastCalledWith('Passage reconnu : Sourate Al-Baqarah, Verset 255');
   });
 
@@ -322,20 +322,20 @@ function hasText(element: RenderedElement, text: string): boolean {
 const OUTCOMES = [
   {
     scenario: 'nothing',
-    fr: 'Aucun passage trouvé',
-    ar: 'لم يُعثر على مقطع',
+    fr: 'Je n’ai pas reconnu ce passage',
+    ar: 'لم أتعرّف على هذا المقطع',
     action: { fr: 'Écouter à nouveau', ar: 'استمع مجددًا' },
   },
   {
     scenario: 'silence',
-    fr: 'Rien entendu',
-    ar: 'لم يُسمع شيء',
+    fr: 'Je ne t’ai pas entendu',
+    ar: 'لم أسمعك',
     action: { fr: 'Écouter à nouveau', ar: 'استمع مجددًا' },
   },
   {
     scenario: 'denied',
-    fr: 'Accès au micro désactivé',
-    ar: 'الوصول إلى الميكروفون معطّل',
+    fr: 'Micro refusé',
+    ar: 'الميكروفون مرفوض',
     action: { fr: 'Ouvrir les réglages', ar: 'افتح الإعدادات' },
   },
   {
@@ -386,7 +386,7 @@ describe('listen again', () => {
     await showScenario('nothing', { language: 'fr' });
     await fireEvent.press(screen.getByRole('button', { name: 'Écouter à nouveau' }));
     await wait(200);
-    expect(screen.getByRole('header', { name: 'À l’écoute…' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'J’écoute…' })).toBeOnTheScreen();
   });
 });
 

@@ -60,5 +60,30 @@
   },
   "introduction": {
     "replay": "مشاهدة التعريف من جديد"
+  },
+  "version": {
+    "label": "الإصدار"
+  },
+  "voiceDiagnostics": {
+    "title": "تشخيص الصوت",
+    "footer": "ما رآه التعرّف على هذا الهاتف. لا يُرسَل شيء.",
+    "model": "النموذج الصوتي",
+    "modelPresent": "موجود، {{megabytes}} م.ب ({{bytes}} بايت)",
+    "modelAbsent": "غير موجود",
+    "whisper": "Whisper",
+    "loaded": "محمَّل",
+    "notLoaded": "غير محمَّل",
+    "notTried": "لم يُجرَّب بعد",
+    "microphone": "الميكروفون",
+    "granted": "مسموح",
+    "denied": "مرفوض",
+    "undetermined": "لم يُطلب بعد",
+    "level": "آخر مستوى",
+    "audio": "مقاطع الصوت المستلمة",
+    "transcript": "آخر نص مكتوب",
+    "error": "آخر خطأ",
+    "native": "الميكروفون (أصلي)",
+    "refresh": "تحديث",
+    "unknown": "غير معروف"
   }
 }

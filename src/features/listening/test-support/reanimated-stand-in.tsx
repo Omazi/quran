@@ -70,7 +70,23 @@ export function createAnimatedComponent<Props extends object>(
   return Animated as unknown as ComponentType<Props & { animatedProps?: Partial<Props> }>;
 }
 
-const AnimatedView = createAnimatedComponent<ViewProps & { children?: ReactNode }>(View);
+/** Timings land at once: a test sees the end of a fade. */
+export function withTiming<Value>(target: Value): Value {
+  return target;
+}
+
+/** Curves are not run: only their name is needed. */
+export const Easing = {
+  bezier: (_x1: number, _y1: number, _x2: number, _y2: number) => (t: number) => t,
+};
+
+/** An entering animation: its builder methods return it, and it does nothing here. */
+const instantEntering = { duration: () => instantEntering };
+export const FadeIn = instantEntering;
+
+const AnimatedView = createAnimatedComponent<
+  ViewProps & { children?: ReactNode; entering?: unknown }
+>(({ entering: _entering, ...props }: ViewProps & { entering?: unknown }) => <View {...props} />);
 
 export default { createAnimatedComponent, View: AnimatedView };
 export type SharedValue<Value> = StandInSharedValue<Value>;

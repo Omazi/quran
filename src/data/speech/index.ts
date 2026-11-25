@@ -5,3 +5,5 @@
 export { createDeviceSpeechEngine, type DeviceSpeechEngineOptions } from './device-speech-engine';
 export { SPEECH_ENGINE_CONFIG, type SpeechEngineMode } from './config';
 export { VOICE_MODEL, type VoiceModel } from './voice-model';
+export { voiceDiagnostics, type VoiceDiagnostics, type VoiceDiagnosticsStore } from './diagnostics';
+export { findVoiceCapture, readNativeDiagnostics } from './device-speech-engine';

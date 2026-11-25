@@ -73,7 +73,10 @@ describe('the route', () => {
       '@/app/listening',
     ).default;
     await render(<ListeningRoute />);
-    expect(screen.getByRole('header', { name: 'À l’écoute…' })).toBeOnTheScreen();
+    // "Un instant…" while the engine starts, then "J'écoute…" once the microphone is open.
+    expect(
+      await screen.findByRole('header', { name: 'J’écoute…' }, { timeout: 10_000 }),
+    ).toBeOnTheScreen();
     expect(screen.queryByTestId('redirect')).toBeNull();
   });
 });
