@@ -15,6 +15,7 @@ import {
   useAppStartup,
   type StartupDependencies,
 } from '@/features/settings';
+import { screenCheckLaunch } from '@/features/screen-check';
 import { SyncProvider, useAppSync, type AppSyncDependencies } from '@/features/sync';
 import { AppStoreProvider } from '@/store';
 import { appFonts, useColors } from '@/ui';
@@ -58,7 +59,13 @@ export default function RootLayout() {
   const sync = useAppSync(startedApp?.store ?? null, SYNC);
   const isReady = startedApp !== null && (areFontsLoaded || fontError !== null);
 
-  const launch = useLaunch({ isReady, hideSplash, readReducedMotion });
+  const launch = useLaunch({
+    isReady,
+    hideSplash,
+    readReducedMotion,
+    // The iOS check's pictures of each screen: no animation in front of them (null in any other build).
+    isSkipped: screenCheckLaunch !== null,
+  });
 
   return (
     <View style={styles.root}>

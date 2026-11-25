@@ -45,10 +45,29 @@ check › Run workflow). Aucun secret, rien n'est envoyé à Apple.
 - **iPhone build** : génère le projet iOS, installe les pods, compile pour iPhone sans
   signature, puis vérifie le contenu de l'appli (identifiant `com.omazi.quran`, JavaScript
   embarqué, police du Coran présente). C'est lui qui décide du résultat.
-- **First screen** : compile pour le simulateur, ouvre l'appli et garde une image de son
-  premier écran en français (clair et sombre), en anglais et en arabe. Les images sont dans
-  l'artefact `ios-first-screen` de l'exécution, puis sur la branche `ci-screens`. Il ne
-  bloque jamais : les images sont faites pour être regardées.
+- **First screen** : compile pour le simulateur, ouvre l'appli sur chacun de ses écrans et en
+  garde une image : les 16 pages de l'introduction (français clair et sombre, arabe clair, la
+  première en anglais), puis, avec un jardin et des proches de démonstration, le jardin, l'onglet
+  Coran, le lecteur (écriture uthmani et simple), l'écoute (prête, micro éteint), l'onglet Proches,
+  le jardin d'un proche, le profil et les réglages (français clair et sombre), et le jardin en
+  anglais et en arabe. La liste est `tools/ci/screens.py`. Les images sont dans l'artefact
+  `ios-first-screen` de l'exécution, puis sur la branche `ci-screens`. Il ne bloque jamais : les
+  images sont faites pour être regardées, et une image est prise même si un écran n'a pas pu
+  s'ouvrir.
+
+### Contrôle des écrans
+
+Cette tâche compile l'appli avec `EXPO_PUBLIC_SCREEN_CHECK=1` (`ios-check.yml`, et nulle part
+ailleurs : ni `testflight.yml`, ni `testflight-build.yml`, ni le workflow de DishPlay qui les
+appelle ; un test de l'appli le vérifie). Cette version comprend des arguments de lancement
+(`xcrun simctl launch … -screenCheckGo reader -screenCheckPage 3 -screenCheckScript imlaei
+-screenCheckSeed demo`) qui ouvrent un écran précis, sautent l'animation de lancement et, avec
+`demo`, remplissent l'appli (historique de lecture, temps passé, proches de démonstration
+connectés). L'adresse `/onboarding?page=N` (de 1 à 16) n'est lue que dans cette version. Sans la
+variable, rien de cela n'existe dans le paquet (`src/features/screen-check/door.ts`) : les
+arguments et le paramètre sont ignorés. L'écoute s'ouvre sans lancer le micro, comme pour tout
+lien. Les pages de l'introduction se photographient avant le remplissage (ensuite l'introduction
+n'est plus qu'une relecture) ; le nombre de pages est dans `tools/ci/screens.py`.
 
 Un push ne lance les Mac que s'il touche à ce dont l'appli est faite (`src/`, `assets/`,
 `modules/`, `app.json`, les dépendances, le script lui-même). La documentation seule ne

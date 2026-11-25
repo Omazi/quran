@@ -45,16 +45,16 @@ Le dépôt est public (D24). Tout ce qui y est poussé, historique compris, est 
   ni publier son journal : les artefacts d'un dépôt public sont publics.
 - Les versions des étapes fournies par GitHub sont figées par leur empreinte.
 - Un seul script a le droit d'écrire dans le dépôt : `ios-screens.yml`, qui dépose les images
-  du premier écran sur la branche `ci-screens`. Décidé par le propriétaire le 24 novembre 2026,
+  des écrans sur la branche `ci-screens`. Décidé par le propriétaire le 24 novembre 2026,
   pour que ces images se regardent depuis un téléphone. Ce qui le borne :
   - il ne compile rien et n'installe aucune dépendance : il lance deux étapes fournies par
     GitHub, figées par leur empreinte, et un script du dépôt pris sur `main`. La compilation
     reste dans `ios-check.yml`, en lecture seule ;
   - il ne lit que l'artefact d'une vérification réussie du `main` de ce dépôt, lancée par un
     push ou à la main : une exécution venue d'un fork est refusée, à deux endroits ;
-  - il traite cet artefact comme une donnée non sûre : seules les quatre images attendues
-    sont gardées, chacune lue jusqu'au bout pour vérifier que c'est un fichier PNG entier
-    (`tools/ci/publish-screens.py`) ; rien de ce qu'il contient n'est exécuté ;
+  - il traite cet artefact comme une donnée non sûre : seules les images dont le nom est dans `tools/ci/screens.py`
+    sont gardées (une liste fixe, lue sur `main`), chacune lue jusqu'au bout pour vérifier que c'est un fichier PNG entier
+    (`tools/ci/publish-screens.py`, avec un plafond de taille par image et au total) ; rien de ce qu'il contient n'est exécuté ;
   - le script ne pousse que la branche `ci-screens`, qui ne contient rien d'autre. Son jeton,
     lui, pourrait écrire ailleurs : seule l'écriture du script l'en empêche. Une règle de
     protection de `main` (réglage du propriétaire, plus bas) fermerait cette porte ;
