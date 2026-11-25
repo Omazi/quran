@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from 'react';
 
-import type { GroupedListAppearance } from './types';
+import type { GroupedListAppearance, GroupedListBackground } from './types';
 
 /** True below a `GroupedList`, in either implementation. */
 const InsideGroupedList = createContext(false);
@@ -8,17 +8,24 @@ const InsideGroupedList = createContext(false);
 /** The look of the list the sections are in. */
 const ListAppearance = createContext<GroupedListAppearance>('system');
 
+/** The background of the enclosing list (`GroupedListProps.background`). */
+const ListBackground = createContext<GroupedListBackground>('system');
+
 /** Set by both implementations of `GroupedList` around their content. */
 export function GroupedListScope({
   children,
   appearance = 'system',
+  background = 'system',
 }: {
   children: ReactNode;
   appearance?: GroupedListAppearance;
+  background?: GroupedListBackground;
 }) {
   return (
     <InsideGroupedList.Provider value>
-      <ListAppearance.Provider value={appearance}>{children}</ListAppearance.Provider>
+      <ListAppearance.Provider value={appearance}>
+        <ListBackground.Provider value={background}>{children}</ListBackground.Provider>
+      </ListAppearance.Provider>
     </InsideGroupedList.Provider>
   );
 }
@@ -26,6 +33,11 @@ export function GroupedListScope({
 /** The appearance of the enclosing `GroupedList`, for its sections. */
 export function useGroupedListAppearance(): GroupedListAppearance {
   return useContext(ListAppearance);
+}
+
+/** The background of the list a section belongs to. */
+export function useGroupedListBackground(): GroupedListBackground {
+  return useContext(ListBackground);
 }
 
 /**

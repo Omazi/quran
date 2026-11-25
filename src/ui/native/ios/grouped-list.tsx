@@ -39,15 +39,28 @@ const TERTIARY = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
  * (lists-and-tables.md › Style). It scrolls by itself and fills the place it is given. In the
  * garden appearance the form hides its own background, so the screen's warm canvas shows
  * through, and each section gives its rows the white of the mockups' cards (see `ListSection`).
+ * With a clear background the form hides its background too, and the screen's backdrop shows
+ * around the system's own rounded groups.
  */
-export function GroupedList({ children, header, appearance = 'system', testID }: GroupedListProps) {
+export function GroupedList({
+  children,
+  header,
+  appearance = 'system',
+  background = 'system',
+  testID,
+}: GroupedListProps) {
+  // The garden canvas and a clear list both need the Form to draw no background of its own; the
+  // groups keep theirs (the system's, or the garden's white rows).
+  const hidesBackground = appearance === 'garden' || background === 'clear';
   const list = (
     <SwiftUIHost size="fill">
       <Form
         testID={testID}
-        modifiers={appearance === 'garden' ? [scrollContentBackground('hidden')] : undefined}
+        modifiers={hidesBackground ? [scrollContentBackground('hidden')] : undefined}
       >
-        <GroupedListScope appearance={appearance}>{children}</GroupedListScope>
+        <GroupedListScope appearance={appearance} background={background}>
+          {children}
+        </GroupedListScope>
       </Form>
     </SwiftUIHost>
   );

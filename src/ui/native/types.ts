@@ -71,10 +71,20 @@ export interface GroupedListProps {
    * system's; place the list on a `Screen` with the `canvas` background.
    */
   appearance?: GroupedListAppearance;
+  /**
+   * `system` (default): the list draws the background its appearance gives it. `clear`: no
+   * background of its own, so that the screen's backdrop shows around the groups, which keep
+   * their own surface: on iOS the system's rounded groups, elsewhere a rounded card per group.
+   * For a list laid over a picture or a gradient, as the validated first-launch prototype lays
+   * its settings.
+   */
+  background?: GroupedListBackground;
   testID?: string;
 }
 
 export type GroupedListAppearance = 'system' | 'garden';
+
+export type GroupedListBackground = 'system' | 'clear';
 
 export interface ListSectionProps {
   /** Header of the section. */

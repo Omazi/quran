@@ -201,6 +201,42 @@ export const palette = {
   launchWord: { light: '#F6FBF9', dark: '#F6FBF9' },
   launchDrops: { light: '#8FE0EA', dark: '#8FE0EA' },
   launchLeaf: { light: '#8FDB6B', dark: '#8FDB6B' },
+
+  // --- The first launch (docs/design/premier-lancement-prototype.html) -----------------------
+  /**
+   * The page dots of the first launch (docs/design/premier-lancement-prototype.html, `.pc`): the
+   * other pages' dots (ink at 22 %), the current one, and the translucent capsule under them where
+   * the system's glass is not available. At night, and over the deep green of the listening page,
+   * the prototype's light values.
+   */
+  pageDot: { light: 'rgba(29, 42, 35, 0.22)', dark: 'rgba(255, 255, 255, 0.35)' },
+  pageDotCurrent: { light: '#1D2A23', dark: '#FFFFFF' },
+  pageDotsSurface: { light: 'rgba(255, 255, 255, 0.55)', dark: 'rgba(255, 255, 255, 0.14)' },
+  pageDotsEdge: { light: 'rgba(255, 255, 255, 0.9)', dark: 'rgba(255, 255, 255, 0.22)' },
+  /**
+   * The sentence over the deep green of the listening page (shazam.png, the prototype's
+   * `.copy.light`): the prototype's white at 78 % as a solid value, 5.82:1 on #1F5C45 (`action`),
+   * where the words begin. Its title takes `onAction`, the same white.
+   */
+  onActionSecondary: { light: '#D3E1DC', dark: '#D3E1DC' },
+  /** The thin gold lines of the star pattern on that green (shazam.png): a decoration only. */
+  patternLine: { light: 'rgba(232, 207, 152, 0.13)', dark: 'rgba(232, 207, 152, 0.1)' },
+  /**
+   * The golden microphone of the listening page (shazam.png): its light, middle and deep gold,
+   * and its rays. A shape beside the words that name it.
+   */
+  orbLight: { light: '#FAEBC2', dark: '#F3DFA9' },
+  orbMiddle: { light: '#D9A441', dark: '#C8963B' },
+  orbDeep: { light: '#9C7838', dark: '#86662E' },
+  orbRays: { light: '#F2D48B', dark: '#E2C27A' },
+  /** The microphone on the gold disc: the prototype's deep green, the same at night. */
+  onOrb: { light: '#123C2D', dark: '#123C2D' },
+  /**
+   * A notification shown in the first launch's reminders page (the prototype's `.notif`): the
+   * translucent card of the system's banners, and its bright edge.
+   */
+  notificationSurface: { light: 'rgba(255, 255, 255, 0.72)', dark: 'rgba(44, 48, 46, 0.78)' },
+  notificationEdge: { light: 'rgba(255, 255, 255, 0.9)', dark: 'rgba(255, 255, 255, 0.12)' },
 } as const satisfies Record<string, ColorPair>;
 
 /** High-contrast values of the palette's words and actions (color.md › Best practices). */
@@ -271,6 +307,36 @@ export const backdropGradients = {
       [0, '#25221D'],
       [0.6, '#201E1A'],
       [1, '#1D1C19'],
+    ],
+  },
+  /**
+   * shazam.png and the prototype's listening page: deep green, lighter at the top. The prototype
+   * draws it as a radial light from the top corner; a vertical gradient keeps its three values.
+   * The same at night, a step darker.
+   */
+  listening: {
+    light: [
+      [0, '#1E8069'],
+      [0.42, '#1F5C45'],
+      [1, '#0E2F24'],
+    ],
+    dark: [
+      [0, '#17644F'],
+      [0.42, '#174636'],
+      [1, '#0A231B'],
+    ],
+  },
+  /** The prototype's page of friends (`.bg.plain`): the peach paled to paper. */
+  together: {
+    light: [
+      [0, '#EFE9DB'],
+      [0.55, '#F4F1EA'],
+      [1, '#F5F4F1'],
+    ],
+    dark: [
+      [0, '#26231E'],
+      [0.55, '#1D1C19'],
+      [1, '#181817'],
     ],
   },
   /** khatm.png: a full sunrise. */
@@ -434,6 +500,16 @@ export type IconColorRole = Exclude<
   | 'launchWord'
   | 'launchDrops'
   | 'launchLeaf'
+  | 'pageDot'
+  | 'pageDotCurrent'
+  | 'pageDotsSurface'
+  | 'pageDotsEdge'
+  | 'patternLine'
+  | 'orbLight'
+  | 'orbMiddle'
+  | 'orbDeep'
+  | 'notificationSurface'
+  | 'notificationEdge'
 >;
 
 /**
@@ -442,7 +518,7 @@ export type IconColorRole = Exclude<
  */
 export type TextColorRole = Exclude<
   IconColorRole,
-  'warning' | 'waterFill' | 'flame' | 'thirstIcon'
+  'warning' | 'waterFill' | 'flame' | 'thirstIcon' | 'orbRays'
 >;
 
 /**
@@ -775,6 +851,80 @@ export const readerShapes = {
   shadowOpacity: 0.1,
   shadowRadius: 10,
   shadowOffsetY: 2,
+} as const;
+
+/**
+ * The first launch as the validated prototype lays it out (docs/design/premier-lancement-
+ * prototype.html, measured at 393 × 852 points). Distances from the top are counted from the safe
+ * area's top, distances from the bottom from its bottom. Owner's rule of 25 November 2026: the
+ * prototype is the visual reference of the first launch.
+ */
+export const storyLayout = {
+  /** The bar that names the app at the top (`.top`). */
+  brandBarHeight: 52,
+  /** The scene: where it starts, and its height as a share of the window (`.stage`). */
+  stageTop: 56,
+  stageShare: 0.48,
+  /** Above the goal the scene shrinks, from its top edge, and rises a little (`small`). */
+  smallStageScale: 0.64,
+  smallStageLift: 10,
+  /** The caption under the garden ("Hizb 8"): its distance above the scene's bottom (`.cap`). */
+  captionAboveStageBottom: 64,
+  captionHeight: 34,
+  captionPadding: 14,
+  /** The words of a story page rest this far above the bottom (`.texts`). */
+  wordsBottom: 92,
+  /** The page's margin at both sides (`.page`, `.copy`). */
+  margin: spacing.lg,
+  /** Between the title and its sentence, and before the hint to swipe. */
+  titleGap: 12,
+  hintGap: 18,
+  /** The page dots and the last button, from the bottom (`.pc`, `.cta`). */
+  dotsBottom: 26,
+  finishBottom: 22,
+  /** Where the goal page's words start, as a share of the window (`.page` 37dvh). */
+  goalTopShare: 0.37,
+  /** Where the reminders page starts (`.page.last`). */
+  remindersTop: 58,
+  /** The notifications previewed on the reminders page (`.notif`). */
+  notificationRadius: 24,
+  notificationIcon: 40,
+  notificationIconRadius: 9,
+  notificationGap: spacing.sm,
+  /** The golden microphone of the listening page (`.orb`, `.mic`, `.radial i`, `.ring`). */
+  orb: 230,
+  orbMicrophone: 104,
+  orbRayCount: 48,
+  orbRayRadius: 96,
+  orbRayWidth: 3,
+  orbRayShortest: 8,
+  orbRayLongest: 26,
+  orbRingInset: 18,
+  /** Once the passage is found, the microphone shrinks and rises, and the card comes over it. */
+  orbFoundScale: 0.62,
+  orbFoundLift: 34,
+  foundCardRadius: 26,
+  foundCardOverlap: 34,
+  /** The friends' gardens (`.fcard`, `.fg`): their card, the garden's height, the middle lift. */
+  friendCardRadius: 22,
+  friendGardenHeight: 86,
+  friendGardenRadius: 15,
+  friendMiddleLift: 18,
+} as const;
+
+/**
+ * The motion of the first launch, from the prototype: how long the listening demonstration
+ * listens before it finds the passage, and its whole loop; the beat of the rays and the rings;
+ * the hint to swipe.
+ */
+export const storyMotion = {
+  listenMs: 2300,
+  loopMs: 6600,
+  foundMs: 550,
+  rayBeatMs: 1000,
+  ringMs: 2400,
+  hintMs: 1600,
+  hintTravel: 8,
 } as const;
 
 /** Semibold, for a short emphasised phrase inside a text style (the watered pill). */

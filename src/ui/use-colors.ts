@@ -172,10 +172,14 @@ const colorValues: Readonly<Record<Contrast, Record<Appearance, ColorValues>>> =
 /**
  * The same colours as `useColors`, as plain values for the device appearance and contrast, for
  * what cannot take a dynamic colour: the strokes and gradients of react-native-svg, CSS gradients
- * and box shadows. A change of appearance renders again.
+ * and box shadows, a colour animated between two values on the UI thread. A change of appearance
+ * renders again. `appearance` fixes the appearance whatever the device's, for a surface that is
+ * always dark (the deep green of the first launch's listening page); the contrast still follows
+ * the device.
  */
-export function useColorValues(): ColorValues {
+export function useColorValues(appearance?: Appearance): ColorValues {
   const scheme = useColorScheme();
   const isHighContrast = useHighContrast();
-  return colorValues[isHighContrast ? 'high' : 'standard'][scheme === 'dark' ? 'dark' : 'light'];
+  const resolved = appearance ?? (scheme === 'dark' ? 'dark' : 'light');
+  return colorValues[isHighContrast ? 'high' : 'standard'][resolved];
 }

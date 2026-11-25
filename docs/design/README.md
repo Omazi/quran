@@ -3,18 +3,19 @@
 Captures des maquettes « Le jardin, version 2 », validées pour le parcours et la
 composition des écrans.
 
-| Fichier         | Écran                                                                 |
-| --------------- | --------------------------------------------------------------------- |
-| `bienvenue.png` | Premier lancement : terre nue                                         |
-| `accueil.png`   | Accueil : jardin, compteur de hizb, arrosage du jour, dernier élément |
-| `soif.png`      | Accueil après 3 jours sans lecture                                    |
-| `mort.png`      | Jardin desséché                                                       |
-| `nouveau.png`   | Hizb terminé : nouvel élément et son verset                           |
-| `mushaf.png`    | Lecture du mushaf                                                     |
-| `voix.png`      | Lecture à voix haute (lot 2)                                          |
-| `shazam.png`    | Reconnaissance d'un passage (lot 2)                                   |
-| `khatm.png`     | Khatma terminée                                                       |
-| `visite.png`    | Visite du jardin d'un proche (lot 3)                                  |
+| Fichier                            | Écran                                                                               |
+| ---------------------------------- | ----------------------------------------------------------------------------------- |
+| `bienvenue.png`                    | Premier lancement : terre nue                                                       |
+| `premier-lancement-prototype.html` | Premier lancement complet (prototype validé, référence d'aspect et de comportement) |
+| `accueil.png`                      | Accueil : jardin, compteur de hizb, arrosage du jour, dernier élément               |
+| `soif.png`                         | Accueil après 3 jours sans lecture                                                  |
+| `mort.png`                         | Jardin desséché                                                                     |
+| `nouveau.png`                      | Hizb terminé : nouvel élément et son verset                                         |
+| `mushaf.png`                       | Lecture du mushaf                                                                   |
+| `voix.png`                         | Lecture à voix haute (lot 2)                                                        |
+| `shazam.png`                       | Reconnaissance d'un passage (lot 2)                                                 |
+| `khatm.png`                        | Khatma terminée                                                                     |
+| `visite.png`                       | Visite du jardin d'un proche (lot 3)                                                |
 
 À savoir :
 

@@ -64,10 +64,13 @@ describe('the palette of the validated mockups', () => {
   const ON_GRADIENT: Readonly<
     Record<keyof typeof backdropGradients, readonly (keyof typeof palette)[]>
   > = {
-    growing: ['dateLabel', 'heading', 'water', 'drought'],
-    thirsty: ['dateLabel', 'heading', 'drought'],
+    growing: ['dateLabel', 'heading', 'water', 'drought', 'muted'],
+    thirsty: ['dateLabel', 'heading', 'drought', 'earthSecondary'],
     dead: ['dateLabel', 'heading', 'earth', 'earthSecondary'],
     complete: ['heading', 'muted'],
+    // The first launch: words over the deep green of the listening page, and over the friends' page.
+    listening: ['onAction', 'onActionSecondary'],
+    together: ['heading', 'muted'],
   };
   /** The completed khatma writes its words under the garden: the lower half of its gradient. */
   const FIRST_STOP_UNDER_TEXT: Readonly<Record<keyof typeof backdropGradients, number>> = {
@@ -75,6 +78,9 @@ describe('the palette of the validated mockups', () => {
     thirsty: 0,
     dead: 0,
     complete: 0.5,
+    // The words of the listening page begin under the scene, from the middle of the screen.
+    listening: 0.42,
+    together: 0,
   };
 
   it.each(['light', 'dark'] as const)(

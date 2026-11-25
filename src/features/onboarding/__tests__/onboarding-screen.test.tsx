@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
-import { PlatformColor, StyleSheet, Text } from 'react-native';
+import { Text } from 'react-native';
 
 import {
   createInertNotificationPermissions,
@@ -10,18 +10,17 @@ import {
   type RenderWithStoreOptions,
 } from '@/features/settings/test-support/render-with-store';
 import { DEFAULT_REMINDERS } from '@/store';
-import { layout, spacing } from '@/ui';
 import {
   APPEARANCES_AND_DIRECTIONS,
   LARGEST_FONT_SCALE,
   directionDependentStyles,
   fixedHeightsAroundText,
+  iosPaletteColor,
   resetDeviceConditions,
   setDeviceConditions,
   styleOf,
   touchTargetHeight,
   withDescendants,
-  type RenderedElement,
 } from '@/ui/test-support/environment';
 
 import { OnboardingScreen } from '../onboarding-screen';
@@ -47,8 +46,10 @@ jest.mock('expo-notifications', () =>
 );
 
 const NO_BREAK_SPACE = ' ';
-const GOAL_PAGE = 11;
-const REMINDERS_PAGE = 12;
+const GOAL_PAGE = 13;
+const REMINDERS_PAGE = 14;
+const PAGE_COUNT = 15;
+const FINISH = 'Créer mon jardin';
 /** The flow once the three features it presents exist. */
 const PAGES_WITH_EVERY_FEATURE = onboardingPages(
   'full',
@@ -73,13 +74,6 @@ interface RenderOnboardingOptions extends RenderWithStoreOptions {
   renderScene?: SceneRenderer;
 }
 
-/** The view of the pager that holds the pages: it draws them once it knows its width. */
-function pagesFrame(): RenderedElement {
-  const frame = screen.getByTestId('onboarding-pager').children[0];
-  if (frame === undefined || typeof frame === 'string') throw new Error('No pages frame.');
-  return frame;
-}
-
 async function renderOnboarding({
   page = 0,
   pages = ONBOARDING_PAGES_FULL,
@@ -99,20 +93,16 @@ async function renderOnboarding({
     />,
     options,
   );
-  // On an iPhone the system pager lays its pages out by itself.
-  if (options.onIOS !== true) {
-    await fireEvent(pagesFrame(), 'layout', { nativeEvent: { layout: WINDOW } });
-  }
+  // The pager draws its pages once it knows its width.
+  await fireEvent(screen.getByTestId('onboarding-pager-pages'), 'layout', {
+    nativeEvent: { layout: WINDOW },
+  });
   return { store, onFinished, request };
 }
 
-/** The pages on screen: each paints its own background. */
-function pageBackgrounds() {
-  return screen.getAllByTestId('onboarding-page').map((page) => styleOf(page).backgroundColor);
-}
-
+/** The page dots; on the last page they are faded out for the button and hidden from readers. */
 function indicator() {
-  return screen.getByTestId('onboarding-pager-indicator');
+  return screen.getByTestId('onboarding-pager-indicator', { includeHiddenElements: true });
 }
 
 /** The names of the buttons on screen, in reading order: their label, or the text they show. */
@@ -132,7 +122,7 @@ const WILL_ASK = 'Ton téléphone te demandera ensuite d’autoriser les notific
 
 describe('first-launch flow', () => {
   it.each(APPEARANCES_AND_DIRECTIONS)(
-    'opens on the bare earth: a named scene, a title, one sentence and the page indicator ($scheme, right to left: $rightToLeft)',
+    'opens on the bare earth: a named scene, a title, one sentence, the hint to swipe and the page dots ($scheme, right to left: $rightToLeft)',
     async (conditions) => {
       setDeviceConditions(conditions);
       await renderOnboarding();
@@ -140,15 +130,21 @@ describe('first-launch flow', () => {
       expect(
         screen.getByRole('image', { name: `Jardin${NO_BREAK_SPACE}: terre nue` }),
       ).toBeOnTheScreen();
-      expect(screen.getByRole('header', { name: 'Une terre nue' })).toBeOnTheScreen();
+      expect(screen.getByRole('header', { name: 'Une terre nue.' })).toBeOnTheScreen();
       expect(
-        screen.getByText('Soixante hizb pour en faire un jardin. Glisse pour continuer.'),
+        screen.getByText(`Soixante hizb pour en faire un${NO_BREAK_SPACE}jardin.`),
       ).toBeOnTheScreen();
+      expect(screen.getByText('Glisse')).toBeOnTheScreen();
       expect(indicator()).toHaveProp('accessibilityLabel', 'Présentation');
-      expect(indicator()).toHaveAccessibilityValue({ text: 'Page 1 sur 13' });
+      expect(indicator()).toHaveAccessibilityValue({ text: `Page 1 sur ${PAGE_COUNT}` });
       expect(directionDependentStyles(screen.getByTestId('onboarding'))).toEqual([]);
     },
   );
+
+  it('names the app at the top, as the welcome mockup does', async () => {
+    await renderOnboarding();
+    expect(screen.getByText('Jannatuk')).toBeOnTheScreen();
+  });
 
   it('has no button to continue or to skip: a swipe is the way through', async () => {
     await renderOnboarding();
@@ -156,28 +152,39 @@ describe('first-launch flow', () => {
     expect(screen.queryByText(/^continuer$|passer|suivant/i)).toBeNull();
   });
 
-  const SCENES_AND_TITLES: readonly (readonly [number, string | null, string])[] = [
-    [0, `Jardin${NO_BREAK_SPACE}: terre nue`, 'Une terre nue'],
-    [1, 'Jardin au hizb 8', 'Lis, et l’eau coule'],
-    [2, 'Jardin au hizb 20', 'Un hizb, un nouvel élément'],
-    [3, 'Jardin au hizb 30', 'À mi-chemin, les murs s’élèvent'],
-    [4, 'Jardin au hizb 40', 'Les portes s’ouvrent'],
-    [5, 'Jardin après 3 jours sans lecture', 'Si tu arrêtes de lire, il a soif'],
-    [6, 'Jardin après 6 jours sans lecture', 'Puis il fane'],
-    [7, 'Jardin après 10 jours sans lecture', 'Les arbres se dénudent'],
-    [8, 'Jardin après 14 jours sans lecture', 'Et il redevient une terre morte'],
-    [9, 'Jardin qui revit après une page', 'Une page suffit pour le faire revivre'],
-    [10, 'Jardin au hizb 60', 'Au soixantième hizb, ton jardin est complet'],
-    [GOAL_PAGE, null, 'Ton objectif du jour'],
-    [REMINDERS_PAGE, null, 'Tes rappels'],
+  const SCENES_AND_TITLES: readonly (readonly [number, string | RegExp | null, string])[] = [
+    [0, `Jardin${NO_BREAK_SPACE}: terre nue`, 'Une terre nue.'],
+    [1, 'Jardin au hizb 8', 'Lis, et l’eau coule.'],
+    [2, 'Jardin au hizb 20', 'Un hizb, un nouvel élément.'],
+    [3, 'Jardin au hizb 30', 'À mi-chemin, les murs s’élèvent.'],
+    [4, 'Jardin au hizb 40', 'Les portes s’ouvrent.'],
+    [5, 'Jardin au hizb 60', 'Ton jardin est complet.'],
+    [6, 'Jardin après 3 jours sans lecture', 'Si tu t’arrêtes en chemin, il a soif.'],
+    [7, 'Jardin après 6 jours sans lecture', 'Puis il fane.'],
+    [8, 'Jardin après 10 jours sans lecture', 'Les arbres se dénudent.'],
+    [9, 'Jardin après 14 jours sans lecture', 'Et il redevient une terre morte.'],
+    [10, 'Jardin qui revit après une page', 'Une page suffit pour le faire revivre.'],
+    [
+      11,
+      /^Passage reconnu à l’écoute, Al-Kahf, verset 10$/,
+      `D’où vient ce passage${NO_BREAK_SPACE}?`,
+    ],
+    [
+      12,
+      /^Jardins de tes proches ; Mustapha, 38 hizb ; Sarah, 52 hizb ; Taghread, 14 hizb$/,
+      'Avec tes proches.',
+    ],
+    [GOAL_PAGE, `Jardin${NO_BREAK_SPACE}: terre nue`, 'Ton objectif du jour.'],
+    [REMINDERS_PAGE, null, 'Tes rappels.'],
   ];
 
   it.each(SCENES_AND_TITLES)(
-    'shows page %i with its scene (%s) and its title (%s)',
+    'shows page %i with its scene (%s) and its title (%s), and nothing of the other pages to a screen reader',
     async (page, sceneName, title) => {
       await renderOnboarding({ page });
       expect(screen.getByRole('header', { name: title })).toBeOnTheScreen();
-      expect(indicator()).toHaveAccessibilityValue({ text: `Page ${page + 1} sur 13` });
+      expect(screen.getAllByRole('header')).toHaveLength(1);
+      expect(indicator()).toHaveAccessibilityValue({ text: `Page ${page + 1} sur ${PAGE_COUNT}` });
       if (sceneName === null) {
         expect(screen.queryByRole('image')).toBeNull();
       } else {
@@ -186,64 +193,77 @@ describe('first-launch flow', () => {
     },
   );
 
-  it('gives the scene the top of the page, edge to edge, and the same height on every page', async () => {
-    await renderOnboarding();
-    const page = screen.getAllByTestId('onboarding-page')[0];
-    if (page === undefined) throw new Error('No page.');
-    const scene = page.queryAll((element) => element.props.accessibilityRole === 'image')[0];
-    const sceneFrame = scene?.parent;
-    if (sceneFrame === undefined) throw new Error('The page has no scene.');
-    if (sceneFrame === null) throw new Error('The scene has no frame.');
-    // Before the page is measured the scene takes what the words leave.
-    expect(styleOf(sceneFrame).flexGrow).toBe(1);
-    await fireEvent(page, 'layout', { nativeEvent: { layout: { ...WINDOW, height: 800 } } });
-    expect(styleOf(sceneFrame).height).toBe(400);
-    // No side margin on the scene: only the words have one.
-    expect(styleOf(page).paddingHorizontal).toBeUndefined();
-  });
-
-  it('paints the last page down to the bottom edge, behind the page indicator', async () => {
-    await renderOnboarding({ page: REMINDERS_PAGE });
-    const page = screen.getByTestId('onboarding-page');
-    expect(styleOf(page).backgroundColor).toEqual(PlatformColor('systemGroupedBackground'));
-    // The list stops above the indicator; the colour does not.
-    expect(styleOf(page).paddingBottom).toBe(layout.touchTarget);
-  });
-
-  it('keeps the words of a story page clear of the page indicator', async () => {
-    await renderOnboarding();
-    const page = screen.getAllByTestId('onboarding-page')[0];
-    if (page === undefined) throw new Error('No page.');
-    expect(StyleSheet.flatten(page.props.contentContainerStyle).paddingBottom).toBe(
-      spacing.md + layout.touchTarget,
-    );
-  });
-
   it('has a title and a sentence on every page of the full flow', () => {
     expect(SCENES_AND_TITLES).toHaveLength(ONBOARDING_PAGES_FULL.length);
   });
 
-  it('tells the complete garden last, as the one that no longer dries', async () => {
-    await renderOnboarding({ page: 10 });
+  it('shows the hint to swipe on the first page only', async () => {
+    await renderOnboarding({ page: 1 });
+    expect(screen.queryByTestId('onboarding-hint')).toBeNull();
+  });
+
+  it('captions each garden with what it shows, a caption screen readers skip', async () => {
+    await renderOnboarding({ page: 6 });
+    const captions = screen
+      .getAllByTestId('onboarding-caption', { includeHiddenElements: true })
+      .map((caption) => caption.queryAll(({ type }) => type === 'Text')[0]?.props.children);
+    expect(captions).toEqual([
+      'Hizb 8',
+      'Hizb 20',
+      'Hizb 30',
+      'Hizb 40',
+      'Hizb 60',
+      '3 jours sans lecture',
+      '6 jours sans lecture',
+      '10 jours sans lecture',
+      '14 jours sans lecture',
+      'Tu reprends ta lecture',
+    ]);
+    expect(screen.queryByText('3 jours sans lecture')).toBeNull();
+  });
+
+  it('says the complete garden no longer dries, before the drought takes a garden on its way', async () => {
+    await renderOnboarding({ page: 5 });
     expect(
-      screen.getByText('Tu as lu le Coran en entier, et ce jardin-là ne sèche plus.'),
+      screen.getByText(
+        `Soixante hizb${NO_BREAK_SPACE}: tu as lu le Coran en entier. Ce jardin-là ne sèche${NO_BREAK_SPACE}plus.`,
+      ),
     ).toBeOnTheScreen();
   });
 
-  it('writes the sentence of a page in the primary text colour, like its title', async () => {
+  it.each([
+    [0, 'heading', 'muted'],
+    [8, 'heading', 'earthSecondary'],
+    [11, 'onAction', 'onActionSecondary'],
+  ] as const)(
+    'writes page %i in the colours of its sky: a %s title over a %s sentence',
+    async (page, titleColor, textColor) => {
+      await renderOnboarding({ page, onIOS: true });
+      const title = screen.getByRole('header');
+      const sentence = screen
+        .getByTestId('onboarding-page')
+        .queryAll(({ type }) => type === 'Text')[1];
+      if (sentence === undefined) throw new Error('No sentence.');
+      expect(styleOf(title).color).toEqual(iosPaletteColor(titleColor));
+      expect(styleOf(sentence).color).toEqual(iosPaletteColor(textColor));
+    },
+  );
+
+  it('lays the sky of each page behind all of them: warm, then grey, deep green, paler', async () => {
     await renderOnboarding();
-    const sentence = screen.getByText(
-      'Soixante hizb pour en faire un jardin. Glisse pour continuer.',
-    );
-    const title = screen.getByRole('header', { name: 'Une terre nue' });
-    expect(styleOf(sentence).color).toEqual(PlatformColor('label'));
-    expect(styleOf(sentence).color).toEqual(styleOf(title).color);
+    for (const layer of ['complete', 'thirsty', 'dead', 'listening', 'together']) {
+      expect(
+        screen.getByTestId(`onboarding-backdrop-${layer}`, { includeHiddenElements: true }),
+      ).toBeOnTheScreen();
+    }
+    // The screen paints nothing of its own: the sky shows behind every page as they slide.
+    expect(styleOf(screen.getByTestId('onboarding')).backgroundColor).toBeUndefined();
   });
 
   it.each([
-    [11, 'Lecture à voix haute, suivie mot à mot', 'Lis à voix haute, l’appli te suit'],
-    [12, 'Passage reconnu à l’écoute', `D’où vient ce passage${NO_BREAK_SPACE}?`],
-    [13, 'Jardins de tes proches', 'Avec tes proches'],
+    [11, 'Lecture à voix haute, suivie mot à mot', 'Lis à voix haute, l’appli te suit.'],
+    [12, /^Passage reconnu à l’écoute/, `D’où vient ce passage${NO_BREAK_SPACE}?`],
+    [13, /^Jardins de tes proches/, 'Avec tes proches.'],
   ])('has page %i ready for the day its feature ships: %s', async (page, sceneName, title) => {
     await renderOnboarding({ page, pages: PAGES_WITH_EVERY_FEATURE });
     expect(indicator()).toHaveAccessibilityValue({ text: `Page ${page + 1} sur 16` });
@@ -251,14 +271,21 @@ describe('first-launch flow', () => {
     expect(screen.getByRole('header', { name: title })).toBeOnTheScreen();
   });
 
-  it('moves one page at a time from the page indicator, forwards and back', async () => {
+  it('shows the passage found as the data layer gives it, once its page is shown', async () => {
+    await renderOnboarding({ page: 11 });
+    const verse = await screen.findByText(/^إِذۡ أَوَى/, { includeHiddenElements: true });
+    expect(verse).toBeOnTheScreen();
+    expect(screen.getByText('Page 294', { includeHiddenElements: true })).toBeOnTheScreen();
+  });
+
+  it('moves one page at a time from the page dots, forwards and back', async () => {
     await renderOnboarding();
     await fireEvent.press(screen.getByTestId('onboarding-pager-indicator-next'));
-    expect(indicator()).toHaveAccessibilityValue({ text: 'Page 2 sur 13' });
-    expect(screen.getByRole('header', { name: 'Lis, et l’eau coule' })).toBeOnTheScreen();
+    expect(indicator()).toHaveAccessibilityValue({ text: `Page 2 sur ${PAGE_COUNT}` });
+    expect(screen.getByRole('header', { name: 'Lis, et l’eau coule.' })).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByTestId('onboarding-pager-indicator-previous'));
-    expect(indicator()).toHaveAccessibilityValue({ text: 'Page 1 sur 13' });
+    expect(indicator()).toHaveAccessibilityValue({ text: `Page 1 sur ${PAGE_COUNT}` });
   });
 
   it('lets a screen reader turn the pages without a swipe', async () => {
@@ -269,68 +296,110 @@ describe('first-launch flow', () => {
     await fireEvent(indicator(), 'accessibilityAction', {
       nativeEvent: { actionName: 'increment' },
     });
-    expect(indicator()).toHaveAccessibilityValue({ text: 'Page 3 sur 13' });
+    expect(indicator()).toHaveAccessibilityValue({ text: `Page 3 sur ${PAGE_COUNT}` });
     await fireEvent(indicator(), 'accessibilityAction', {
       nativeEvent: { actionName: 'decrement' },
     });
-    expect(indicator()).toHaveAccessibilityValue({ text: 'Page 2 sur 13' });
+    expect(indicator()).toHaveAccessibilityValue({ text: `Page 2 sur ${PAGE_COUNT}` });
+  });
+
+  it('keeps the page dots and the last button at least 44 points tall', async () => {
+    await renderOnboarding({ page: REMINDERS_PAGE });
+    expect(touchTargetHeight(indicator())).toBeGreaterThanOrEqual(44);
+    expect(touchTargetHeight(screen.getByTestId('onboarding-finish'))).toBeGreaterThanOrEqual(44);
+  });
+
+  it('trades the page dots for the last button on the last page only', async () => {
+    await renderOnboarding({ page: GOAL_PAGE });
+    expect(screen.queryByRole('button', { name: FINISH })).toBeNull();
+    expect(indicator()).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('onboarding-pager-indicator-next'));
+    expect(await screen.findByRole('button', { name: FINISH })).toBeOnTheScreen();
+    expect(screen.queryByRole('adjustable', { name: 'Présentation' })).toBeNull();
   });
 
   it('shows the short flow when given its pages, with no other change', async () => {
-    await renderOnboarding({ pages: ONBOARDING_PAGES_SHORT, page: 7 });
-    expect(indicator()).toHaveAccessibilityValue({ text: 'Page 8 sur 8' });
-    expect(screen.getByRole('header', { name: 'Tes rappels' })).toBeOnTheScreen();
-    expect(await screen.findByRole('button', { name: 'Continuer' })).toBeOnTheScreen();
+    await renderOnboarding({ pages: ONBOARDING_PAGES_SHORT, page: 8 });
+    expect(indicator).toBeDefined();
+    expect(screen.getByRole('header', { name: 'Tes rappels.' })).toBeOnTheScreen();
+    expect(await screen.findByRole('button', { name: FINISH })).toBeOnTheScreen();
   });
 
-  it('draws its scenes with the function it is given', async () => {
+  it('draws its gardens with the function it is given, the friends’ gardens too', async () => {
     const scenes: OnboardingScene[] = [];
     const renderScene: SceneRenderer = (scene) => {
       scenes.push(scene);
       return <Text>{`Scène ${scene.kind}`}</Text>;
     };
-    await renderOnboarding({ page: 1, renderScene });
-    expect(scenes).toContainEqual({ kind: 'garden', hizbCompleted: 8 });
-    expect(screen.queryByRole('image')).toBeNull();
-    expect(screen.getAllByText('Scène garden').length).toBeGreaterThan(0);
+    await renderOnboarding({ page: 12, renderScene });
+    expect(scenes).toContainEqual({ kind: 'garden', hizbCompleted: 38 });
+    expect(scenes).toContainEqual({ kind: 'drought', hizbCompleted: 14, daysWithoutReading: 3 });
+    expect(
+      screen.getAllByText('Scène garden', { includeHiddenElements: true }).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it('draws only the pictures a swipe can bring: the page shown and its neighbours', async () => {
+    const scenes: OnboardingScene[] = [];
+    const renderScene: SceneRenderer = (scene) => {
+      scenes.push(scene);
+      return <Text>{`Scène ${scene.kind}`}</Text>;
+    };
+    await renderOnboarding({ page: 0, renderScene });
+    expect(new Set(scenes.map((scene) => JSON.stringify(scene)))).toEqual(
+      new Set([
+        JSON.stringify({ kind: 'garden', hizbCompleted: 0 }),
+        JSON.stringify({ kind: 'garden', hizbCompleted: 8 }),
+      ]),
+    );
+  });
+
+  it('names the surah of the passage found in Arabic for a person who reads Arabic', async () => {
+    setDeviceConditions({ rightToLeft: true });
+    await renderOnboarding({ language: 'ar', page: 11 });
+    const scene = screen.getByTestId('onboarding-recognition-scene');
+    expect(String(scene.props.accessibilityLabel)).toContain('الكهف، الآية 10');
   });
 
   it('is written in Arabic, mirrored, for a person who reads Arabic', async () => {
     setDeviceConditions({ rightToLeft: true });
     await renderOnboarding({ language: 'ar', page: 1 });
     expect(screen.getByRole('image', { name: 'الحديقة عند الحزب 8' })).toBeOnTheScreen();
-    expect(screen.getByRole('header', { name: 'اقرأ، فيجري الماء' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'اقرأ، فيجري الماء.' })).toBeOnTheScreen();
+    expect(screen.getByText('جنتك')).toBeOnTheScreen();
     expect(indicator()).toHaveProp('accessibilityLabel', 'التعريف');
-    expect(indicator()).toHaveAccessibilityValue({ text: 'الصفحة 2 من 13' });
+    expect(indicator()).toHaveAccessibilityValue({ text: `الصفحة 2 من ${PAGE_COUNT}` });
     expect(directionDependentStyles(screen.getByTestId('onboarding'))).toEqual([]);
   });
 
-  it.each([0, 10, GOAL_PAGE, REMINDERS_PAGE])(
-    'cuts no text on page %i at the largest text size',
+  it.each([0, 5, 11, GOAL_PAGE, REMINDERS_PAGE])(
+    'cuts no word of page %i at the largest text size',
     async (page) => {
       setDeviceConditions({ fontScale: LARGEST_FONT_SCALE });
       await renderOnboarding({ page });
-      expect(fixedHeightsAroundText(screen.getByTestId('onboarding'))).toEqual([]);
+      expect(fixedHeightsAroundText(screen.getByTestId('onboarding-pager-pages'))).toEqual([]);
+      expect(fixedHeightsAroundText(indicator())).toEqual([]);
     },
   );
 
-  it('paints each page with its own background, so nothing changes colour while pages slide', async () => {
-    await renderOnboarding({ page: 10 });
-    // The complete garden, then the two pages that show a grouped list (color.md › Mobile).
-    expect(pageBackgrounds()).toEqual([
-      PlatformColor('systemBackground'),
-      PlatformColor('systemGroupedBackground'),
-      PlatformColor('systemGroupedBackground'),
-    ]);
-    const screenBackground = styleOf(screen.getByTestId('onboarding')).backgroundColor;
-    expect(screenBackground).toEqual(PlatformColor('systemBackground'));
-
-    await fireEvent.press(screen.getByTestId('onboarding-pager-indicator-next'));
-    expect(indicator()).toHaveAccessibilityValue({ text: 'Page 12 sur 13' });
-    expect(styleOf(screen.getByTestId('onboarding')).backgroundColor).toEqual(screenBackground);
+  it('previews the notifications of the reminders that are on, on a tall enough screen', async () => {
+    // An iPhone 15's window: tall enough for the previews (shorter screens leave them out).
+    setDeviceConditions();
+    await renderOnboarding({ page: REMINDERS_PAGE });
+    expect(
+      screen.getAllByTestId('onboarding-notification', { includeHiddenElements: true }),
+    ).toHaveLength(2);
   });
 
-  it.each([0, GOAL_PAGE, REMINDERS_PAGE])(
+  it('leaves out the previewed notifications at the largest text size, for the settings', async () => {
+    setDeviceConditions({ fontScale: LARGEST_FONT_SCALE });
+    await renderOnboarding({ page: REMINDERS_PAGE });
+    expect(
+      screen.queryByTestId('onboarding-notifications', { includeHiddenElements: true }),
+    ).toBeNull();
+  });
+
+  it.each([0, 11, 12, GOAL_PAGE, REMINDERS_PAGE])(
     'asks an iPhone for system components only on page %i, each inside a host',
     async (page) => {
       await renderOnboarding({ page, onIOS: true });
@@ -379,7 +448,8 @@ describe('daily goal page', () => {
   it('can be passed without touching anything: the goal stays the one proposed', async () => {
     const { store } = await renderOnboarding({ page: GOAL_PAGE });
     await fireEvent.press(screen.getByTestId('onboarding-pager-indicator-next'));
-    expect(indicator()).toHaveAccessibilityValue({ text: 'Page 13 sur 13' });
+    expect(indicator).toBeDefined();
+    expect(screen.getByRole('header', { name: 'Tes rappels.' })).toBeOnTheScreen();
     expect(store.getState().settings.dailyGoalPages).toBe(5);
   });
 });
@@ -391,7 +461,7 @@ describe('reminders page', () => {
   const FRIDAY = `Le vendredi${NO_BREAK_SPACE}: sourate Al-Kahf`;
   const ALL_OFF = { ...DEFAULT_REMINDERS, dailyEnabled: false, thirstyGardenEnabled: false };
 
-  function finishButton(name = 'Continuer') {
+  function finishButton(name = FINISH) {
     return screen.getByRole('button', { name });
   }
 
@@ -404,7 +474,7 @@ describe('reminders page', () => {
     expect(screen.getByRole('switch', { name: FRIDAY })).not.toBeChecked();
     // The time row opens the system's picker; the only button that leaves the page is the last.
     await screen.findByText(WILL_ASK);
-    expect(buttonNames()).toEqual(['Heure des rappels', 'Continuer']);
+    expect(buttonNames()).toEqual(['Heure des rappels', FINISH]);
     expect(touchTargetHeight(finishButton())).toBeGreaterThanOrEqual(44);
   });
 
@@ -432,25 +502,22 @@ describe('reminders page', () => {
     expect(request).not.toHaveBeenCalled();
   });
 
-  it('says that the phone is about to ask in the note that follows the button, in the same list', async () => {
+  it('says that the phone is about to ask, between the reminders and the one button', async () => {
     await renderOnboarding({ page: REMINDERS_PAGE });
     const notice = await screen.findByText(WILL_ASK);
-    const list = withDescendants(screen.getByTestId('onboarding-reminders'));
+    const order = withDescendants(screen.getByTestId('onboarding'));
     const finish = screen.getByTestId('onboarding-finish');
-    // Right after the button that leads to the question, and in the list, so that the button
-    // sits under the reminders it concludes and not at the bottom of an empty page.
-    expect(list).toContain(finish);
-    expect(list).toContain(notice);
-    expect(list.indexOf(notice)).toBeGreaterThan(list.indexOf(finish));
-    expect(list.indexOf(finish)).toBeGreaterThan(
-      list.indexOf(screen.getByRole('switch', { name: 'Rappel du jour' })),
+    // In reading order: the reminders, the sentence that announces the alert, then the button.
+    expect(order.indexOf(notice)).toBeGreaterThan(
+      order.indexOf(screen.getByRole('switch', { name: 'Rappel du jour' })),
     );
+    expect(order.indexOf(finish)).toBeGreaterThan(order.indexOf(notice));
     // The button does not borrow the word of the system's alert.
     expect(screen.queryByText(/autoriser$|^autoriser|allow/i)).toBeNull();
   });
 
   it.each(['granted', 'denied'] as const)(
-    'asks the system once "Continuer" is pressed and enters the app whatever the answer: %s',
+    'asks the system once "Créer mon jardin" is pressed and enters the app whatever the answer: %s',
     async (answer) => {
       const notifications = createInertNotificationPermissions({ status: 'undetermined', answer });
       const { store, onFinished, request } = await renderOnboarding({
@@ -459,7 +526,7 @@ describe('reminders page', () => {
       });
       expect(store.getState().settings.onboardingCompleted).toBe(false);
 
-      await fireEvent.press(await screen.findByRole('button', { name: 'Continuer' }));
+      await fireEvent.press(await screen.findByRole('button', { name: FINISH }));
       await waitFor(() => expect(onFinished).toHaveBeenCalledTimes(1));
       expect(request).toHaveBeenCalledTimes(1);
       expect(onFinished).toHaveBeenCalledWith({ isReplay: false });
@@ -480,7 +547,7 @@ describe('reminders page', () => {
         }),
     };
     const { store, onFinished } = await renderOnboarding({ page: REMINDERS_PAGE, notifications });
-    await fireEvent.press(await screen.findByRole('button', { name: 'Continuer' }));
+    await fireEvent.press(await screen.findByRole('button', { name: FINISH }));
     await fireEvent.press(finishButton());
     expect(onFinished).not.toHaveBeenCalled();
     expect(store.getState().settings.onboardingCompleted).toBe(false);
@@ -490,45 +557,50 @@ describe('reminders page', () => {
     await waitFor(() => expect(onFinished).toHaveBeenCalledTimes(1));
   });
 
-  it('is named "Commencer", and asks nothing, when every reminder is off', async () => {
+  it('asks nothing, and announces nothing, when every reminder is off', async () => {
     const { store, onFinished, request } = await renderOnboarding({
       page: REMINDERS_PAGE,
       settings: { reminders: ALL_OFF },
     });
     expect(await screen.findByText(NONE)).toBeOnTheScreen();
     expect(screen.queryByText(WILL_ASK)).toBeNull();
-    expect(buttonNames()).toEqual(['Commencer']);
+    expect(buttonNames()).toEqual([FINISH]);
 
-    await fireEvent.press(finishButton('Commencer'));
+    await fireEvent.press(finishButton());
     await waitFor(() => expect(onFinished).toHaveBeenCalledTimes(1));
     expect(request).not.toHaveBeenCalled();
     expect(store.getState().settings.onboardingCompleted).toBe(true);
   });
 
-  it('follows the switches: the button and its notice change as the last reminder goes off and on', async () => {
+  it('follows the switches: the notice comes and goes with the last reminder, and so do the notifications shown', async () => {
+    setDeviceConditions();
     await renderOnboarding({
       page: REMINDERS_PAGE,
       settings: { reminders: { ...ALL_OFF, dailyEnabled: true } },
     });
+    const previews = () =>
+      screen.queryAllByTestId('onboarding-notification', { includeHiddenElements: true }).length;
     expect(await screen.findByText(WILL_ASK)).toBeOnTheScreen();
-    expect(finishButton('Continuer')).toBeOnTheScreen();
+    expect(previews()).toBe(1);
 
     await fireEvent.press(screen.getByRole('switch', { name: 'Rappel du jour' }));
     expect(screen.getByText(NONE)).toBeOnTheScreen();
     expect(screen.queryByText(WILL_ASK)).toBeNull();
-    expect(finishButton('Commencer')).toBeOnTheScreen();
+    expect(finishButton()).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('switch', { name: FRIDAY }));
     expect(screen.getByText(WILL_ASK)).toBeOnTheScreen();
-    expect(finishButton('Continuer')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Un moment pour la sourate Al-Kahf ?', { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
   });
 
-  it('is named "Commencer", with no notice, when the person has already allowed the notifications', async () => {
+  it('announces nothing when the person has already allowed the notifications', async () => {
     const { onFinished, request } = await renderOnboarding({
       page: REMINDERS_PAGE,
       notifications: createInertNotificationPermissions({ status: 'granted' }),
     });
-    await fireEvent.press(await screen.findByRole('button', { name: 'Commencer' }));
+    await fireEvent.press(await screen.findByRole('button', { name: FINISH }));
     await waitFor(() => expect(onFinished).toHaveBeenCalledTimes(1));
     expect(request).not.toHaveBeenCalled();
     expect(screen.queryByText(WILL_ASK)).toBeNull();
@@ -543,9 +615,9 @@ describe('reminders page', () => {
     expect(await screen.findByText(DENIED)).toBeOnTheScreen();
     expect(screen.queryByTestId('open-system-settings')).toBeNull();
     // No alert can follow: the button starts the app and says so.
-    expect(buttonNames()).toEqual(['Heure des rappels', 'Commencer']);
+    expect(buttonNames()).toEqual(['Heure des rappels', FINISH]);
 
-    await fireEvent.press(finishButton('Commencer'));
+    await fireEvent.press(finishButton());
     await waitFor(() => expect(onFinished).toHaveBeenCalledTimes(1));
     expect(request).not.toHaveBeenCalled();
   });
@@ -556,7 +628,7 @@ describe('reminders page', () => {
       request: () => Promise.reject(new Error('unavailable')),
     };
     const { store, onFinished } = await renderOnboarding({ page: REMINDERS_PAGE, notifications });
-    await fireEvent.press(finishButton('Commencer'));
+    await fireEvent.press(finishButton());
     await waitFor(() => expect(onFinished).toHaveBeenCalledTimes(1));
     expect(store.getState().settings.onboardingCompleted).toBe(true);
   });
@@ -567,18 +639,18 @@ describe('reminders page', () => {
       request: () => Promise.reject(new Error('unavailable')),
     };
     const { onFinished } = await renderOnboarding({ page: REMINDERS_PAGE, notifications });
-    await fireEvent.press(await screen.findByRole('button', { name: 'Continuer' }));
+    await fireEvent.press(await screen.findByRole('button', { name: FINISH }));
     await waitFor(() => expect(onFinished).toHaveBeenCalledTimes(1));
   });
 
   it('is written in Arabic for a person who reads Arabic', async () => {
     setDeviceConditions({ rightToLeft: true });
     await renderOnboarding({ page: REMINDERS_PAGE, language: 'ar' });
-    expect(screen.getByRole('header', { name: 'تذكيراتك' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'تذكيراتك.' })).toBeOnTheScreen();
     expect(screen.getByRole('switch', { name: 'التذكير اليومي' })).toBeChecked();
     expect(screen.getByRole('switch', { name: 'عندما تعطش الحديقة' })).toBeChecked();
     expect(await screen.findByText('سيطلب منك هاتفك بعد ذلك السماح بالإشعارات.')).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'التالي' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'أنشئ حديقتي' })).toBeOnTheScreen();
     expect(directionDependentStyles(screen.getByTestId('onboarding'))).toEqual([]);
   });
 });
@@ -602,7 +674,7 @@ describe('introduction opened again from the settings', () => {
     await renderOnboarding({ page: REMINDERS_PAGE, settings: REPLAY });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Terminé' })).toBeOnTheScreen());
     expect(screen.queryByText(WILL_ASK)).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Continuer' })).toBeNull();
+    expect(screen.queryByRole('button', { name: FINISH })).toBeNull();
   });
 
   it('asks for the permission when a reminder is switched on, as the settings do', async () => {

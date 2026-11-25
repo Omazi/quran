@@ -65,7 +65,7 @@ jest.mock('expo-splash-screen', () => ({
 }));
 
 const WINDOW = { x: 0, y: 0, width: 390, height: 700 };
-const LAST_PAGE = 12;
+const LAST_PAGE = 14;
 
 /** The first launch loads every route of the app: it needs more than Jest's five seconds. */
 jest.setTimeout(30_000);
@@ -146,32 +146,18 @@ function layOut(element: RenderedElement) {
   return fireEvent(element, 'layout', { nativeEvent: { layout: WINDOW } });
 }
 
-function pagerList(): RenderedElement {
-  const lists = screen
-    .getByTestId('onboarding-pager')
-    .queryAll(({ type, props }) => type === 'RCTScrollView' && props.horizontal === true);
-  if (lists[0] === undefined) throw new Error('The pager is not laid out yet.');
-  return lists[0];
-}
-
 /** Gives the pager of the introduction its size, as the platform would. */
 async function layOutIntroduction(): Promise<void> {
-  const frame = (await screen.findByTestId('onboarding-pager')).children[0];
-  if (frame === undefined || typeof frame === 'string') throw new Error('No pages frame.');
-  await layOut(frame);
-  await layOut(pagerList());
-  await fireEvent(pagerList(), 'contentSizeChange', WINDOW.width * (LAST_PAGE + 1), WINDOW.height);
+  await layOut(await screen.findByTestId('onboarding-pager-pages'));
 }
 
-/** Swipes to a page: the list is scrolled until that page fills it. */
-function swipeToPage(page: number) {
-  return fireEvent.scroll(pagerList(), {
-    nativeEvent: {
-      contentOffset: { x: WINDOW.width * page, y: 0 },
-      contentSize: { width: WINDOW.width * (LAST_PAGE + 1), height: WINDOW.height },
-      layoutMeasurement: { width: WINDOW.width, height: WINDOW.height },
-    },
-  });
+/** Turns the pages up to the one asked, one step at a time, as a screen reader would. */
+async function swipeToPage(page: number) {
+  const dots = () =>
+    screen.getByTestId('onboarding-pager-indicator', { includeHiddenElements: true });
+  for (let step = 0; step < page; step += 1) {
+    await fireEvent(dots(), 'accessibilityAction', { nativeEvent: { actionName: 'increment' } });
+  }
 }
 
 /**
@@ -235,7 +221,7 @@ describe('first launch', () => {
     await layOutIntroduction();
 
     expect(app.getPathname()).toBe('/onboarding');
-    expect(screen.getByRole('header', { name: 'Bare Earth' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Bare earth.' })).toBeOnTheScreen();
     expect(SplashScreen.hide).toHaveBeenCalled();
     // The seed is drawn and kept from the very first launch.
     expect(typeof (await storedSettings()).userSeed).toBe('number');
@@ -246,22 +232,32 @@ describe('first launch', () => {
     await openApp();
     await layOutIntroduction();
     expect(screen.getByTestId('onboarding-pager-indicator')).toHaveAccessibilityValue({
-      text: 'Page 1 sur 13',
+      text: 'Page 1 sur 15',
     });
-    const labels = screen
-      .getAllByTestId('garden-scene')
-      .map(({ props }) => String(props.accessibilityLabel));
-    // The garden grows from the bare earth to hizb 40...
+    // The garden of each page, as the person turns them: only the one shown is described.
+    const labels: string[] = [];
+    for (let page = 0; page <= 10; page += 1) {
+      const shown = screen.getAllByTestId('garden-scene');
+      expect(shown).toHaveLength(1);
+      labels.push(String(shown[0]?.props.accessibilityLabel));
+      await swipeToPage(1);
+    }
+    // The garden grows from the bare earth to hizb 40, then to the complete garden...
     expect(labels[0]).toMatch(/^Terre nue/);
     expect(labels[1]).toMatch(/^Jardin, 8 hizb sur 60/);
     expect(labels[4]).toMatch(/^Jardin, 40 hizb sur 60/);
-    // ...and it is that garden in progress that dries, never the complete one.
-    expect(labels[5]).toMatch(/^Jardin assoiffé, 40 hizb sur 60/);
-    expect(labels[6]).toMatch(/^Jardin fané, 40 hizb sur 60/);
-    expect(labels[7]).toMatch(/^Jardin mourant, 40 hizb sur 60/);
-    expect(labels[8]).toMatch(/^Terre morte, 40 hizb sur 60 acquis/);
-    // No page presents a feature the app does not have yet.
-    expect(screen.queryByRole('image', { name: /voix haute|proches|Passage/ })).toBeNull();
+    expect(labels[5]).toMatch(/60 hizb sur 60/);
+    // ...and it is a garden in progress that dries, never the complete one.
+    expect(labels[6]).toMatch(/^Jardin assoiffé, 40 hizb sur 60/);
+    expect(labels[7]).toMatch(/^Jardin fané, 40 hizb sur 60/);
+    expect(labels[8]).toMatch(/^Jardin mourant, 40 hizb sur 60/);
+    expect(labels[9]).toMatch(/^Terre morte, 40 hizb sur 60 acquis/);
+    await swipeToPage(1);
+    // Listening and friends are presented; reading aloud, which the app has not yet, is not.
+    const hidden = { includeHiddenElements: true };
+    expect(screen.getByRole('image', { name: /^Passage reconnu/, ...hidden })).toBeTruthy();
+    expect(screen.getByRole('image', { name: /^Jardins de tes proches/, ...hidden })).toBeTruthy();
+    expect(screen.queryByRole('image', { name: /voix haute/, ...hidden })).toBeNull();
   });
 
   it('gives no way out of the introduction but its last page: no header, no back swipe', async () => {
@@ -279,9 +275,9 @@ describe('first launch', () => {
     const app = await openApp();
     await layOutIntroduction();
     await swipeToPage(LAST_PAGE);
-    expect(await screen.findByRole('header', { name: 'Tes rappels' })).toBeOnTheScreen();
+    expect(await screen.findByRole('header', { name: 'Tes rappels.' })).toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Continuer' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Créer mon jardin' }));
     await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
     expect(requestPermissionsAsync).toHaveBeenCalledTimes(1);
     expect(tabs()).toHaveLength(4);
@@ -295,7 +291,7 @@ describe('first launch', () => {
     const app = await openApp();
     await layOutIntroduction();
     await swipeToPage(LAST_PAGE);
-    await fireEvent.press(await screen.findByRole('button', { name: 'Continuer' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Créer mon jardin' }));
     await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
     expect((await storedSettings()).onboardingCompleted).toBe(true);
     expect(scheduleNotificationAsync).not.toHaveBeenCalled();
@@ -312,7 +308,7 @@ describe('first launch', () => {
     const app = await openApp();
     await layOutIntroduction();
     expect(app.getPathname()).toBe('/onboarding');
-    expect(screen.getByRole('header', { name: 'Une terre nue' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Une terre nue.' })).toBeOnTheScreen();
     expect((await storedSettings()).dailyGoalPages).toBe(5);
     warn.mockRestore();
   });
@@ -636,7 +632,7 @@ describe('writing direction at start-up', () => {
     await layOutIntroduction();
 
     // The app shows itself in Arabic, in the direction it has, and says nothing false about it.
-    expect(screen.getByRole('header', { name: 'أرض جرداء' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'أرض جرداء.' })).toBeOnTheScreen();
     expect(reloadAppAsync).not.toHaveBeenCalled();
     expect(SplashScreen.hide).toHaveBeenCalled();
   });

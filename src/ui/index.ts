@@ -44,6 +44,8 @@ export {
   readerShapes,
   spacing,
   stateOpacity,
+  storyLayout,
+  storyMotion,
   type BackdropName,
   type PaletteRole,
   type QuranTextStyleName,
@@ -63,6 +65,11 @@ export {
   type Colors,
   type ColorValues,
 } from './use-colors';
+export { PageDots, type PageDotsProps } from './components/page-dots';
+export { PAGE_DOTS } from './components/page-dots-shape';
+export { StarPattern, type StarPatternProps } from './components/star-pattern';
+export { SwipePager, type SwipePagerProps } from './components/swipe-pager';
+export { SWIPE_PAGING, crossfade, stageLayerOpacity, swapOpacity } from './components/swipe-paging';
 export {
   ActionButton,
   type ActionButtonProps,
