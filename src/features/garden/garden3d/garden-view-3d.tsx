@@ -1,5 +1,5 @@
 import { GLView, type ExpoWebGLRenderingContext } from 'expo-gl';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Animated,
@@ -100,7 +100,9 @@ export function GardenView3D({
   useEffect(() => surface.setStage(stage), [stage, surface]);
   useEffect(() => surface.setMotionReduced(isMotionReduced), [isMotionReduced, surface]);
   useEffect(() => surface.setOnUse(hint.retire), [hint.retire, surface]);
-  useEffect(() => () => surface.dispose(), [surface]);
+  // In the commit that removes the GL view, not after it (a passive effect runs later): from
+  // then on no frame, gesture event or layout can draw into the context that leaves with it.
+  useLayoutEffect(() => () => surface.dispose(), [surface]);
 
   const gesture = useGardenGestures(surface.controller, isReady && !hasFailed, testID);
   const model = modelStatus.status === 'ready' ? modelStatus.model : null;
@@ -123,13 +125,24 @@ export function GardenView3D({
     return () => fade.stop();
   }, [isReady, reveal]);
 
+  const resizeFrame = useRef<number | null>(null);
   const onLayout = useCallback(
     (event: LayoutChangeEvent) => {
       const { width, height } = event.nativeEvent.layout;
       // expo-gl resizes its drawing buffer with the view: draw at the new size next frame.
-      requestAnimationFrame(() => surface.setSize({ width, height }));
+      if (resizeFrame.current !== null) cancelAnimationFrame(resizeFrame.current);
+      resizeFrame.current = requestAnimationFrame(() => {
+        resizeFrame.current = null;
+        surface.setSize({ width, height });
+      });
     },
     [surface],
+  );
+  useEffect(
+    () => () => {
+      if (resizeFrame.current !== null) cancelAnimationFrame(resizeFrame.current);
+    },
+    [],
   );
 
   const onAccessibilityAction = useCallback(

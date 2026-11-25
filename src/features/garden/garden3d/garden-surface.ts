@@ -52,6 +52,12 @@ export class GardenSurface {
   private motionReduced = false;
   private onUse: () => void = () => undefined;
   private failed = false;
+  /**
+   * Set when the view goes. A GL context that arrives later (expo-gl calls `onContextCreate`
+   * from the native side, possibly after the screen closed) is never drawn into: the native
+   * context goes with its view, and a call into a context that is gone ends the app.
+   */
+  private isDisposed = false;
 
   constructor(private readonly options: GardenSurfaceOptions) {
     this.controller = new OrbitController({
@@ -79,7 +85,9 @@ export class GardenSurface {
 
   /** The GL context is there: builds the scene of `model` and draws its first frame. */
   attach(gl: ExpoWebGLRenderingContext, model: GardenModel): void {
-    if (this.failed) return;
+    if (this.failed || this.isDisposed) return;
+    // A second context for the same view (its surface was made again): the first one is let go.
+    this.releaseEngine();
     try {
       const modules = engineModules();
       const renderer = modules.renderer.createGardenRenderer(gl);
@@ -130,7 +138,12 @@ export class GardenSurface {
   }
 
   dispose(): void {
+    this.isDisposed = true;
     this.controller.dispose();
+    this.releaseEngine();
+  }
+
+  private releaseEngine(): void {
     const engine = this.engine;
     this.engine = null;
     if (engine === null) return;
