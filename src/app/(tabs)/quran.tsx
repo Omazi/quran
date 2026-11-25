@@ -8,5 +8,6 @@ export default function QuranRoute() {
   const router = useRouter();
   const openPage = useCallback((page: number) => router.push(`/reader/${page}`), [router]);
   const { model, actions } = useContentsModel(openPage);
-  return <ContentsScreen model={model} actions={actions} />;
+  const openRecognition = useCallback(() => router.push('/listening'), [router]);
+  return <ContentsScreen model={model} actions={actions} onRecognize={openRecognition} />;
 }

@@ -1,7 +1,15 @@
 import { EMPTY_JOURNAL, recordPageRead, type ReadingJournal } from '@/domain/khatm';
 import { parseLocalDate } from '@/domain/shared/local-date';
 
-import { DEFAULT_REMINDERS, MAX_PAUSES, STORED_DATA_VERSION, STORED_DATE_RANGE } from '../config';
+import {
+  DEFAULT_READER_SCRIPT,
+  DEFAULT_READER_TEXT_SIZE,
+  DEFAULT_REMINDERS,
+  MAX_PAUSES,
+  READER_TEXT_SIZE_RANGE,
+  STORED_DATA_VERSION,
+  STORED_DATE_RANGE,
+} from '../config';
 import { readStoredData, writeStoredData } from '../stored-data';
 import type { AppData, AppSettings } from '../types';
 
@@ -12,6 +20,8 @@ const SETTINGS: AppSettings = {
   userSeed: 123_456_789,
   lastOpenedPage: 293,
   bookmarks: [18, 293, 604],
+  readerScript: 'imlaei',
+  readerTextSize: 3,
   pauses: [{ from: parseLocalDate('2026-03-01'), to: parseLocalDate('2026-03-04') }],
   reminders: {
     dailyEnabled: false,
@@ -27,6 +37,11 @@ const JOURNAL: ReadingJournal = [1, 2, 3].reduce(
   (journal, page) => recordPageRead(journal, { page, date: parseLocalDate('2026-11-24') }),
   EMPTY_JOURNAL,
 );
+
+const READER_DEFAULTS = {
+  readerScript: DEFAULT_READER_SCRIPT,
+  readerTextSize: DEFAULT_READER_TEXT_SIZE,
+} as const;
 
 const DATA: AppData = { settings: SETTINGS, journal: JOURNAL, timeSpent: {} };
 
@@ -451,10 +466,6 @@ describe('the last page opened in the reader', () => {
 });
 
 describe('the bookmarks of the reader', () => {
-  it('is version 5 of the document', () => {
-    expect(STORED_DATA_VERSION).toBe(5);
-  });
-
   it('are written and read back, in the order of the pages', () => {
     for (const bookmarks of [[], [1], [2, 293, 604]]) {
       const settings = { ...SETTINGS, bookmarks };
@@ -465,12 +476,17 @@ describe('the bookmarks of the reader', () => {
   });
 
   it('are none in a document of version 4, which had no such field, and nothing else changes', () => {
-    const { bookmarks: _bookmarks, ...settingsOfVersion4 } = SETTINGS;
+    const {
+      bookmarks: _bookmarks,
+      readerScript: _script,
+      readerTextSize: _size,
+      ...settingsOfVersion4
+    } = SETTINGS;
     const reading = readStoredData(
       JSON.stringify({ version: 4, settings: settingsOfVersion4, journal: JOURNAL, timeSpent: {} }),
     );
     expect(reading).toEqual({
-      settings: { ...SETTINGS, bookmarks: [] },
+      settings: { ...SETTINGS, bookmarks: [], ...READER_DEFAULTS },
       journal: JOURNAL,
       timeSpent: {},
       discarded: [],
@@ -479,11 +495,22 @@ describe('the bookmarks of the reader', () => {
   });
 
   it('are none after the upgrade of the oldest documents too', () => {
-    const { bookmarks: _bookmarks, lastOpenedPage: _page, ...settingsOfVersion2 } = SETTINGS;
+    const {
+      bookmarks: _bookmarks,
+      lastOpenedPage: _page,
+      readerScript: _script,
+      readerTextSize: _size,
+      ...settingsOfVersion2
+    } = SETTINGS;
     const reading = readStoredData(
       JSON.stringify({ version: 2, settings: settingsOfVersion2, journal: JOURNAL }),
     );
-    expect(reading.settings).toEqual({ ...SETTINGS, lastOpenedPage: null, bookmarks: [] });
+    expect(reading.settings).toEqual({
+      ...SETTINGS,
+      lastOpenedPage: null,
+      bookmarks: [],
+      ...READER_DEFAULTS,
+    });
   });
 
   it.each([
@@ -497,6 +524,69 @@ describe('the bookmarks of the reader', () => {
     ['null', null],
   ])('discards the settings, and keeps the journal, for %s', (_name, bookmarks) => {
     expect(readStoredData(settingsWith({ bookmarks }))).toMatchObject({
+      settings: null,
+      journal: JOURNAL,
+      discarded: ['settings'],
+    });
+  });
+});
+
+describe('the script and the text size of the reader (D41)', () => {
+  it('is version 6 of the document', () => {
+    expect(STORED_DATA_VERSION).toBe(6);
+  });
+
+  it('starts with the Uthmani script at the size of the text size setting', () => {
+    expect(DEFAULT_READER_SCRIPT).toBe('uthmani');
+    expect(DEFAULT_READER_TEXT_SIZE).toBeGreaterThanOrEqual(READER_TEXT_SIZE_RANGE.min);
+    expect(DEFAULT_READER_TEXT_SIZE).toBeLessThanOrEqual(READER_TEXT_SIZE_RANGE.max);
+  });
+
+  it('are written and read back', () => {
+    for (const readerScript of ['uthmani', 'imlaei'] as const) {
+      for (const readerTextSize of [READER_TEXT_SIZE_RANGE.min, READER_TEXT_SIZE_RANGE.max]) {
+        const settings = { ...SETTINGS, readerScript, readerTextSize };
+        const reading = readStoredData(writeStoredData({ settings, journal: JOURNAL }));
+        expect(reading.settings).toEqual(settings);
+        expect(reading.discarded).toEqual([]);
+      }
+    }
+  });
+
+  it('take their defaults in a document of version 5, and nothing else changes', () => {
+    const { readerScript: _script, readerTextSize: _size, ...settingsOfVersion5 } = SETTINGS;
+    const reading = readStoredData(
+      JSON.stringify({ version: 5, settings: settingsOfVersion5, journal: JOURNAL, timeSpent: {} }),
+    );
+    expect(reading).toEqual({
+      settings: { ...SETTINGS, ...READER_DEFAULTS },
+      journal: JOURNAL,
+      timeSpent: {},
+      discarded: [],
+      wasUpgraded: true,
+    });
+  });
+
+  it('keeps the sync part of a version 5 document through the upgrade', () => {
+    const { readerScript: _script, readerTextSize: _size, ...settingsOfVersion5 } = SETTINGS;
+    const sync = { deviceId: 'phone', outbox: [] };
+    const reading = readStoredData(
+      JSON.stringify({ version: 5, settings: settingsOfVersion5, journal: JOURNAL, sync }),
+    );
+    expect(reading.settings).toEqual({ ...SETTINGS, ...READER_DEFAULTS });
+    expect(reading.rawSync).toEqual(sync);
+  });
+
+  it.each([
+    ['the mushaf script that has no reader', { readerScript: 'uthmani-minimal' }],
+    ['an unknown script', { readerScript: 'simple' }],
+    ['no script', { readerScript: null }],
+    ['a size below the range', { readerTextSize: READER_TEXT_SIZE_RANGE.min - 1 }],
+    ['a size above the range', { readerTextSize: READER_TEXT_SIZE_RANGE.max + 1 }],
+    ['a size that is not whole', { readerTextSize: 1.5 }],
+    ['a size written as text', { readerTextSize: '2' }],
+  ])('discards the settings, and keeps the journal, for %s', (_name, change) => {
+    expect(readStoredData(settingsWith(change))).toMatchObject({
       settings: null,
       journal: JOURNAL,
       discarded: ['settings'],

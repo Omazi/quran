@@ -38,6 +38,8 @@ const SETTINGS: AppSettings = {
   userSeed: 31_337,
   lastOpenedPage: 4,
   bookmarks: [2],
+  readerScript: 'imlaei',
+  readerTextSize: 2,
   pauses: [{ from: parseLocalDate('2026-10-01'), to: parseLocalDate('2026-10-02') }],
   reminders: {
     dailyEnabled: true,
@@ -220,17 +222,33 @@ describe('the second copy of the document', () => {
 });
 
 describe('builds of other versions', () => {
-  it('an older build reads what this one writes: the sync part is only left out', async () => {
+  it('an older build reads what this one writes: the sync part and the reader choices are left out', async () => {
     const storage = createMemoryStorage();
     const { store } = await load(storage);
     store.getState().recordPageRead({ page: 1, date: DAY });
     await store.whenSaved();
     const text = storage.peek(STORED_DATA_KEY);
-    expect(JSON.parse(text ?? '{}').version).toBe(5);
-    // Version 5 builds read with the default checks, which ignore parts they do not know.
-    const asOlderBuildReads = readStoredData(text);
-    expect(asOlderBuildReads.discarded).toEqual([]);
-    expect(asOlderBuildReads.journal).toHaveLength(1);
+    // Version 6 (D41) only adds the reader's two choices to the settings of version 5.
+    const written = JSON.parse(text ?? '{}');
+    expect(written.version).toBe(STORED_DATA_VERSION);
+    expect(STORED_DATA_VERSION).toBe(6);
+    // A version 5 build reads its own device's newer document (`acceptNewer`) with its checks,
+    // which look only at the settings they know: those are all there, and valid.
+    for (const key of [
+      'language',
+      'dailyGoalPages',
+      'onboardingCompleted',
+      'userSeed',
+      'lastOpenedPage',
+      'bookmarks',
+      'pauses',
+      'reminders',
+    ]) {
+      expect(written.settings).toHaveProperty(key);
+    }
+    const asThisBuildReads = readStoredData(text);
+    expect(asThisBuildReads.discarded).toEqual([]);
+    expect(asThisBuildReads.journal).toHaveLength(1);
   });
 
   it('a document of a newer version is read when its core passes the checks', async () => {

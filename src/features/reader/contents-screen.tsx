@@ -30,10 +30,16 @@ import type { ContentsActions, ContentsModel, ContentsView } from './use-content
 
 const NO_RESULT_SYMBOL: IconSymbol = { ios: 'magnifyingglass', android: 'search' };
 const PAGE_SYMBOL: IconSymbol = { ios: 'book.pages', android: 'auto_stories' };
+const RECOGNIZE_SYMBOL: IconSymbol = { ios: 'waveform.and.magnifyingglass', android: 'graphic_eq' };
 
 export interface ContentsScreenProps {
   model: ContentsModel;
   actions: ContentsActions;
+  /**
+   * Opens the passage recognition ("Shazam", `/listening`): the reader's microphone follows the
+   * recitation now (spec reader 3b), so the recognition is reached from here.
+   */
+  onRecognize?: () => void;
 }
 
 /**
@@ -51,7 +57,7 @@ export interface ContentsScreenProps {
  * - the surahs or the juz, switched by the mockup's two-part control (segmented-controls.md ›
  *   Mobile), in white cards. While something is typed, the results replace both.
  */
-export function ContentsScreen({ model, actions }: ContentsScreenProps) {
+export function ContentsScreen({ model, actions, onRecognize }: ContentsScreenProps) {
   const { t } = useTranslation('reader');
   const viewOptions: readonly ReaderChoiceOption<ContentsView>[] = [
     { value: 'surahs', label: t('contents.view.surahs') },
@@ -62,9 +68,24 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
     <Screen background="canvas" scroll testID="contents">
       <SkyBand />
       <View style={styles.content} testID="contents-list">
-        <AppText variant="largeTitle" color="ink">
-          {t('contents.title')}
-        </AppText>
+        <View style={styles.titleRow}>
+          <AppText variant="largeTitle" color="ink" style={styles.title}>
+            {t('contents.title')}
+          </AppText>
+          {onRecognize === undefined ? null : (
+            // A trailing action next to the title, a symbol with its label for VoiceOver
+            // (toolbars.md › Actions: simple, recognizable symbols; 44-point target).
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('contents.recognize')}
+              onPress={onRecognize}
+              testID="contents-recognize"
+              style={({ pressed }) => [styles.recognize, pressed && styles.pressed]}
+            >
+              <Icon symbol={RECOGNIZE_SYMBOL} textStyle="title2" color="actionTint" />
+            </Pressable>
+          )}
+        </View>
         <TodayCard
           today={model.today}
           resume={model.resume}
@@ -200,6 +221,14 @@ function SearchResults({ model, actions }: ContentsScreenProps) {
 }
 
 const styles = StyleSheet.create({
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  title: { flex: 1 },
+  recognize: {
+    minWidth: layout.touchTarget,
+    minHeight: layout.touchTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   content: {
     gap: spacing.md,
     paddingHorizontal: layout.screenMargin,

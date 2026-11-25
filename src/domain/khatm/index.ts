@@ -16,6 +16,7 @@ export {
   recordPageRead,
 } from './journal';
 export { getKhatmProgress } from './progress';
+export { requiredReadingSeconds, type ReadingTimeRules } from './reading-time';
 export type {
   GardenFeed,
   HizbPageRange,

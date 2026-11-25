@@ -69,6 +69,8 @@ describe('Public API — functions named by the specification', () => {
       'getWateredDays',
       'isPageRead',
       'recordPageRead',
+      // The time a page asks in the reader (docs/specs/khatm.md, rule 11; D41).
+      'requiredReadingSeconds',
     ]);
   });
 

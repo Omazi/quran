@@ -1,8 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import {
   AppText,
@@ -18,14 +23,22 @@ import {
   type IconSymbol,
 } from '@/ui';
 
+import type { ReaderScript } from '@/store';
+
 import { READER_CONFIG } from './config';
+import { ReaderSegmented, type ReaderChoiceOption } from './contents-parts';
 import { surahDisplayName } from './surah-name';
-import type { ReaderModel } from './use-reader';
+import type { PageCountProgress, ReaderModel } from './use-reader';
 
 const BACK_SYMBOL: IconSymbol = { ios: 'chevron.backward', android: 'arrow_back_ios_new' };
 const BOOKMARK_SYMBOL: IconSymbol = { ios: 'bookmark', android: 'bookmark_border' };
 const BOOKMARK_FILLED_SYMBOL: IconSymbol = { ios: 'bookmark.fill', android: 'bookmark' };
 const MICROPHONE_SYMBOL: IconSymbol = { ios: 'mic.fill', android: 'mic' };
+const TEXT_SMALLER_SYMBOL: IconSymbol = {
+  ios: 'textformat.size.smaller',
+  android: 'text_decrease',
+};
+const TEXT_LARGER_SYMBOL: IconSymbol = { ios: 'textformat.size.larger', android: 'text_increase' };
 const WATER_SYMBOL: IconSymbol = { ios: 'drop.fill', android: 'water_drop' };
 /** The bottom bar keeps the home indicator clear by itself. */
 const BOTTOM_EDGE = ['bottom'] as const;
@@ -151,19 +164,49 @@ export function ReaderHeader({ model, isVisible, onBack, onToggleBookmark }: Rea
 export interface ReaderBottomBarProps {
   isVisible: boolean;
   onListen: () => void;
+  script: ReaderScript;
+  onChooseScript: (script: ReaderScript) => void;
+  canShrinkText: boolean;
+  canEnlargeText: boolean;
+  onShrinkText: () => void;
+  onEnlargeText: () => void;
+  /** Where the text size stands, for VoiceOver ("Taille 2 sur 5"). */
+  textSizeValue: string;
 }
 
 /**
- * The bottom bar of the mockup, with its one control: the big forest-green microphone, centred,
- * that opens the listening screen (owner's decision, 25 November 2026: no other tool for now).
- * The bar is the mockup's lighter cream under a hairline and runs under the home indicator. It
- * hides and comes back with the top bar, and keeps its room so the page does not move. The
- * microphone is the screen's one coloured button (buttons.md › Style), 56 points, with a soft
- * shadow of its own green as in the mockup.
+ * The bottom bar of the mockup (docs/design/mushaf.png): the "Uthmani | Simple" choice at the
+ * start, the big forest-green microphone, and at the end, where the mockup puts two small tools,
+ * the text size control (D41). The script choice is the mockup's own segmented control
+ * (segmented-controls.md › Best practices: closely related choices that affect a view; nouns),
+ * drawn like the Quran tab's (deviation 83). The text size is a pair of symbol buttons, smaller
+ * and larger, the two halves of a stepper whose value is the text itself (steppers.md › Make the
+ * value that a stepper affects obvious); each is dimmed at its end of the range. The microphone
+ * stays the screen's one coloured button (buttons.md › Style), 56 points, with a soft shadow of
+ * its own green as in the mockup. The bar runs under the home indicator, hides and comes back with
+ * the top bar, and keeps its room so the text does not move. In Arabic the row is mirrored
+ * (right-to-left.md › Flip controls that help people navigate or access items in a fixed order).
  */
-export function ReaderBottomBar({ isVisible, onListen }: ReaderBottomBarProps) {
-  const { t } = useTranslation('reader');
+export function ReaderBottomBar({
+  isVisible,
+  onListen,
+  script,
+  onChooseScript,
+  canShrinkText,
+  canEnlargeText,
+  onShrinkText,
+  onEnlargeText,
+  textSizeValue,
+}: ReaderBottomBarProps) {
   const colors = useColors();
+  const { t } = useTranslation('reader');
+  const scripts = useMemo<readonly ReaderChoiceOption<ReaderScript>[]>(
+    () => [
+      { value: 'uthmani', label: t('script.uthmani') },
+      { value: 'imlaei', label: t('script.imlaei') },
+    ],
+    [t],
+  );
   return (
     <SafeAreaView
       edges={BOTTOM_EDGE}
@@ -179,21 +222,84 @@ export function ReaderBottomBar({ isVisible, onListen }: ReaderBottomBarProps) {
       ]}
     >
       <View style={[styles.bottomBarContent, !isVisible && styles.hidden]}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('bar.listen')}
-          onPress={onListen}
-          testID="reader-listen"
-          style={({ pressed }) => [
-            styles.microphone,
-            { backgroundColor: colors.action, shadowColor: colors.action },
-            pressed && styles.pressed,
-          ]}
-        >
-          <Icon symbol={MICROPHONE_SYMBOL} textStyle="title2" color="onAction" />
-        </Pressable>
+        <ReaderSegmented
+          label={t('script.label')}
+          options={scripts}
+          value={script}
+          onChange={onChooseScript}
+          fitsContent
+          testID="reader-script"
+        />
+        <View style={styles.barMiddle}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('bar.listen')}
+            onPress={onListen}
+            testID="reader-listen"
+            style={({ pressed }) => [
+              styles.microphone,
+              { backgroundColor: colors.action, shadowColor: colors.action },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Icon symbol={MICROPHONE_SYMBOL} textStyle="title2" color="onAction" />
+          </Pressable>
+        </View>
+        <View style={styles.barEnd}>
+          <ToolButton
+            symbol={TEXT_SMALLER_SYMBOL}
+            label={t('textSize.smaller')}
+            value={textSizeValue}
+            isEnabled={canShrinkText}
+            onPress={onShrinkText}
+            testID="reader-text-smaller"
+          />
+          <ToolButton
+            symbol={TEXT_LARGER_SYMBOL}
+            label={t('textSize.larger')}
+            value={textSizeValue}
+            isEnabled={canEnlargeText}
+            onPress={onEnlargeText}
+            testID="reader-text-larger"
+          />
+        </View>
       </View>
     </SafeAreaView>
+  );
+}
+
+interface ToolButtonProps {
+  symbol: IconSymbol;
+  label: string;
+  value: string;
+  isEnabled: boolean;
+  onPress: () => void;
+  testID: string;
+}
+
+/**
+ * A small tool of the bottom bar, as the mockup draws its headphones and info: a symbol in ink,
+ * no circle, on a 44-point target (buttons.md › Best practices), dimmed and silent when it cannot
+ * act (menus.md › Show people when a menu item is unavailable: the same convention for a control).
+ */
+function ToolButton({ symbol, label, value, isEnabled, onPress, testID }: ToolButtonProps) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityValue={{ text: value }}
+      accessibilityState={{ disabled: !isEnabled }}
+      disabled={!isEnabled}
+      onPress={onPress}
+      testID={testID}
+      style={({ pressed }) => [
+        styles.tool,
+        !isEnabled && styles.disabled,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Icon symbol={symbol} textStyle="title3" color="ink" />
+    </Pressable>
   );
 }
 
@@ -244,6 +350,68 @@ export function FeedbackPill({ text }: { text: string }) {
   );
 }
 
+/**
+ * The water line under the title (spec 3; owner's decision of 25 November 2026): it shows,
+ * discreetly, that the page being read is being counted. A thin line of water fills as the page
+ * gathers its time; when the time is reached, a small drop settles at its end: "this page will
+ * count". It is not there for a page already read in the khatma. It sits in the row of the
+ * watered pill, which keeps its room, so it never moves the text, and gives way to the pill when
+ * a page counts. With Reduce Motion it moves by three still steps (accessibility.md › Cognitive;
+ * motion.md › Best practices: make motion optional). VoiceOver does not hear it: the pill says
+ * when a page counts, once (feedback.md › Make sure all feedback is accessible, without chatter).
+ */
+export function PageProgressLine({ progress }: { progress: PageCountProgress }) {
+  const colors = useColors();
+  const isMotionReduced = useReducedMotion();
+  const { width, thickness, followMs, reducedMotionSteps } = READER_CONFIG.progressLine;
+  const target =
+    progress.kind === 'ready'
+      ? 1
+      : progress.kind === 'filling'
+        ? isMotionReduced
+          ? Math.floor(progress.share * reducedMotionSteps) / reducedMotionSteps
+          : progress.share
+        : 0;
+  const fill = useSharedValue(target);
+  useEffect(() => {
+    fill.value = isMotionReduced ? target : withTiming(target, { duration: followMs });
+  }, [fill, followMs, isMotionReduced, target]);
+  const fillStyle = useAnimatedStyle(() => ({ width: width * fill.value }));
+  if (progress.kind === 'hidden') return null;
+  return (
+    <View
+      style={styles.progress}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      pointerEvents="none"
+      testID="reader-page-progress"
+    >
+      <View
+        style={[
+          styles.progressTrack,
+          { width, height: thickness, borderRadius: thickness, backgroundColor: colors.waterTrack },
+        ]}
+      >
+        <Animated.View
+          testID="reader-page-progress-fill"
+          style={[
+            { height: thickness, borderRadius: thickness, backgroundColor: colors.waterFill },
+            isMotionReduced ? { width: width * target } : fillStyle,
+          ]}
+        />
+      </View>
+      {progress.kind === 'ready' ? (
+        <Icon
+          symbol={WATER_SYMBOL}
+          textStyle="footnote"
+          color="accent"
+          testID="reader-page-progress-drop"
+        />
+      ) : null}
+    </View>
+  );
+}
+
 const shadow = {
   shadowOpacity,
   shadowRadius,
@@ -282,12 +450,33 @@ const styles = StyleSheet.create({
     ...shadow,
   },
   pillText: { flexShrink: 1 },
+  progress: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  // Filled from the start of the reading direction: right to left in Arabic, with the row
+  // (right-to-left.md › Flip controls that show progress from one value to another).
+  progressTrack: { overflow: 'hidden', flexDirection: 'row' },
   bottomBar: {
-    alignItems: 'center',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'transparent',
   },
-  bottomBarContent: { paddingVertical: spacing.sm },
+  bottomBarContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: layout.screenMargin,
+  },
+  // As in the mockup: the script choice at the start, the tools at the end, the microphone in the
+  // middle of the room between them.
+  barMiddle: { flex: 1, alignItems: 'center' },
+  // Twelve points between the two targets (accessibility.md › Mobility; charter).
+  barEnd: { flexDirection: 'row', gap: spacing.sm + spacing.xs },
+  tool: {
+    minWidth: layout.touchTarget,
+    minHeight: layout.touchTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  disabled: { opacity: stateOpacity.disabled },
   hiddenBar: { backgroundColor: 'transparent' },
   microphone: {
     width: readerShapes.micButton,

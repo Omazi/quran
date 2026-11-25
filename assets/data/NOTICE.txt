@@ -22,6 +22,15 @@ No licence text for the data file itself was found in the mirror. The font
 shipped with it carries the Complex's licence: see assets/fonts/NOTICE.txt.
 
 
+verses/imlaei.json
+------------------
+The text of each verse is copied unchanged from the column "aya_text_emlaey" of
+the same file, hafsData_v18.json of the King Fahd Glorious Quran Printing
+Complex (same mirror, same commit as above). It is the verse in the everyday
+(imla'i) spelling, without vowel marks, as the Complex publishes it. Nothing is
+added, removed or changed. The same notice as for verses/uthmani.json applies.
+
+
 verses/uthmani-minimal.json
 ---------------------------
 The text of each verse is copied unchanged from dist/quran.json of the npm

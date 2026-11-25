@@ -19,7 +19,7 @@ export { useHighContrast, useReducedMotion } from './device-settings';
 export { useSafeInsets } from './safe-insets';
 export { listeningOpacity, listeningShape, useUpcomingInk } from './listening-tokens';
 export { getWritingDirection, type WritingDirection } from './direction';
-export { appFonts } from './fonts';
+export { appFonts, simpleScriptFont } from './fonts';
 // The text styles and field behaviours the Proches tab's own text field is built from.
 export { textStyles } from './tokens';
 export { TEXT_FIELD_BEHAVIOURS } from './native/text-field-kinds';

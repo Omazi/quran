@@ -13,10 +13,14 @@ export { AppStoreProvider, useAppStore, type AppStoreProviderProps } from './app
 export {
   DAILY_GOAL_RANGE,
   DEFAULT_DAILY_GOAL_PAGES,
+  DEFAULT_READER_SCRIPT,
+  DEFAULT_READER_TEXT_SIZE,
   DEFAULT_REMINDERS,
   EMPTY_TIME_SPENT,
   MAX_PAUSES,
   MAX_TIME_DAYS,
+  READER_SCRIPTS,
+  READER_TEXT_SIZE_RANGE,
   REJECTED_DATA_KEY,
   RESET_NOTICE_KEY,
   STORED_DATA_KEY,
@@ -42,6 +46,7 @@ export type {
   DataResetNotice,
   ForegroundTime,
   QuietHours,
+  ReaderScript,
   ReminderSettings,
   ReminderTime,
 } from './types';

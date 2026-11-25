@@ -148,12 +148,18 @@ export function ReaderSegmented<Value extends string>({
   options,
   value,
   onChange,
+  fitsContent = false,
   testID,
 }: {
   label: string;
   options: readonly ReaderChoiceOption<Value>[];
   value: Value;
   onChange: (value: Value) => void;
+  /**
+   * True in a bar, where the control takes the width of its labels instead of the whole row (the
+   * reader's bottom bar, as the mockup draws it). The segments then follow their labels.
+   */
+  fitsContent?: boolean;
   testID?: string;
 }) {
   const colors = useColors();
@@ -176,6 +182,7 @@ export function ReaderSegmented<Value extends string>({
             testID={testID === undefined ? undefined : `${testID}-${option.value}`}
             style={({ pressed }) => [
               styles.segment,
+              fitsContent && styles.segmentFittingContent,
               isSelected && [
                 styles.thumb,
                 { backgroundColor: colors.surface, shadowColor: colors.shadow },
@@ -359,6 +366,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: layout.touchTarget,
   },
+  segmentFittingContent: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
   thumb: {
     shadowOpacity,
     shadowRadius: shadowRadius / 2,

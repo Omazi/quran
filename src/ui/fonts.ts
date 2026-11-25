@@ -1,4 +1,5 @@
 // Each variant is imported from its own folder: the package index would bundle every variant.
+import { Amiri_400Regular } from '@expo-google-fonts/amiri/400Regular';
 import { Amiri_700Bold } from '@expo-google-fonts/amiri/700Bold';
 
 /**
@@ -28,3 +29,11 @@ export const appFonts = {
   Amiri_700Bold,
   FrauncesSemiBold,
 } as const;
+
+/**
+ * The font of the reader's simple (imla'i) script (D41): Amiri Regular, a Naskh drawn for running
+ * Arabic text, SIL Open Font License 1.1 (node_modules/@expo-google-fonts/amiri/LICENSE_FONT),
+ * keyed by `fontFamily.quranSimple`. Not in `appFonts`: only a reader who chooses the simple
+ * script loads it, so the first screen never waits for it.
+ */
+export const simpleScriptFont = { Amiri_400Regular } as const;

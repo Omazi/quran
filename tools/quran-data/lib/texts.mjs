@@ -1,6 +1,7 @@
 /**
  * Reads the two verse sources into one simple shape. The Tanzil text is taken unchanged;
- * the Uthmani text is extracted by the two documented removals of `verseTextOf`:
+ * the Uthmani text is extracted by the two documented removals of `verseTextOf`; the imla'i
+ * (simple) text is the publisher's `aya_text_emlaey` column, taken unchanged:
  *
  *   { surahs: [{ surah, nameArabic, nameTransliterated, verseCount, revelationPlace }],
  *     verses: string[][] }            verses[surah - 1][verse - 1]
@@ -124,7 +125,9 @@ function verseTextOf(row, key) {
  * { id, jozz, sora, sora_name_en, sora_name_ar, page, line_start, line_end, aya_no, aya_text,
  * aya_text_emlaey }.
  *
- * Only `sora`, `aya_no`, `aya_text`, `page` and the two surah names are read. Its `jozz`
+ * Only `sora`, `aya_no`, `aya_text`, `aya_text_emlaey`, `page` and the two surah names are
+ * read. `aya_text_emlaey` is the same verse in the everyday (imla'i) spelling, without vowel
+ * marks, as the publisher gives it: it is copied unchanged (docs/DECISIONS.md, D41). Its `jozz`
  * column puts 3:92 and 9:93 in the wrong juz and is not used. The surah names and the first
  * verse of each `page` come back as the publisher gives them: structure.mjs only uses them
  * to cross-check the names kept in the app and the pages of the layout.
@@ -135,6 +138,7 @@ export function readUthmaniSource(raw) {
 
   const surahs = [];
   const verses = [];
+  const imlaei = [];
   const pageStarts = [];
   for (const row of raw) {
     const key = verseKey(row.sora, row.aya_no);
@@ -149,18 +153,22 @@ export function readUthmaniSource(raw) {
         verseCount: 0,
       });
       verses.push([]);
+      imlaei.push([]);
     }
     const info = surahs.at(-1);
     if (info === undefined || row.sora !== info.surah || row.aya_no !== info.verseCount + 1) {
       fail(`${sourceName}: verse ${key} is out of order`);
     }
     verses.at(-1).push(verseTextOf(row, key));
+    if (typeof row.aya_text_emlaey !== 'string') fail(`${sourceName} ${key}: no imla'i text`);
+    imlaei.at(-1).push(row.aya_text_emlaey);
     info.verseCount += 1;
   }
 
   assertCounts(sourceName, surahs, verses);
   assertWordSeparation(sourceName, verses);
-  return { surahs, verses, pageStarts };
+  assertWordSeparation(`${sourceName} (imla'i)`, imlaei);
+  return { surahs, verses, imlaei, pageStarts };
 }
 
 /**

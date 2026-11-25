@@ -581,6 +581,11 @@ export const fontFamily = {
   /** Arabic titles (surah names). */
   quranTitle: 'Amiri_700Bold',
   /**
+   * The reader's simple (imla'i) script (D41): Amiri Regular (`simpleScriptFont`). The Uthmani
+   * text never uses it: its signs only have their shape in `quran`.
+   */
+  quranSimple: 'Amiri_400Regular',
+  /**
    * The Quran font by its PostScript name, for SwiftUI (`Font.custom`), which does not know the
    * name given to it in `appFonts`. expo-font registers the file for the whole process.
    */
@@ -687,6 +692,17 @@ export interface QuranTextStyleToken {
 export const quranTextStyles = {
   /** A verse read on its own. */
   verse: { fontFamily: fontFamily.quran, fontSize: 28, lineHeight: 56, ramp: 'title1' },
+  /**
+   * The simple script of the reader's scroll (D41). Amiri draws its letters larger than the King
+   * Fahd font at the same size: 26 points read like the Uthmani text's 28 (compared on the web
+   * screenshots of Al-Kahf); the same line height keeps the two scripts on one rhythm.
+   */
+  verseSimple: {
+    fontFamily: fontFamily.quranSimple,
+    fontSize: 26,
+    lineHeight: 56,
+    ramp: 'title1',
+  },
   /** The opening words of a verse, in a row that names its place. */
   openingWords: { fontFamily: fontFamily.quran, fontSize: 22, lineHeight: 44, ramp: 'title2' },
   /** A surah's Arabic name, as the reader's surah header writes it. */

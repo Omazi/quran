@@ -8,16 +8,18 @@
     "hizb": 60,
     "lines": 9046,
     "uthmaniWords": 77430,
-    "uthmaniMinimalWords": 77433
+    "uthmaniMinimalWords": 77433,
+    "imlaeiWords": 77491
   },
   "pagesPerFile": 20,
   "canonicalText": {
     "format": "UTF-8, one line \"<surah>|<verse>|<text>\\n\" per verse, the 6236 verses in reading order",
     "uthmaniSha256": "f0cb43235f1ebb96cc5fa5de33c2043c04c3a68d7a11c63626fa7e4f0f2bb687",
-    "uthmaniMinimalSha256": "432e8775149564af0cf0420b0b427eb90cb25d5d9f2118dc396afd2192814b4b"
+    "uthmaniMinimalSha256": "432e8775149564af0cf0420b0b427eb90cb25d5d9f2118dc396afd2192814b4b",
+    "imlaeiSha256": "177f2aeabdbde65193126fc402af2700cc81df7288eae9869e469a31dc493d6a"
   },
   "files": {
-    "NOTICE.txt": "a3b6be072f8ed37297823dc396347a68ff4add6e2e96a63bc1a51aa074aa4acb",
+    "NOTICE.txt": "adba898f5a43383fa69bee022911917082c1cab9ea37a5c1e49bd32469cf1ea8",
     "pages/pages-001-020.json": "ab255fe5cbe59cc253b8afd849a44ba95e0e061eba41e0507612daeaa30d7c12",
     "pages/pages-021-040.json": "a6788ccb913c8924afd090bd404fd078209db72bee018f6a24667c4a2bdaf0dc",
     "pages/pages-041-060.json": "2ee30d5da24c8277f61c8b1dcf3e04d60a9cd3828e5604cecd34a64e2fcfc0c2",
@@ -50,6 +52,7 @@
     "pages/pages-581-600.json": "dcc71c8707c9e0de0ad6c7eb08b236376ab227ea7e6b3d820b633463d8ea81cf",
     "pages/pages-601-604.json": "25fe980255283c48b5a426d0e8053242cdb6a9e3a47ef109353fb1730881b4b3",
     "structure.json": "9273796e0d10e1aedde0ebafbcbd5e0a302f707bc174768924df80f62e090e99",
+    "verses/imlaei.json": "af2c0ffd193ad5d64520767d17bf406ebf5e9feb2e447303207b4e6250ca3668",
     "verses/uthmani-minimal.json": "8b95f6e370ed2be2f97cc0856fedb9c3d8e9146933c2c2116313270b7777c540",
     "verses/uthmani.json": "de2f906a7caf807ac01f4c96e0c3c1426f0479021586b3892a327779f7d27a9b"
   },

@@ -15,8 +15,9 @@ Tout ce document applique [la règle des skills](../design/SKILLS.md) et
 L'écran de reconnaissance **reste la rosace validée sur le papier** (D27, D29 : jour validé, nuit
 « même dessin aux valeurs de nuit » validée le 24 novembre) : la maquette `shazam.png` ne
 s'applique pas à lui (décision du propriétaire). Le suivi de la voix (`docs/design/voix.png`)
-existe en écran d'essai, `/voice-follow?page=294&from=18:10`, avec la règle du domaine
-`followRecitation` ; ses couleurs et tailles sont dans `src/ui/listening-tokens.ts`. Écarts et
+se fait **dans le lecteur** depuis le 25 novembre 2026 (micro vert, `specs/reader.md` § 3b) ;
+l'ancienne adresse d'essai `/voice-follow?page=294&from=18:10` ouvre le lecteur en suivi. Règle
+du domaine : `followRecitation` ; la reconnaissance (« Shazam ») s'ouvre depuis l'onglet Coran ; ses couleurs et tailles sont dans `src/ui/listening-tokens.ts`. Écarts et
 questions au propriétaire : `design/SKILLS.md`, écarts 85 à 87.
 
 ## Mise à jour du 25 novembre 2026, soir : le vrai moteur (D42)

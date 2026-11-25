@@ -89,6 +89,48 @@ describe('changes made on the phone', () => {
   });
 });
 
+describe('the reader’s script and text size travel like the other settings (D41)', () => {
+  it('a choice on this phone waits in the outbox', async () => {
+    const { store } = await load(createMemoryStorage());
+    store.getState().syncStartAccount('user-1');
+    clock += 1;
+    store.getState().setReaderScript('imlaei');
+    clock += 1;
+    store.getState().setReaderTextSize(3);
+    expect(store.getState().sync.outbox).toContainEqual(
+      expect.objectContaining({ kind: 'setting', key: 'readerScript', value: 'imlaei' }),
+    );
+    expect(store.getState().sync.outbox).toContainEqual(
+      expect.objectContaining({ kind: 'setting', key: 'readerTextSize', value: 3 }),
+    );
+  });
+
+  it('a choice from the account is applied; a value the store refuses keeps the current one', async () => {
+    const { store } = await load(createMemoryStorage());
+    store.getState().syncStartAccount('user-1');
+    store.getState().syncReceive(
+      [
+        { kind: 'setting', key: 'readerScript', value: 'imlaei', at: 50_000, device: 'tablet' },
+        { kind: 'setting', key: 'readerTextSize', value: 4, at: 50_000, device: 'tablet' },
+      ],
+      1,
+      clock,
+    );
+    expect(store.getState().settings.readerScript).toBe('imlaei');
+    expect(store.getState().settings.readerTextSize).toBe(4);
+    store.getState().syncReceive(
+      [
+        { kind: 'setting', key: 'readerScript', value: 'warsh', at: 60_000, device: 'tablet' },
+        { kind: 'setting', key: 'readerTextSize', value: 9, at: 60_000, device: 'tablet' },
+      ],
+      2,
+      clock,
+    );
+    expect(store.getState().settings.readerScript).toBe('imlaei');
+    expect(store.getState().settings.readerTextSize).toBe(4);
+  });
+});
+
 describe('changes from the account', () => {
   const remote: SyncEvent[] = [
     { kind: 'page', khatm: 1, page: 50, date: DAY },

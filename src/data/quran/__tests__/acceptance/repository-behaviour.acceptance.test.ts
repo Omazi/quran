@@ -184,7 +184,8 @@ describe('Entrées invalides (sourate 0, verset 300 de la sourate 1, page 605) :
     },
   );
 
-  it.each(['simple', 'imlaei', 'UTHMANI', '', null, 0])(
+  // `imlaei` became a known script with D41; `warsh` stands for any reading the app does not ship.
+  it.each(['simple', 'warsh', 'UTHMANI', '', null, 0])(
     'an unknown script (%p) rejects explicitly instead of falling back to another text',
     async (script) => {
       // as: simulates an untyped caller (a stored preference from an older version).

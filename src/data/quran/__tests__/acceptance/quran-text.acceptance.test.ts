@@ -449,6 +449,7 @@ describe('Hygiène du texte (corpus entier, les deux écritures)', () => {
   const DECLARED_SURPRISES: Readonly<Record<QuranScript, readonly string[]>> = {
     uthmani: [],
     'uthmani-minimal': [],
+    imlaei: [],
   };
 
   function isExpected(codePoint: number): boolean {

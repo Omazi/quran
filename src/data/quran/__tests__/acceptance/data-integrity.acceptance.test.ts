@@ -59,6 +59,8 @@ describe('Invariant — L’empreinte recalculée est égale à celle de integri
   const integrity = readRawIntegrity();
   const uthmani = readRawVerses('uthmani');
   const minimal = readRawVerses('uthmani-minimal');
+  // The simple script of the reader (D41), added with its own count.
+  const imlaei = readRawVerses('imlaei');
 
   it('canonicalQuranText is the format written in integrity.json, for both texts', () => {
     expect(canonicalQuranText(uthmani)).toBe(canonicalTextByHand(uthmani));
@@ -108,6 +110,7 @@ describe('Invariant — L’empreinte recalculée est égale à celle de integri
       lines: lineCount,
       uthmaniWords: wordCount(uthmani),
       uthmaniMinimalWords: wordCount(minimal),
+      imlaeiWords: wordCount(imlaei),
     });
     expect(integrity.counts.surahs).toBe(114);
     expect(integrity.counts.verses).toBe(6236);

@@ -88,6 +88,7 @@ function readData(dataDir, integrity) {
     structure: readJson(dataDir, 'structure.json'),
     uthmani: readJson(dataDir, 'verses/uthmani.json'),
     uthmaniMinimal: readJson(dataDir, 'verses/uthmani-minimal.json'),
+    imlaei: readJson(dataDir, 'verses/imlaei.json'),
   };
 }
 
@@ -101,8 +102,15 @@ function canonicalText(verses) {
   return text;
 }
 
-function checkCountsAndFingerprints({ integrity, pages, structure, uthmani, uthmaniMinimal }) {
-  for (const [name, verses] of Object.entries({ uthmani, uthmaniMinimal })) {
+function checkCountsAndFingerprints({
+  integrity,
+  pages,
+  structure,
+  uthmani,
+  uthmaniMinimal,
+  imlaei,
+}) {
+  for (const [name, verses] of Object.entries({ uthmani, uthmaniMinimal, imlaei })) {
     check(Object.keys(verses).length === EXPECTED.surahs, `${name}: not ${EXPECTED.surahs} surahs`);
     const verseCount = Object.values(verses).reduce((total, list) => total + list.length, 0);
     check(verseCount === EXPECTED.verses, `${name}: ${verseCount} verses`);
@@ -292,13 +300,18 @@ function publishedVerseText(printed) {
 }
 
 /** The text on disk must be the text of the sources, character for character. */
-function checkTextIsTheSourceText({ integrity, uthmani, uthmaniMinimal }, sources) {
+function checkTextIsTheSourceText({ integrity, uthmani, uthmaniMinimal, imlaei }, sources) {
   check(sources.uthmani.length === EXPECTED.verses, 'The Uthmani source does not have 6236 rows');
   sources.uthmani.forEach((row) => {
     const key = `${row.sora}:${row.aya_no}`;
     check(
       uthmani[row.sora]?.[row.aya_no - 1] === publishedVerseText(row.aya_text),
       `Uthmani ${key} differs from its source`,
+    );
+    // The imla'i text is the publisher's column as it is, without any removal.
+    check(
+      imlaei[row.sora]?.[row.aya_no - 1] === row.aya_text_emlaey,
+      `Imla'i ${key} differs from its source`,
     );
   });
   sources.tanzil.surahs.forEach((surah) => {
@@ -352,9 +365,10 @@ runCommand('data:verify', () => {
         `${counts.juz} juz, ${counts.hizb} hizb`,
       `  ${counts.uthmaniWords} Uthmani words placed exactly once on ${counts.lines} lines; ` +
         'every verse rebuilt from its page words equals its text',
-      '  both texts identical to their sources; every file matches its checksum and the build',
+      '  the three texts identical to their sources; every file matches its checksum and the build',
       `  Uthmani text SHA-256 ${fingerprints.uthmaniSha256}`,
       `  Uthmani-minimal text SHA-256 ${fingerprints.uthmaniMinimalSha256}`,
+      `  Imla'i text SHA-256 ${fingerprints.imlaeiSha256}`,
     ].join('\n'),
   );
 });

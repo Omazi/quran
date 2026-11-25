@@ -1,20 +1,13 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
 
-import { quranStructure } from '@/data/quran';
-import {
-  createFollowEngine,
-  loadQuranPage,
-  parseFollowParams,
-  useListeningNavigation,
-  VoiceFollowScreen,
-} from '@/features/listening';
+import { parseFollowParams } from '@/features/listening';
 
 /**
- * Reading aloud with the voice followed (docs/design/voix.png): no button leads here yet.
- * `/voice-follow?page=294&from=18:10` follows the recitation with the phone's speech engine
- * (D42); in development and test builds, `&scenario=follow` plays the simulated recitation of
- * 18:10 instead. Where the phone has no engine, a published build sends the address home.
+ * The former trial of the voice following (docs/design/voix.png). The reader follows the
+ * recitation itself now (D41, docs/specs/reader.md, 3b): `/voice-follow?page=294&from=18:10`
+ * opens the reader on that page, following from that verse; `&scenario=…` is passed on for the
+ * simulated recitation of development and test builds. An address that names no page of the
+ * mushaf goes home.
  */
 export default function VoiceFollowRoute() {
   const { page, from, scenario } = useLocalSearchParams<{
@@ -22,18 +15,20 @@ export default function VoiceFollowRoute() {
     from?: string;
     scenario?: string;
   }>();
-  const [engine] = useState(() => createFollowEngine(scenario));
-  const navigation = useListeningNavigation();
   const params = parseFollowParams(page, from);
-  if (engine === null || params === null) return <Redirect href="/" />;
+  if (params === null) return <Redirect href="/" />;
+  const verse = params.from ?? null;
   return (
-    <VoiceFollowScreen
-      engine={engine}
-      page={params.page}
-      from={params.from}
-      structure={quranStructure}
-      loadPage={loadQuranPage}
-      onClose={navigation.close}
+    <Redirect
+      href={{
+        pathname: '/reader/[page]',
+        params: {
+          page: String(params.page),
+          follow: '1',
+          ...(verse === null ? {} : { from: `${verse.surah}:${verse.verse}` }),
+          ...(scenario === undefined ? {} : { scenario }),
+        },
+      }}
     />
   );
 }

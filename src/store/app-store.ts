@@ -19,10 +19,14 @@ import { isSupportedLanguage } from '@/i18n';
 import {
   DAILY_GOAL_RANGE,
   DEFAULT_DAILY_GOAL_PAGES,
+  DEFAULT_READER_SCRIPT,
+  DEFAULT_READER_TEXT_SIZE,
   DEFAULT_REMINDERS,
   EMPTY_TIME_SPENT,
   MAX_PAUSES,
   MAX_TIME_DAYS,
+  READER_SCRIPTS,
+  READER_TEXT_SIZE_RANGE,
   REJECTED_DATA_KEY,
   RESET_NOTICE_KEY,
   STORED_DATA_BACKUP_KEY,
@@ -42,6 +46,8 @@ import {
   isDailyGoalPages,
   isLastOpenedPage,
   isQuietHours,
+  isReaderScript,
+  isReaderTextSize,
   isReminderTime,
   isStorableDate,
   isUserSeed,
@@ -128,6 +134,8 @@ export function createFirstLaunchSettings(userSeed: number): AppSettings {
     userSeed,
     lastOpenedPage: null,
     bookmarks: [],
+    readerScript: DEFAULT_READER_SCRIPT,
+    readerTextSize: DEFAULT_READER_TEXT_SIZE,
     pauses: [],
     reminders: DEFAULT_REMINDERS,
   };
@@ -326,6 +334,25 @@ export function createStateStore(
           ? current.filter((bookmarked) => bookmarked !== page)
           : [...current, page].sort((first, second) => first - second);
         changeSettings({ bookmarks });
+      },
+
+      setReaderScript: (script) => {
+        if (!isReaderScript(script)) {
+          throw new RangeError(
+            `The reader shows ${READER_SCRIPTS.join(' or ')}, received ${String(script)}.`,
+          );
+        }
+        if (get().settings.readerScript !== script) changeSettings({ readerScript: script });
+      },
+
+      setReaderTextSize: (step) => {
+        if (!isReaderTextSize(step)) {
+          const { min, max } = READER_TEXT_SIZE_RANGE;
+          throw new RangeError(
+            `The reader's text size is a step from ${min} to ${max}, received ${String(step)}.`,
+          );
+        }
+        if (get().settings.readerTextSize !== step) changeSettings({ readerTextSize: step });
       },
 
       recordPageRead: (pageRead) => {

@@ -41,7 +41,8 @@
       "title": "Juz {{juz}}",
       "hizb": "Hizb {{hizb}}",
       "start": "{{surah}}, verse {{verse}} · Page {{page}}"
-    }
+    },
+    "recognize": "Recognize a Passage"
   },
   "page": {
     "subtitle": "Juz {{juz}}, Hizb {{hizb}} · Page {{page}}",
@@ -53,9 +54,9 @@
       "spoken": "{{title}}، {{place}}، {{verses}}"
     },
     "loading": "Loading page {{page}}",
-    "next": "Next Page",
-    "previous": "Previous Page",
-    "pager": "Pages of the mushaf",
+    "scroll": "Quran Text",
+    "footer": "{{page}}",
+    "footerSpoken": "End of page {{page}}",
     "error": {
       "title": "Page Unreadable",
       "description": "The data of this page is incomplete, so it is not shown. The other pages can still be read."
@@ -64,7 +65,17 @@
   "bar": {
     "back": "Back",
     "bookmark": "Bookmark",
-    "listen": "Listen to a Passage"
+    "listen": "Recite, Followed by the App"
+  },
+  "script": {
+    "label": "Script",
+    "uthmani": "Uthmani",
+    "imlaei": "Simple"
+  },
+  "textSize": {
+    "smaller": "Smaller Text",
+    "larger": "Larger Text",
+    "value": "Size {{step}} of {{count}}"
   },
   "feedback": {
     "pageCounted": "+1 page, your garden is watered",
@@ -108,5 +119,9 @@
     "title": "Text Unavailable",
     "description": "The Quran font could not be loaded. Close the app, then open it again.",
     "action": "Open Contents"
+  },
+  "follow": {
+    "denied": "The microphone is not allowed. Allow it in Settings so the app can follow your recitation.",
+    "failed": "Listening could not start. Try again in a moment."
   }
 }

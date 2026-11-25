@@ -15,6 +15,7 @@ export const INTEGRITY_FILE = 'integrity.json';
 export const STRUCTURE_FILE = 'structure.json';
 export const UTHMANI_VERSES_FILE = 'verses/uthmani.json';
 export const UTHMANI_MINIMAL_VERSES_FILE = 'verses/uthmani-minimal.json';
+export const IMLAEI_VERSES_FILE = 'verses/imlaei.json';
 export const NOTICE_FILE = 'NOTICE.txt';
 export const CANONICAL_TEXT_FORMAT =
   'UTF-8, one line "<surah>|<verse>|<text>\\n" per verse, the 6236 verses in reading order';
@@ -75,6 +76,7 @@ export function writeDataFiles({ uthmani, tanzil, alignment, structure, sourceCh
   const files = new Map();
   files.set(UTHMANI_VERSES_FILE, versesJson(uthmani.verses));
   files.set(UTHMANI_MINIMAL_VERSES_FILE, versesJson(tanzil.verses));
+  files.set(IMLAEI_VERSES_FILE, versesJson(uthmani.imlaei));
   files.set(NOTICE_FILE, notice);
   files.set(STRUCTURE_FILE, prettyJson(structure));
   for (let first = 0; first < alignment.pages.length; first += PAGES_PER_FILE) {
@@ -93,12 +95,14 @@ export function writeDataFiles({ uthmani, tanzil, alignment, structure, sourceCh
       lines: alignment.pages.reduce((total, page) => total + page.lines.length, 0),
       uthmaniWords: countWords(uthmani.verses),
       uthmaniMinimalWords: countWords(tanzil.verses),
+      imlaeiWords: countWords(uthmani.imlaei),
     },
     pagesPerFile: PAGES_PER_FILE,
     canonicalText: {
       format: CANONICAL_TEXT_FORMAT,
       uthmaniSha256: sha256(canonicalText(uthmani.verses)),
       uthmaniMinimalSha256: sha256(canonicalText(tanzil.verses)),
+      imlaeiSha256: sha256(canonicalText(uthmani.imlaei)),
     },
     files: Object.fromEntries(
       [...files.keys()].sort().map((name) => [name, sha256(files.get(name))]),

@@ -17,7 +17,7 @@ premier. Le compte n'est qu'une copie de plus, fusionnée sans jamais rien écra
 
 ## 1. Sur le téléphone
 
-- **Un seul document** (`app-data`, version 5) contient la progression (réglages, journal, temps)
+- **Un seul document** (`app-data`, version 6 depuis D41) contient la progression (réglages, journal, temps)
   **et** les métadonnées de synchronisation (partie `sync`). Les deux sont donc toujours écrits
   ensemble : aucune fenêtre où l'un serait à jour sans l'autre.
 - **Écriture atomique** : chaque clé est écrite d'un bloc par AsyncStorage (iOS : fichiers écrits
@@ -55,8 +55,8 @@ le résultat change.
 - **Une seule khatma en cours** : l'union de deux journaux valides reste valide (une khatma n+1
   n'existe sur un téléphone que si la khatma n y est complète). Une entrée impossible (venue d'un
   événement abîmé ou forgé) est écartée par `normalizeJournal`.
-- **Réglages qui voyagent** : langue, objectif du jour, rappels, dernière page ouverte (le plus
-  récent gagne) ; graine des jardins (**la plus ancienne gagne** : un nouveau téléphone prend les
+- **Réglages qui voyagent** : langue, objectif du jour, rappels, dernière page ouverte, écriture
+  et taille du texte du lecteur (D41) (le plus récent gagne) ; graine des jardins (**la plus ancienne gagne** : un nouveau téléphone prend les
   jardins du compte) ; introduction terminée (**vrai gagne**). Une valeur que le magasin refuserait
   est ignorée, une clé inconnue aussi (venue d'une version plus récente).
 - **Horloges** : chaque téléphone horodate avec une horloge hybride (jamais en arrière, toujours

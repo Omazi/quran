@@ -1,9 +1,10 @@
 /**
  * Reading in the reader shows on the tabs (bug report of 25 November 2026: "j'ai lu 4 hizb et le
  * jardin, le compteur et les hasanat n'ont pas bougé"). The whole app, through expo-router and
- * the real store saved in the device storage: the reader on top of the tabs, its 30-second rule
- * driven by the fake clock, then the "Jardin" and "Profil" tabs, which stay mounted under the
- * native tabs and must follow the store, and a restart of the app.
+ * the real store saved in the device storage: the reader on top of the tabs, its continuous
+ * scroll (D41) and its reading rule (each page asks a time that grows with its words) driven by
+ * the fake clock, then the "Jardin" and "Profil" tabs, which stay mounted under the native tabs
+ * and must follow the store, and a restart of the app.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,7 +12,8 @@ import { router } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, waitFor, within } from 'expo-router/testing-library';
 import { AppState } from 'react-native';
 
-import { quranStructure } from '@/data/quran';
+import { quranRepository, quranStructure } from '@/data/quran';
+import { requiredReadingSeconds } from '@/domain/khatm';
 import { deviceLocalDate } from '@/features/home';
 import { setCamera } from '@/features/friends/test-support/camera';
 import { freshAppDemoForTest } from '@/features/friends/test-support/demo';
@@ -20,7 +22,8 @@ import { createTestAppStore } from '@/store/test-support/test-store';
 import { resetDeviceConditions, setDeviceConditions } from '@/ui/test-support/environment';
 
 import { READER_CONFIG } from '../config';
-import { pagerIndexOfPage } from '../page-order';
+import { pageWordCounts } from '../page-words';
+import { forgetReadingProgress } from '../reading-memory';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
   jest.requireActual('@react-native-async-storage/async-storage/jest/async-storage-mock'),
@@ -68,7 +71,9 @@ jest.mock('expo-splash-screen', () => ({
 /** Loading every route of the app takes more than Jest's five seconds. */
 jest.setTimeout(60_000);
 
-const PAGE_AREA = { x: 0, y: 0, width: 390, height: 700 };
+/** The scroll on screen, and the height given to each page section: one page fits whole. */
+const SCROLL = { width: 390, height: 700 };
+const PAGE_HEIGHT = 600;
 const SECOND = 1000;
 /** Pages of the first hizb, from the app's own structure. */
 const FIRST_HIZB = quranStructure.hizbPageRanges()[0];
@@ -99,18 +104,58 @@ function openApp(initialUrl = '/') {
   return renderRouter({ appDir: 'src/app', overrides: {} }, { initialUrl });
 }
 
-/** The reader on screen gets the size of its page area, as the platform gives it. */
-async function layOutReader(): Promise<void> {
-  await fireEvent(await screen.findByTestId('reader-pages'), 'layout', {
-    nativeEvent: { layout: PAGE_AREA },
-  });
-  await screen.findByTestId('book-pager');
+/** Words of each page, for the time each page asks (spec 3). */
+let words: readonly number[] = [];
+beforeAll(async () => {
+  const bySurah = new Map<number, readonly string[]>();
+  for (const { surah } of quranStructure.surahs) {
+    bySurah.set(
+      surah,
+      (await quranRepository.getSurahVerses(surah)).map((verse) => verse.text),
+    );
+  }
+  words = pageWordCounts(({ surah, verse }) => bySurah.get(surah)?.[verse - 1] ?? '');
+});
+
+function secondsAsked(page: number): number {
+  return requiredReadingSeconds(words[page - 1] ?? 1, READER_CONFIG.readingTime);
 }
 
-/** A swipe that settles on a page. */
-async function swipeTo(page: number): Promise<void> {
-  await fireEvent(screen.getByTestId('book-pager'), 'momentumScrollEnd', {
-    nativeEvent: { contentOffset: { x: pagerIndexOfPage(page) * PAGE_AREA.width, y: 0 } },
+/**
+ * The scroll brings a page on screen, whole, as the layout of a phone would: its section gets its
+ * place in the content (pages one under the other, from `firstPage`), then the scroll settles on it.
+ */
+async function scrollToPage(page: number, firstPage: number): Promise<void> {
+  const top = (page - firstPage) * PAGE_HEIGHT;
+  // The list learns its own size, as the platform tells it, and draws the pages it then needs.
+  const list = await screen.findByTestId('reader-scroll');
+  await fireEvent(list, 'layout', { nativeEvent: { layout: { x: 0, y: 0, ...SCROLL } } });
+  await fireEvent(list, 'contentSizeChange', SCROLL.width, 604 * PAGE_HEIGHT);
+  // The cells the list drew before are laid out one under the other.
+  for (let drawn = firstPage; drawn < page; drawn += 1) {
+    const cell = screen.queryByTestId(`page-cell-${drawn}`);
+    if (cell === null) continue;
+    await fireEvent(cell, 'layout', {
+      nativeEvent: {
+        layout: {
+          x: 0,
+          y: (drawn - firstPage) * PAGE_HEIGHT,
+          width: SCROLL.width,
+          height: PAGE_HEIGHT,
+        },
+      },
+    });
+  }
+  await stay(1);
+  await fireEvent(await screen.findByTestId(`page-cell-${page}`), 'layout', {
+    nativeEvent: { layout: { x: 0, y: top, width: SCROLL.width, height: PAGE_HEIGHT } },
+  });
+  await fireEvent.scroll(screen.getByTestId('reader-scroll'), {
+    nativeEvent: {
+      contentOffset: { x: 0, y: top },
+      layoutMeasurement: SCROLL,
+      contentSize: { width: SCROLL.width, height: 100_000 },
+    },
   });
 }
 
@@ -141,6 +186,7 @@ beforeEach(async () => {
   setDeviceConditions();
   // React Native's Jest mock makes the state a function; on a phone it is a string.
   Object.defineProperty(AppState, 'currentState', { value: 'active', configurable: true });
+  forgetReadingProgress();
   await storeReturningPerson();
 });
 
@@ -194,15 +240,13 @@ describe('pages read in the reader, seen on the tabs', () => {
     // "Lire et arroser" opens the reader on the first page.
     await fireEvent.press(screen.getByTestId('home-read'));
     await waitFor(() => expect(app.getPathname()).toBe(`/reader/${firstPage}`));
-    await layOutReader();
 
-    // The whole first hizb, each page read for the time the rule asks.
-    for (let page = firstPage; page < lastPage; page += 1) {
-      await stay(READER_CONFIG.minimumSecondsOnPage);
-      await swipeTo(page + 1);
+    // The whole first hizb, each page on screen for the time it asks.
+    for (let page = firstPage; page <= lastPage; page += 1) {
+      await scrollToPage(page, firstPage);
+      await stay(secondsAsked(page) + 1);
     }
     expect(screen.getByTestId('reader-feedback')).toBeOnTheScreen();
-    await stay(READER_CONFIG.minimumSecondsOnPage);
     await closeReader();
     await waitFor(() => expect(app.getPathname()).toBe('/'));
 
@@ -217,10 +261,10 @@ describe('pages read in the reader, seen on the tabs', () => {
     // The profile, mounted before the reading, follows the store.
     await act(() => router.navigate('/profile'));
     await waitFor(() => expect(app.getPathname()).toBe('/profile'));
-    // The restyled profile (work/mk-profile): the week's figures, the hasanat as the hero figure.
-    expect(await screen.findByTestId('profile-figure-pages')).toHaveTextContent(
-      new RegExp(`${pageCount}`),
-    );
+    // The figures of the profile, restyled on main (work/mk-profile): pages, hasanat, time.
+    expect(
+      within(await screen.findByTestId('profile-figure-pages')).getByText(`${pageCount}`),
+    ).toBeOnTheScreen();
     expect(screen.getByTestId('profile-hero-value')).toHaveTextContent(/[1-9]/);
     // The time is handed over to the store by batches of a minute (D37): some minutes are there.
     expect(screen.getByTestId('profile-figure-readingTime')).toHaveTextContent(/[1-9] min/);
@@ -236,10 +280,9 @@ describe('pages read in the reader, seen on the tabs', () => {
     await waitFor(() => expect(app.getPathname()).toBe('/'));
     await fireEvent.press(await screen.findByTestId('home-read'));
     await waitFor(() => expect(app.getPathname()).toBe('/reader/1'));
-    await layOutReader();
-    for (let page = 2; page <= 40; page += 1) {
-      await stay(READER_CONFIG.minimumSecondsOnPage / 3);
-      await swipeTo(page);
+    for (let page = 1; page <= 12; page += 1) {
+      await scrollToPage(page, 1);
+      await stay(secondsAsked(page) / 3);
     }
     expect(screen.queryByTestId('reader-feedback')).toBeNull();
     await closeReader();

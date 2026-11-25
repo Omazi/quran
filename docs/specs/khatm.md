@@ -71,12 +71,18 @@ les jours « arrosés » et la série.
     complet reste affiché** : quand une khatma vient d'être terminée et que la suivante
     n'a encore aucune page, le jardin reçoit la khatma terminée, avec ses 60 hizb. Il ne
     passe au nouveau jardin qu'à la première page de la khatma suivante.
+11. **Temps de lecture d'une page** (`requiredReadingSeconds`, décision du propriétaire du
+    25 novembre 2026, D41) : le temps qu'une page demande avant de compter est son nombre de
+    mots multiplié par un temps par mot, jamais moins qu'un minimum. Les deux valeurs sont des
+    réglages du lecteur (0,2 s par mot, 8 s au moins), passés en paramètre. Nombre de mots : entier
+    à partir de 1 ; temps par mot : nombre positif ; minimum : nombre à partir de 0 ; sinon
+    `RangeError`.
 
 ## API attendue (noms indicatifs)
 
 `recordPageRead`, `getCurrentKhatm`, `getReadPages`, `isPageRead`, `getGardenFeed`,
 `getKhatmProgress`, `getTodayProgress`, `getWateredDays`, `getStreak`,
-`estimateFinishDate`, `getBadges`, plus les types et la configuration par défaut. Fonctions pures,
+`estimateFinishDate`, `getBadges`, `requiredReadingSeconds`, plus les types et la configuration par défaut. Fonctions pures,
 journal immuable (une fonction renvoie un nouveau journal).
 
 ## Entrées invalides

@@ -154,6 +154,7 @@ describe('data:build — regenerates assets/data deterministically', () => {
     const files = listFiles(firstRun);
     expect(files).toContain('verses/uthmani.json');
     expect(files).toContain('verses/uthmani-minimal.json');
+    expect(files).toContain('verses/imlaei.json');
     expect(files).toContain('NOTICE.txt');
     expect(files).toContain('structure.json');
     expect(files).toContain('integrity.json');
@@ -462,6 +463,35 @@ describe('data:verify — checks the generated files without regenerating them',
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('1:1 differs');
+  });
+
+  it("refuses an edited imla'i verse even when integrity.json was recomputed to hide it", () => {
+    const data = copyOfData();
+    const versesPath = join(data, 'verses/imlaei.json');
+    const verses = JSON.parse(readFileSync(versesPath, 'utf8'));
+    const edited = readFileSync(versesPath, 'utf8').replace(
+      verses['1'][1],
+      verses['1'][1].slice(0, -1),
+    );
+    writeFileSync(versesPath, edited);
+
+    const editedVerses = JSON.parse(edited);
+    let canonical = '';
+    for (let surah = 1; surah <= 114; surah += 1) {
+      editedVerses[surah].forEach((text, index) => {
+        canonical += `${surah}|${index + 1}|${text}\n`;
+      });
+    }
+    const integrityPath = join(data, 'integrity.json');
+    const integrity = JSON.parse(readFileSync(integrityPath, 'utf8'));
+    integrity.files['verses/imlaei.json'] = sha256(edited);
+    integrity.canonicalText.imlaeiSha256 = sha256(canonical);
+    writeFileSync(integrityPath, JSON.stringify(integrity, null, 2) + '\n');
+
+    const result = verify(data);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Imla'i 1:2 differs");
   });
 
   it('refuses an edited page file', () => {
