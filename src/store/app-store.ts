@@ -4,6 +4,16 @@ import { EMPTY_JOURNAL, recordPageRead } from '@/domain/khatm';
 import { PAGE_COUNT } from '@/domain/quran';
 import type { LocalDate } from '@/domain/shared/local-date';
 import { MAX_SECONDS_PER_DAY, type SecondsByDay } from '@/domain/stats';
+import {
+  acknowledgePushed,
+  createSyncMeta,
+  mergeRemoteEvents,
+  readSyncMeta,
+  recordLocalChanges,
+  settleTimeBaseline,
+  startAccount,
+  type SyncMeta,
+} from '@/domain/sync';
 import { isSupportedLanguage } from '@/i18n';
 
 import {
@@ -15,6 +25,7 @@ import {
   MAX_TIME_DAYS,
   REJECTED_DATA_KEY,
   RESET_NOTICE_KEY,
+  STORED_DATA_BACKUP_KEY,
   STORED_DATA_KEY,
   STORED_DATE_RANGE,
   USER_SEED_COUNT,
@@ -26,6 +37,7 @@ import {
   type ProgressBackup,
 } from './progress-backup';
 import type { KeyValueStorage } from './storage';
+import { drawDeviceId, fromSyncedValues, SYNC_RULES, toSyncedValues } from './sync-bridge';
 import {
   isDailyGoalPages,
   isLastOpenedPage,
@@ -37,6 +49,7 @@ import {
   readStoredData,
   writeStoredData,
   type StoredDataPart,
+  type StoredDataReading,
 } from './stored-data';
 import type {
   AppData,
@@ -63,6 +76,10 @@ export interface AppStoreDependencies {
    * progress lives on the device only.
    */
   readonly backup?: ProgressBackup;
+  /** The device's clock, in milliseconds since 1970: stamps of the sync. Defaults to `Date.now`. */
+  readonly now?: () => number;
+  /** Draws a new name for this phone (docs/specs/sync.md). Defaults to 20 random characters. */
+  readonly newDeviceId?: () => string;
 }
 
 /** The store of the app: a zustand store whose every change is written to the device. */
@@ -82,6 +99,11 @@ export interface LoadedAppStore {
   readonly discarded: readonly StoredDataPart[];
   /** True when the device had no page of its own and the progress came back from its copy. */
   readonly restoredFromBackup: boolean;
+  /**
+   * Parts the device's document could not give back but its second copy did
+   * (`STORED_DATA_BACKUP_KEY`). Nothing was lost for those: the person is not told.
+   */
+  readonly recoveredFromSecondCopy: readonly StoredDataPart[];
 }
 
 function drawRandomUserSeed(): number {
@@ -190,6 +212,12 @@ export interface StateStoreOptions {
   readonly dataResetNotice?: DataResetNotice | null;
   /** Called when the person dismisses the notice, to forget it on the device too. */
   readonly onDataResetNoticeDismissed?: () => void;
+  /** The sync metadata read back from the device. Defaults to new metadata for this data. */
+  readonly sync?: SyncMeta;
+  /** The device's clock, in milliseconds. Defaults to `Date.now`. */
+  readonly now?: () => number;
+  /** Draws a new name for this phone. */
+  readonly newDeviceId?: () => string;
 }
 
 /**
@@ -198,9 +226,43 @@ export interface StateStoreOptions {
  */
 export function createStateStore(
   initial: AppData,
-  { dataResetNotice = null, onDataResetNoticeDismissed }: StateStoreOptions = {},
+  {
+    dataResetNotice = null,
+    onDataResetNoticeDismissed,
+    now = Date.now,
+    newDeviceId = drawDeviceId,
+    sync = createSyncMeta(toSyncedValues(initial), SYNC_RULES, {
+      deviceId: newDeviceId(),
+      now: now(),
+    }),
+  }: StateStoreOptions = {},
 ): StoreApi<AppState> {
-  return createStore<AppState>()((set, get) => {
+  return createStore<AppState>()((rawSet, get) => {
+    /**
+     * Every change of the data made on this phone goes through here: the sync metadata records
+     * it in the same change, so both are written together (docs/specs/sync.md). Changes that
+     * come from the account use `rawSet`: they are not this phone's to send.
+     */
+    const set = (partial: Partial<AppState>) => {
+      const isDataChange = 'settings' in partial || 'journal' in partial || 'timeSpent' in partial;
+      if (!isDataChange) {
+        rawSet(partial);
+        return;
+      }
+      const state = get();
+      const next = { ...state, ...partial };
+      const meta = recordLocalChanges(
+        state.sync,
+        toSyncedValues(state),
+        toSyncedValues(next),
+        now(),
+        SYNC_RULES,
+      );
+      rawSet(meta === state.sync ? partial : { ...partial, sync: meta });
+    };
+    const changeSyncMeta = (meta: SyncMeta) => {
+      if (meta !== get().sync) rawSet({ sync: meta });
+    };
     const changeSettings = (change: Partial<AppSettings>) => {
       set({ settings: { ...get().settings, ...change } });
     };
@@ -208,6 +270,7 @@ export function createStateStore(
       settings: initial.settings,
       journal: initial.journal,
       timeSpent: initial.timeSpent,
+      sync,
       dataResetNotice,
 
       dismissDataResetNotice: () => {
@@ -294,6 +357,41 @@ export function createStateStore(
         const timeSpent = withForegroundTime(get().timeSpent, time);
         if (time.appSeconds > 0) set({ timeSpent });
       },
+
+      syncStartAccount: (account) => {
+        const state = get();
+        changeSyncMeta(startAccount(state.sync, toSyncedValues(state), account));
+      },
+
+      syncReceive: (events, cursor, at) => {
+        const state = get();
+        const merged = mergeRemoteEvents(state.sync, toSyncedValues(state), events, SYNC_RULES, {
+          now: at,
+          newDeviceId,
+        });
+        const meta = { ...merged.meta, cursor: Math.max(state.sync.cursor, cursor) };
+        if (!merged.changed) {
+          rawSet({ sync: meta });
+          return false;
+        }
+        rawSet({ ...fromSyncedValues(state, merged.values), sync: meta });
+        return true;
+      },
+
+      syncSettleTime: () => {
+        const state = get();
+        const settled = settleTimeBaseline(state.sync, toSyncedValues(state), SYNC_RULES);
+        if (settled.meta === state.sync) return;
+        rawSet({ timeSpent: settled.values.timeSpent, sync: settled.meta });
+      },
+
+      syncAcknowledge: (sent) => {
+        changeSyncMeta(acknowledgePushed(get().sync, sent));
+      },
+
+      syncMarkSynced: (at) => {
+        changeSyncMeta({ ...get().sync, lastSyncedAt: Math.floor(at) });
+      },
     };
   });
 }
@@ -339,6 +437,8 @@ export async function loadAppStore({
   drawUserSeed = drawRandomUserSeed,
   onStorageError = warnAboutStorage,
   backup,
+  now = Date.now,
+  newDeviceId = drawDeviceId,
 }: AppStoreDependencies): Promise<LoadedAppStore> {
   let raw: string | null = null;
   let pendingNotice: DataResetNotice | null = null;
@@ -355,17 +455,24 @@ export async function loadAppStore({
     onStorageError(error);
   }
 
-  const reading = readStoredData(raw);
-  const discarded: readonly StoredDataPart[] = isUnreadable ? ['document'] : reading.discarded;
+  const main = readStoredData(raw, { acceptNewer: true });
+  const mainDiscarded: readonly StoredDataPart[] = isUnreadable ? ['document'] : main.discarded;
+  // The second copy is only read when the first is missing or lacks a part.
+  const needsSecondCopy = raw === null || mainDiscarded.length > 0;
+  const second = needsSecondCopy ? await readSecondCopy(storage) : null;
+  const reading = combineReadings(main, isUnreadable, second);
+  const recoveredFromSecondCopy = mainDiscarded.filter((part) => !reading.discarded.includes(part));
+  const discarded = reading.discarded;
   const local: AppData = {
     settings: reading.settings ?? createFirstLaunchSettings(drawUserSeed()),
     journal: reading.journal ?? EMPTY_JOURNAL,
     timeSpent: reading.timeSpent ?? EMPTY_TIME_SPENT,
   };
+  const storedSync = readSyncMeta(reading.rawSync, SYNC_RULES);
 
   // A device that could not read its own storage does not know what it holds: it neither adopts
-  // the copy nor replaces it.
-  const copy = isUnreadable ? undefined : backup;
+  // the copy nor replaces it (unless its second copy could be read).
+  const copy = isUnreadable && second === null ? undefined : backup;
   /**
    * The copy, when it is sound and the device must adopt it instead of replacing it: the device
    * has no page of its own, and the copy brings something. A device without any progress adopts
@@ -396,7 +503,7 @@ export async function loadAppStore({
 
   // A rejected text is kept aside before the fresh start replaces it, and the person is told
   // once. Progress that came back from its copy leaves nothing to tell.
-  if (raw !== null && discarded.length > 0) keep(REJECTED_DATA_KEY, raw);
+  if (raw !== null && mainDiscarded.length > 0) keep(REJECTED_DATA_KEY, raw);
   const dataResetNotice =
     restored === null ? mergeNotices(pendingNotice, noticeFor(discarded)) : null;
   if (dataResetNotice === null && pendingNotice !== null) forget(RESET_NOTICE_KEY);
@@ -404,9 +511,29 @@ export async function loadAppStore({
     keep(RESET_NOTICE_KEY, dataResetNotice);
   }
 
+  /**
+   * Sync metadata for progress that came back from the copy: started again from that progress
+   * (its time becomes the baseline), keeping this phone's name and its account, to which the
+   * whole progress is then sent.
+   */
+  const syncMetaFor = (data: AppData, previous: SyncMeta | null): SyncMeta => {
+    const values = toSyncedValues(data);
+    const fresh = createSyncMeta(values, SYNC_RULES, {
+      deviceId: previous?.deviceId ?? newDeviceId(),
+      now: now(),
+    });
+    return previous === null || previous.account === null
+      ? fresh
+      : startAccount(fresh, values, previous.account);
+  };
+  const sync = restored === null ? (storedSync ?? undefined) : syncMetaFor(restored, storedSync);
+
   const store = createStateStore(restored ?? local, {
     dataResetNotice,
     onDataResetNoticeDismissed: () => forget(RESET_NOTICE_KEY),
+    sync,
+    now,
+    newDeviceId,
   });
 
   /**
@@ -424,32 +551,56 @@ export async function loadAppStore({
           if (document !== null) await copy.write(document);
         } else if (store.getState().journal.length === 0) {
           const hadNotice = store.getState().dataResetNotice !== null;
-          store.setState({ ...found, dataResetNotice: null });
+          const sync = syncMetaFor(found, store.getState().sync);
+          store.setState({ ...found, sync, dataResetNotice: null });
           if (hadNotice) forget(RESET_NOTICE_KEY);
         }
       })
       // The copy is a comfort, not a duty: its failures are never shown.
       .catch(() => {});
   };
-  const save = (data: AppData) => {
-    const text = writeStoredData(data);
+  /**
+   * Writes the document, then its second copy with the same text, then the copy of the progress
+   * (when the progress itself changed). The second copy is only written once the first write has
+   * succeeded: one of the two always holds a whole document.
+   */
+  const save = (state: AppState, hasProgressChanged = true) => {
+    const text = writeStoredData(state, state.sync);
     lastSave = lastSave
       .then(() => storage.setItem(STORED_DATA_KEY, text))
-      .then(() => backUp(data), onStorageError);
+      .then(async () => {
+        try {
+          await storage.setItem(STORED_DATA_BACKUP_KEY, text);
+        } catch (error) {
+          onStorageError(error);
+        }
+        if (hasProgressChanged) backUp(state);
+      }, onStorageError);
   };
 
   store.subscribe((state, previous) => {
-    const hasChanged =
+    const hasProgressChanged =
       state.settings !== previous.settings ||
       state.journal !== previous.journal ||
       state.timeSpent !== previous.timeSpent;
-    if (hasChanged) save(state);
+    if (hasProgressChanged || state.sync !== previous.sync) save(state, hasProgressChanged);
   });
   // A fresh start is written at once, and so are an adopted copy and a document upgraded from
   // an older version.
   const isStartingFresh =
     reading.settings === null || reading.journal === null || reading.timeSpent === null;
-  if (restored !== null || isStartingFresh || reading.wasUpgraded) save(store.getState());
+  // New sync metadata (an update from a version without sync) is written at once too, so that
+  // this phone keeps the name it has just drawn.
+  const isSyncNew = storedSync === null;
+  if (
+    restored !== null ||
+    isStartingFresh ||
+    reading.wasUpgraded ||
+    isSyncNew ||
+    recoveredFromSecondCopy.length > 0
+  ) {
+    save(store.getState());
+  }
   // Otherwise the device is right: its data replaces the copy.
   else backUp(store.getState());
 
@@ -469,5 +620,53 @@ export async function loadAppStore({
     store: Object.assign(store, { whenSaved: () => lastSave, whenBackedUp }),
     discarded,
     restoredFromBackup: restored !== null,
+    recoveredFromSecondCopy,
+  };
+}
+
+/** The second copy of the document, or null when it cannot be read or is not there. */
+async function readSecondCopy(storage: KeyValueStorage): Promise<StoredDataReading | null> {
+  try {
+    const text = await storage.getItem(STORED_DATA_BACKUP_KEY);
+    return text === null ? null : readStoredData(text, { acceptNewer: true });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The device's document, with each part it could not give back taken from the second copy when
+ * that copy has it. `discarded` names what neither could give back.
+ */
+function combineReadings(
+  main: StoredDataReading,
+  isMainUnreadable: boolean,
+  second: StoredDataReading | null,
+): StoredDataReading {
+  const first = isMainUnreadable ? { ...main, discarded: ['document' as const] } : main;
+  if (second === null) return first;
+  const settings = first.settings ?? second.settings;
+  const journal = first.journal ?? second.journal;
+  // A time part simply missing from the first document reads as "no time yet", not as damage.
+  const isTimeLost = first.discarded.includes('time') || first.discarded.includes('document');
+  const timeSpent = isTimeLost ? (second.timeSpent ?? first.timeSpent) : first.timeSpent;
+  const discarded: StoredDataPart[] = [];
+  const hadDocument = first.discarded.includes('document');
+  if (settings === null && (hadDocument || first.discarded.includes('settings'))) {
+    discarded.push('settings');
+  }
+  if (journal === null && (hadDocument || first.discarded.includes('journal'))) {
+    discarded.push('journal');
+  }
+  if (timeSpent === null && isTimeLost) discarded.push('time');
+  // Everything lost in a document that could not be read at all is still said as `document`.
+  const lostAll = hadDocument && settings === null && journal === null;
+  return {
+    settings,
+    journal,
+    timeSpent,
+    discarded: lostAll ? ['document'] : discarded,
+    wasUpgraded: first.wasUpgraded || (second !== null && settings !== first.settings),
+    rawSync: first.rawSync ?? second.rawSync,
   };
 }

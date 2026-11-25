@@ -5,33 +5,58 @@
   },
   "periods": {
     "label": "Période",
-    "today": "Aujourd’hui",
+    "today": "Jour",
     "week": "Semaine",
     "month": "Mois",
     "all-time": "Tout"
   },
-  "hasanat": {
+  "hero": {
     "caption": {
-      "today": "Hasanat aujourd’hui",
-      "week": "Hasanat cette semaine",
-      "month": "Hasanat ce mois-ci",
-      "all-time": "Hasanat depuis le début"
-    },
+      "hasanat": {
+        "today": "Hasanat aujourd’hui",
+        "week": "Hasanat cette semaine",
+        "month": "Hasanat ce mois-ci",
+        "all-time": "Hasanat depuis le début"
+      },
+      "verses": {
+        "today": "Versets aujourd’hui",
+        "week": "Versets cette semaine",
+        "month": "Versets ce mois-ci",
+        "all-time": "Versets depuis le début"
+      },
+      "words": {
+        "today": "Mots aujourd’hui",
+        "week": "Mots cette semaine",
+        "month": "Mots ce mois-ci",
+        "all-time": "Mots depuis le début"
+      },
+      "pages": {
+        "today": "Pages aujourd’hui",
+        "week": "Pages cette semaine",
+        "month": "Pages ce mois-ci",
+        "all-time": "Pages depuis le début"
+      },
+      "readingTime": {
+        "today": "Temps de lecture aujourd’hui",
+        "week": "Temps de lecture cette semaine",
+        "month": "Temps de lecture ce mois-ci",
+        "all-time": "Temps de lecture depuis le début"
+      }
+    }
+  },
+  "hasanat": {
     "value": "≈ {{value}}",
     "valueSpoken": "Environ {{value}} hasanat, une estimation",
     "note": "Estimation : dix hasanat par lettre lue, d’après le hadith rapporté par Ibn Mas‘ûd (Sunan at-Tirmidhî n° 2910). Allah seul connaît la récompense."
   },
   "figures": {
-    "versesRead": "Versets lus",
-    "wordsRead": "Mots lus",
-    "pagesRead": "Pages lues",
-    "readingTime": "Temps de lecture",
-    "appTime": "Temps dans l’appli"
+    "label": "Chiffre suivi",
+    "choice": "{{name}}, {{value}}",
+    "hasanatSpoken": "environ {{value}}",
+    "appTime": "Temps dans l’appli : {{value}}",
+    "appTimeSpoken": "Temps dans l’appli, {{value}}"
   },
   "chart": {
-    "titleDay": "Chaque jour",
-    "titleMonth": "Chaque mois",
-    "metricLabel": "Afficher",
     "metrics": {
       "hasanat": "Hasanat",
       "verses": "Versets",
@@ -47,8 +72,11 @@
   "khatmas": {
     "title": "Tes jardins",
     "inProgress": "Jardin {{number}} · en cours",
+    "inProgressUntil": "Jardin {{number}} · en cours · fin estimée le {{date}}",
     "complete": "Jardin {{number}} · achevé le {{date}}",
-    "detail": "Khatma {{number}} · {{pages}} pages · {{verses}} versets · {{words}} mots · ≈ {{hasanat}} hasanat"
+    "detail": "Khatma {{number}} · {{pages}} pages · {{verses}} versets · {{words}} mots · ≈ {{hasanat}} hasanat",
+    "pace_one": "Fin estimée au rythme de ton objectif : {{count}} page par jour.",
+    "pace_other": "Fin estimée au rythme de ton objectif : {{count}} pages par jour."
   },
   "empty": {
     "title": "Ta première page t’attend",

@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
-import { useVisitColors } from '@/ui';
+import { useColorValues } from '@/ui';
 
 /**
  * The navigation of the Proches tab: its pages are pushed inside the tab, so the tab bar stays on
@@ -11,20 +11,20 @@ import { useVisitColors } from '@/ui';
  * The root of the tab writes its own large title, as the other tabs do; the pages it opens have
  * the system bar, their title and the system's back button, a chevron alone
  * (toolbars.md › Navigation). The bar takes the top colour of the mockups' sky
- * (docs/design/visite.png), so the page's sky starts under it without a seam, and the ink of
+ * (docs/design/visite.png), so the page's sky starts under it without a seam, and the colour of
  * their title; both follow the dark appearance (deviation 49).
  */
 export default function FriendsLayout() {
   const { t } = useTranslation('friends');
-  const colors = useVisitColors();
+  const colors = useColorValues();
   const page = {
     headerShown: true,
-    headerTintColor: colors.ink,
+    headerTintColor: colors.heading,
     headerBackButtonDisplayMode: 'minimal',
     headerStyle: { backgroundColor: colors.skyTop },
-    headerTitleStyle: { color: colors.ink },
+    headerTitleStyle: { color: colors.heading },
     headerShadowVisible: false,
-    contentStyle: { backgroundColor: colors.page },
+    contentStyle: { backgroundColor: colors.canvas },
   } as const;
   return (
     <Stack screenOptions={page}>

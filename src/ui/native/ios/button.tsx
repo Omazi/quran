@@ -26,8 +26,8 @@ const SYSTEM_STYLE = {
 } as const satisfies Record<ButtonVariant, string>;
 
 /**
- * The system button. It takes the app's accent from its host: the background of the prominent
- * style, the label of the two others. A destructive button has the system's role and its red
+ * The system button. The prominent style is filled with the app's action green, as the capsule
+ * button is; the two others take the label colour of the host's tint. A destructive button has the system's role and its red
  * (buttons.md › Role). The large control size keeps the bordered styles above 44 points; the
  * borderless one gets a label frame of 44 by 44 (buttons.md › Best practices). In a list, a
  * plain button keeps the list's own style: the whole row is the button.
@@ -46,14 +46,15 @@ export function Button({
   assertButtonRole({ variant, role });
   const colors = useColors();
   const isListAction = useIsInsideSwiftUI() && variant === 'plain';
-  // The prominent style is filled with the forest green, lighter at night: its label takes the
-  // charter's `onAccent`, white by day (7.85:1), black at night (11.09:1), where the system's white
-  // would not be readable. The other styles write their label in that green. A disabled or
-  // destructive button keeps the system's own colours.
+  // The prominent style is filled with the action green of the capsule button (`action`), the same
+  // green by day and at night, with its white label (7.85:1, 5.18:1). The host's tint stays the
+  // lighter `actionTint`, which writes the label of the other styles in green, readable on the
+  // dark background. A disabled or destructive button keeps the system's own colours.
+  const isFilled = variant === 'primary' && !disabled && role !== 'destructive';
   const labelColor =
     disabled || role === 'destructive'
       ? []
-      : [foregroundStyle(variant === 'primary' ? colors.onAccent : colors.actionTint)];
+      : [foregroundStyle(variant === 'primary' ? colors.onAction : colors.actionTint)];
   const labelWidth = fullWidth ? [frame({ maxWidth: Infinity })] : [];
   const labelTarget =
     variant === 'plain' && !isListAction
@@ -66,7 +67,12 @@ export function Button({
     ? []
     : [buttonStyle(SYSTEM_STYLE[variant]), controlSize('large')];
   // Stated on the button itself, so that the accent inherited from the host cannot replace it.
-  const roleColor = role === 'destructive' ? [tint(colors.destructive)] : [];
+  const roleColor =
+    role === 'destructive'
+      ? [tint(colors.destructive)]
+      : isFilled && !isListAction
+        ? [tint(colors.action)]
+        : [];
   return (
     <SwiftUIHost size={fullWidth ? 'contentHeight' : 'content'}>
       <SwiftUIButton

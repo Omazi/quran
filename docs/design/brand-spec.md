@@ -17,20 +17,38 @@ skill Apple Design (étapes 1 à 3). Voir [SKILLS.md](SKILLS.md).
   bord à l'autre de l'écran, sans cadre. Une image absente donne l'emplacement neutre et
   nommé.
 
-## 2. Trois directions
+## 2. Direction : les maquettes validées
 
-SwiftUI Design, principe 3 : proposer deux ou trois directions distinctes, pas une réponse
-finale. **Le choix revient au propriétaire.** La direction A est appliquée en attendant,
-parce que c'est la seule qui passe la critique de la section 5.
+**Règle du propriétaire (25 novembre 2026, D39) : les maquettes validées de `docs/design/` sont la
+référence visuelle.** Les skills de design restent la méthode ; quand une maquette contredit une
+règle d'Apple ou cette charte, la maquette l'emporte et l'écart est inscrit dans
+[SKILLS.md](SKILLS.md), où le propriétaire tranche au cas par cas. On ne dessine rien « de tête ».
 
-|        | A. L'eau                                         | B. Le mushaf                                                                                              | C. La nuit                                                              |
-| ------ | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| École  | Minimal chaleureux, système d'abord              | Éditorial                                                                                                 | Expressif                                                               |
-| Fonds  | Couleurs système d'iOS, clair et sombre          | Papier crème partout                                                                                      | Sombre en permanence                                                    |
-| Accent | Bleu d'eau : lire, c'est arroser                 | Vert profond, or                                                                                          | Or sur nuit                                                             |
-| Titres | New York (serif système)                         | New York, ornements                                                                                       | New York, très grands                                                   |
-| Pour   | Natif, laisse le vert au jardin, lisible partout | Familier pour une appli de Coran                                                                          | Spectaculaire avec un jardin lumineux                                   |
-| Contre | Sobre tant que le jardin n'a pas ses images      | C'est le look « crème + serif » que les skills signalent comme générique, et celui des maquettes refusées | `dark-mode.md` réserve le sombre permanent aux applis de média immersif |
+| Choix               | Décision du propriétaire                                                                                                                                                |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Référence           | Les maquettes d'abord (`accueil`, `soif`, `mort`, `nouveau`, `khatm`, `mushaf`, `visite`, `bienvenue`, `voix`) ; la charte complète ce qu'elles ne montrent pas         |
+| Couleur d'action    | Vert forêt `#1F5C45` dans toute l'appli ; la nuit, `#2E7A5B` pour tout bouton plein (libellé blanc), `#7FCCA6` pour un mot ou un symbole vert. Bleu d'eau = l'eau seule |
+| Titres              | Fraunces demi-gras (embarquée, OFL) ; San Francisco pour le reste ; New York pour le seul titre de l'écran d'écoute                                                     |
+| Nuit                | « Crépuscule » : ciel sombre et chaud, cartes sombres et chaudes ; valeurs dérivées des maquettes et mesurées                                                           |
+| Surfaces et boutons | Cartes blanches arrondies avec l'ombre douce des maquettes (de jour) ; boutons en capsule dessinés (`ActionButton`)                                                     |
+| Pièces du système   | Gardées là où elles ne changent pas l'apparence : onglets, barres de navigation, menus, feuilles d'action, interrupteurs, champs, sélecteurs                            |
+| Écoute              | L'écran de reconnaissance garde la rosace validée (D27, D29)                                                                                                            |
+| Lancement           | La marque calligraphique animée sur l'eau profonde `#0B3C44` (`#072C33` en sombre) : écart 115                                                                          |
+| Jardin              | Vraie 3D qu'on fait tourner (D4) ; les images de D35 pour les vignettes et en repli                                                                                     |
+
+**Un seul système de design.** Toutes les valeurs vivent dans `src/ui/tokens.ts` : la palette
+unique `palette` (un rôle, une valeur ; sombre et contraste élevé compris), les dégradés
+`backdropGradients`, les ombres `elevation`, les mesures `pieceSizes`, `radius`, `readerShapes`,
+`listeningShape`. Les écrans les lisent par `useColors()` (couleurs dynamiques sur iOS) ou
+`useColorValues()` (valeurs simples pour SVG et dégradés), et se composent des pièces partagées de
+`src/ui/components` (`Card`, `ActionButton`, `Avatar`, `DottedProgress`, `ProgressRing`,
+`SectionHeader`, `Pill`, `IconTile`…). Une nouvelle pièce va dans `src/ui`, pas dans une
+fonctionnalité.
+
+Historique : la charte avait proposé trois directions (A, l'eau, système d'abord ; B, le mushaf,
+crème et or ; C, la nuit) et appliquait A. Les maquettes validées l'ont remplacée ; les tableaux de
+la section 3 restent pour les rôles que la palette n'a pas (papier et encre du mushaf, ornements,
+eau de la rosace, couleurs système).
 
 ## 3. Jetons (direction A)
 
@@ -69,16 +87,14 @@ décoration qui ne porte aucune information), sombre `#D9A441` (celui de `orname
 de contraste élevé dans tous les réglages, `#0A4F59` clair, `#8FE0EA` sombre, pour l'étoile du
 cœur de la rosace ; elle n'a pas de variante à elle.
 
-**Palette des maquettes validées** (25 novembre 2026). Règle du propriétaire : les maquettes de
-`docs/design/` font foi ; où elles diffèrent de cette charte, la maquette l’emporte et l’écart lui
-est soumis (SKILLS.md, écarts 70 à 79). Leurs couleurs vivent à part, dans `gardenPalette`
+**Palette des maquettes validées** (D39). Les couleurs des maquettes vivent dans `palette`
 (`src/ui/tokens.ts`), relevées sur les images ; un gris trop pâle y est foncé jusqu’à 4,5:1, sa
-valeur d’origine notée à côté. Deux décisions du propriétaire s’y ajoutent : **la couleur d’action
-de toute l’appli est le vert forêt des maquettes** (`#1F5C45` de jour, `#7FCCA6` pour une étiquette
-ou un bouton du système la nuit, `#2E7A5B` pour la capsule des maquettes la nuit) ; le bleu d’eau
-(`accent`, `water`) ne garde que le sens « eau, arrosage » ; la nuit suit la direction
-« crépuscule » (ciel de crépuscule, cartes sombres et chaudes), alignée sur la palette de Proches.
-Les tableaux ci-dessus restent ceux de la direction A pour le reste de l’appli jusqu’à leur fusion.
+valeur d’origine notée à côté. Les quatre palettes d'avant (accueil, lecteur, Proches, suivi de la
+voix) y sont fusionnées : un rôle, une valeur (écart 97). **La couleur d’action de toute l’appli est
+le vert forêt** : `action` `#1F5C45` de jour, `#2E7A5B` la nuit, pour tout bouton plein, capsule ou
+bouton proéminent du système, libellé blanc ; `actionTint` (`#7FCCA6` la nuit) pour un mot ou un
+symbole vert. Le bleu d’eau (`accent`, `water`) ne garde que le sens « eau, arrosage ». Les tableaux
+ci-dessus gardent les rôles de la charte que la palette n'a pas.
 
 Soif et alerte : orange système, pour l'icône et la jauge seulement ; le mot qui
 l'accompagne reste dans la couleur du texte, parce que l'orange n'est pas assez lisible
@@ -213,7 +229,8 @@ Sur Android, tout le mot tient dans le cercle de sécurité de 66 dp (31,7 dp du
 
 ## 4. Ce qui manque encore
 
-- Le moteur 3D du jardin : faire tourner le jardin et visiter celui d'un proche (D4, D35).
+- Le jardin en vraie 3D qu'on fait tourner et le jardin d'un proche à visiter (D4, D39), en
+  cours par un autre agent ; les images de D35 restent pour les vignettes et en repli.
   Les jardins des autres niveaux (D23). Le jardin en images est celui du niveau 1.
 - La présentation du texte du Coran : à revoir avec le propriétaire.
 - Version iPad (largeur « regular ») : lot ultérieur ; le lot 1 vise l'iPhone.
@@ -230,3 +247,8 @@ Apple Design, étape 3 : « aurais-je produit ce même plan pour un autre produi
   ces deux choix.
 - Ce qu'on retire (« enlève un accessoire ») : l'or hors du mushaf, les cartes ombrées, la
   police d'affichage embarquée.
+
+Révision du 25 novembre 2026 (D39) : le propriétaire a validé des maquettes qui reprennent ce que
+cette critique retirait (crème, vert, Fraunces, cartes ombrées, bouton dessiné). Elles font foi ;
+ce qui les distingue du « look générique » tient au jardin, à l'eau qui garde son sens et à la
+calligraphie de l'icône. La critique reste ici comme trace du raisonnement.

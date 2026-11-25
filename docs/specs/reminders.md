@@ -88,6 +88,40 @@ Règles d'Apple (`notifications.md`, `managing-notifications.md`) :
 - Aucun rappel « urgent » : niveau d'interruption normal.
 - Tous les rappels se règlent dans l'appli (onglet Réglages).
 
+## Programmation (notifications locales)
+
+Le plan devient des notifications locales (`expo-notifications`, aucun serveur) :
+
+- **Une notification par créneau et par jour.** Identifiant stable `reminder.<date>.reading`
+  ou `reminder.<date>.friday` : reprogrammer remplace, ne double jamais. Au plus 60
+  notifications en attente (iOS en garde 64) ; on garde les plus proches.
+- **Idempotent.** La couche de données compare ce que le téléphone détient (identifiant +
+  signature `type@heure@langue`) à ce que le plan demande, annule l'obsolète, programme le
+  manquant. Seules les notifications dont l'identifiant commence par `reminder.` sont touchées.
+- **On recalcule** : réglage modifié (rappels, heure, objectif, pauses, langue) ; page lue
+  (le rappel du jour disparaît dès que l'objectif est atteint, ceux du jardin reculent) ;
+  retour de l'appli au premier plan ; réponse à la demande d'autorisation ; changement de
+  jour ou de fuseau appli ouverte (contrôle chaque minute). Rien avant la fin de la
+  présentation.
+- **Sans autorisation**, ou tous rappels coupés : tout est annulé ; les rappels reviennent
+  d'eux-mêmes quand l'autorisation est donnée.
+- **Rappel de jardin et rappel du jour ne se cumulent pas** (priorité ci-dessus) : une
+  notification de soif remplace le rappel du jour, au plus une par jour.
+- **Heures.** Rappel de lecture à `dailyTime` (20 h 30 par défaut), vendredi à `fridayTime`
+  (9 h par défaut, éteint par défaut car il nomme une sourate). Moment absolu à l'heure du
+  téléphone au moment du calcul ; un changement de fuseau est repris à l'ouverture suivante.
+- **Toucher une notification** : `daily-goal`, `water-stopped`, `thirsty`, `wilting`,
+  `dying`, `last-chance` ouvrent le lecteur à la page de reprise (lue au moment du toucher) ;
+  `friday-kahf` ouvre la page 293 (Al-Kahf) ; `dead` et `come-back` ouvrent l'accueil.
+- **Premier plan** : une notification reçue appli ouverte n'est pas affichée.
+- **Textes** : espace de noms `notifications` (fr, en, ar), voix du jardin, sans nombre ni
+  reproche ; le rappel du vendredi a un texte de remplacement pour les aperçus masqués (iOS).
+- **Android** : canal `reminders`, icône `assets/images/notification-icon.png`, couleur
+  d'action `#1F5C45` (plugin `expo-notifications` dans `app.json`).
+
+Code : `src/domain/reminders/notification-schedule.ts`, `src/data/notifications`,
+`src/features/reminders`.
+
 ## À tester
 
 Chaque type ; la priorité quand deux rappels tombent le même jour ; le vendredi en plus

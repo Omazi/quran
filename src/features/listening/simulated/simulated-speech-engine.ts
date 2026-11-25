@@ -2,7 +2,7 @@
  * A SIMULATED speech engine: it opens no microphone and hears nothing. It replays a script of
  * voice levels and words, to test the listening screen and to let it be tried before the real
  * engine exists (docs/specs/listening.md, section 2). It is never part of a published build:
- * the only way in is `simulated-engine-door.ts`.
+ * the only way in is `speech-engine-door.ts`.
  */
 import type {
   MicrophonePermission,

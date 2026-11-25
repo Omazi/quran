@@ -6,12 +6,17 @@ import {
   appleTextStyles,
   fontFamily,
   layout,
+  radius,
   spacing,
   stateOpacity,
   textStyles,
 } from '../../tokens';
-import { useColors } from '../../use-colors';
-import { GroupedListScope, useGroupedListGuard } from '../grouped-list-scope';
+import { useColors, useElevation } from '../../use-colors';
+import {
+  GroupedListScope,
+  useGroupedListAppearance,
+  useGroupedListGuard,
+} from '../grouped-list-scope';
 import type { GroupedListProps, IconSymbol, ListRowProps, ListSectionProps } from '../types';
 import { Icon } from './icon';
 
@@ -20,12 +25,45 @@ import { Icon } from './icon';
  * a small header names each section, a hairline separates the sections, and there are no inset
  * cards and no disclosure chevrons, which are iOS conventions.
  */
-export function GroupedList({ children, header, testID }: GroupedListProps) {
+export function GroupedList({ children, header, appearance = 'system', testID }: GroupedListProps) {
   return (
-    <ScrollView style={styles.list} testID={testID}>
+    <ScrollView
+      style={styles.list}
+      contentContainerStyle={appearance === 'garden' ? styles.gardenContent : undefined}
+      testID={testID}
+    >
       {header}
-      <GroupedListScope>{children}</GroupedListScope>
+      <GroupedListScope appearance={appearance}>{children}</GroupedListScope>
     </ScrollView>
+  );
+}
+
+/**
+ * A section of the garden appearance: its header and footer on the canvas, its rows on a white
+ * card with the soft shadow of the mockups (the `Card` of the design system), as the iOS form
+ * draws an inset group.
+ */
+function GardenSection({ title, footer, children }: ListSectionProps) {
+  const colors = useColors();
+  const shadow = useElevation('card');
+  return (
+    <View style={styles.gardenSection}>
+      {title === undefined ? null : (
+        <View style={styles.gardenText} accessible accessibilityRole="header">
+          <AppText variant="footnote" color="muted">
+            {title}
+          </AppText>
+        </View>
+      )}
+      <View style={[styles.gardenCard, { backgroundColor: colors.surface, boxShadow: shadow }]}>
+        {children}
+      </View>
+      {footer === undefined ? null : (
+        <AppText variant="footnote" color="muted" style={styles.gardenText}>
+          {footer}
+        </AppText>
+      )}
+    </View>
   );
 }
 
@@ -38,6 +76,14 @@ export function ListSection({
 }: ListSectionProps) {
   useGroupedListGuard('ListSection');
   const colors = useColors();
+  const appearance = useGroupedListAppearance();
+  if (appearance === 'garden' && !isBare && titleQuran === undefined) {
+    return (
+      <GardenSection title={title} footer={footer}>
+        {children}
+      </GardenSection>
+    );
+  }
   return (
     <View
       style={
@@ -92,7 +138,7 @@ interface RowLayoutProps {
 export function RowLayout({ label, symbol, trailing }: RowLayoutProps) {
   return (
     <View style={styles.row}>
-      {symbol === undefined ? null : <Icon symbol={symbol} color="accent" />}
+      {symbol === undefined ? null : <Icon symbol={symbol} color="actionTint" />}
       <AppText style={styles.rowLabel}>{label}</AppText>
       {trailing}
     </View>
@@ -142,6 +188,15 @@ export function ListRow({
 
 const styles = StyleSheet.create({
   list: { flex: 1 },
+  gardenContent: {
+    paddingHorizontal: layout.screenMargin,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xl,
+    rowGap: spacing.lg,
+  },
+  gardenSection: { rowGap: spacing.sm },
+  gardenText: { paddingHorizontal: spacing.md },
+  gardenCard: { borderRadius: radius.xl, overflow: 'hidden', paddingVertical: spacing.xs },
   section: {
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,

@@ -1,0 +1,16 @@
+{
+  "title": "Sauvegarde",
+  "onPhone": "Sauvegardé sur ce téléphone",
+  "status": {
+    "syncing": "Synchronisation…",
+    "justNow": "Synchronisé à l’instant",
+    "minutes_one": "Synchronisé il y a {{count}} min",
+    "minutes_other": "Synchronisé il y a {{count}} min",
+    "hours_one": "Synchronisé il y a {{count}} h",
+    "hours_other": "Synchronisé il y a {{count}} h",
+    "days_one": "Synchronisé il y a {{count}} jour",
+    "days_other": "Synchronisé il y a {{count}} jours",
+    "offline": "Hors ligne — sera synchronisé",
+    "waiting": "Pas encore synchronisé — nouvel essai automatique"
+  }
+}

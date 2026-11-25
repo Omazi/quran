@@ -266,6 +266,13 @@ aucun `mistake` ni `skipped` sans altération, avec lettres confondues, mot doub
   par des erreurs inventées. Les seuils (0,7 ; 0,5 ; 0,6 ; 0,8) n'ont pas vu un vrai
   lecteur. Un moteur réel hallucine, répète, « corrige » vers le texte qu'il connaît : rien
   de cela n'est simulé. À reprendre dès que le moteur existe, avec la voix du propriétaire.
+  _Premières vraies transcriptions (D42, 25 novembre 2026)_ : Whisper tiny affiné sur le
+  Coran, 28 lecteurs ordinaires récitant 83:1–3 au téléphone : passage trouvé pour 16 sur 28
+  avec tous les mots, 19 sur 28 avec les derniers mots cherchés seuls aussi
+  (`domain/listening/heard-search.ts`), jamais un autre passage ; les seuils n'ont pas changé.
+  Les bons passages non trouvés expliquent 0,3 à 0,59 de l'entrée : sous le seuil de 0,6,
+  dans la zone des entrées au hasard (moins de 0,47 pour 99 %, jusqu'à 0,56). Baisser le
+  seuil ne serait donc pas sûr ; le gain doit venir de la transcription.
 - **Téléphone.** Temps mesurés sur un poste, avec un moteur JavaScript à compilation. Sur
   téléphone (Hermes), prévoir nettement plus lent : non mesuré.
 - **Entrées courtes abîmées** (3 à 5 mots avec un mot faux, tombé, doublé ou collé) : un

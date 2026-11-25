@@ -28,6 +28,7 @@ function build(
     period: 'week',
     metric: 'hasanat',
     today,
+    dailyGoalPages: 5,
     ...overrides,
   });
 }
@@ -166,5 +167,24 @@ describe('buildProfileStats › per khatma', () => {
     expect(khatmas[0]?.counts.pages).toBe(10);
     expect(khatmas[1]).toMatchObject({ isComplete: true, lastDate: '2026-09-01' });
     expect(khatmas[1]?.counts.verses).toBe(604 * FIXTURE_PAGE.verses);
+  });
+
+  it('estimates the end of the khatma in progress at the pace of the daily goal, as the home screen did', () => {
+    const journal = journalOf([
+      ['2026-09-01', 604],
+      ['2026-11-25', 10],
+    ]);
+    const { khatmas } = build({ journal, dailyGoalPages: 5 });
+    // 594 pages left, today's 5 already read: 119 days of 5 pages after today.
+    expect(khatmas[0]?.estimatedFinishDate).toBe('2027-03-24');
+    expect(khatmas[1]?.estimatedFinishDate).toBeNull();
+    // A faster pace ends sooner.
+    expect(build({ journal, dailyGoalPages: 20 }).khatmas[0]?.estimatedFinishDate).toBe(
+      '2026-12-25',
+    );
+  });
+
+  it('refuses a daily goal that is not a whole number of pages', () => {
+    expect(() => build({ dailyGoalPages: 0 })).toThrow(RangeError);
   });
 });

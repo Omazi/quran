@@ -64,3 +64,11 @@ la semaine. Le temps est compté par `useForegroundTimeRecording` (racine de l'a
 lots d'une minute et au passage en arrière-plan ; le temps de lecture est le temps où un
 lecteur est ouvert, appli au premier plan. La table des pages est construite une fois, après le
 premier affichage (`page-stats-table.ts`). Formulations des hasanat : **à faire valider**.
+
+Puis (25 novembre 2026, branche `work/mk-profile`) : le profil refait dans la langue visuelle de l’accueil
+(maquettes validées ; écarts 100 à 104). Maquettes fil de fer : trois options, « Le sélecteur » retenue :
+une carte avec la période, le chiffre suivi en grand (hasanat par défaut) et la phrase du meilleur jour,
+le graphique de ce chiffre, puis les cinq chiffres de la période, dont la liste choisit le chiffre suivi ;
+le temps dans l’appli et la source des hasanat en notes. La khatma en cours dit sa fin estimée au rythme
+de l’objectif du jour (décision du propriétaire ; `estimateFinishDate`, comme l’ancien accueil). Les
+réglages gardent les contrôles du système sur le fond chaud, groupes sur cartes blanches.

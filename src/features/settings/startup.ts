@@ -21,6 +21,8 @@ export interface StartupDependencies {
   readonly getDeviceLanguageCodes: () => readonly (string | null)[];
   /** Resolves after the given time. Defaults to a timer. */
   readonly wait?: (milliseconds: number) => Promise<void>;
+  /** The clock of the sync stamps, corrected by the server's (src/data/sync). Defaults to the phone's. */
+  readonly now?: () => number;
 }
 
 /** The app once it is ready to show its first screen. */
@@ -52,8 +54,9 @@ export async function startApp({
   direction,
   getDeviceLanguageCodes,
   wait = waitWithTimer,
+  now,
 }: StartupDependencies): Promise<StartedApp> {
-  const { store, discarded, restoredFromBackup } = await loadAppStore({ storage, backup });
+  const { store, discarded, restoredFromBackup } = await loadAppStore({ storage, backup, now });
   const language = resolveLanguage(store.getState().settings.language, getDeviceLanguageCodes());
   initI18n(language);
   // The copy of the progress may be adopted while the app runs (it can arrive late): the texts

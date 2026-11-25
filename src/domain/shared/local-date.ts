@@ -87,6 +87,9 @@ export function localDateInTimeZone(instant: Date, timeZone: string): LocalDate 
     month: '2-digit',
     day: '2-digit',
   }).formatToParts(instant);
-  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
-  return parseLocalDate(`${get('year')}-${get('month')}-${get('day')}`);
+  // Padded here: an engine may write "3" for a month asked as "2-digit" (Hermes builds its Intl
+  // on the platform's formatter), and the day must not depend on it.
+  const get = (type: string, length: number) =>
+    (parts.find((part) => part.type === type)?.value ?? '').padStart(length, '0');
+  return parseLocalDate(`${get('year', 4)}-${get('month', 2)}-${get('day', 2)}`);
 }

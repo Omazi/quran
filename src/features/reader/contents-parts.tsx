@@ -1,23 +1,24 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { quranStructure } from '@/data/quran';
 import { getDisplayedLanguage } from '@/i18n';
 import {
   AppText,
+  ArabicDisplayText,
+  Card,
   Icon,
+  ProgressRing,
   emphasisWeight,
   fontFamily,
-  getWritingDirection,
   layout,
   readerShapes,
   spacing,
   stateOpacity,
   useColors,
-  useReaderPalette,
-  useReaderPaletteValues,
+  useColorValues,
   type IconSymbol,
 } from '@/ui';
 
@@ -26,75 +27,7 @@ import { surahDisplayName } from './surah-name';
 import type { ContentsModel } from './use-contents-model';
 
 const WATER_SYMBOL: IconSymbol = { ios: 'drop.fill', android: 'water_drop' };
-const { cardRadius, innerCardRadius, ringSize, ringStroke, shadowOpacity, shadowRadius } =
-  readerShapes;
-
-/**
- * A white card of the validated home mockup (docs/design/accueil.png): rounded, with the soft
- * shadow of the mockups, on the warm ground (tokens `readerPalette`, deviation 80).
- */
-export function ReaderCard({ children, testID }: { children: ReactNode; testID?: string }) {
-  const palette = useReaderPalette();
-  return (
-    <View
-      testID={testID}
-      style={[styles.card, { backgroundColor: palette.card, shadowColor: palette.shadow }]}
-    >
-      {children}
-    </View>
-  );
-}
-
-/**
- * The water ring of the day, as the home mockup draws it: a thin track, filled in water clockwise
- * from the top, with the water drop in its middle. It only decorates the words beside it, which
- * say the same, so VoiceOver skips it. In Arabic it fills the other way, as progress follows the
- * reading direction (right-to-left.md › Controls: flip controls that show progress).
- */
-function WaterRing({ share, testID }: { share: number; testID: string }) {
-  // Plain values: react-native-svg strokes do not take the system's dynamic colours.
-  const palette = useReaderPaletteValues();
-  const radius = (ringSize - ringStroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const filled = Math.min(1, Math.max(0, share)) * circumference;
-  const isMirrored = getWritingDirection() === 'rtl';
-  return (
-    <View
-      testID={testID}
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      style={styles.ring}
-    >
-      <Svg
-        width={ringSize}
-        height={ringSize}
-        style={[StyleSheet.absoluteFill, isMirrored && styles.mirrored]}
-      >
-        <Circle
-          cx={ringSize / 2}
-          cy={ringSize / 2}
-          r={radius}
-          stroke={palette.ringTrack}
-          strokeWidth={ringStroke}
-          fill="none"
-        />
-        <Circle
-          cx={ringSize / 2}
-          cy={ringSize / 2}
-          r={radius}
-          stroke={palette.ring}
-          strokeWidth={ringStroke}
-          strokeLinecap="round"
-          strokeDasharray={`${filled} ${circumference}`}
-          fill="none"
-          // From the top, clockwise.
-          transform={`rotate(-90 ${ringSize / 2} ${ringSize / 2})`}
-        />
-      </Svg>
-      <Icon symbol={WATER_SYMBOL} textStyle="headline" color="accent" />
-    </View>
-  );
-}
+const { shadowOpacity, shadowRadius } = readerShapes;
 
 /**
  * The card at the top of the Quran tab, after the home mockup's watering card: the water ring and
@@ -112,12 +45,24 @@ export function TodayCard({
   const { t } = useTranslation('reader');
   const remaining = Math.max(0, today.goalPages - today.pagesRead);
   return (
-    <ReaderCard testID="contents-today-card">
+    <Card contentGap="md" testID="contents-today-card">
       <View style={styles.todayRow} testID="contents-today" accessible>
-        <WaterRing share={today.pagesRead / today.goalPages} testID="contents-today-ring" />
+        <ProgressRing
+          progress={Math.min(1, today.pagesRead / today.goalPages)}
+          size="large"
+          tone="water"
+          accessibilityLabel={t('contents.today.label')}
+          accessibilityValue={t('contents.today.value', {
+            count: today.pagesRead,
+            goal: today.goalPages,
+          })}
+          testID="contents-today-ring"
+        >
+          <Icon symbol={WATER_SYMBOL} textStyle="title3" color="waterFill" />
+        </ProgressRing>
         <View style={styles.todayWords}>
-          <AppText variant="footnote" color="accent">
-            <Text style={styles.emphasis}>{t('contents.today.label')}</Text>
+          <AppText variant="subheadEmphasized" color="water">
+            {t('contents.today.label')}
           </AppText>
           <AppText variant="headline" color="ink">
             {t('contents.today.value', { count: today.pagesRead, goal: today.goalPages })}
@@ -130,7 +75,7 @@ export function TodayCard({
         </View>
       </View>
       <ResumeCard resume={resume} onPress={onResume} />
-    </ReaderCard>
+    </Card>
   );
 }
 
@@ -142,33 +87,29 @@ export function TodayCard({
  */
 function ResumeCard({ resume, onPress }: { resume: ContentsModel['resume']; onPress: () => void }) {
   const { t } = useTranslation('reader');
-  const palette = useReaderPalette();
   const name = surahDisplayName(resume.surah);
   const isArabic = getDisplayedLanguage() === 'ar';
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Card
+      tone="inset"
       accessibilityLabel={t('contents.resume.spoken', { surah: name, page: resume.page })}
       onPress={onPress}
       testID="contents-resume"
-      style={({ pressed }) => [
-        styles.resume,
-        { backgroundColor: palette.cardCream, borderColor: palette.cardCreamEdge },
-        pressed && styles.pressed,
-      ]}
     >
-      <View style={styles.resumeWords}>
-        <AppText variant="headline" color="ink" numberOfLines={1}>
-          {name}
-        </AppText>
-        <AppText variant="subhead" color="inkSecondary">
-          {t('contents.resume.detail', { page: resume.page })}
-        </AppText>
+      <View style={styles.resume}>
+        <View style={styles.resumeWords}>
+          <AppText variant="callout" numberOfLines={1}>
+            {name}
+          </AppText>
+          <AppText variant="footnote" color="muted">
+            {t('contents.resume.detail', { page: resume.page })}
+          </AppText>
+        </View>
+        {isArabic ? null : (
+          <ArabicDisplayText text={quranStructure.surah(resume.surah).nameArabic} />
+        )}
       </View>
-      {isArabic ? null : (
-        <ArabicName name={quranStructure.surah(resume.surah).nameArabic} size="large" />
-      )}
-    </Pressable>
+    </Card>
   );
 }
 
@@ -177,9 +118,9 @@ function ResumeCard({ resume, onPress }: { resume: ContentsModel['resume']; onPr
  * writes "الكهف". It is a name, set larger than the words around it; it grows with the text size
  * of the title it sits beside.
  */
-function ArabicName({ name, size }: { name: string; size: 'large' | 'row' }) {
+function ArabicName({ name }: { name: string }) {
   const colors = useColors();
-  const variant = readerShapes.arabicName[size];
+  const variant = readerShapes.arabicName.row;
   return (
     <Text
       accessibilityLanguage="ar"
@@ -215,13 +156,13 @@ export function ReaderSegmented<Value extends string>({
   onChange: (value: Value) => void;
   testID?: string;
 }) {
-  const palette = useReaderPalette();
+  const colors = useColors();
   return (
     <View
       accessibilityRole="radiogroup"
       accessibilityLabel={label}
       testID={testID}
-      style={[styles.track, { backgroundColor: palette.track }]}
+      style={[styles.track, { backgroundColor: colors.track }]}
     >
       {options.map((option) => {
         const isSelected = option.value === value;
@@ -237,7 +178,7 @@ export function ReaderSegmented<Value extends string>({
               styles.segment,
               isSelected && [
                 styles.thumb,
-                { backgroundColor: palette.card, shadowColor: palette.shadow },
+                { backgroundColor: colors.surface, shadowColor: colors.shadow },
               ],
               pressed && styles.pressed,
             ]}
@@ -259,12 +200,12 @@ export function ReaderSegmented<Value extends string>({
 
 /** The number of a surah or a hizb, in a small cream medallion, like the page's cartouche. */
 function NumberBadge({ number }: { number: number }) {
-  const palette = useReaderPalette();
+  const colors = useColors();
   return (
     <View
       style={[
         styles.badge,
-        { backgroundColor: palette.cardCream, borderColor: palette.cardCreamEdge },
+        { backgroundColor: colors.surfaceInset, borderColor: colors.surfaceInsetBorder },
       ]}
     >
       <AppText variant="footnote" color="ornament" align="center">
@@ -288,7 +229,7 @@ function ListRow({
   testID: string;
   children: ReactNode;
 }) {
-  const palette = useReaderPalette();
+  const colors = useColors();
   return (
     <Pressable
       accessibilityRole="button"
@@ -297,7 +238,7 @@ function ListRow({
       testID={testID}
       style={({ pressed }) => [
         styles.row,
-        !isFirst && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.divider },
+        !isFirst && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.divider },
         pressed && styles.pressed,
       ]}
     >
@@ -348,7 +289,7 @@ export function SurahRow({
           {detail}
         </AppText>
       </View>
-      {isArabic ? null : <ArabicName name={entry.nameArabic} size="row" />}
+      {isArabic ? null : <ArabicName name={entry.nameArabic} />}
     </ListRow>
   );
 }
@@ -391,29 +332,18 @@ export function HizbRow({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: cardRadius,
-    padding: spacing.md,
-    gap: spacing.md,
-    shadowOpacity,
-    shadowRadius,
-    shadowOffset: { width: 0, height: readerShapes.shadowOffsetY },
-  },
   todayRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   todayWords: { flex: 1 },
-  ring: { width: ringSize, height: ringSize, alignItems: 'center', justifyContent: 'center' },
-  mirrored: { transform: [{ scaleX: -1 }] },
   emphasis: { fontWeight: emphasisWeight },
+  // As the home screen's resume card (src/features/home/daily-card.tsx).
   resume: {
-    minHeight: layout.touchTarget,
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: spacing.md,
-    padding: spacing.md,
-    borderRadius: innerCardRadius,
-    borderWidth: layout.outlineWidth,
+    justifyContent: 'space-between',
+    columnGap: spacing.md,
   },
-  resumeWords: { flex: 1 },
+  resumeWords: { flexShrink: 1, paddingVertical: spacing.xs },
   arabicName: { fontFamily: fontFamily.quranTitle, writingDirection: 'rtl' },
   pressed: { opacity: stateOpacity.pressed },
   track: {
@@ -459,14 +389,14 @@ const styles = StyleSheet.create({
  * the content, it scrolls with it and carries no information.
  */
 export function SkyBand() {
-  const palette = useReaderPaletteValues();
+  const colors = useColorValues();
   return (
     <View pointerEvents="none" style={styles.sky} testID="contents-sky">
       <Svg width="100%" height="100%">
         <Defs>
           <LinearGradient id="contents-sky" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={palette.skyTop} stopOpacity={1} />
-            <Stop offset="1" stopColor={palette.canvas} stopOpacity={1} />
+            <Stop offset="0" stopColor={colors.skyTop} stopOpacity={1} />
+            <Stop offset="1" stopColor={colors.canvas} stopOpacity={1} />
           </LinearGradient>
         </Defs>
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#contents-sky)" />
@@ -492,7 +422,7 @@ export function BookmarksCard({
   const { t } = useTranslation('reader');
   if (bookmarks.length === 0) return null;
   return (
-    <ReaderCard testID="contents-bookmarks">
+    <Card contentGap="md" testID="contents-bookmarks">
       <AppText variant="title2" color="ink">
         {t('contents.bookmarks.title')}
       </AppText>
@@ -524,6 +454,6 @@ export function BookmarksCard({
           );
         })}
       </View>
-    </ReaderCard>
+    </Card>
   );
 }

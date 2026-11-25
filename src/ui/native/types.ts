@@ -64,8 +64,17 @@ export interface GroupedListProps {
    * could never reach them (SKILLS.md, deviation 30).
    */
   header?: ReactNode;
+  /**
+   * `system` (default): the system's grouped backgrounds. `garden`: the warm canvas of the
+   * validated mockups under the list and its rows on white cards (`palette`), so a page of
+   * system rows (the settings) looks like the rest of the app. The rows and controls stay the
+   * system's; place the list on a `Screen` with the `canvas` background.
+   */
+  appearance?: GroupedListAppearance;
   testID?: string;
 }
+
+export type GroupedListAppearance = 'system' | 'garden';
 
 export interface ListSectionProps {
   /** Header of the section. */
@@ -389,8 +398,8 @@ export interface IconProps {
   /** A foreground role. Defaults to the primary label colour. */
   color?: IconColorRole;
   /**
-   * A colour of the mockup palette (`useReaderPalette`), for a symbol on one of its surfaces, such
-   * as white on the forest green of the reader's microphone. Takes the place of `color`.
+   * A colour given as a value, for a symbol drawn on a surface whose colour is not a foreground
+   * role, such as white on a gradient. Takes the place of `color`.
    */
   tint?: ColorValue;
   /** What the icon means. Omit it for an icon that only decorates a text that says the same. */

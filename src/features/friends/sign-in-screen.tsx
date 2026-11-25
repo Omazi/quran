@@ -3,17 +3,17 @@ import { Platform, StyleSheet, View } from 'react-native';
 
 import { SOCIAL_CONFIG, type SignInProvider } from '@/domain/social';
 import { GardenScene, previewGardenState } from '@/features/garden';
-import { layout, spacing, type IconSymbol } from '@/ui';
-
 import {
-  FriendsButton,
-  FriendsCard,
-  FriendsEyebrow,
-  FriendsPage,
-  FriendsText,
-  FriendsTextField,
-  type FriendsButtonKind,
-} from './friends-kit';
+  ActionButton,
+  AppText,
+  Card,
+  layout,
+  spacing,
+  type ActionButtonVariant,
+  type IconSymbol,
+} from '@/ui';
+
+import { FriendsPage, FriendsTextField } from './friends-kit';
 import type { SignInActions, SignInModel } from './use-session';
 
 /** The garden shown while signed out: a garden in its prime, what reading together grows. */
@@ -24,10 +24,10 @@ const SIGN_IN_GARDEN = previewGardenState({ hizbCompleted: 36 });
  * at night), Google outlined, the e-mail as green words. Apple comes first on iOS and is never
  * smaller than the others (sign-in-with-apple.md › Displaying buttons).
  */
-const KINDS: Readonly<Record<SignInProvider, FriendsButtonKind>> = {
-  apple: 'apple',
+const KINDS: Readonly<Record<SignInProvider, ActionButtonVariant>> = {
+  apple: 'contrast',
   google: 'outline',
-  email: 'link',
+  email: 'plain',
 };
 
 /** The Apple logo, as the system draws it; iOS only (the other platforms have no such symbol). */
@@ -62,25 +62,25 @@ export function SignInScreen({ model, actions }: SignInScreenProps) {
   const refusal = model.refusal === null ? null : t(`refusals.${model.refusal}`);
   return (
     <FriendsPage sky="visit" testID="friends-sign-in">
-      <FriendsText variant="title2" color="title" align="center" style={styles.place}>
+      <AppText variant="title2" color="heading" align="center" style={styles.place}>
         {t('title')}
-      </FriendsText>
+      </AppText>
       <View style={styles.garden}>
         <GardenScene state={SIGN_IN_GARDEN} size="band" />
       </View>
       <View style={styles.pitch}>
-        <FriendsText variant="heading" color="title">
+        <AppText variant="title1" color="heading">
           {t('signIn.heading')}
-        </FriendsText>
-        <FriendsText variant="subhead" color="inkSecondary">
+        </AppText>
+        <AppText variant="subhead" color="muted">
           {t('signIn.text')}
-        </FriendsText>
+        </AppText>
       </View>
       <View style={styles.buttons}>
         {model.providers.map((provider) => (
-          <FriendsButton
+          <ActionButton
             key={provider}
-            kind={KINDS[provider]}
+            variant={KINDS[provider]}
             symbol={provider === 'apple' && Platform.OS === 'ios' ? APPLE_LOGO : undefined}
             label={label[provider]}
             onPress={press[provider]}
@@ -91,8 +91,10 @@ export function SignInScreen({ model, actions }: SignInScreenProps) {
       </View>
 
       {model.emailStep === 'closed' ? null : (
-        <FriendsCard>
-          <FriendsEyebrow>{t('signIn.emailField')}</FriendsEyebrow>
+        <Card contentGap="md">
+          <AppText variant="subheadEmphasized" color="actionTint">
+            {t('signIn.emailField')}
+          </AppText>
           <FriendsTextField
             label={t('signIn.emailField')}
             placeholder={t('signIn.emailPlaceholder')}
@@ -102,23 +104,25 @@ export function SignInScreen({ model, actions }: SignInScreenProps) {
             onSubmit={actions.requestCode}
             testID="sign-in-email-field"
           />
-          <FriendsButton
-            kind="soft"
+          <ActionButton
+            variant="tonal"
             label={t('signIn.requestCode')}
             onPress={actions.requestCode}
             disabled={model.isBusy || model.email.trim() === ''}
             testID="sign-in-request-code"
           />
           {model.emailStep === 'code' ? (
-            <FriendsText variant="footnote" color="inkSecondary">
+            <AppText variant="footnote" color="muted">
               {t('signIn.codeSent', { email: model.email.trim() })}
-            </FriendsText>
+            </AppText>
           ) : null}
-        </FriendsCard>
+        </Card>
       )}
       {model.emailStep === 'code' ? (
-        <FriendsCard>
-          <FriendsEyebrow>{t('signIn.codeField')}</FriendsEyebrow>
+        <Card contentGap="md">
+          <AppText variant="subheadEmphasized" color="actionTint">
+            {t('signIn.codeField')}
+          </AppText>
           <FriendsTextField
             label={t('signIn.codeField')}
             placeholder={t('signIn.codePlaceholder')}
@@ -129,27 +133,27 @@ export function SignInScreen({ model, actions }: SignInScreenProps) {
             onSubmit={actions.signInWithEmail}
             testID="sign-in-code-field"
           />
-          <FriendsButton
-            kind="primary"
+          <ActionButton
+            variant="filled"
             label={t('signIn.signInWithCode')}
             onPress={actions.signInWithEmail}
             disabled={model.isBusy || model.code.trim() === ''}
             testID="sign-in-with-code"
           />
-        </FriendsCard>
+        </Card>
       ) : null}
 
       {/* A refusal first, where the person looks after pressing; then, while nothing here is
           real, the demonstration said plainly (docs/specs/social.md, section 4). */}
       {refusal === null ? null : (
-        <FriendsText variant="footnote" color="inkSecondary">
+        <AppText variant="footnote" color="muted">
           {refusal}
-        </FriendsText>
+        </AppText>
       )}
       {model.isDemonstration ? (
-        <FriendsText variant="footnote" color="inkSecondary">
+        <AppText variant="footnote" color="muted">
           {t('signIn.demoNote')}
-        </FriendsText>
+        </AppText>
       ) : null}
     </FriendsPage>
   );

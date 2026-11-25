@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { listeningShape, stateOpacity, useListeningColors, type IconSymbol } from '@/ui';
+import { listeningShape, stateOpacity, useColorValues, type IconSymbol } from '@/ui';
 
 import { SceneSymbol } from './scene-symbol';
 
@@ -9,7 +9,7 @@ export interface RoundButtonProps {
   readonly accessibilityLabel: string;
   readonly accessibilityHint?: string;
   readonly onPress: () => void;
-  /** The disc, and the symbol on it: colours of the listening palette. */
+  /** The disc, and the symbol on it: plain colours of the palette. */
   readonly background: string;
   readonly foreground: string;
   /** Diameter of the disc; the touch area is never under 44 points (buttons.md › Best practices). */
@@ -39,7 +39,7 @@ export function RoundButton({
   isRaised = false,
   testID,
 }: RoundButtonProps) {
-  const { shadow } = useListeningColors();
+  const { shadow } = useColorValues();
   const hit = Math.max(diameter, listeningShape.sceneButtonHit);
   return (
     <Pressable

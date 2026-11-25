@@ -8,7 +8,7 @@ export type SceneTextVariant = TextStyleName;
 export interface SceneTextProps {
   readonly children: ReactNode;
   readonly variant: SceneTextVariant;
-  /** A colour of the listening palette (`useListeningColors`). */
+  /** A plain colour of the palette (`useColorValues`). */
   readonly color: string;
   readonly align?: 'start' | 'center' | 'end';
   /** The title of the screen or of the card: screen readers can move to it. */

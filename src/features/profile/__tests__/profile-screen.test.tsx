@@ -13,6 +13,7 @@ import {
   directionDependentStyles,
   resetDeviceConditions,
   setDeviceConditions,
+  swiftUIViewsWithoutHost,
 } from '@/ui/test-support/environment';
 
 import { ProfileScreen } from '../profile-screen';
@@ -86,7 +87,7 @@ async function renderProfile(
     timeSpent: options.empty ? undefined : readingTime,
     dataResetNotice: options.dataResetNotice ?? null,
   });
-  await screen.findByTestId(options.empty ? 'profile-stats-empty' : 'profile-hasanat');
+  await screen.findByTestId(options.empty ? 'profile-stats-empty' : 'profile-hero');
   return store;
 }
 
@@ -102,81 +103,104 @@ afterEach(async () => {
 });
 
 describe('ProfileScreen › statistics', () => {
-  it('opens on the week: the hasanat estimate large, with its source right under it', async () => {
+  it('opens on the week: the hasanat written large, with its source in the same card', async () => {
     await renderProfile();
     const pagesThisWeek = 7;
-    expect(screen.getByText('Hasanat cette semaine')).toBeOnTheScreen();
-    expect(plain(screen.getByTestId('profile-hasanat-value').props.children)).toBe(
+    const hero = screen.getByTestId('profile-hero');
+    expect(within(hero).getByText('Hasanat cette semaine')).toBeOnTheScreen();
+    expect(plain(screen.getByTestId('profile-hero-value').props.children)).toBe(
       `≈ ${(pagesThisWeek * FIXTURE_PAGE.letters * 10).toLocaleString('fr-FR').replace(/[  ]/g, ' ')}`,
     );
-    expect(screen.getByTestId('profile-hasanat-note')).toHaveTextContent(
-      /Estimation .*Tirmidhî n° 2910.*Allah seul connaît la récompense\./,
+    expect(
+      within(screen.getByTestId('profile-stats')).getByTestId('profile-hasanat-note'),
+    ).toHaveTextContent(/Estimation .*Tirmidhî n° 2910.*Allah seul connaît la récompense\./);
+  });
+
+  it('lists every figure of the period, each one a choice of what the chart follows', async () => {
+    await renderProfile();
+    const figures = screen.getByTestId('profile-figures');
+    expect(figures).toHaveProp('accessibilityRole', 'radiogroup');
+    expect(within(screen.getByTestId('profile-figure-verses')).getByText('70')).toBeOnTheScreen();
+    expect(within(screen.getByTestId('profile-figure-words')).getByText('700')).toBeOnTheScreen();
+    expect(within(screen.getByTestId('profile-figure-pages')).getByText('7')).toBeOnTheScreen();
+    expect(
+      within(screen.getByTestId('profile-figure-readingTime')).getByText('1 h 35 min'),
+    ).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: /^Hasanat, environ/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Versets, 70' })).not.toBeChecked();
+  });
+
+  it('writes the time in the app under the figures', async () => {
+    await renderProfile();
+    expect(screen.getByTestId('profile-app-time')).toHaveTextContent(
+      'Temps dans l’appli : 1 h 45 min',
     );
   });
 
-  it('shows the other figures of the period, time included', async () => {
+  it('reads the times in words, not in abbreviations', async () => {
     await renderProfile();
-    expect(within(screen.getByTestId('profile-verses')).getByText('70')).toBeOnTheScreen();
-    expect(within(screen.getByTestId('profile-words')).getByText('700')).toBeOnTheScreen();
-    expect(within(screen.getByTestId('profile-pages')).getByText('7')).toBeOnTheScreen();
     expect(
-      within(screen.getByTestId('profile-reading-time')).getByText('1 h 35 min'),
+      screen.getByRole('radio', { name: 'Temps de lecture, 1 heure 35 minutes' }),
     ).toBeOnTheScreen();
-    expect(
-      within(screen.getByTestId('profile-app-time')).getByText('1 h 45 min'),
-    ).toBeOnTheScreen();
+    expect(screen.getByLabelText('Temps dans l’appli, 1 heure 45 minutes')).toBeOnTheScreen();
   });
 
   it('changes every figure with the period', async () => {
     await renderProfile();
-    await fireEvent.press(screen.getByRole('radio', { name: 'Aujourd’hui' }));
+    await fireEvent.press(screen.getByRole('radio', { name: 'Jour' }));
     expect(screen.getByText('Hasanat aujourd’hui')).toBeOnTheScreen();
-    expect(within(screen.getByTestId('profile-pages')).getByText('3')).toBeOnTheScreen();
+    expect(within(screen.getByTestId('profile-figure-pages')).getByText('3')).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('radio', { name: 'Tout' }));
     expect(screen.getByText('Hasanat depuis le début')).toBeOnTheScreen();
-    expect(within(screen.getByTestId('profile-pages')).getByText('611')).toBeOnTheScreen();
-    expect(screen.getByText('Chaque mois')).toBeOnTheScreen();
+    expect(within(screen.getByTestId('profile-figure-pages')).getByText('611')).toBeOnTheScreen();
+    expect(screen.getByTestId('profile-chart-summary')).toHaveTextContent(/^Meilleur mois : /);
   });
 
-  it('draws the evolution day by day, each day read by VoiceOver with its value', async () => {
+  it('says what matters right under the figure, then draws each day, read by VoiceOver', async () => {
     await renderProfile();
-    // The summary is the subtitle of the chart's title, right under it (charts.md › Descriptive
-    // content).
-    const title = screen.getByTestId('profile-chart-title');
-    expect(within(title).getByRole('header', { name: 'Chaque jour' })).toBeOnTheScreen();
-    expect(within(title).getByTestId('profile-chart-summary')).toHaveTextContent(
-      /^Meilleur jour : lundi 23 novembre, 16[\s\u202f]000$/,
-    );
+    // The sentence that says what the chart shows comes before it (charts.md › Descriptive
+    // content), in the same block as the figure it explains.
+    expect(
+      within(screen.getByTestId('profile-hero')).getByTestId('profile-chart-summary'),
+    ).toHaveTextContent(/^Meilleur jour : lundi 23 novembre, 16[\s\u202f]000$/);
     expect(screen.getByLabelText(/^lundi 23 novembre, Hasanat : /)).toBeOnTheScreen();
     // The days still to come are not read.
     expect(screen.queryByLabelText(/^jeudi 26 novembre/)).toBeNull();
   });
 
-  it('lets the person choose the figure the chart follows', async () => {
+  it('makes the chosen figure the large one, and the chart follows it', async () => {
     await renderProfile();
-    await fireEvent.press(
-      within(screen.getByTestId('profile-chart-metric')).getByRole('radio', {
-        name: 'Temps de lecture',
-      }),
-    );
+    await fireEvent.press(screen.getByRole('radio', { name: /^Temps de lecture, / }));
+    expect(
+      within(screen.getByTestId('profile-hero')).getByText('Temps de lecture cette semaine'),
+    ).toBeOnTheScreen();
+    expect(screen.getByTestId('profile-hero-value')).toHaveTextContent('1 h 35 min');
+    expect(screen.getByRole('radio', { name: /^Temps de lecture, / })).toBeChecked();
     await waitFor(() =>
       expect(
         screen.getByLabelText('mercredi 25 novembre, Temps de lecture : 1 heure 10 minutes'),
       ).toBeOnTheScreen(),
     );
+    // The source of the estimate stays with the hasanat, still listed in the card.
+    expect(screen.getByTestId('profile-hasanat-note')).toBeOnTheScreen();
   });
 
-  it('tells each khatma as the garden it grew, the one in progress first', async () => {
+  it('tells each khatma as the garden it grew, the one in progress first, with its estimated end', async () => {
     await renderProfile();
-    expect(screen.getByText('Tes jardins')).toBeOnTheScreen();
-    expect(screen.getByText('Jardin 2 · en cours')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Tes jardins' })).toBeOnTheScreen();
+    // 597 pages left at the daily goal of 5 pages, 3 already read today.
+    expect(
+      within(screen.getByTestId('profile-khatma-2')).getByText(
+        'Jardin 2 · en cours · fin estimée le 24 mars 2027',
+      ),
+    ).toBeOnTheScreen();
     expect(screen.getByText(/^Jardin 1 · achevé le 1 sept\. 2026$/)).toBeOnTheScreen();
     expect(
       within(screen.getByTestId('profile-khatma-1')).getByText(/^Khatma 1 · 604 pages/),
     ).toBeOnTheScreen();
   });
 
-  it('gives the source of the estimate once, under the figure', async () => {
+  it('gives the source of the estimate once', async () => {
     await renderProfile();
     expect(screen.getAllByText(/Tirmidhî/)).toHaveLength(1);
   });
@@ -188,16 +212,10 @@ describe('ProfileScreen › statistics', () => {
     expect(within(garden).getByText('Jardin 2')).toBeOnTheScreen();
   });
 
-  it('reads the times in words, not in abbreviations', async () => {
-    await renderProfile();
-    expect(screen.getByLabelText('Temps de lecture, 1 heure 35 minutes')).toBeOnTheScreen();
-    expect(screen.getByLabelText('Temps dans l’appli, 1 heure 45 minutes')).toBeOnTheScreen();
-  });
-
   it('says what will be counted, without a zero, before anything is read', async () => {
     await renderProfile({ empty: true });
     expect(screen.getByText('Ta première page t’attend')).toBeOnTheScreen();
-    expect(screen.queryByTestId('profile-hasanat')).toBeNull();
+    expect(screen.queryByTestId('profile-hero')).toBeNull();
     expect(screen.queryByTestId('profile-period')).toBeNull();
     // The bare garden, with no zero written under it.
     expect(
@@ -217,13 +235,13 @@ describe('ProfileScreen › statistics', () => {
     await renderProfile({ language: 'ar' });
     expect(screen.getByText('الحسنات هذا الأسبوع')).toBeOnTheScreen();
     expect(screen.getByTestId('profile-hasanat-note')).toHaveTextContent(/الترمذي، رقم 2910/);
-    expect(screen.getByTestId('profile-hasanat-value')).toHaveTextContent(/^≈\s28[,٬]000$/);
+    expect(screen.getByTestId('profile-hero-value')).toHaveTextContent(/^≈\s28[,٬]000$/);
     expect(directionDependentStyles(screen.getByTestId('profile'))).toEqual([]);
   });
 });
 
-describe('ProfileScreen › settings behind one row', () => {
-  it('lists no setting itself: one row, at the end, opens the settings', async () => {
+describe('ProfileScreen › settings behind one card', () => {
+  it('lists no setting itself: one card, at the end, opens the settings', async () => {
     await renderProfile();
     expect(screen.queryByTestId('language')).toBeNull();
     expect(screen.queryByRole('adjustable', { name: 'Pages par jour' })).toBeNull();
@@ -231,14 +249,16 @@ describe('ProfileScreen › settings behind one row', () => {
     expect(openSettings).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the row on a blank profile', async () => {
+  it('keeps the card on a blank profile', async () => {
     await renderProfile({ empty: true });
     expect(screen.getByRole('button', { name: 'Réglages' })).toBeOnTheScreen();
   });
 
-  it('says first, above the statistics, what data could not be read back', async () => {
+  it('says first, above the statistics, what data could not be read back, until it is read', async () => {
     await renderProfile({ dataResetNotice: 'journal' });
     expect(screen.getByRole('header', { name: 'À savoir' })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('dismiss-data-reset-notice'));
+    await waitFor(() => expect(screen.queryByRole('header', { name: 'À savoir' })).toBeNull());
   });
 });
 
@@ -258,6 +278,7 @@ describe('ProfileScreen on an iPhone', () => {
       journal: readingJournal,
       timeSpent: readingTime,
     });
-    expect(await screen.findByTestId('profile-hasanat')).toBeOnTheScreen();
+    expect(await screen.findByTestId('profile-hero')).toBeOnTheScreen();
+    expect(swiftUIViewsWithoutHost()).toEqual([]);
   });
 });

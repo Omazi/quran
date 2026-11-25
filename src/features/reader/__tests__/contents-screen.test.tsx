@@ -11,7 +11,7 @@ import { deviceLocalDate } from '@/features/home';
 import { SCREEN_CONDITIONS, showLanguage } from '@/features/garden/test-support/screen-conditions';
 import { AppStoreProvider, type AppStore } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
-import { fontFamily, readerShapes } from '@/ui';
+import { fontFamily, radius } from '@/ui';
 import {
   directionDependentStyles,
   touchTargetHeight,
@@ -20,7 +20,7 @@ import {
   setDeviceConditions,
   styleOf,
 } from '@/ui/test-support/environment';
-import { appColors, readerPalette, textStyles } from '@/ui/tokens';
+import { appColors, palette, textStyles } from '@/ui/tokens';
 
 import { ContentsScreen } from '../contents-screen';
 import { useContentsModel } from '../use-contents-model';
@@ -66,15 +66,15 @@ describe('the Quran tab', () => {
     await showLanguage('fr');
     await renderContents();
     expect(styleOf(screen.getByTestId('contents'))).toMatchObject({
-      backgroundColor: readerPalette.canvas.light,
+      backgroundColor: palette.canvas.light,
     });
     expect(styleOf(screen.getByTestId('contents-today-card'))).toMatchObject({
-      backgroundColor: readerPalette.card.light,
-      borderRadius: readerShapes.cardRadius,
+      backgroundColor: palette.surface.light,
+      borderRadius: radius.xl,
     });
     expect(styleOf(screen.getByTestId('contents-resume'))).toMatchObject({
-      backgroundColor: readerPalette.cardCream.light,
-      borderColor: readerPalette.cardCreamEdge.light,
+      backgroundColor: palette.surfaceInset.light,
+      borderColor: palette.surfaceInsetBorder.light,
     });
     const arabic = within(screen.getByTestId('contents-resume')).getByText('الفاتحة');
     expect(styleOf(arabic)).toMatchObject({
@@ -125,9 +125,9 @@ describe('the Quran tab', () => {
     expect(card).toHaveTextContent(
       /^Arrosage du jour3 pages sur 5Encore 2 pages pour ton objectif$/,
     );
-    // The water ring of the mockup, filled to three fifths, in water.
+    // The water ring of the home screen (ProgressRing), in water, read with the card's words.
     const ring = screen.getByTestId('contents-today-ring', { includeHiddenElements: true });
-    expect(ring.props.accessibilityElementsHidden).toBe(true);
+    expect(ring.props.accessibilityRole).toBe('progressbar');
     // In the same white card as the resume card, above it, as in accueil.png.
     const order = ['contents-today', 'contents-resume', 'contents-search'];
     const all = screen.container.queryAll(
@@ -168,7 +168,7 @@ describe('the Quran tab', () => {
     await showLanguage('fr');
     await renderContents(createTestAppStore({ settings: { bookmarks: [2, 293] } }));
     const card = screen.getByTestId('contents-bookmarks');
-    expect(styleOf(card)).toMatchObject({ backgroundColor: readerPalette.card.light });
+    expect(styleOf(card)).toMatchObject({ backgroundColor: palette.surface.light });
     expect(within(card).getByRole('header', { name: 'Marque-pages' })).toBeOnTheScreen();
     const rows = within(card).getAllByTestId(/^contents-bookmark-\d+$/);
     expect(rows.map((row) => row.props.testID)).toEqual([
@@ -215,7 +215,7 @@ describe('the Quran tab', () => {
       color: appColors.ornament.light,
     });
     expect(styleOf(screen.getByTestId('contents-surahs-card'))).toMatchObject({
-      backgroundColor: readerPalette.card.light,
+      backgroundColor: palette.surface.light,
     });
   });
 

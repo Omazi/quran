@@ -1,29 +1,26 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
-import type { GardenState } from '@/domain/garden';
-import {
-  DataResetNoticeSection,
-  type SettingsActions,
-  type SettingsModel,
-} from '@/features/settings';
+import type { GardenPhase, GardenState } from '@/domain/garden';
+import { DataResetNoticeCard, type SettingsActions, type SettingsModel } from '@/features/settings';
 import {
   AppText,
-  ContentRow,
-  GroupedList,
-  ListRow,
-  ListSection,
-  Screen,
+  Card,
+  GradientBackdrop,
+  Icon,
+  getWritingDirection,
+  layout,
   spacing,
-  type IconSymbol,
+  useColors,
+  useSafeInsets,
+  type BackdropName,
 } from '@/ui';
 
-import { ProfileGardenSection } from './profile-garden';
+import { PROFILE_CARDS_RISE, PROFILE_PULL_ROOM_STEPS, PROFILE_SYMBOLS } from './config';
+import { ProfileGarden } from './profile-garden';
 import { StatsPreviewSection } from './state-preview';
 import { StatsSections } from './stats-sections';
 import type { ProfileStatsActions, ProfileStatsModel } from './use-profile-stats';
-
-const SETTINGS_SYMBOL: IconSymbol = { ios: 'gearshape', android: 'settings' };
 
 /** What the profile opens: its own actions, the route decides where they lead. */
 export interface ProfileActions {
@@ -44,12 +41,24 @@ export interface ProfileScreenProps {
   actions: ProfileActions;
 }
 
+/** The gradient of the home screen that matches the state of the garden (soif.png, mort.png). */
+const BACKDROP_OF_PHASE: Readonly<Record<GardenPhase, BackdropName>> = {
+  bare: 'growing',
+  thriving: 'growing',
+  thirsty: 'thirsty',
+  wilting: 'thirsty',
+  dying: 'thirsty',
+  dead: 'dead',
+};
+
 /**
- * The "Profil" tab: the person's garden, then their reading statistics, then one row that opens
- * the settings (owner's decision, 25 November 2026). One list of the system, so the whole tab
- * scrolls as one and nothing is cut at the largest text sizes (layout.md › Adaptability). A
- * notice about lost data, when there is one, comes before everything: the tab's badge points to
- * it (tab-bars.md › Best practices).
+ * The "Profil" tab, in the visual language of the home screen (docs/design/accueil.png; there is
+ * no mockup of the profile): the title in the serif of the mockups and the person's garden on the
+ * gradient of its state, then white cards that rise over the end of the gradient, in the order of
+ * importance (layout.md › Visual hierarchy): the reading statistics, the gardens, and one card
+ * that opens the settings (settings.md › General settings). A notice about lost data, when there
+ * is one, comes first: the tab's badge points to it (tab-bars.md › Best practices). One scroll
+ * view, so nothing is cut at the largest text sizes (layout.md › Adaptability).
  */
 export function ProfileScreen({
   stats,
@@ -60,41 +69,87 @@ export function ProfileScreen({
   actions,
 }: ProfileScreenProps) {
   const { t } = useTranslation('profile');
-  const { t: tSettings } = useTranslation('settings');
+  const colors = useColors();
+  const insets = useSafeInsets();
+  // iOS insets a scroll view for the status bar and the tab bar by itself; elsewhere the safe
+  // area is added here (as on the home screen).
+  const ownsInsets = Platform.OS !== 'ios';
+  const backdrop = garden === null ? 'growing' : BACKDROP_OF_PHASE[garden.phase];
   return (
-    <Screen background="groupedBackground" testID="profile">
-      <GroupedList testID="profile-list">
-        <ListSection isBare>
-          <ContentRow>
-            <View style={styles.title}>
-              <AppText variant="largeTitle">{t('title')}</AppText>
-            </View>
-          </ContentRow>
-        </ListSection>
-        <DataResetNoticeSection model={settings} actions={settingsActions} />
-        {garden === null ? null : <ProfileGardenSection garden={garden} />}
-        <StatsSections
-          model={stats}
-          actions={statsActions}
-          onRead={actions.read}
-          hasGardenAbove={garden !== null}
-        />
-        {/* Settings change rarely: one row at the end, which opens their page (settings.md ›
-            General settings), with the disclosure indicator (lists-and-tables.md › Mobile). */}
-        <ListSection>
-          <ListRow
-            label={tSettings('title')}
-            symbol={SETTINGS_SYMBOL}
-            onPress={actions.openSettings}
-            testID="profile-settings"
+    <View style={[styles.screen, { backgroundColor: colors.canvas }]} testID="profile">
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={[
+          styles.content,
+          ownsInsets ? { paddingTop: insets.top, paddingBottom: insets.bottom } : null,
+        ]}
+        testID="profile-list"
+      >
+        <View style={styles.stage}>
+          <GradientBackdrop
+            name={backdrop}
+            extendUp={insets.top + spacing.xxl * PROFILE_PULL_ROOM_STEPS}
+            style={styles.backdrop}
           />
-        </ListSection>
-        {StatsPreviewSection === null ? null : <StatsPreviewSection />}
-      </GroupedList>
-    </Screen>
+          <View style={styles.header}>
+            <AppText variant="largeTitle" color="heading">
+              {t('title')}
+            </AppText>
+          </View>
+          {garden === null ? null : <ProfileGarden garden={garden} />}
+        </View>
+        <View style={styles.cards}>
+          <DataResetNoticeCard model={settings} actions={settingsActions} />
+          <StatsSections model={stats} actions={statsActions} onRead={actions.read} />
+          <SettingsCard onPress={actions.openSettings} />
+          {StatsPreviewSection === null ? null : <StatsPreviewSection />}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+/**
+ * Settings change rarely: one card at the end opens their page (settings.md › General settings),
+ * with the forward chevron of a row that leads somewhere (lists-and-tables.md › Mobile). iOS
+ * flips `chevron.forward` in Arabic by itself; elsewhere it is mirrored here
+ * (right-to-left.md › Controls).
+ */
+function SettingsCard({ onPress }: { onPress: () => void }) {
+  const { t } = useTranslation('settings');
+  const mirrorsChevron = Platform.OS !== 'ios' && getWritingDirection() === 'rtl';
+  return (
+    <Card tone="raised" onPress={onPress} accessibilityLabel={t('title')} testID="profile-settings">
+      <View style={styles.settingsRow}>
+        <Icon symbol={PROFILE_SYMBOLS.settings} textStyle="headline" color="actionTint" />
+        <AppText style={styles.settingsLabel}>{t('title')}</AppText>
+        <View style={mirrorsChevron ? styles.mirrored : null}>
+          <Icon symbol={PROFILE_SYMBOLS.disclosure} textStyle="footnote" color="muted" />
+        </View>
+      </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  title: { paddingVertical: spacing.sm },
+  screen: { flex: 1 },
+  content: { flexGrow: 1, paddingBottom: spacing.xl },
+  stage: { paddingBottom: spacing.xxl },
+  backdrop: { position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 },
+  header: {
+    paddingHorizontal: layout.screenMargin + spacing.xs,
+    paddingTop: layout.controlGap,
+  },
+  cards: {
+    marginTop: -spacing[PROFILE_CARDS_RISE],
+    paddingHorizontal: layout.screenMargin,
+    rowGap: spacing.lg,
+  },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    columnGap: layout.controlGap,
+  },
+  settingsLabel: { flex: 1 },
+  mirrored: { transform: [{ scaleX: -1 }] },
 });

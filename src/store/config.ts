@@ -6,13 +6,25 @@ import type { ReminderSettings } from './types';
  * Version of the stored document. Version 1 had no `fridayTime` and no `quietHours` in the
  * reminders; version 2 had no `timeSpent` (the time counters, D37). Version 3 was written by two
  * lines of the app, one with `timeSpent` and one with `settings.lastOpenedPage`; version 4 has both.
- * Version 5 adds `settings.bookmarks`, the pages bookmarked in the reader. Documents of the older versions are upgraded when they are read (stored-data.ts). A document of
- * any other version is discarded.
+ * Version 5 adds `settings.bookmarks`, the pages bookmarked in the reader. Documents of the older versions are upgraded when they are read (stored-data.ts).
+ *
+ * Version 5 may also hold a `sync` part (docs/specs/sync.md). It is optional, so it does not
+ * change the version: an older build of the app (a TestFlight build installed over a newer one)
+ * still reads the document, and only leaves the `sync` part out. A document of a newer version
+ * is read like this one when its settings and journal pass the checks (a newer version only adds
+ * parts); otherwise, like a document of an unknown version, it is discarded.
  */
 export const STORED_DATA_VERSION = 5;
 
 /** The key of the stored document. */
 export const STORED_DATA_KEY = 'app-data';
+
+/**
+ * The key of a second copy of the stored document, written right after each successful write of
+ * the first. When the first cannot be read back, or holds a part that cannot be trusted, that part
+ * is taken from this copy before anything starts again from nothing (docs/specs/sync.md, 1).
+ */
+export const STORED_DATA_BACKUP_KEY = 'app-data-backup';
 
 /**
  * The key under which a stored text that could not be trusted is kept before it is replaced, so
