@@ -14,5 +14,6 @@ export function useHomeSource(): HomeSource {
   const dailyGoalPages = useAppStore((state) => state.settings.dailyGoalPages);
   const userSeed = useAppStore((state) => state.settings.userSeed);
   const pauses = useAppStore((state) => state.settings.pauses);
-  return { journal, settings: { dailyGoalPages, userSeed, pauses } };
+  const lastOpenedPage = useAppStore((state) => state.settings.lastOpenedPage);
+  return { journal, settings: { dailyGoalPages, userSeed, lastOpenedPage, pauses } };
 }

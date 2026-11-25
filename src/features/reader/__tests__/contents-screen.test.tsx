@@ -18,7 +18,6 @@ import {
 } from '@/ui/test-support/environment';
 
 import { ContentsScreen } from '../contents-screen';
-import { forgetOpenedPage, rememberOpenedPage } from '../reader-session';
 import { useContentsModel } from '../use-contents-model';
 
 const openPage = jest.fn();
@@ -37,7 +36,6 @@ async function renderContents(store: AppStore = createTestAppStore()) {
 }
 
 beforeEach(() => {
-  forgetOpenedPage();
   openPage.mockClear();
 });
 
@@ -68,8 +66,7 @@ describe('the Quran tab', () => {
     await renderContents(createTestAppStore({ journal }));
     expect(within(screen.getByTestId('contents-resume')).getByText('Page 4')).toBeOnTheScreen();
 
-    rememberOpenedPage(293);
-    await renderContents(createTestAppStore({ journal }));
+    await renderContents(createTestAppStore({ journal, settings: { lastOpenedPage: 293 } }));
     const resume = screen.getByTestId('contents-resume');
     // Named, like its juz and hizb, by its first verse: page 293 opens on the end of Al-Isra.
     expect(within(resume).getByText('Al-Isra')).toBeOnTheScreen();

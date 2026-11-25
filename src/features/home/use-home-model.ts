@@ -41,20 +41,20 @@ export function useHomeModel({ clock }: HomeModelDependencies = {}): HomeModelRe
   const today = useToday(clock);
   const { journal, settings } = usePreviewedSource(useHomeSource(), today);
   // The settings are compared one by one: a source may return a new object at every render.
-  const { dailyGoalPages, userSeed, pauses } = settings;
+  const { dailyGoalPages, userSeed, pauses, lastOpenedPage } = settings;
   const [attempt, setAttempt] = useState(0);
   const retry = useCallback(() => setAttempt((count) => count + 1), []);
   const model = useMemo(
     () =>
       buildHomeModelOrUnavailable({
         journal,
-        settings: { dailyGoalPages, userSeed, pauses },
+        settings: { dailyGoalPages, userSeed, lastOpenedPage, pauses },
         today,
         hizbPageRanges: quranStructure.hizbPageRanges(),
       }),
     // `attempt` is not read: a new attempt is what asks for a new build.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [journal, dailyGoalPages, userSeed, pauses, today, attempt],
+    [journal, dailyGoalPages, userSeed, lastOpenedPage, pauses, today, attempt],
   );
   return { model, retry };
 }

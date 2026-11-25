@@ -66,4 +66,24 @@ describe('the "Jardin" tab', () => {
     expect(store.getState().journal).toBe(journal);
     expect(screen.getByTestId('home-today-pages')).toHaveTextContent('Pages lues3 sur 5');
   });
+
+  it('shows in its row the page the button opens, once the reader was opened elsewhere', async () => {
+    const store = readerStore();
+    store.getState().setLastOpenedPage(293);
+    await renderRoute(store);
+    expect(screen.getByTestId('home-next-page')).toHaveTextContent('ReprendrePage 293');
+    await fireEvent.press(screen.getByRole('button', { name: 'Lire et arroser' }));
+    expect(router.push).toHaveBeenCalledWith('/reader/293');
+  });
+
+  it('shows the first unread page in the row too while the reader was never opened', async () => {
+    const store = readerStore();
+    await renderRoute(store);
+    const resumePage = resolveResumePage({
+      lastOpenedPage: store.getState().settings.lastOpenedPage,
+      journal: store.getState().journal,
+      hizbPageRanges: quranStructure.hizbPageRanges(),
+    });
+    expect(screen.getByTestId('home-next-page')).toHaveTextContent(`ReprendrePage ${resumePage}`);
+  });
 });

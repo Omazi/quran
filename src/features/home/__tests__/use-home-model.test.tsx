@@ -130,6 +130,14 @@ describe('useHomeModel', () => {
     });
   });
 
+  it('follows the last page opened in the reader, as the button does', async () => {
+    const { store, hook } = renderHomeModel();
+    const { result } = await hook;
+    expect(result.current.model).toMatchObject({ reading: { nextPage: 1, hasStarted: false } });
+    await act(async () => store.getState().setLastOpenedPage(293));
+    expect(result.current.model).toMatchObject({ reading: { nextPage: 293, hasStarted: true } });
+  });
+
   it('gives the same model again while neither the data nor the day changes', async () => {
     const { result, rerender } = await renderHomeModel().hook;
     const first = result.current;
@@ -142,7 +150,7 @@ describe('useHomeModel', () => {
     const logged = jest.spyOn(console, 'error').mockImplementation(() => {});
     const { result } = await renderHomeModel({
       journal: [],
-      settings: { dailyGoalPages: 0, userSeed: 1, pauses: [] },
+      settings: { dailyGoalPages: 0, userSeed: 1, lastOpenedPage: null, pauses: [] },
     }).hook;
     expect(result.current.model).toEqual({ status: 'unavailable' });
     expect(logged).toHaveBeenCalledTimes(1);

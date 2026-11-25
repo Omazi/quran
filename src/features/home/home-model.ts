@@ -17,6 +17,7 @@ import {
   type ReadingJournal,
   type TodayProgress,
 } from '@/domain/khatm';
+import { assertPageNumber } from '@/domain/quran';
 import type { LocalDate } from '@/domain/shared/local-date';
 
 /** What the home screen needs from the person's settings. */
@@ -25,6 +26,8 @@ export interface HomeSettings {
   readonly dailyGoalPages: number;
   /** Makes this person's gardens their own (`gardenVariant`). */
   readonly userSeed: number;
+  /** The last page opened in the reader, or null: the page to resume starts from it. */
+  readonly lastOpenedPage: number | null;
   /** Periods during which the garden is frozen. */
   readonly pauses: readonly Pause[];
 }
@@ -127,7 +130,7 @@ export function buildHomeModel({
   today,
   hizbPageRanges,
 }: HomeModelInput): HomeReadyModel {
-  const { dailyGoalPages, userSeed, pauses } = settings;
+  const { dailyGoalPages, userSeed, pauses, lastOpenedPage } = settings;
 
   const feed = getGardenFeed(journal, hizbPageRanges);
   const garden = computeGardenState({
@@ -147,6 +150,9 @@ export function buildHomeModel({
   if (progress.firstUnreadPage === null) {
     throw new RangeError(`Khatma ${khatm} is the one to read, yet it has no unread page.`);
   }
+  // The page to resume is the reader's (docs/specs/reader.md, section 1): the last page opened,
+  // else the first unread page. The row and the button "Lire et arroser" must name the same page.
+  if (lastOpenedPage !== null) assertPageNumber(lastOpenedPage);
   const estimatedFinishDate = estimateFinishDate(journal, khatm, today, {
     kind: 'daily-goal',
     dailyGoalPages,
@@ -164,8 +170,8 @@ export function buildHomeModel({
     today: getTodayProgress(journal, today, dailyGoalPages),
     reading: {
       khatm,
-      nextPage: progress.firstUnreadPage,
-      hasStarted: progress.pagesRead > 0,
+      nextPage: lastOpenedPage ?? progress.firstUnreadPage,
+      hasStarted: progress.pagesRead > 0 || lastOpenedPage !== null,
       estimatedFinishDate,
       finishesToday: estimatedFinishDate === today,
     },

@@ -2,10 +2,10 @@ import type { ReminderSettings } from './types';
 
 /**
  * Version of the stored document. Version 1 had no `fridayTime` and no `quietHours` in the
- * reminders: a version 1 document is upgraded when it is read (stored-data.ts). A document of
- * any other version is discarded.
+ * reminders; version 2 had no `lastOpenedPage` in the settings. Older documents are upgraded when
+ * they are read (stored-data.ts). A document of any other version is discarded.
  */
-export const STORED_DATA_VERSION = 2;
+export const STORED_DATA_VERSION = 3;
 
 /** The key of the stored document. */
 export const STORED_DATA_KEY = 'app-data';

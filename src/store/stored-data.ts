@@ -10,6 +10,7 @@ import {
   type ReadingEntry,
   type ReadingJournal,
 } from '@/domain/khatm';
+import { PAGE_COUNT } from '@/domain/quran';
 import { compareLocalDates, isLocalDate, type LocalDate } from '@/domain/shared/local-date';
 import { isSupportedLanguage } from '@/i18n';
 
@@ -51,6 +52,11 @@ function isWholeNumberWithin(value: unknown, min: number, max: number): value is
 
 export function isDailyGoalPages(value: unknown): value is number {
   return isWholeNumberWithin(value, DAILY_GOAL_RANGE.min, DAILY_GOAL_RANGE.max);
+}
+
+/** A page of the Quran book, or null for none: the last page opened in the reader. */
+export function isLastOpenedPage(value: unknown): value is number | null {
+  return value === null || isWholeNumberWithin(value, 1, PAGE_COUNT);
 }
 
 /** A seed the garden module accepts: a whole number from 0 to 2^53 - 1. */
@@ -140,7 +146,7 @@ function readPauses(value: unknown): readonly Pause[] | null {
  */
 function readSettings(value: unknown): AppSettings | null {
   if (!isRecord(value)) return null;
-  const { language, dailyGoalPages, onboardingCompleted, userSeed } = value;
+  const { language, dailyGoalPages, onboardingCompleted, userSeed, lastOpenedPage } = value;
   const reminders = readReminders(value.reminders);
   const pauses = readPauses(value.pauses);
   if (language !== null && (typeof language !== 'string' || !isSupportedLanguage(language))) {
@@ -148,7 +154,16 @@ function readSettings(value: unknown): AppSettings | null {
   }
   if (!isDailyGoalPages(dailyGoalPages) || typeof onboardingCompleted !== 'boolean') return null;
   if (!isUserSeed(userSeed) || reminders === null || pauses === null) return null;
-  return { language, dailyGoalPages, onboardingCompleted, userSeed, pauses, reminders };
+  if (!isLastOpenedPage(lastOpenedPage)) return null;
+  return {
+    language,
+    dailyGoalPages,
+    onboardingCompleted,
+    userSeed,
+    lastOpenedPage,
+    pauses,
+    reminders,
+  };
 }
 
 function readJournalEntry(value: unknown): ReadingEntry | null {
@@ -183,6 +198,8 @@ function readJournal(value: unknown): ReadingJournal | null {
 
 /** The version that had no `fridayTime` and no `quietHours` in the reminders. */
 const VERSION_WITHOUT_FRIDAY_TIME = 1;
+/** The version that had no `lastOpenedPage` in the settings. */
+const VERSION_WITHOUT_LAST_OPENED_PAGE = 2;
 
 /**
  * Brings a document written by an older version of the app to the current shape, so that an
@@ -192,15 +209,18 @@ const VERSION_WITHOUT_FRIDAY_TIME = 1;
  */
 function upgradeDocument(document: UnknownRecord): UnknownRecord | null {
   if (document.version === STORED_DATA_VERSION) return document;
-  if (document.version !== VERSION_WITHOUT_FRIDAY_TIME) return null;
+  const { version, settings } = document;
+  if (version !== VERSION_WITHOUT_FRIDAY_TIME && version !== VERSION_WITHOUT_LAST_OPENED_PAGE) {
+    return null;
+  }
+  if (!isRecord(settings)) return document;
 
-  const { settings } = document;
-  if (!isRecord(settings) || !isRecord(settings.reminders)) return document;
-  const { fridayTime, quietHours } = DEFAULT_REMINDERS;
-  return {
-    ...document,
-    settings: { ...settings, reminders: { ...settings.reminders, fridayTime, quietHours } },
-  };
+  let upgraded: UnknownRecord = settings;
+  if (version === VERSION_WITHOUT_FRIDAY_TIME && isRecord(settings.reminders)) {
+    const { fridayTime, quietHours } = DEFAULT_REMINDERS;
+    upgraded = { ...upgraded, reminders: { ...settings.reminders, fridayTime, quietHours } };
+  }
+  return { ...document, settings: { ...upgraded, lastOpenedPage: null } };
 }
 
 const NOTHING_USABLE = { settings: null, journal: null, wasUpgraded: false } as const;

@@ -1,6 +1,7 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
 
 import { EMPTY_JOURNAL, recordPageRead } from '@/domain/khatm';
+import { PAGE_COUNT } from '@/domain/quran';
 import { isSupportedLanguage } from '@/i18n';
 
 import {
@@ -23,6 +24,7 @@ import {
 import type { KeyValueStorage } from './storage';
 import {
   isDailyGoalPages,
+  isLastOpenedPage,
   isQuietHours,
   isReminderTime,
   isStorableDate,
@@ -97,6 +99,7 @@ export function createFirstLaunchSettings(userSeed: number): AppSettings {
     dailyGoalPages: DEFAULT_DAILY_GOAL_PAGES,
     onboardingCompleted: false,
     userSeed,
+    lastOpenedPage: null,
     pauses: [],
     reminders: DEFAULT_REMINDERS,
   };
@@ -197,6 +200,15 @@ export function createStateStore(
 
       completeOnboarding: () => {
         if (!get().settings.onboardingCompleted) changeSettings({ onboardingCompleted: true });
+      },
+
+      setLastOpenedPage: (page) => {
+        if (!isLastOpenedPage(page)) {
+          throw new RangeError(
+            `The last page opened must be a page from 1 to ${PAGE_COUNT} or null, received ${String(page)}.`,
+          );
+        }
+        if (get().settings.lastOpenedPage !== page) changeSettings({ lastOpenedPage: page });
       },
 
       recordPageRead: (pageRead) => {

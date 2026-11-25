@@ -171,7 +171,7 @@ describe('the 30-second rule (spec 3), with a fake clock', () => {
       readingFeedback({
         before: journal,
         after: journal,
-        settings: { dailyGoalPages: 5, userSeed: 42, pauses: [] },
+        settings: { dailyGoalPages: 5, userSeed: 42, lastOpenedPage: null, pauses: [] },
         today: DAY,
         hizbPageRanges: RANGES,
       }),
@@ -180,7 +180,7 @@ describe('the 30-second rule (spec 3), with a fake clock', () => {
 });
 
 describe('the feedback after a page (spec 3)', () => {
-  const settings = { dailyGoalPages: 5, userSeed: 42, pauses: [] };
+  const settings = { dailyGoalPages: 5, userSeed: 42, lastOpenedPage: null, pauses: [] };
 
   it('says a new page counted', () => {
     const before = readPages([1]);

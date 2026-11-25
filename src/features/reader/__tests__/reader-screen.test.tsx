@@ -24,7 +24,6 @@ import {
 
 import { READER_CONFIG } from '../config';
 import { pagerIndexOfPage } from '../page-order';
-import { forgetOpenedPage, getLastOpenedPage } from '../reader-session';
 import { ReaderNotFound, ReaderScreen } from '../reader-screen';
 import { useReader } from '../use-reader';
 import type { QuranFontStatus } from '../use-quran-font';
@@ -90,7 +89,6 @@ function pagesOf(store: AppStore): number[] {
 
 beforeEach(async () => {
   now = 0;
-  forgetOpenedPage();
   // React Native's Jest mock makes the state a function; on a device it is a string.
   Object.defineProperty(AppState, 'currentState', { value: 'active', configurable: true });
   setDeviceConditions();
@@ -101,9 +99,10 @@ afterEach(resetDeviceConditions);
 
 describe('turning the pages', () => {
   it('opens on the page asked, and remembers it as the page to resume', async () => {
-    await openReader(createTestAppStore(), 293);
+    const store = createTestAppStore();
+    await openReader(store, 293);
     await waitFor(() => expect(screen.getByTestId('mushaf-page-293')).toBeOnTheScreen());
-    expect(getLastOpenedPage()).toBe(293);
+    expect(store.getState().settings.lastOpenedPage).toBe(293);
   });
 
   it('starts the pager on that page, in the order of the book', async () => {
@@ -133,7 +132,8 @@ describe('turning the pages', () => {
   });
 
   it('offers VoiceOver an action for the next and the previous page', async () => {
-    await openReader(createTestAppStore(), 293);
+    const store = createTestAppStore();
+    await openReader(store, 293);
     await waitFor(() => expect(screen.getByTestId('mushaf-page-293')).toBeOnTheScreen());
     const firstLine = screen.container.queryAll(
       (element) => element.props.accessibilityLanguage === 'ar' && element.props.accessible,
@@ -145,7 +145,7 @@ describe('turning the pages', () => {
     await act(async () => {
       firstLine.props.onAccessibilityAction({ nativeEvent: { actionName: 'nextPage' } });
     });
-    expect(getLastOpenedPage()).toBe(294);
+    expect(store.getState().settings.lastOpenedPage).toBe(294);
   });
 });
 

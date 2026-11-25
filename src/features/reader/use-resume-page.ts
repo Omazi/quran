@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { quranStructure } from '@/data/quran';
 import { useAppStore } from '@/store';
 
-import { useLastOpenedPage } from './reader-session';
 import { resolveResumePage } from './resume-page';
 
 /**
@@ -12,7 +11,7 @@ import { resolveResumePage } from './resume-page';
  */
 export function useResumePage(): number {
   const journal = useAppStore((state) => state.journal);
-  const lastOpenedPage = useLastOpenedPage();
+  const lastOpenedPage = useAppStore((state) => state.settings.lastOpenedPage);
   return useMemo(
     () =>
       resolveResumePage({
