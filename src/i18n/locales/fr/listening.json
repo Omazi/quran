@@ -44,7 +44,12 @@
     "title": "L’écoute s’est arrêtée",
     "description": "Réessaie dans un instant."
   },
+  "ready": {
+    "title": "Prêt quand tu l’es",
+    "description": "Appuie sur le bouton pour commencer l’écoute. Le micro reste éteint d’ici là."
+  },
   "actions": {
+    "start": "Commencer l’écoute",
     "listenAgain": "Écouter à nouveau",
     "openSettings": "Ouvrir les réglages",
     "close": "Fermer",

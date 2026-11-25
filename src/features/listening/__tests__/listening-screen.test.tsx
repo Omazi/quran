@@ -49,6 +49,7 @@ function screenFor(engine: SpeechEngine) {
   return (
     <ListeningScreen
       engine={engine}
+      autoStart
       loadVerseIndex={() => Promise.resolve(index)}
       structure={quranStructure}
       loadVerseText={loadQuranVerseText}

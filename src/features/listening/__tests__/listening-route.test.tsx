@@ -5,6 +5,8 @@ import { Linking } from 'react-native';
 import { showLanguage } from '@/features/garden/test-support/screen-conditions';
 import { resetDeviceConditions } from '@/ui/test-support/environment';
 
+import { forgetOpenedInApp, markOpenedInApp } from '../in-app-open';
+
 const mockRouter = {
   push: jest.fn(),
   back: jest.fn(),
@@ -25,6 +27,7 @@ jest.mock('expo-router', () => ({
 jest.mock('react-native-reanimated', () => require('../test-support/reanimated-stand-in'));
 
 afterEach(async () => {
+  forgetOpenedInApp();
   jest.clearAllMocks();
   await resetDeviceConditions();
 });
@@ -65,6 +68,7 @@ describe('where the listening screen leads', () => {
 describe('the route', () => {
   it('in development, shows the listening screen with the simulated engine', async () => {
     await showLanguage('fr');
+    markOpenedInApp('listening');
     const ListeningRoute = jest.requireActual<{ default: ComponentType }>(
       '@/app/listening',
     ).default;

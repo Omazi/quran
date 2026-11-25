@@ -1,9 +1,9 @@
 import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { quranStructure } from '@/data/quran';
 import { parseVerseKey, type VerseRef } from '@/domain/quran';
-import { createFollowEngine } from '@/features/listening';
+import { createFollowEngine, wasOpenedInApp } from '@/features/listening';
 import {
   ReaderNotFound,
   ReaderScreen,
@@ -81,6 +81,7 @@ function OpenReader({
   const fontStatus = useScriptFont(model.script);
   const texts = useScriptTexts(model.script);
   const uthmani = useScriptTexts('uthmani');
+  const [isTrusted] = useState(() => wasOpenedInApp('reader-follow'));
   const createEngine = useCallback(() => createFollowEngine(scenario), [scenario]);
   const followFromKey = followFrom === null ? null : `${followFrom.surah}:${followFrom.verse}`;
   // The verse named by the address: a new object for the same verse must not start again.
@@ -90,7 +91,8 @@ function OpenReader({
     createEngine,
     uthmaniTextOf: uthmani.status === 'ready' ? uthmani.textOf : null,
     onPagesFollowed: actions.countPagesReadAloud,
-    autoStartFrom,
+    // A link cannot open the microphone: only a follow started inside the app does.
+    autoStartFrom: isTrusted ? autoStartFrom : null,
   });
   return (
     <>

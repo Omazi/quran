@@ -8,3 +8,9 @@ export { createFollowEngine, createListeningEngine } from './speech-engine-door'
 export { parseFollowParams, type FollowParams } from './follow/follow-params';
 export { useListeningNavigation, readerHref } from './use-listening-navigation';
 export { loadQuranPage, loadQuranVerseIndex, loadQuranVerseText } from './verse-index-source';
+export {
+  forgetOpenedInApp,
+  markOpenedInApp,
+  wasOpenedInApp,
+  type MicrophoneRoute,
+} from './in-app-open';

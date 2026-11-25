@@ -32,8 +32,24 @@ async function wait(milliseconds: number) {
 }
 
 async function listenWith(engine: SpeechEngine, load = loadVerseIndex) {
-  return await renderHook(() => useListening({ engine, loadVerseIndex: load }));
+  return await renderHook(() => useListening({ engine, loadVerseIndex: load, autoStart: true }));
 }
+
+describe('a listening opened by a link', () => {
+  it('does not open the microphone until it is asked to', async () => {
+    const engine = createScenarioEngine('found');
+    const start = jest.spyOn(engine, 'start');
+    const { result } = await renderHook(() =>
+      useListening({ engine, loadVerseIndex, autoStart: false }),
+    );
+    await wait(1000);
+    expect(start).not.toHaveBeenCalled();
+    expect(result.current.state.status).toBe('idle');
+    await act(async () => result.current.listenAgain());
+    await wait(100);
+    expect(start).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('a listening, with the simulated engine and the real passage search', () => {
   it('voice then a single passage: found, and the microphone is closed at once', async () => {

@@ -158,7 +158,7 @@ s'ouvre depuis l'onglet Coran, bouton à côté du titre).
 - **Pages comptées par la voix** : une page dont chaque mot a été récité depuis son premier
   compte comme lue, sans minuterie, **une seule fois**, avec les mêmes règles de khatma (D8) ; la
   page où le suivi a commencé au milieu ne compte pas par la voix (elle peut compter par le temps).
-- `/voice-follow?page=294&from=18:10` ouvre le lecteur en suivi (`/reader/294?follow=1&from=18:10`).
+- `/voice-follow?page=294&from=18:10` ouvre le lecteur en suivi (`/reader/294?follow=1&from=18:10`) ; ouvert par un lien, le lecteur n'ouvre pas le micro tant que la personne n'a pas appuyé (docs/SECURITY.md).
 
 ## 4. Depuis l'accueil
 

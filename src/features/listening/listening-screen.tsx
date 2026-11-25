@@ -17,6 +17,8 @@ import { PassagesView } from './views/passages-view';
 
 export interface ListeningScreenProps {
   readonly engine: SpeechEngine;
+  /** False when a link opened the screen: the microphone waits for the button. */
+  readonly autoStart: boolean;
   readonly loadVerseIndex: () => Promise<VerseIndex>;
   readonly structure: Pick<QuranStructure, 'pageOfVerse' | 'surah'>;
   /** Reads a verse's text, shown exactly as stored: the verses found, the opening words of a place. */
@@ -43,6 +45,7 @@ const NOT_FOUND: Readonly<Record<NothingFoundReason, string>> = {
  */
 export function ListeningScreen({
   engine,
+  autoStart,
   loadVerseIndex,
   structure,
   loadVerseText,
@@ -51,7 +54,7 @@ export function ListeningScreen({
   onOpenSettings,
 }: ListeningScreenProps) {
   const { t, i18n } = useTranslation('listening');
-  const { state, listenAgain, stop } = useListening({ engine, loadVerseIndex });
+  const { state, listenAgain, stop } = useListening({ engine, loadVerseIndex, autoStart });
   const reducedMotion = useReducedMotion();
 
   const describe = (passage: Parameters<typeof describePassage>[0]) =>
@@ -127,8 +130,28 @@ export function ListeningScreen({
           testID="listening-failed"
         />
       );
+    case 'idle':
+      // Waiting for the button: opened by a link, the microphone stays off until it is pressed.
+      if (!autoStart) {
+        return (
+          <OutcomeView
+            title={t('ready.title')}
+            description={t('ready.description')}
+            action={{ label: t('actions.start'), onPress: listenAgain }}
+            {...close}
+            testID="listening-ready"
+          />
+        );
+      }
+      return (
+        <ListeningView
+          subscribeToLevel={engine.onLevel}
+          onStop={stop}
+          reducedMotion={reducedMotion}
+        />
+      );
     default:
-      // Idle, starting, listening, and the instant before a closed screen goes away.
+      // Starting, starting, listening, and the instant before a closed screen goes away.
       return (
         <ListeningView
           subscribeToLevel={engine.onLevel}

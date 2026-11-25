@@ -31,14 +31,62 @@ async function isTheModel(file) {
   return (await sha256Of(file)) === manifest.sha256;
 }
 
-async function download(url, destination) {
-  const response = await fetch(url, { redirect: 'follow' });
-  if (!response.ok || response.body === null) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-  const { Readable } = require('node:stream');
+/** The whole transfer may last this long, and no longer than `STALL_MS` without a byte. */
+const TOTAL_MS = 10 * 60 * 1000;
+const STALL_MS = 60 * 1000;
+
+/**
+ * Downloads `url` to `destination`: https only (also after redirects), at most `manifest.bytes`
+ * bytes (the file is deleted and the transfer stopped as soon as it is bigger, before any
+ * hashing), within a total time and without stalling.
+ */
+async function download(url, destination, { totalMs = TOTAL_MS, stallMs = STALL_MS } = {}) {
+  if (!url.startsWith('https://')) throw new Error('not an https address');
+  const { Readable, Transform } = require('node:stream');
   const { pipeline } = require('node:stream/promises');
-  await pipeline(Readable.fromWeb(response.body), fs.createWriteStream(destination));
+
+  const controller = new AbortController();
+  const total = setTimeout(() => controller.abort(new Error('took too long')), totalMs);
+  let stall;
+  const watch = () => {
+    clearTimeout(stall);
+    stall = setTimeout(() => controller.abort(new Error('transfer stalled')), stallMs);
+  };
+  try {
+    watch();
+    const response = await fetch(url, { redirect: 'follow', signal: controller.signal });
+    if (!response.ok || response.body === null) throw new Error(`HTTP ${response.status}`);
+    // A redirect may not take the download off https.
+    if (
+      typeof response.url === 'string' &&
+      response.url !== '' &&
+      !response.url.startsWith('https://')
+    ) {
+      throw new Error(`redirected to a page that is not https (${response.url})`);
+    }
+    let received = 0;
+    const counter = new Transform({
+      transform(chunk, _encoding, done) {
+        watch();
+        received += chunk.length;
+        if (received > manifest.bytes) {
+          done(new Error(`larger than the ${manifest.bytes} bytes announced`));
+        } else {
+          done(null, chunk);
+        }
+      },
+    });
+    await pipeline(Readable.fromWeb(response.body), counter, fs.createWriteStream(destination), {
+      signal: controller.signal,
+    });
+  } catch (error) {
+    fs.rmSync(destination, { force: true });
+    const reason = controller.signal.aborted ? controller.signal.reason : null;
+    throw reason instanceof Error ? reason : error;
+  } finally {
+    clearTimeout(total);
+    clearTimeout(stall);
+  }
 }
 
 /** A checked copy of the model, from the cache, a local file, or one of the addresses. */
@@ -107,3 +155,5 @@ const withVoiceModelResource = (config) =>
   });
 
 module.exports = (config) => withVoiceModelResource(withVoiceModelFile(config));
+// For the tests.
+module.exports.download = download;

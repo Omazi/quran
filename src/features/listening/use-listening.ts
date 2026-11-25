@@ -13,6 +13,11 @@ export interface ListeningDependencies {
   readonly engine: SpeechEngine;
   /** The passage search over the whole Quran (`loadQuranVerseIndex` in the app). */
   readonly loadVerseIndex: () => Promise<VerseIndex>;
+  /**
+   * Whether the microphone opens as the screen appears. False when the screen was opened by a
+   * link: it then waits for the person to press the button (`listenAgain` starts it).
+   */
+  readonly autoStart: boolean;
 }
 
 export interface Listening {
@@ -37,7 +42,11 @@ function isActive(state: ListeningState): boolean {
  *
  * The level of the voice does not pass through here: the rosette subscribes to it directly.
  */
-export function useListening({ engine, loadVerseIndex }: ListeningDependencies): Listening {
+export function useListening({
+  engine,
+  loadVerseIndex,
+  autoStart,
+}: ListeningDependencies): Listening {
   const [state, dispatch] = useReducer(transition, INITIAL_LISTENING_STATE);
   /** Each listening has its number: what a previous one says late is ignored. */
   const session = useRef(0);
@@ -105,16 +114,17 @@ export function useListening({ engine, loadVerseIndex }: ListeningDependencies):
     };
   }, [engine, loadVerseIndex]);
 
-  // One listening when the screen opens; the engine is closed when the screen goes away.
+  // One listening when the screen opens (if it was opened from inside the app); the engine is
+  // closed when the screen goes away.
   const unsubscribe = useRef<(() => void) | null>(null);
   useEffect(() => {
-    unsubscribe.current = start();
+    if (autoStart) unsubscribe.current = start();
     return () => {
       session.current += 1;
       unsubscribe.current?.();
       void engine.stop();
     };
-  }, [engine, start]);
+  }, [engine, start, autoStart]);
 
   // As soon as the screen has its answer, the microphone is closed.
   const isOver = state.status !== 'idle' && !isActive(state);
