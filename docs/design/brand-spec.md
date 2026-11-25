@@ -137,23 +137,24 @@ forte), deux revues de design du 25 novembre 2026, et le choix du propriétaire 
 images 3D (D35). Fichiers produits par `tools/app-icon/make_icon.py` (scène :
 `tools/app-icon/scene.html`).
 
-**L'idée.** Un jeune arbre du jardin au bord d'un petit bassin d'eau claire, sur une pelouse
-ronde, vu de trois quarts : lire arrose le jardin. C'est un rendu 3D, comme le jardin de l'appli
-(D35) : l'arbre est un modèle du Nature Kit de Kenney (CC0), la pelouse et le bassin sont des
-formes simples, toutes les couleurs sont unies (aucune texture de photo). Plus d'étoile : la
-rosace reste à l'écran d'écoute.
+**L'idée.** Un jeune arbre fruitier du jardin au bord d'un petit bassin d'eau claire, sur une
+pelouse ronde, vu de trois quarts : lire arrose le jardin. C'est un rendu 3D, comme le jardin de
+l'appli (D35) : l'arbre est un modèle de Quaternius (Platformer Game Kit, CC0), une couronne ronde
+et généreuse avec des fruits rouges, sur un tronc court ; la pelouse et le bassin sont des formes
+simples ; toutes les couleurs sont unies (aucune texture de photo). Lumière chaude venue d'en haut
+à gauche. Plus d'étoile : la rosace reste à l'écran d'écoute.
 
 **Couleurs, par rôle.** Mesurées sur le rendu (luminance médiane, formule WCAG).
 
-| Rôle              | Où                   | Valeur                                                                                      |
-| ----------------- | -------------------- | ------------------------------------------------------------------------------------------- |
-| Eau (`accent`)    | Fond, de haut en bas | `#CDF3F7` → `#5CC8D6` (`accent` sombre) ; apparence sombre `#0E6B78` (`accent`) → `#06333A` |
-| Eau vive          | Le bassin            | `#8FE6F1`, légèrement lumineux, bord `#2C9DAE`                                              |
-| Jardin (`growth`) | Feuillage, pelouse   | feuillage `#6ACB66`, pelouse `#A4D86E` ; tronc `#7A4A30`, terre `#7B5638`                   |
+| Rôle              | Où                   | Valeur                                                                                                          |
+| ----------------- | -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Eau (`accent`)    | Fond, de haut en bas | `#CDF3F7` → `#5CC8D6` (`accent` sombre) ; apparence sombre `#0E6B78` (`accent`) → `#06333A`                     |
+| Eau vive          | Le bassin            | `#8FE6F1`, légèrement lumineux, bord `#2C9DAE`                                                                  |
+| Jardin (`growth`) | Feuillage, pelouse   | feuillage `#5DBF5A`, fruits `#C93A48`, pelouse `#A4D86E` bordée de `#6FA94A` ; tronc `#6E4630`, terre `#5E4029` |
 
-Contrastes : l'arbre contre le haut du fond 3,2:1 ; le bassin contre la pelouse 1,7:1, tenu par
-son bord sombre ; la pelouse contre le bas du fond, à peu près 1:1 en luminance, tenue par la teinte
-et par la bande de terre. Ni or ni papier.
+Contrastes : l'arbre contre le haut du fond 3,2:1 ; le bassin contre la pelouse 1,7:1, tenu par son
+bord sombre ; le bord de la pelouse et la terre (luminance 0,04) contre le bas du fond (0,48),
+plus de 6:1. Ni or ni papier.
 
 **Couches** (`assets/expo.icon`, format Icon Composer, `app-icons.md › Layer design`) : le fond
 est le dégradé d'Icon Composer lui-même (clair et sombre). Trois groupes, du dessus vers le dessous :
@@ -163,10 +164,11 @@ matricielles). Chaque couche est entière sous celles du dessus, et coupée seul
 tient devant elle. En teinté et en transparent, l'ordre de clarté est gardé par l'opacité :
 arbre, bassin (80 %), pelouse (45 %).
 
-**Composition.** Le sujet couvre 80 % de la hauteur et 75 % de la largeur. L'arbre est à gauche
-du bassin, pas au-dessus : centré sur la pelouse ovale, sa silhouette d'une seule teinte (teinté,
-transparent, Android monochrome) se lisait comme un verre à pied. À 29 pixels, on voit un petit
-arbre et de l'eau.
+**Composition.** Le sujet couvre 80 % de la hauteur et 72 % de la largeur ; l'arbre seul, 56 % de
+la hauteur. L'arbre se tient au bord gauche de la pelouse, à côté du bassin, sa couronne penchée
+au-dehors : centré sur la pelouse ovale, sa silhouette d'une seule teinte (teinté, transparent,
+Android monochrome) se lisait comme un verre à pied. À 29 pixels, on voit un arbre et de l'eau ; les
+fruits se voient à partir de 120 pixels.
 
 **Écran de lancement** : une couleur unie, sans logo (`launching.md › Launch screens`) ;
 `splash-icon.png` existe mais n'est pas affiché.
@@ -178,8 +180,10 @@ arbre et de l'eau.
 - La parcelle vue de trois quarts, en vectoriel (deuxième version) : une puce électronique ou une
   tuile de jeu, très sombre, petite dans le carré ; un trou sur l'écran d'accueil.
 - Le même arbre et le même bassin en vectoriel plat : une illustration de banque d'images.
-- Un chêne (`tree_oak`) centré au-dessus du bassin : le verre à pied en silhouette ; un arbre en
-  blocs (`tree_detailed`) : trop proche de Minecraft ; un arbre gras (`tree_fat`) : un œuf.
+- Les arbres de Kenney (troisième version, `tree_default`) : un cône mince sur un bâton, un air de
+  jeu ; centrés au-dessus du bassin, le verre à pied en silhouette. Les arbres du pack « mixed »
+  du jardin (Quaternius stylisés) : des feuilles en texture, exclues ici. Les autres arbres
+  fruitiers de Quaternius (pommier, oranger du Crops Pack) : couronne clairsemée, tronc long.
 - Plus tôt : une goutte qui devient feuille, la rosace seule, la calligraphie de جنتك (texte
   déconseillé par `app-icons.md › Design`).
 

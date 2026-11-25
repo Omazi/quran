@@ -411,7 +411,7 @@ et la formulation de l'écran. Tant que ce n'est pas validé, l'écran garde le 
 _Changerait si_ la personne qualifiée retient une autre règle : seul `letters.ts` change, avec
 ses tests ; les totaux de contrôle sont alors à relire.
 
-## D38 — L'icône de l'appli : un jeune arbre du jardin au bord de l'eau, en rendu 3D
+## D38 — L'icône de l'appli : un jeune arbre fruitier du jardin au bord de l'eau, en rendu 3D
 
 Proposée le 25 novembre 2026 (développeur d'interface), à la demande du propriétaire, qui veut
 une icône ; jusque-là l'appli portait celle d'Expo. Troisième version du jour. Les deux premières,
@@ -421,8 +421,8 @@ quarts, comme une puce électronique très sombre (coordination). Le propriétai
 rendu à partir de modèles 3D plutôt que dessiné en code (D35) : l'icône suit ce choix. **Le choix
 final revient au propriétaire.**
 
-Ce que montre l'icône : un jeune arbre du jardin à côté d'un petit bassin d'eau claire, sur une
-pelouse ronde, vus de trois quarts, sur un fond d'eau clair. Détail, couleurs, couches,
+Ce que montre l'icône : un jeune arbre fruitier du jardin à côté d'un petit bassin d'eau claire, sur
+une pelouse ronde, vus de trois quarts, sur un fond d'eau clair. Détail, couleurs, couches,
 contrastes et pistes écartées : `design/brand-spec.md`, « Icône ».
 
 - **Fichiers** : `assets/expo.icon` (format Icon Composer : fond en dégradé clair et sombre, trois
@@ -433,11 +433,13 @@ contrastes et pistes écartées : `design/brand-spec.md`, « Icône ».
   sur la même machine.
 - **Écran de lancement** : inchangé, une couleur unie (blanc, noir en sombre), celle du fond du
   premier écran ; pas de logo (`launching.md › Launch screens`).
-- **Licences** : l'arbre est le modèle `tree_default` du Nature Kit de Kenney, CC0 (fichier de
-  licence du kit, miroir GitHub, comme pour D35) ; la pelouse et le bassin sont des formes
-  géométriques du projet ; three.js (MIT) a servi au rendu et n'est pas dans l'appli. Comme pour
-  D35 : retélécharger le kit chez Kenney avant une publication sur l'App Store
-  (`tools/app-icon/NOTICE.txt`).
+- **Licences** : l'arbre est le modèle `Tree_Fruit` du Platformer Game Kit de Quaternius, CC0
+  (miroir GitHub `trebeljahr/quaternius-showcase`, dont `LICENSES.md` donne CC0-1.0 pour ce kit,
+  vérifié par son auteur sur quaternius.com le 10 octobre 2026) ; la pelouse et le bassin sont des
+  formes géométriques du projet ; three.js (MIT) a servi au rendu et n'est pas dans l'appli. Comme
+  pour D35 : retélécharger le kit chez Quaternius avant une publication sur l'App Store
+  (`tools/app-icon/NOTICE.txt`). Une version intermédiaire utilisait un arbre de Kenney (CC0),
+  remplacé parce que trop maigre.
 - **Vérifié** : rendus à 1024, 180, 120, 60 et 29 pixels sur fond clair et sombre, version
   sombre, écrans d'accueil, masques Android (rond, carré arrondi, monochrome), aperçus teintés ;
   contrastes mesurés sur le rendu ; deux exécutions de l'outil donnent les mêmes fichiers ;
@@ -448,7 +450,8 @@ contrastes et pistes écartées : `design/brand-spec.md`, « Icône ».
   et personne n'a de Mac (D24). À regarder sur la prochaine version TestFlight.
 - **Risques connus** : l'arbre sur une île en low poly est un motif courant (jeux, applis de
   concentration) ; l'éclairage est dans l'image, alors qu'Apple préfère laisser le système le faire
-  (écart 51 de `design/SKILLS.md`) ; la pelouse et le bas du fond ont presque la même luminance.
+  (écart 51 de `design/SKILLS.md`) ; à 1024 pixels, les grappes de feuilles de la couronne font un
+  peu écailles.
 
 _Changerait si_ le propriétaire préfère une autre piste, ou si le rendu sur iPhone déçoit : les
 réglages de la scène sont en tête de `make_icon.py`, et on relance l'outil.

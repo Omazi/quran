@@ -1,14 +1,14 @@
 """Renders the app icon of Jannatuk and writes every file the app needs from it.
 
-The icon is a young tree of the app's garden standing by a small pool of bright water, on a round
-lawn: reading waters the garden (docs/design/brand-spec.md, "Icône"; docs/DECISIONS.md, D38). It
-is a 3D render, like the garden itself (D35): the tree is a model of the Kenney Nature Kit (CC0),
-the lawn and the pool are plain geometry, every colour is flat and set here.
+The icon is a young fruit tree of the app's garden standing by a small pool of bright water, on a
+round lawn: reading waters the garden (docs/design/brand-spec.md, "Icône"; docs/DECISIONS.md,
+D38). It is a 3D render, like the garden itself (D35): the tree is a Quaternius model (Platformer
+Game Kit, CC0), the lawn and the pool are plain geometry, every colour is flat and set here.
 
 usage: python3 -I tools/app-icon/make_icon.py [--previews DIR]
 
 Needs Python 3 with Pillow, numpy and Playwright (headless Chromium), and the garden render tool
-(three.js and the Kenney models), by default in /home/claude/gen/garden3d (set GARDEN3D to move
+(three.js and the CC0 model packs), by default in /home/claude/gen/garden3d (set GARDEN3D to move
 it). The scene is tools/app-icon/scene.html. The output is the same, byte for byte, from one run
 to the next on the same machine (software WebGL). Nothing here ships in the app. Writes:
   assets/expo.icon/                       Icon Composer bundle (iOS 26 layered icon)
@@ -42,15 +42,21 @@ FIELD = ("#CDF3F7", "#5CC8D6")
 FIELD_DARK = ("#0E6B78", "#06333A")  # `accent` at the top, night water below (dark appearance)
 
 SCENE = {
-    "radius": 1.3, "height": 0.16, "round": 0.1, "segs": 96,  # the lawn: a disc with a rounded edge
-    "lawn": "#A4D86E", "earth": "#7B5638",
-    "pool": 0.6, "poolAt": [0.45, 0.25], "rim": 0.05, "stone": "#2C9DAE",  # the pool and its edge
-    "water": "#8FE6F1", "waterGlow": 0.45, "lily": False,
-    # The tree stands to the left of the pool, not above it: centred over the oval lawn, a tree's
-    # one-tone silhouette (tinted, clear) read as a goblet.
-    "tree": "tree_default", "treeHeight": 1.9, "treeYaw": 0.6, "treeAt": [-0.7, 0.05],
-    "leaf": "#6ACB66", "leafDark": "#2E9447", "bark": "#7A4A30",
-    "sky": "#EAFBFF", "bounce": "#7FA36F", "fill": 1.45, "key": 1.7, "sun": [-3, 6, 4], "shadow": 0.28,
+    # The lawn: a disc with a rounded edge; a darker rim and the earth band part it from the
+    # background (lawn and background bottom have nearly the same luminance).
+    "radius": 1.25, "height": 0.16, "round": 0.1, "segs": 96,
+    "lawn": "#A4D86E", "lawnRim": "#6FA94A", "earth": "#5E4029",
+    "pool": 0.62, "poolAt": [0.45, 0.3], "rim": 0.05, "stone": "#2C9DAE",  # the pool and its edge
+    "water": "#8FE6F1", "waterGlow": 0.55,
+    # A fruit tree (Quaternius, Platformer Game Kit, CC0), its colours set here. It stands at the
+    # lawn's left edge, beside the pool, its crown leaning out: centred over the oval lawn, a
+    # tree's one-tone silhouette (tinted, clear, Android themed) reads as a goblet.
+    "tree": "quaternius-showcase/public/glb/platformer_game_pack/Tree_Fruit.glb",
+    "treeColours": {"Green": "#5DBF5A", "Wood": "#6E4630", "Red": "#C93A48"},
+    "treeHeight": 2.25, "treeYaw": 0.3, "treeAt": [-0.8, 0.12],
+    # One warm key light from the upper left, a sky fill.
+    "sky": "#EAFBFF", "bounce": "#7FA36F", "fill": 1.45, "key": 1.7, "sun": [-3, 6, 4],
+    "sunColour": "#FFF1DC", "shadow": 0.28,
 }
 VIEW = {"fov": 24, "az": 30, "el": 26, "target": [0, 0.9, 0], "dist": 8.0, "offset": [0, 0]}
 FILL = 0.80  # the subject covers this share of the canvas, in its larger dimension
@@ -76,7 +82,7 @@ def site():
     with tempfile.TemporaryDirectory() as root:
         shutil.copy(os.path.join(HERE, "scene.html"), os.path.join(root, "index.html"))
         os.symlink(os.path.join(GARDEN3D, "tool", "node_modules", "three"), os.path.join(root, "three"))
-        os.symlink(os.path.join(GARDEN3D, "packs", "kenney-shorepine", "3d", "nature"), os.path.join(root, "models"))
+        os.symlink(os.path.join(GARDEN3D, "packs"), os.path.join(root, "packs"))
         handler = functools.partial(_Quiet, directory=root)
         httpd = socketserver.ThreadingTCPServer(("127.0.0.1", 0), handler)
         httpd.daemon_threads = True

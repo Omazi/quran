@@ -3,22 +3,22 @@
 <head>
 <meta charset="utf-8">
 <!-- The app icon's scene (decision D38), rendered by tools/app-icon/make_icon.py in a headless
-     browser. three.js (MIT) and the Kenney Nature Kit models (CC0) are served from the garden
-     render tool, outside this repository; nothing here ships in the app. -->
+     browser. three.js (MIT) and the garden's CC0 models are served from the garden render tool,
+     outside this repository; nothing here ships in the app. -->
 <style>html,body{margin:0;background:transparent}canvas{display:block}</style>
 <script type="importmap">{"imports":{"three":"/three/build/three.module.js","three/addons/":"/three/examples/jsm/"}}</script>
 </head>
 <body>
 <script type="module">
-// R1: one young tree beside a small bright pool, on a round lawn. Kenney Nature Kit models (CC0),
-// colours replaced by flat ones by material name. Everything else is plain geometry.
+// One young fruit tree by a small bright pool, on a round lawn. The tree is a CC0 model of the
+// garden's packs, its colours replaced by flat ones by material name. Everything else is plain geometry.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const loader = new GLTFLoader();
 const cache = {};
 async function model(name) {
-  if (!cache[name]) cache[name] = await loader.loadAsync(`/models/${name}.glb`);
+  if (!cache[name]) cache[name] = await loader.loadAsync(`/packs/${name}`);
   return cache[name].scene.clone(true);
 }
 
@@ -30,7 +30,7 @@ function recolour(obj, colours) {
   obj.traverse((n) => {
     if (n.isMesh) {
       const name = n.material.name;
-      n.material = mat(colours[name] ?? '#ff00ff');
+      n.material = colours[name] ? mat(colours[name]) : mat('#000000', { color: n.material.color.clone() });
       n.castShadow = true;
       n.receiveShadow = true;
     }
@@ -68,10 +68,10 @@ window.build = async function (o) {
   const body = new THREE.Mesh(mound(o.radius, o.height, o.round, o.segs), mat(o.earth));
   // colour the rounded rim like the lawn, the side like earth: split by vertex height
   const g = body.geometry.toNonIndexed(); body.geometry = g;
-  const col = [], pos = g.attributes.position, lawnC = new THREE.Color(o.lawn), earthC = new THREE.Color(o.earth);
+  const col = [], pos = g.attributes.position, lawnC = new THREE.Color(o.lawn), earthC = new THREE.Color(o.earth), rimC = new THREE.Color(o.lawnRim);
   for (let i = 0; i < pos.count; i += 3) {
     const y = (pos.getY(i) + pos.getY(i + 1) + pos.getY(i + 2)) / 3;
-    const c = y > o.height - o.round * 0.55 ? lawnC : earthC;
+    const c = y > o.height - o.round * 0.12 ? lawnC : y > o.height - o.round * 0.8 ? rimC : earthC;
     for (let k = 0; k < 3; k++) col.push(c.r, c.g, c.b);
   }
   g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
@@ -86,20 +86,15 @@ window.build = async function (o) {
   const water = new THREE.Mesh(new THREE.CircleGeometry(o.pool, 48), mat(o.water, { emissive: new THREE.Color(o.water), emissiveIntensity: o.waterGlow }));
   water.rotation.x = -Math.PI / 2; water.position.set(o.poolAt[0], o.height + 0.012, o.poolAt[1]); water.receiveShadow = true;
   parts.water.add(rim, water);
-  if (o.lily) {
-    const lily = recolour(await model('lily_small'), { leafsGreen: o.leaf, leafsDark: o.leafDark });
-    sized(lily, 0.04); lily.scale.multiplyScalar(1); lily.position.set(o.poolAt[0] + o.pool * 0.35, o.height + 0.015, o.poolAt[1] + o.pool * 0.15);
-    parts.water.add(lily);
-  }
   // tree
-  const tree = recolour(await model(o.tree), { leafsGreen: o.leaf, woodBark: o.bark, leafsDark: o.leafDark });
+  const tree = recolour(await model(o.tree), o.treeColours);
   sized(tree, o.treeHeight); tree.rotation.y = o.treeYaw;
   tree.position.set(o.treeAt[0], o.height, o.treeAt[1]);
   parts.tree = tree;
   for (const k of Object.keys(parts)) scene.add(parts[k]);
   // light: one soft key light, a sky fill
   scene.add(new THREE.HemisphereLight(new THREE.Color(o.sky), new THREE.Color(o.bounce), o.fill));
-  const sun = new THREE.DirectionalLight(0xffffff, o.key);
+  const sun = new THREE.DirectionalLight(new THREE.Color(o.sunColour), o.key);
   sun.position.set(...o.sun); sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 6; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.02;
   const s = 3; Object.assign(sun.shadow.camera, { left: -s, right: s, top: s, bottom: -s, near: 0.1, far: 30 });

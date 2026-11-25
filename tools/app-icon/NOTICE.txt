@@ -9,12 +9,13 @@ They are renders, made on 25 November 2026 by tools/app-icon/make_icon.py from t
 tools/app-icon/scene.html. They are pictures: no 3D file is in the app.
 
 The tree
-  Kenney (www.kenney.nl), Nature Kit, model tree_default.glb
-  (SHA-256 562d29638c902de3c7bee465d3a53bb77117efbc392ae04ed894faf6b5dc691d).
-  Licence: CC0 1.0 ("Creative Commons Zero"), as written in the kit's LICENSE.txt.
-  File used: the third-party GitHub mirror shorepine/kenney, commit
-  3694c6879e487c108f55677be7dd2ca75b07cc3b (the same source as the garden pictures, see
-  assets/images/garden/NOTICE.txt). Its colours were replaced by flat ones in the scene.
+  Quaternius (quaternius.com), Platformer Game Kit, model Tree_Fruit.glb
+  (SHA-256 805fd79f8e50ae40b9a9faf7449c4f1fdb93ee29b1d78d4ceb130360adb5034c).
+  Licence: CC0 1.0, as given for this kit by the mirror's LICENSES.md ("Platformer Game Kit |
+  CC0-1.0 | https://quaternius.com/packs/ultimateplatformer.html", checked by the mirror's author
+  against quaternius.com on 2026-10-10). The mirror's MIT licence covers its own code only.
+  File used: the third-party GitHub mirror trebeljahr/quaternius-showcase, commit
+  0128ca510d653bb04d6d1e4885bd8890b5050b4f. Its colours were replaced by flat ones in the scene.
 
 Not from a pack
   The lawn, its earth band, the pool and its edge are plain geometry made by the scene; the
@@ -24,7 +25,7 @@ Tools used to make them, not shipped in the app: three.js 0.187.0 (MIT), run in 
 Chromium through Playwright (Apache-2.0), Python with Pillow (MIT-CMU) and numpy (BSD-3-Clause).
 
 To do before a store release (as decision D35 asks for the garden pictures)
-  Download the Nature Kit again from kenney.nl, keep the proof of its licence, and render the
-  icon again from that file.
+  Download the Platformer Game Kit again from quaternius.com, keep the proof of its licence, and
+  render the icon again from that file.
 
 CC0 asks for no credit; this notice is kept for provenance, not because it is required.
