@@ -40,7 +40,8 @@
     "members_many": "{{count}} عضوًا",
     "members_other": "{{count}} عضو",
     "noGroups": "لا مجموعات بعد",
-    "createGroup": "إنشاء مجموعة"
+    "createGroup": "إنشاء مجموعة",
+    "seeAll": "عرض الكل"
   },
   "card": {
     "hizb_zero": "{{count}} حزب",
@@ -60,7 +61,14 @@
     "neverWatered": "لم تُسقَ بعد",
     "hidden": "حديقة غير مشارَكة",
     "label": "{{name}}، {{details}}",
-    "hiddenLabel": "{{name}}، حديقة غير مشارَكة"
+    "hiddenLabel": "{{name}}، حديقة غير مشارَكة",
+    "wateredSince_zero": "تُسقى منذ {{count}} يوم",
+    "wateredSince_one": "تُسقى منذ يوم واحد",
+    "wateredSince_two": "تُسقى منذ يومين",
+    "wateredSince_few": "تُسقى منذ {{count}} أيام",
+    "wateredSince_many": "تُسقى منذ {{count}} يومًا",
+    "wateredSince_other": "تُسقى منذ {{count}} يوم",
+    "details": "{{hizb}}، {{water}}"
   },
   "friend": {
     "gardenTitle": "حديقة {{name}}",
@@ -98,7 +106,18 @@
     "cancel": "إلغاء",
     "notFriend": "{{name}} ليس من أحبّتك.",
     "unavailableTitle": "لا أحد لعرضه",
-    "unavailableText": "هذا الحساب غير متاح."
+    "unavailableText": "هذا الحساب غير متاح.",
+    "hizbOutOf_zero": "{{count}} من 60 حزبًا",
+    "hizbOutOf_one": "{{count}} من 60 حزبًا",
+    "hizbOutOf_two": "{{count}} من 60 حزبًا",
+    "hizbOutOf_few": "{{count}} من 60 حزبًا",
+    "hizbOutOf_many": "{{count}} من 60 حزبًا",
+    "hizbOutOf_other": "{{count}} من 60 حزبًا",
+    "hizbProgress": "الأحزاب المقروءة",
+    "read": "اقرأ واسقِ",
+    "readHint": "يفتح المصحف حيث توقفت.",
+    "options": "خيارات أخرى",
+    "encourageShort": "تشجيع"
   },
   "add": {
     "title": "إضافة حبيب",
@@ -165,7 +184,8 @@
     "addNote": "ينضمّ أحبّتك دون أن يحتاجوا إلى القبول، ويمكنهم المغادرة متى شاؤوا. كل عضو يرى أسماء الجميع وصفحاتهم.",
     "noOneToAdd": "كل أحبّتك في هذه المجموعة.",
     "notFoundTitle": "المجموعة غير موجودة",
-    "notFoundText": "لست عضوًا في هذه المجموعة، أو لم تعد كذلك."
+    "notFoundText": "لست عضوًا في هذه المجموعة، أو لم تعد كذلك.",
+    "addShort": "إضافة"
   },
   "newGroup": {
     "title": "مجموعة جديدة",

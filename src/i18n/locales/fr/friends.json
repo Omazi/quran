@@ -36,7 +36,8 @@
     "members_one": "{{count}} membre",
     "members_other": "{{count}} membres",
     "noGroups": "Aucun groupe pour l’instant",
-    "createGroup": "Créer un groupe"
+    "createGroup": "Créer un groupe",
+    "seeAll": "Tout voir"
   },
   "card": {
     "hizb_one": "{{count}} hizb",
@@ -48,7 +49,10 @@
     "neverWatered": "pas encore arrosé",
     "hidden": "Jardin non partagé",
     "label": "{{name}}, {{details}}",
-    "hiddenLabel": "{{name}}, jardin non partagé"
+    "hiddenLabel": "{{name}}, jardin non partagé",
+    "wateredSince_one": "arrosé depuis {{count}} jour",
+    "wateredSince_other": "arrosé depuis {{count}} jours",
+    "details": "{{hizb}}, {{water}}"
   },
   "friend": {
     "gardenTitle": "Le jardin de {{name}}",
@@ -82,7 +86,14 @@
     "cancel": "Annuler",
     "notFriend": "{{name}} n’est pas dans tes proches.",
     "unavailableTitle": "Personne à afficher",
-    "unavailableText": "Ce compte n’est pas disponible."
+    "unavailableText": "Ce compte n’est pas disponible.",
+    "hizbOutOf_one": "{{count}} hizb sur 60",
+    "hizbOutOf_other": "{{count}} hizb sur 60",
+    "hizbProgress": "Hizb lus",
+    "read": "Lire et arroser",
+    "readHint": "Ouvre le Coran où tu t’es arrêté.",
+    "options": "Plus d’options",
+    "encourageShort": "Encourager"
   },
   "add": {
     "title": "Ajouter un proche",
@@ -145,7 +156,8 @@
     "addNote": "Tes proches entrent sans avoir à accepter, et peuvent partir quand ils le veulent. Chaque membre voit les noms et les pages de tous.",
     "noOneToAdd": "Tous tes proches sont déjà dans ce groupe.",
     "notFoundTitle": "Groupe introuvable",
-    "notFoundText": "Tu ne fais pas, ou plus, partie de ce groupe."
+    "notFoundText": "Tu ne fais pas, ou plus, partie de ce groupe.",
+    "addShort": "Ajouter"
   },
   "newGroup": {
     "title": "Nouveau groupe",

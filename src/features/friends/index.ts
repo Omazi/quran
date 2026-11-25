@@ -11,6 +11,8 @@ export {
   GroupPage,
   NewGroupPage,
   ScanInvitePage,
+  type FriendOptionsItem,
+  type FriendOptionsMenu,
 } from './friends-pages';
 export {
   SocialProvider,
