@@ -104,9 +104,9 @@ mode enfants.
 - Direction visuelle à choisir (trois directions dans `design/brand-spec.md`).
 - Jardins : télécharger les packs à la source officielle ; choisir sept jardins parmi les
   huit styles retenus et leur ordre (quel jardin pour quel niveau).
-- Premier lancement : 16 pages sans « Passer », ou 10 pages selon les règles d'Apple.
-- Design du premier lancement à retravailler (pages « lecture à voix haute » et
-  « rappels » non validées).
+- Premier lancement : 16 pages sans « Passer », ou 10 pages selon les règles d'Apple
+  (la page « lecture à voix haute » est dessinée depuis le 25 novembre 2026).
+- Design du premier lancement : page « rappels » non validée.
 - Présentation du texte du Coran (police, mise en page) à revoir avec le propriétaire.
 
 - Nom de l'application : **Jannatuk** (D31). Reste à le faire accepter par Apple (création

@@ -52,6 +52,11 @@ export interface RosetteProps {
   readonly subscribeToLevel: (listener: (level: number) => void) => Unsubscribe;
   /** No petal leaves and nothing grows; the voice only lights the lines (D29). */
   readonly reducedMotion: boolean;
+  /**
+   * Where the star is, when it is not where the listening screen puts it (the centre and radius,
+   * in points of the box above). The first launch shows the rosette in a smaller box.
+   */
+  readonly frame?: { readonly cx: number; readonly cy: number; readonly radius: number };
   readonly testID?: string;
 }
 
@@ -64,7 +69,14 @@ export interface RosetteProps {
  * which the system does without redrawing them; the petals are the only paths redrawn at each
  * frame. Decorative: screen readers never reach it, the screen announces its state instead.
  */
-export function Rosette({ width, height, subscribeToLevel, reducedMotion, testID }: RosetteProps) {
+export function Rosette({
+  width,
+  height,
+  subscribeToLevel,
+  reducedMotion,
+  frame,
+  testID,
+}: RosetteProps) {
   const colors = useRosetteColors();
   const [initialMotion] = useState(createRosetteMotion);
   const motion = useSharedValue<RosetteMotion>(initialMotion);
@@ -97,7 +109,7 @@ export function Rosette({ width, height, subscribeToLevel, reducedMotion, testID
   });
 
   if (width <= 0 || height <= 0) return null;
-  const { cx, cy, radius } = rosetteFrame(width, height);
+  const { cx, cy, radius } = frame ?? rosetteFrame(width, height);
   const side = 2 * (radius + GLOW_ROOM);
   // Centred, so the same from either edge: `start` keeps it right in both writing directions.
   const box = { start: cx - side / 2, top: cy - side / 2, width: side, height: side };

@@ -83,11 +83,13 @@ export interface OnboardingPage {
 }
 
 /**
- * The features that exist in the app: recognising a passage by listening (the Proches and the
- * listening lots) and friends. Reading aloud followed word by word is still a trial screen that no
- * button opens: its page stays written here and appears the day the feature is added to this set.
+ * The features the introduction presents: recognising a passage by listening, following a
+ * recitation word by word (shown by owner's decision of 25 November 2026, its demonstration
+ * being the real page and bar of the following) and friends. A feature taken out of this set takes
+ * its page out of the flow: an introduction must not promise what the app cannot do.
  */
 export const SHIPPED_FEATURES: ReadonlySet<OnboardingFeature> = new Set<OnboardingFeature>([
+  'voice',
   'recognition',
   'friends',
 ]);
@@ -197,8 +199,8 @@ const EVERY_PAGE: Readonly<Record<OnboardingLength, readonly OnboardingPage[]>> 
     PAGE.dying,
     PAGE.dead,
     PAGE.revival,
-    PAGE.voice,
     PAGE.recognition,
+    PAGE.voice,
     PAGE.friends,
     PAGE.goal,
     PAGE.reminders,
@@ -210,8 +212,8 @@ const EVERY_PAGE: Readonly<Record<OnboardingLength, readonly OnboardingPage[]>> 
     PAGE.thirsty,
     PAGE.dead,
     PAGE.revival,
-    PAGE.voice,
     PAGE.recognition,
+    PAGE.voice,
     PAGE.goal,
     PAGE.reminders,
   ],
@@ -231,13 +233,14 @@ export function onboardingPages(
 }
 
 /**
- * The flow the owner saw in the prototype: 16 pages once every feature has shipped, 15 today.
+ * The flow the owner saw in the prototype, with the following of the recitation after the
+ * listening: 16 pages.
  * Longer than Apple advises (onboarding.md: a brief flow; page-controls.md: about 10 pages):
  * deviation 3 of docs/design/SKILLS.md, to be confirmed.
  */
 export const ONBOARDING_PAGES_FULL: readonly OnboardingPage[] = onboardingPages('full');
 
-/** The flow that fits Apple's advice: 10 pages once every feature has shipped, 9 today. */
+/** The flow that fits Apple's advice: 10 pages. */
 export const ONBOARDING_PAGES_SHORT: readonly OnboardingPage[] = onboardingPages('short');
 
 /** The one constant that chooses the flow: `full` or `short`. */

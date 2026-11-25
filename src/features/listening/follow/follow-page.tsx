@@ -22,6 +22,8 @@ export interface FollowPageProps {
   readonly startIndex: number;
   /** The inner width of the page, to size its text. */
   readonly width: number;
+  /** The size of the text in points, when it is not the reader's share of the width. */
+  readonly textSize?: number;
   readonly testID?: string;
 }
 
@@ -41,13 +43,20 @@ function lookOf(index: number, follow: FollowState, startIndex: number): WordLoo
  * still to come are faint (full ink when the person asks for more contrast). The
  * text is exactly the data layer's; nothing is added to it.
  */
-export function FollowPage({ lines, follow, startIndex, width, testID }: FollowPageProps) {
+export function FollowPage({
+  lines,
+  follow,
+  startIndex,
+  width,
+  textSize,
+  testID,
+}: FollowPageProps) {
   const colors = useColors();
   const palette = useColorValues();
   const isHighContrast = useHighContrast();
   // The Hafs font's own line height is 1.76 em; 1.9 keeps the marks of two lines apart, as the
   // reader does.
-  const fontSize = Math.round(width * listeningShape.followTextOfWidth);
+  const fontSize = textSize ?? Math.round(width * listeningShape.followTextOfWidth);
   const lineHeight = Math.round(fontSize * listeningShape.followLineHeightEm);
   const upcomingInk = useUpcomingInk();
   const upcomingOpacity = isHighContrast ? 1 : listeningOpacity.upcomingMarks;

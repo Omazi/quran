@@ -68,15 +68,17 @@ export const DAILY_GOAL_RANGE = { min: 1, max: 60 } as const;
 export const DEFAULT_DAILY_GOAL_PAGES = 5;
 
 /**
- * The reminders proposed at the first launch: the two about the person's own reading. The Friday
- * reminder is off until the person switches it on, because its notification names a surah on a
- * lock screen others can see (notifications.md › Best practices).
+ * The reminders proposed at the first launch: the two about the person's own reading, and the
+ * Friday Al-Kahf one. The Friday reminder was off until the person switched it on, because its
+ * notification names a surah on a lock screen others can see (notifications.md › Best practices);
+ * the owner decided on 25 November 2026 that it is on (deviation 23 changed). It is the default
+ * of new installs only: what a person has already saved is read back as it was.
  */
 export const DEFAULT_REMINDERS: ReminderSettings = Object.freeze({
   dailyEnabled: true,
   dailyTime: Object.freeze({ hour: 20, minute: 30 }),
   thirstyGardenEnabled: true,
-  fridayKahfEnabled: false,
+  fridayKahfEnabled: true,
   fridayTime: Object.freeze({ hour: 9, minute: 0 }),
   quietHours: null,
 });

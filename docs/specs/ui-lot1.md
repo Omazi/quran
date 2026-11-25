@@ -120,14 +120,18 @@ texte, ciel, couleur des mots, taille de la scène }`. Changer leur nombre ou le
    └──────────────────────┘
    ```
 
-   - Pages (15 aujourd'hui) : terre nue (avec l'indication « Glisse ») ; hizb 8, 20, 30, 40,
+   - Pages (16 aujourd'hui) : terre nue (avec l'indication « Glisse ») ; hizb 8, 20, 30, 40,
      60 (jardin complet, qui ne sèche plus) ; 3, 6, 10 et 14 jours sans lecture, sur un jardin
      encore en chemin (l'eau s'en va d'abord, puis les feuilles, puis les éléments) ; « une page
      suffit pour le faire revivre » ; « d'où vient ce passage ? » (démonstration de l'écoute :
-     le micro doré écoute, puis la carte du passage Al-Kahf 18:10 monte, texte tiré des
-     données) ; avec tes proches (Mustapha, Sarah, Taghread, D25) ; ton objectif du jour ; tes
-     rappels. La page « lecture à voix haute » reste écrite et apparaîtra quand la fonction
-     existera (`SHIPPED_FEATURES`).
+     la vraie rosace de l'écoute (D27, D29) sur son papier, qui bat avec une voix simulée, puis
+     la carte « Passage reconnu » Al-Kahf 18:10 monte sous la rosace réduite, texte tiré des
+     données) ; « lecture à voix haute » (la page du lecteur et la barre verte de `voix.png`,
+     vraies pièces de `features/listening/follow` : les mots récités passent à l'encre, le mot
+     courant sur l'or, un mot oublié en rouge sur rose avec « Relis ce mot » ; mots tirés des
+     données ; « réduire les animations » : état final fixe) ; avec tes proches (Mustapha, Sarah, Taghread, D25) ; ton objectif du jour ; tes
+     rappels. Les pages des fonctions dépendent de `SHIPPED_FEATURES` : retirer une fonction de
+     l'ensemble retire sa page.
    - _Objectif du jour_ : sous la terre nue, en petit ; liste groupée du système posée sur le
      ciel, ligne « Pages par jour » avec sa valeur et le sélecteur − / +
      (`steppers.md › Best practices`), de 1 à 60, valeur par défaut déjà posée. Pas de boutons
@@ -139,12 +143,12 @@ texte, ciel, couleur des mots, taille de la scène }`. Changer leur nombre ou le
      avec les mots que les rappels envoient vraiment (`notifications.json`, et non ceux du
      prototype) ;
      puis la liste groupée du système posée sur le ciel — rappel du jour et son heure,
-     « mon jardin a soif », vendredi : sourate Al-Kahf (désactivé par défaut). Un seul bouton,
+     « mon jardin a soif », vendredi : sourate Al-Kahf (activé par défaut depuis le 25 novembre 2026, écart 23). Un seul bouton,
      « Créer mon jardin », à la place des points ; la demande d'autorisation du système le suit
      si un rappel est activé, annoncée par la phrase placée juste avant lui
      (`privacy.md › Pre-alert screens, windows, or views`, écart 120). Les valeurs choisies sont
      celles que le module des rappels programme.
-   - **Points à trancher par le propriétaire**, inscrits au registre : 15 pages et pas de
+   - **Points à trancher par le propriétaire**, inscrits au registre : 16 pages et pas de
      « Passer » (écart 3) ; le libellé du bouton (écart 120) ; le pageur et les points dessinés
      (écart 118). Une liste courte est prête dans les données (`ONBOARDING_PAGES_SHORT`).
 

@@ -26,9 +26,10 @@ import type { OnboardingPageProps } from './pages/page-props';
 import { RemindersPage } from './pages/reminders-page';
 import { StoryPage } from './pages/story-page';
 import { VoicePage } from './pages/voice-page';
-import { renderPlaceholderScene, PlaceholderScene, type SceneRenderer } from './scene';
+import { renderPlaceholderScene, type SceneRenderer } from './scene';
 import { FriendsScene } from './scenes/friends-scene';
 import { RecognitionScene } from './scenes/recognition-scene';
+import { VoiceScene } from './scenes/voice-scene';
 import { StoryBackdrop } from './story-backdrop';
 import { StoryStage, type StageLayerRenderer } from './story-stage';
 import type { OnboardingActions, OnboardingModel } from './use-onboarding';
@@ -133,7 +134,7 @@ function FeatureScene({
     case 'friends':
       return <FriendsScene renderScene={renderScene} />;
     case 'voice':
-      return <PlaceholderScene scene={{ kind: 'feature', feature }} />;
+      return <VoiceScene isShown={isShown} />;
   }
 }
 

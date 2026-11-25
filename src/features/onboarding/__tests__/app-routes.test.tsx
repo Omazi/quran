@@ -65,7 +65,7 @@ jest.mock('expo-splash-screen', () => ({
 }));
 
 const WINDOW = { x: 0, y: 0, width: 390, height: 700 };
-const LAST_PAGE = 14;
+const LAST_PAGE = 15;
 
 /** The first launch loads every route of the app: it needs more than Jest's five seconds. */
 jest.setTimeout(30_000);
@@ -232,7 +232,7 @@ describe('first launch', () => {
     await openApp();
     await layOutIntroduction();
     expect(screen.getByTestId('onboarding-pager-indicator')).toHaveAccessibilityValue({
-      text: 'Page 1 sur 15',
+      text: 'Page 1 sur 16',
     });
     // The garden of each page, as the person turns them: only the one shown is described.
     const labels: string[] = [];
@@ -253,11 +253,11 @@ describe('first launch', () => {
     expect(labels[8]).toMatch(/^Jardin mourant, 40 hizb sur 60/);
     expect(labels[9]).toMatch(/^Terre morte, 40 hizb sur 60 acquis/);
     await swipeToPage(1);
-    // Listening and friends are presented; reading aloud, which the app has not yet, is not.
+    // Listening, the following of the recitation and friends are presented, in that order.
     const hidden = { includeHiddenElements: true };
     expect(screen.getByRole('image', { name: /^Passage reconnu/, ...hidden })).toBeTruthy();
+    expect(screen.getByRole('image', { name: /^Lecture à voix haute/, ...hidden })).toBeTruthy();
     expect(screen.getByRole('image', { name: /^Jardins de tes proches/, ...hidden })).toBeTruthy();
-    expect(screen.queryByRole('image', { name: /voix haute/, ...hidden })).toBeNull();
   });
 
   it('gives no way out of the introduction but its last page: no header, no back swipe', async () => {

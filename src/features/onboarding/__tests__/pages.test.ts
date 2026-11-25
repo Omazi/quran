@@ -21,7 +21,7 @@ function ids(pages: readonly OnboardingPage[]): string[] {
 }
 
 describe('pages of the first-launch flow', () => {
-  it('tell, in the full flow, the story of the validated prototype: growth to completion, drought, revival, then listening and friends', () => {
+  it('tell, in the full flow, the story of the validated prototype: growth to completion, drought, revival, then listening, the following of the recitation and friends', () => {
     expect(ids(ONBOARDING_PAGES_FULL)).toEqual([
       'bareEarth',
       'hizb8',
@@ -35,6 +35,7 @@ describe('pages of the first-launch flow', () => {
       'dead',
       'revival',
       'recognition',
+      'voice',
       'friends',
       'goal',
       'reminders',
@@ -50,6 +51,7 @@ describe('pages of the first-launch flow', () => {
       'dead',
       'revival',
       'recognition',
+      'voice',
       'goal',
       'reminders',
     ]);
@@ -117,6 +119,7 @@ describe('pages of the first-launch flow', () => {
       { hizbCompleted: 40, daysWithoutReading: 14, readsToday: true },
       null,
       null,
+      null,
       // The goal page shows the bare earth again, small: the garden the person is about to start.
       { hizbCompleted: 0, daysWithoutReading: 0, readsToday: false },
       null,
@@ -169,8 +172,10 @@ describe('look of each page, as the prototype paints it', () => {
 
   it('writes in light words on the deep green, in earth tones on dust, in the garden tones elsewhere', () => {
     expect(byId('recognition').words).toBe('deep');
+    // The following of the recitation sits on the warm sky, on the paper of the reader.
+    expect(byId('voice').backdrop).toEqual({});
     for (const id of ['thirsty', 'wilting', 'dying', 'dead']) expect(byId(id).words).toBe('dust');
-    for (const id of ['bareEarth', 'hizb60', 'revival', 'friends', 'goal', 'reminders']) {
+    for (const id of ['bareEarth', 'hizb60', 'revival', 'voice', 'friends', 'goal', 'reminders']) {
       expect(byId(id).words).toBe('garden');
     }
   });
@@ -186,14 +191,21 @@ describe('look of each page, as the prototype paints it', () => {
 });
 
 describe('pages about features', () => {
-  it('show listening and friends, which the app has, and leave out reading aloud, which it has not yet', () => {
-    expect([...SHIPPED_FEATURES].sort()).toEqual(['friends', 'recognition']);
+  it('present listening, the following of the recitation and friends', () => {
+    expect([...SHIPPED_FEATURES].sort()).toEqual(['friends', 'recognition', 'voice']);
     for (const pages of [ONBOARDING_PAGES_FULL, ONBOARDING_PAGES_SHORT]) {
-      expect(pages.filter((page) => page.feature === 'voice')).toEqual([]);
+      expect(pages.filter((page) => page.feature === 'voice')).toHaveLength(1);
     }
   });
 
-  it('are still written, and come back in their place when their feature ships', () => {
+  it('put the following of the recitation right after the listening, in both flows', () => {
+    for (const pages of [ONBOARDING_PAGES_FULL, ONBOARDING_PAGES_SHORT]) {
+      const order = ids(pages);
+      expect(order.indexOf('voice')).toBe(order.indexOf('recognition') + 1);
+    }
+  });
+
+  it('are all still written, and a page leaves the flow when its feature is taken out', () => {
     expect(ids(onboardingPages('full', EVERY_FEATURE))).toEqual([
       'bareEarth',
       'hizb8',
@@ -206,8 +218,8 @@ describe('pages about features', () => {
       'dying',
       'dead',
       'revival',
-      'voice',
       'recognition',
+      'voice',
       'friends',
       'goal',
       'reminders',
@@ -219,8 +231,8 @@ describe('pages about features', () => {
       'thirsty',
       'dead',
       'revival',
-      'voice',
       'recognition',
+      'voice',
       'goal',
       'reminders',
     ]);

@@ -1,23 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
-  withRepeat,
-  withSequence,
   withTiming,
-  type SharedValue,
 } from 'react-native-reanimated';
-import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
+import { Rosette } from '@/features/listening/rosette/rosette';
+import { StillRosette } from '@/features/listening/rosette/still-rosette';
 import {
   AppText,
   ArabicDisplayText,
-  Icon,
   QuranText,
   radius,
   spacing,
@@ -25,15 +21,18 @@ import {
   storyMotion,
   useColors,
   useElevation,
-  useColorValues,
   useReducedMotion,
 } from '@/ui';
 
+import { useDemoVoice } from './use-demo-voice';
 import { useSamplePassage, type SamplePassageSources } from './use-sample-passage';
 
-/** The order the rays beat in: each one a little later than the one before, as the prototype. */
-const RAY_DELAY_STEP = 0.37;
-const MICROPHONE = { ios: 'mic.fill', android: 'mic' } as const;
+const PANEL = {
+  height: storyLayout.rosettePanelHeight,
+  foundHeight: storyLayout.rosettePanelFoundHeight,
+} as const;
+/** The rosette is centred in the tall panel; once found it rises to the middle of the short one. */
+const FOUND_LIFT = (PANEL.height - PANEL.foundHeight) / 2;
 
 export interface RecognitionSceneProps {
   /** True while the listening page is shown: the demonstration runs and the verse is loaded. */
@@ -43,62 +42,76 @@ export interface RecognitionSceneProps {
 }
 
 /**
- * The picture of the listening page, as the validated mockup and prototype draw it (shazam.png,
- * the prototype's `.shz`): a golden microphone that listens, rays beating around it, rings
- * spreading, then the card of the passage found, Al-Kahf 18:10, rising over it; then again. It
- * shows the feature rather than describing it (onboarding.md › Best practices: teach through
- * interactivity).
+ * The picture of the listening page: the app's real listening screen (D27, D29), the validated
+ * rosette on the paper of the mushaf, breathing with a voice as it does when the app listens;
+ * then the rosette shrinks, as it does on a result, and the card of the passage found, Al-Kahf
+ * 18:10, rises under it (shazam.png's card); then again. It shows the feature rather than
+ * describing it (onboarding.md › Best practices: teach through interactivity), and shows the
+ * screen the person will meet.
  *
  * The motion is a demonstration and stays optional (motion.md › Best practices): with "reduce
- * motion" the card is shown found, at rest. It runs only while its page is shown. The verse is
- * the data layer's text, in the Quran font (D19). Screen readers hear one description.
+ * motion" the rosette is the still one of a result and the card is shown found, at rest. It runs
+ * only while its page is shown. The verse is the data layer's text, in the Quran font (D19).
+ * Screen readers hear one description.
  */
 export function RecognitionScene({ isShown, sources }: RecognitionSceneProps) {
   const { t, i18n } = useTranslation('onboarding');
+  const colors = useColors();
   const isMotionReduced = useReducedMotion();
   const passage = useSamplePassage(isShown, sources);
+  const { width: windowWidth } = useWindowDimensions();
+  const panelWidth = windowWidth - 2 * spacing.md;
+  // The demonstration alternates listening and found while the page is shown; resting, and with
+  // reduced motion, the passage is found.
+  const [isListening, setIsListening] = useState(false);
+  const isRunning = isShown && !isMotionReduced;
+  const isFound = !isRunning || !isListening;
   const found = useSharedValue(1);
-  const beat = useSharedValue(0);
+  const subscribeToLevel = useDemoVoice(isRunning && isListening);
 
   useEffect(() => {
-    if (!isShown || isMotionReduced) {
-      cancelAnimation(found);
-      cancelAnimation(beat);
-      found.value = 1;
+    if (!isRunning) return undefined;
+    let timer: ReturnType<typeof setTimeout>;
+    const listen = () => {
+      setIsListening(true);
+      timer = setTimeout(() => {
+        setIsListening(false);
+        timer = setTimeout(listen, storyMotion.loopMs - storyMotion.listenMs);
+      }, storyMotion.listenMs);
+    };
+    listen();
+    return () => clearTimeout(timer);
+  }, [isRunning]);
+
+  useEffect(() => {
+    cancelAnimation(found);
+    const target = isFound ? 1 : 0;
+    if (isMotionReduced) {
+      found.value = target;
       return;
     }
-    const ease = { duration: storyMotion.foundMs, easing: Easing.bezier(0.3, 0.8, 0.2, 1) };
-    found.value = 0;
-    found.value = withRepeat(
-      withSequence(
-        withDelay(storyMotion.listenMs, withTiming(1, ease)),
-        withDelay(
-          storyMotion.loopMs - storyMotion.listenMs - 2 * storyMotion.foundMs,
-          withTiming(0, ease),
-        ),
-      ),
-      -1,
-    );
-    beat.value = 0;
-    beat.value = withRepeat(
-      withTiming(1, { duration: storyMotion.ringMs, easing: Easing.linear }),
-      -1,
-    );
-  }, [isShown, isMotionReduced, found, beat]);
+    found.value = withTiming(target, {
+      duration: storyMotion.foundMs,
+      easing: Easing.bezier(0.3, 0.8, 0.2, 1),
+    });
+  }, [isFound, isMotionReduced, found]);
 
   // In Arabic the surah is named in Arabic, as the listening screen names it.
   const surah = i18n.language === 'ar' ? passage.surahArabic : passage.surahName;
   const where = t('recognition.where', { surah, verse: passage.verse });
-  const orbMoves = useAnimatedStyle(() => ({
+  const panelHeight = useAnimatedStyle(() => ({
+    height: PANEL.height - (PANEL.height - PANEL.foundHeight) * found.value,
+  }));
+  const rosetteMoves = useAnimatedStyle(() => ({
     transform: [
-      { translateY: -storyLayout.orbFoundLift * found.value },
-      { scale: 1 - (1 - storyLayout.orbFoundScale) * found.value },
+      { translateY: -FOUND_LIFT * found.value },
+      { scale: 1 - (1 - storyLayout.rosetteFoundScale) * found.value },
     ],
   }));
   const cardMoves = useAnimatedStyle(() => ({
     opacity: found.value,
     transform: [
-      { translateY: storyLayout.foundCardOverlap * 0.75 * (1 - found.value) },
+      { translateY: storyLayout.foundCardRise * (1 - found.value) },
       { scale: 0.96 + 0.04 * found.value },
     ],
   }));
@@ -111,11 +124,29 @@ export function RecognitionScene({ isShown, sources }: RecognitionSceneProps) {
       accessibilityLabel={`${t('scenes.recognition')}, ${where}`}
       testID="onboarding-recognition-scene"
     >
-      <Animated.View style={[styles.orb, orbMoves]}>
-        <Rays beat={beat} found={found} />
-        <Ring beat={beat} offset={0} />
-        <Ring beat={beat} offset={0.5} />
-        <Microphone />
+      <Animated.View
+        style={[styles.panel, { backgroundColor: colors.paper }, panelHeight]}
+        testID="onboarding-listening-panel"
+      >
+        <Animated.View style={[styles.rosette, { width: panelWidth }, rosetteMoves]}>
+          {isMotionReduced ? (
+            <View style={styles.still}>
+              <StillRosette radius={storyLayout.rosetteRadius} />
+            </View>
+          ) : (
+            <Rosette
+              width={panelWidth}
+              height={PANEL.height}
+              frame={{
+                cx: panelWidth / 2,
+                cy: PANEL.height / 2,
+                radius: storyLayout.rosetteRadius,
+              }}
+              subscribeToLevel={subscribeToLevel}
+              reducedMotion={false}
+            />
+          )}
+        </Animated.View>
       </Animated.View>
       <Animated.View style={[styles.cardSlot, cardMoves]}>
         <FoundCard
@@ -128,81 +159,6 @@ export function RecognitionScene({ isShown, sources }: RecognitionSceneProps) {
       </Animated.View>
     </View>
   );
-}
-
-/** The golden disc of the microphone: a radial gold, the system's microphone symbol on it. */
-function Microphone() {
-  const palette = useColorValues();
-  const shadow = useElevation('floating');
-  return (
-    <View style={[styles.microphone, { boxShadow: shadow }]}>
-      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-        <Defs>
-          <RadialGradient id="onboarding-orb" cx="35%" cy="30%" r="75%">
-            <Stop offset="0" stopColor={palette.orbLight} />
-            <Stop offset="0.58" stopColor={palette.orbMiddle} />
-            <Stop offset="1" stopColor={palette.orbDeep} />
-          </RadialGradient>
-        </Defs>
-        <Rect width="100%" height="100%" fill="url(#onboarding-orb)" />
-      </Svg>
-      <Icon symbol={MICROPHONE} textStyle="largeTitle" color="onOrb" />
-    </View>
-  );
-}
-
-function Rays({ beat, found }: { beat: SharedValue<number>; found: SharedValue<number> }) {
-  return (
-    <View style={StyleSheet.absoluteFill}>
-      {Array.from({ length: storyLayout.orbRayCount }, (_, ray) => (
-        <Ray key={ray} ray={ray} beat={beat} found={found} />
-      ))}
-    </View>
-  );
-}
-
-function Ray({
-  ray,
-  beat,
-  found,
-}: {
-  ray: number;
-  beat: SharedValue<number>;
-  found: SharedValue<number>;
-}) {
-  const { orbRays } = useColorValues();
-  const angle = (360 / storyLayout.orbRayCount) * ray;
-  const delay = (ray * RAY_DELAY_STEP) % 1;
-  const span = storyLayout.orbRayLongest - storyLayout.orbRayShortest;
-  // The rays beat once a second; the ring clock turns every 2.4 s.
-  const cycles = storyMotion.ringMs / storyMotion.rayBeatMs;
-  const grow = useAnimatedStyle(() => {
-    const phase = (beat.value * cycles + delay) % 1;
-    const pulse = 0.5 - 0.5 * Math.cos(2 * Math.PI * phase);
-    const listening = storyLayout.orbRayShortest + span * pulse;
-    // Once the passage is found, the rays rest at their shortest.
-    const height = listening + (storyLayout.orbRayShortest - listening) * found.value;
-    return { height, opacity: 0.45 + 0.55 * pulse * (1 - found.value) };
-  });
-  return (
-    <View
-      style={[
-        styles.raySlot,
-        { transform: [{ rotate: `${angle}deg` }, { translateY: -storyLayout.orbRayRadius }] },
-      ]}
-    >
-      <Animated.View style={[styles.ray, { backgroundColor: orbRays }, grow]} />
-    </View>
-  );
-}
-
-function Ring({ beat, offset }: { beat: SharedValue<number>; offset: number }) {
-  const { orbRays } = useColorValues();
-  const spread = useAnimatedStyle(() => {
-    const progress = (beat.value + offset) % 1;
-    return { opacity: 0.9 * (1 - progress), transform: [{ scale: 0.6 + 0.65 * progress }] };
-  });
-  return <Animated.View style={[styles.ring, { borderColor: orbRays }, spread]} />;
 }
 
 interface FoundCardProps {
@@ -242,42 +198,27 @@ function FoundCard({ title, page, surahArabic, where, text }: FoundCardProps) {
   );
 }
 
-const ORB = storyLayout.orb;
-const MIC = storyLayout.orbMicrophone;
-const RAY_SLOT = storyLayout.orbRayLongest;
-
 const styles = StyleSheet.create({
-  scene: { alignItems: 'center', paddingHorizontal: spacing.md },
-  orb: { width: ORB, height: ORB, alignItems: 'center', justifyContent: 'center' },
-  // Every ray turns around the centre of the disc: its slot is centred there, then pushed out.
-  raySlot: {
-    position: 'absolute',
-    start: ORB / 2 - storyLayout.orbRayWidth / 2,
-    top: ORB / 2 - RAY_SLOT / 2,
-    width: storyLayout.orbRayWidth,
-    height: RAY_SLOT,
-    alignItems: 'center',
-    justifyContent: 'center',
+  // The panel and the card keep the top of the stage: the panel shortens when the card comes.
+  scene: {
+    height: '100%',
+    alignItems: 'stretch',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
   },
-  ray: { width: storyLayout.orbRayWidth, borderRadius: storyLayout.orbRayWidth / 2 },
-  ring: {
-    position: 'absolute',
-    top: storyLayout.orbRingInset,
-    bottom: storyLayout.orbRingInset,
-    start: storyLayout.orbRingInset,
-    end: storyLayout.orbRingInset,
-    borderRadius: ORB,
-    borderWidth: StyleSheet.hairlineWidth * 2,
-  },
-  microphone: {
-    width: MIC,
-    height: MIC,
-    borderRadius: MIC / 2,
+  panel: {
     overflow: 'hidden',
+    borderRadius: storyLayout.rosettePanelRadius,
+    borderCurve: 'continuous',
+  },
+  // As tall as the whole panel and centred in it: the rosette scales around its own middle.
+  rosette: {
+    height: PANEL.height,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardSlot: { alignSelf: 'stretch', marginTop: -storyLayout.foundCardOverlap },
+  still: { alignItems: 'center', justifyContent: 'center' },
+  cardSlot: { alignSelf: 'stretch', marginTop: spacing.sm },
   card: {
     borderRadius: storyLayout.foundCardRadius,
     paddingHorizontal: spacing.md,
