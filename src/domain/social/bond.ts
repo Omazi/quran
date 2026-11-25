@@ -107,3 +107,54 @@ export function assertBondBetween(bond: Bond, first: UserId, second: UserId): vo
     throw new RangeError('Invalid bond: it links two other people');
   }
 }
+
+/** The two tables a bond is read from and written to. */
+export interface BondTables {
+  readonly friendships: readonly Friendship[];
+  readonly blocks: readonly Block[];
+}
+
+function isBetween(first: UserId, second: UserId, one: UserId, other: UserId): boolean {
+  return isSamePair(pairOf(first, second), pairOf(one, other));
+}
+
+/**
+ * The bond of two people, read from the tables, whichever way the rows were written. Two
+ * friendship rows for one pair mean damaged data, which the table's unique index forbids.
+ */
+export function bondBetween(tables: BondTables, first: UserId, second: UserId): Bond {
+  const friendships = tables.friendships.filter((row) =>
+    isBetween(row.requesterId, row.addresseeId, first, second),
+  );
+  if (friendships.length > 1) {
+    throw new RangeError('Invalid friendships: more than one row for a pair of people');
+  }
+  const bond: Bond = {
+    friendship: friendships[0] ?? null,
+    blocks: tables.blocks.filter((row) => isBetween(row.blockerId, row.blockedId, first, second)),
+  };
+  assertBondBetween(bond, first, second);
+  return bond;
+}
+
+/** The tables with the rows of the pair replaced by the bond: every other row is kept. */
+export function replaceBond(
+  tables: BondTables,
+  first: UserId,
+  second: UserId,
+  bond: Bond,
+): BondTables {
+  assertBondBetween(bond, first, second);
+  return {
+    friendships: [
+      ...tables.friendships.filter(
+        (row) => !isBetween(row.requesterId, row.addresseeId, first, second),
+      ),
+      ...(bond.friendship === null ? [] : [bond.friendship]),
+    ],
+    blocks: [
+      ...tables.blocks.filter((row) => !isBetween(row.blockerId, row.blockedId, first, second)),
+      ...bond.blocks,
+    ],
+  };
+}

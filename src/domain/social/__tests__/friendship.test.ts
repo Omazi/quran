@@ -46,11 +46,17 @@ describe('Rule 2 — friend request (demande d’amitié)', () => {
     });
 
     it('nobody adds themselves', () => {
-      expectRefusal(() => requestFriendship(NO_BOND, OMAR, OMAR, TODAY), 'cannot-befriend-yourself');
+      expectRefusal(
+        () => requestFriendship(NO_BOND, OMAR, OMAR, TODAY),
+        'cannot-befriend-yourself',
+      );
     });
 
     it('one relation per pair: the sender cannot ask twice while the request is pending', () => {
-      expectRefusal(() => requestFriendship(PENDING, OMAR, SARAH, TOMORROW), 'request-already-sent');
+      expectRefusal(
+        () => requestFriendship(PENDING, OMAR, SARAH, TOMORROW),
+        'request-already-sent',
+      );
     });
 
     it('one relation per pair: two friends cannot ask each other again, in either direction', () => {

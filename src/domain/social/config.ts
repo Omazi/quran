@@ -15,6 +15,12 @@ export const SOCIAL_CONFIG = Object.freeze({
    * made on the 24th works until the 1st. Not given by the spec: see README.
    */
   inviteValidityDays: 7,
+  /** Pages of the mushaf: no one reads more new pages than this in a day (rule 9). */
+  maxNewPagesPerDay: 604,
+  /** Hizb of a khatma: a garden summary holds 0 to 60 (section 2). */
+  hizbPerKhatm: 60,
+  /** Longest a name of an account may be once typed in an e-mail field, local part (RFC 5321). */
+  maxEmailLocalPartLength: 64,
   /** Members of a group, its owner included (rule 8). */
   maxGroupMembers: 50,
   /** Digits of the one-time code sent by e-mail. To align with the server's setting. */

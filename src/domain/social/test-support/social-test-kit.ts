@@ -3,7 +3,7 @@
  */
 import { parseLocalDate, type LocalDate } from '@/domain/shared/local-date';
 
-import { SocialRuleError, type SocialRefusal } from '../index';
+import { SocialRuleError, type Profile, type SocialRefusal } from '../index';
 
 /** Short alias: tests write `day('2026-11-24')`. */
 export function day(value: string): LocalDate {
@@ -59,4 +59,20 @@ export async function expectRefusalLater(
     throw new Error(`Expected the refusal "${reason}", got: ${String(thrown)}`);
   }
   expect(thrown.reason).toBe(reason);
+}
+
+/** Gives `overrides` on top of a profile of Sarah, shown to friends by default (D23). */
+export function profileOf(
+  id: string,
+  displayName: string,
+  overrides: Partial<{ showGarden: boolean; showLevel: boolean }> = {},
+): Profile {
+  return {
+    id,
+    displayName,
+    showGarden: true,
+    showLevel: true,
+    createdOn: day('2026-10-01'),
+    ...overrides,
+  };
 }

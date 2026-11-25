@@ -1,6 +1,7 @@
 import { daysBetween, type LocalDate } from '@/domain/shared/local-date';
 
-import { assertBond, assertBondBetween, type Bond } from './bond';
+import { assertBond, type Bond } from './bond';
+import { assertNoBlock } from './blocking';
 import { SOCIAL_CONFIG } from './config';
 import { SocialRuleError } from './errors';
 import type { Friendship, UserId } from './types';
@@ -44,17 +45,23 @@ function isStillCoolingDown(declined: Friendship, today: LocalDate): boolean {
  *
  * - Nobody adds themselves.
  * - If the other person has already asked, their request is accepted: still one row.
+ * - Nobody can ask across a block, in either direction (rule 3).
  * - A sender whose request was declined waits `friendRequestCooldownDays` days. The person
  *   who declined does not wait: their request replaces the row, in the other direction.
  */
-export function requestFriendship(bond: Bond, fromId: UserId, toId: UserId, today: LocalDate): Bond {
+export function requestFriendship(
+  bond: Bond,
+  fromId: UserId,
+  toId: UserId,
+  today: LocalDate,
+): Bond {
   assertId(fromId, 'sender');
   assertId(toId, 'addressee');
   assertLocalDate(today, 'today');
   if (fromId === toId) {
     throw new SocialRuleError('cannot-befriend-yourself', 'a request goes to someone else');
   }
-  assertBondBetween(bond, fromId, toId);
+  assertNoBlock(bond, fromId, toId);
 
   const existing = bond.friendship;
   if (existing === null) return { ...bond, friendship: pendingRequest(fromId, toId, today) };
@@ -91,6 +98,7 @@ function requestToAnswer(bond: Bond, actorId: UserId, today: LocalDate): Friends
   if (request.addresseeId !== actorId) {
     throw new SocialRuleError('not-the-addressee', 'only the person asked can answer a request');
   }
+  assertNoBlock(bond, actorId, request.requesterId);
   return request;
 }
 
