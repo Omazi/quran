@@ -29,6 +29,9 @@ export const DEFAULT_ORBIT: Orbit = {
   panY: 0,
 };
 
+/** Where the picture's frame rests in a view taller than itself. */
+export type FrameAnchor = 'bottom' | 'center';
+
 export interface Frustum {
   readonly left: number;
   readonly right: number;
@@ -61,7 +64,10 @@ function elevationFit(elevation: number): number {
  * resting on the bottom edge of a taller view and centred in a wider one, as the pictures sit in
  * `GardenScene`.
  */
-function baseFrame(aspect: number): {
+function baseFrame(
+  aspect: number,
+  anchor: FrameAnchor,
+): {
   centerX: number;
   centerY: number;
   width: number;
@@ -72,13 +78,14 @@ function baseFrame(aspect: number): {
     return { centerX, centerY, width: height * aspect, height };
   }
   const tallHeight = width / aspect;
+  if (anchor === 'center') return { centerX, centerY, width, height: tallHeight };
   const bottom = centerY - height / 2;
   return { centerX, centerY: bottom + tallHeight / 2, width, height: tallHeight };
 }
 
 /** The orthographic frame, in metres around the point the camera looks at. */
-export function frustumOf(orbit: Orbit, aspect: number): Frustum {
-  const base = baseFrame(aspect);
+export function frustumOf(orbit: Orbit, aspect: number, anchor: FrameAnchor = 'bottom'): Frustum {
+  const base = baseFrame(aspect, anchor);
   const scale = elevationFit(orbit.elevation) / orbit.zoom;
   const halfWidth = (base.width * scale) / 2;
   const halfHeight = (base.height * scale) / 2;
@@ -104,8 +111,13 @@ export function cameraDirection(orbit: Orbit): [number, number, number] {
 }
 
 /** Radians per point of drag, so that the rim of the garden moves exactly with the finger. */
-export function radiansPerPoint(orbit: Orbit, viewWidth: number, aspect: number): number {
-  const frame = frustumOf(orbit, aspect);
+export function radiansPerPoint(
+  orbit: Orbit,
+  viewWidth: number,
+  aspect: number,
+  anchor: FrameAnchor = 'bottom',
+): number {
+  const frame = frustumOf(orbit, aspect, anchor);
   const rimPoints = (GARDEN_3D.rimRadius / (frame.right - frame.left)) * viewWidth;
   return 1 / rimPoints;
 }
@@ -120,8 +132,9 @@ export function orbitAfterDrag(
   drag: { dx: number; dy: number },
   viewWidth: number,
   aspect: number,
+  anchor: FrameAnchor = 'bottom',
 ): Orbit {
-  const perPoint = radiansPerPoint(start, viewWidth, aspect);
+  const perPoint = radiansPerPoint(start, viewWidth, aspect, anchor);
   const { min, max, overshoot } = GARDEN_3D.elevation;
   return {
     ...start,
@@ -136,8 +149,9 @@ export function viewOffset(
   aspect: number,
   view: { width: number; height: number },
   point: { x: number; y: number },
+  anchor: FrameAnchor = 'bottom',
 ): { x: number; y: number } {
-  const frame = frustumOf(orbit, aspect);
+  const frame = frustumOf(orbit, aspect, anchor);
   return {
     x: (point.x / view.width - 0.5) * (frame.right - frame.left),
     y: (0.5 - point.y / view.height) * (frame.top - frame.bottom),
@@ -173,10 +187,11 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-/** The frame never leaves the picture's frame: at zoom 1 there is no pan at all. */
+/** The frame stays within `panReach` of the picture's frame: at zoom 1 there is no pan at all. */
 function clampPan(orbit: Orbit): Orbit {
   const { width, height } = GARDEN_3D.frame;
-  const room = Math.max(0, 1 - 1 / orbit.zoom) * elevationFit(orbit.elevation);
+  // Only part of the room: the garden's centre stays well inside the view, never at its edge.
+  const room = Math.max(0, 1 - 1 / orbit.zoom) * elevationFit(orbit.elevation) * GARDEN_3D.panReach;
   const maxX = (width / 2) * room;
   const maxY = (height / 2) * room;
   return { ...orbit, panX: clamp(orbit.panX, -maxX, maxX), panY: clamp(orbit.panY, -maxY, maxY) };
@@ -240,4 +255,15 @@ export function approachOrbit(orbit: Orbit, target: Orbit, elapsedMs: number): O
     panY: towards(orbit.panY, target.panY),
   };
   return sameOrbit(next, target) ? { ...target, azimuth: nearTarget } : next;
+}
+
+/**
+ * How much of its width each edge of the view dissolves into the page, at this zoom (0 to
+ * `edgeFade.width`, as a share of the view's smaller side). At rest the garden is the picture, whole,
+ * and nothing fades; once zoomed, the garden is cut by the view, and the cut must not show as a line.
+ */
+export function edgeFadeWidth(zoom: number): number {
+  const { width, fromZoom, fullAtZoom } = GARDEN_3D.edgeFade;
+  const t = clamp((zoom - fromZoom) / (fullAtZoom - fromZoom), 0, 1);
+  return width * t * t * (3 - 2 * t);
 }

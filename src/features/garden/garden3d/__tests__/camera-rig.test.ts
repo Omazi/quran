@@ -1,4 +1,5 @@
 import {
+  edgeFadeWidth,
   approachOrbit,
   cameraDirection,
   clampOrbit,
@@ -217,5 +218,47 @@ describe('going back to the default view', () => {
     expect(isOrbitDefault(orbit)).toBe(true);
     // From 350° it goes up to 360°, not down to 0°.
     expect(azimuths[1]).toBeGreaterThan(azimuths[0] ?? 0);
+  });
+});
+
+describe('zoom and pan stay where the garden is in view', () => {
+  it('never zooms in so far that the garden fills the view', () => {
+    expect(GARDEN_3D.zoom.max).toBeLessThanOrEqual(2);
+    expect(clampOrbit({ ...DEFAULT_ORBIT, zoom: 50 }).zoom).toBe(GARDEN_3D.zoom.max);
+  });
+
+  it('keeps the garden centre inside the middle of the view, at any zoom and pan', () => {
+    for (const zoom of [1.5, GARDEN_3D.zoom.max]) {
+      for (const sign of [-1, 1]) {
+        const o = clampOrbit({ ...DEFAULT_ORBIT, zoom, panX: sign * 100, panY: sign * 100 });
+        const f = frustumOf(o, PICTURE_ASPECT);
+        const centre = { x: 0, y: 0 }; /* the point the camera looks at */
+        const across = (centre.x - f.left) / (f.right - f.left);
+        const up = (centre.y - f.bottom) / (f.top - f.bottom);
+        expect(across).toBeGreaterThan(0.1);
+        expect(across).toBeLessThan(0.9);
+        expect(up).toBeGreaterThan(0.1);
+        expect(up).toBeLessThan(0.9);
+      }
+    }
+  });
+
+  it('centres the picture in a taller view when asked, and rests it on the bottom otherwise', () => {
+    const tall = 0.5;
+    const bottom = frustumOf(DEFAULT_ORBIT, tall);
+    const centre = frustumOf(DEFAULT_ORBIT, tall, 'center');
+    expect(centre.right - centre.left).toBeCloseTo(bottom.right - bottom.left, 5);
+    expect((centre.top + centre.bottom) / 2).toBeCloseTo(GARDEN_3D.frame.centerY, 5);
+  });
+});
+
+describe('edgeFadeWidth: the cut of a zoomed view dissolves, the picture at rest does not', () => {
+  it('is nothing at rest, so the garden is the picture', () => {
+    expect(edgeFadeWidth(1)).toBe(0);
+  });
+  it('grows with the zoom up to the configured width, and no more', () => {
+    expect(edgeFadeWidth(1.25)).toBeGreaterThan(0);
+    expect(edgeFadeWidth(1.25)).toBeLessThan(edgeFadeWidth(1.4));
+    expect(edgeFadeWidth(GARDEN_3D.zoom.max)).toBeCloseTo(GARDEN_3D.edgeFade.width, 8);
   });
 });

@@ -147,7 +147,12 @@ export function FriendScreen({
               />
             ) : (
               // The garden to visit in 3D (visite.png: « Glisse pour tourner, pince pour zoomer »).
-              <GardenView3D state={card.garden} hintPlacement="below" testID="friend-garden-3d" />
+              <GardenView3D
+                state={card.garden}
+                hintPlacement="below"
+                fill
+                testID="friend-garden-3d"
+              />
             )}
           </View>
           <Card shape="sheet" style={styles.sheet}>
@@ -310,13 +315,9 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { flexGrow: 1, paddingBottom: spacing.xl, gap: spacing.md },
   firstScreen: { justifyContent: 'space-between' },
-  // High in the free space, as in the mockup: the sky stays open between the garden and the card.
-  garden: {
-    flexGrow: 1,
-    justifyContent: 'flex-start',
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.xxl,
-  },
+  // The garden takes all the space between the bar and the card (no empty band): its view is
+  // transparent and dissolves at its edges, so a zoom never shows a box (visite.png).
+  garden: { flexGrow: 1 },
   hiddenGarden: {
     aspectRatio: GARDEN_PICTURE_ASPECT_RATIO,
     marginHorizontal: layout.screenMargin,

@@ -51,7 +51,18 @@ export const GARDEN_3D = {
    */
   fit: { depth: 18 * Math.SQRT2, height: 5 },
   /** Zoom: 1 is the picture; never smaller. Past a limit, resistance up to `overshoot` times. */
-  zoom: { min: 1, max: 2.5, overshoot: 1.25, doubleTap: 2 },
+  zoom: { min: 1, max: 2, overshoot: 1.12, doubleTap: 1.8 },
+  /**
+   * How much of the room a zoomed view has to move in, once zoomed: the garden's centre never
+   * gets close to the edge of the view, which would leave the view on the cut.
+   */
+  panReach: 0.6,
+  /**
+   * The edges of the view dissolve into the page (the GL view is transparent, so what is under it,
+   * the page's own gradient, shows through): from `fromZoom` the fade grows to `width` (a share of
+   * the view's smaller side) at `fullAtZoom`. At rest nothing fades: the garden is the picture.
+   */
+  edgeFade: { width: 0.16, fromZoom: 1.05, fullAtZoom: 1.5 },
   /**
    * The spin after the finger lets go: the deceleration of a scroll view (0.998 per millisecond,
    * UIScrollView's normal rate), and the speed below which it stops (radians per millisecond).

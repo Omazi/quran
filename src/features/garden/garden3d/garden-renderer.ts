@@ -61,11 +61,18 @@ export function drawFrame(
   gl: ExpoWebGLRenderingContext,
   scene: THREE.Scene,
   camera: THREE.Camera,
+  fade?: { scene: THREE.Scene; camera: THREE.Camera; isVisible: () => boolean },
 ): void {
   const size = renderer.getSize(new THREE.Vector2());
   if (size.x !== gl.drawingBufferWidth || size.y !== gl.drawingBufferHeight) {
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight, false);
   }
   renderer.render(scene, camera);
+  if (fade?.isVisible()) {
+    // Over the garden, without clearing it: the edges dissolve into the page.
+    renderer.autoClear = false;
+    renderer.render(fade.scene, fade.camera);
+    renderer.autoClear = true;
+  }
   gl.endFrameEXP();
 }

@@ -39,6 +39,17 @@ function drawnTriangles(scene: THREE.Scene): number {
   return triangles;
 }
 
+describe('buildGardenThree: the edges dissolve into the page', () => {
+  it('draws no fade at rest, and one once zoomed, whatever the theme (the view is transparent)', () => {
+    const garden = buildGardenThree(MODEL);
+    garden.setOrbit(DEFAULT_ORBIT, 1.4);
+    expect(garden.fade.isVisible()).toBe(false);
+    garden.setOrbit({ ...DEFAULT_ORBIT, zoom: 2 }, 1.4);
+    expect(garden.fade.isVisible()).toBe(true);
+    garden.dispose();
+  });
+});
+
 describe('buildGardenThree', () => {
   it('makes one mesh per mesh of the model, with the light of the pictures', () => {
     const garden = buildGardenThree(MODEL);

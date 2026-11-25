@@ -33,6 +33,11 @@ export interface GardenView3DProps {
   /** The garden to show, exactly as the garden module describes it. */
   state: GardenState;
   hintPlacement?: GardenHintPlacement;
+  /**
+   * Takes all the height its parent gives instead of the picture's own proportions. The garden
+   * is then centred in it, and what a zoom shows beyond the picture dissolves at the edges.
+   */
+  fill?: boolean;
   testID?: string;
 }
 
@@ -61,6 +66,7 @@ const TURN_SYMBOL: IconSymbol = { ios: 'arrow.clockwise', android: 'rotate_right
 export function GardenView3D({
   state,
   hintPlacement = 'overlay',
+  fill = false,
   testID = 'garden-3d',
 }: GardenView3DProps) {
   const { t } = useTranslation('garden');
@@ -73,6 +79,7 @@ export function GardenView3D({
   const [surface] = useState(
     () =>
       new GardenSurface({
+        anchor: fill ? 'center' : 'bottom',
         onReady: () => setReady(true),
         onFail: (error) => {
           console.warn('The 3D garden stopped; the picture stays.', error);
@@ -157,9 +164,9 @@ export function GardenView3D({
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, fill && styles.fill]}>
       <View
-        style={styles.band}
+        style={fill ? styles.fill : styles.band}
         onLayout={onLayout}
         accessible
         accessibilityRole="image"
@@ -185,7 +192,11 @@ export function GardenView3D({
             importantForAccessibility="no-hide-descendants"
             pointerEvents="none"
           >
-            <GardenScene state={state} size="band" />
+            <GardenScene
+              state={state}
+              size={fill ? 'fill' : 'band'}
+              anchor={fill ? 'center' : 'bottom'}
+            />
           </View>
         )}
         {shows3D ? (
@@ -211,6 +222,7 @@ export function GardenView3D({
 
 const styles = StyleSheet.create({
   container: { alignSelf: 'stretch' },
+  fill: { flex: 1 },
   band: { alignSelf: 'stretch', aspectRatio: GARDEN_PICTURE_ASPECT_RATIO },
   hint: { alignItems: 'center' },
   hintOverlay: { position: 'absolute', start: 0, end: 0, bottom: spacing.sm },

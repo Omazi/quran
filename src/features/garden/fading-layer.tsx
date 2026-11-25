@@ -1,4 +1,4 @@
-import { Image } from 'expo-image';
+import { Image, type ImageContentPosition } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { Animated, Platform, StyleSheet } from 'react-native';
 
@@ -9,6 +9,8 @@ export interface FadingLayerProps {
   asset: number | undefined;
   /** How long a change takes, in milliseconds. 0: at once, with no fade at all. */
   transitionMs: number;
+  /** Where the picture rests in a taller box. Bottom if not given. */
+  position?: ImageContentPosition;
 }
 
 /**
@@ -17,7 +19,11 @@ export interface FadingLayerProps {
  * from one picture to another the image itself dissolves. With no transition time, it appears
  * and disappears at once. The fade is on opacity only: nothing moves.
  */
-export function FadingLayer({ asset, transitionMs }: FadingLayerProps) {
+export function FadingLayer({
+  asset,
+  transitionMs,
+  position = GARDEN_PICTURE_POSITION,
+}: FadingLayerProps) {
   const [opacity] = useState(() => new Animated.Value(asset === undefined ? 0 : 1));
   // The last picture shown, kept on screen while it fades out.
   const [kept, setKept] = useState(asset);
@@ -48,7 +54,7 @@ export function FadingLayer({ asset, transitionMs }: FadingLayerProps) {
         source={kept}
         style={StyleSheet.absoluteFill}
         contentFit="contain"
-        contentPosition={GARDEN_PICTURE_POSITION}
+        contentPosition={position}
         accessible={false}
         transition={transitionMs > 0 ? { duration: transitionMs, effect: 'cross-dissolve' } : null}
         cachePolicy="memory"

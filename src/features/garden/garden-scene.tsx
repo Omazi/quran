@@ -1,4 +1,4 @@
-import { Image } from 'expo-image';
+import { Image, type ImageContentPosition } from 'expo-image';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -28,19 +28,29 @@ export interface GardenSceneProps {
   /** The garden to show, exactly as the garden module describes it. */
   state: GardenState;
   size: GardenSceneSize;
+  /** Where the picture rests in a taller box (`fill`): its bottom edge (default) or the middle. */
+  anchor?: 'bottom' | 'center';
   /** Which pictures exist. Only tests give it: the app uses the set that ships with it. */
   images?: GardenImageNames;
 }
 
 /** One layer of the picture: a rendered image, as tall and wide as the scene, never cropped. */
-function Layer({ asset, transitionMs }: { asset: number | undefined; transitionMs: number }) {
+function Layer({
+  asset,
+  transitionMs,
+  position,
+}: {
+  asset: number | undefined;
+  transitionMs: number;
+  position: ImageContentPosition;
+}) {
   if (asset === undefined) return null;
   return (
     <Image
       source={asset}
       style={StyleSheet.absoluteFill}
       contentFit="contain"
-      contentPosition={GARDEN_PICTURE_POSITION}
+      contentPosition={position}
       // The garden is described once, by the scene: the layers are not elements of their own.
       accessible={false}
       // A fade between two pictures; none when the picture comes at once.
@@ -63,11 +73,17 @@ function Layer({ asset, transitionMs }: { asset: number | undefined; transitionM
  * stands in, never a broken image. The accessibility label says the state in words either way
  * (voiceover.md › Descriptions).
  */
-export function GardenScene({ state, size, images = SHIPPED_GARDEN_IMAGES }: GardenSceneProps) {
+export function GardenScene({
+  state,
+  size,
+  anchor = 'bottom',
+  images = SHIPPED_GARDEN_IMAGES,
+}: GardenSceneProps) {
   const { t } = useTranslation('garden');
   const target = gardenPicture(state, { images });
   const { picture, transitionMs } = useGardenPictureSequence(target, images);
   const label = gardenSceneLabel(state, t);
+  const position = anchor === 'center' ? 'center' : GARDEN_PICTURE_POSITION;
 
   if (picture === null) {
     return (
@@ -89,10 +105,11 @@ export function GardenScene({ state, size, images = SHIPPED_GARDEN_IMAGES }: Gar
       style={styles[size]}
       testID="garden-scene"
     >
-      <Layer asset={baseAsset(names.base)} transitionMs={transitionMs} />
+      <Layer asset={baseAsset(names.base)} transitionMs={transitionMs} position={position} />
       <FadingLayer
         asset={names.water === null ? undefined : waterAsset(names.water)}
         transitionMs={transitionMs}
+        position={position}
       />
     </View>
   );

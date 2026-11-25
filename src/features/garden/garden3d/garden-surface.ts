@@ -8,6 +8,7 @@ import type { ExpoWebGLRenderingContext } from 'expo-gl';
 import type * as THREE from 'three';
 
 import type { GardenStage } from '../garden-picture';
+import type { FrameAnchor } from './camera-rig';
 import type { GardenModel } from './garden-model';
 import type * as Renderer from './garden-renderer';
 import type * as Three from './garden-three';
@@ -18,6 +19,8 @@ export interface GardenSurfaceOptions {
   readonly onReady: () => void;
   /** Something failed: the picture stays. */
   readonly onFail: (error: unknown) => void;
+  /** Where the picture rests in a taller view. Bottom if not given. */
+  readonly anchor?: FrameAnchor;
   readonly frames?: FrameScheduler;
 }
 
@@ -56,6 +59,7 @@ export class GardenSurface {
       onChange: () => this.draw(),
       onUse: () => this.onUse(),
       isMotionReduced: () => this.motionReduced,
+      anchor: () => options.anchor ?? 'bottom',
       frames: options.frames,
     });
   }
@@ -108,8 +112,18 @@ export class GardenSurface {
     const engine = this.engine;
     if (engine === null || this.size.width === 0 || this.size.height === 0) return;
     try {
-      engine.three.setOrbit(this.controller.orbit, this.size.width / this.size.height);
-      engine.drawFrame(engine.renderer, engine.gl, engine.three.scene, engine.three.camera);
+      engine.three.setOrbit(
+        this.controller.orbit,
+        this.size.width / this.size.height,
+        this.options.anchor,
+      );
+      engine.drawFrame(
+        engine.renderer,
+        engine.gl,
+        engine.three.scene,
+        engine.three.camera,
+        engine.three.fade,
+      );
     } catch (error) {
       this.fail(error);
     }

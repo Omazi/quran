@@ -10,7 +10,13 @@
 import * as THREE from 'three';
 
 import type { GardenStage } from '../garden-picture';
-import { cameraDirection, frustumOf, type Orbit } from './camera-rig';
+import {
+  cameraDirection,
+  edgeFadeWidth,
+  frustumOf,
+  type FrameAnchor,
+  type Orbit,
+} from './camera-rig';
 import { GARDEN_3D } from './config';
 import {
   visibleInstances,
@@ -27,8 +33,72 @@ export interface GardenThree {
   readonly camera: THREE.OrthographicCamera;
   /** Shows a stage. Returns false when nothing changed (no need to draw again). */
   showStage(stage: GardenStage): boolean;
-  setOrbit(orbit: Orbit, aspect: number): void;
+  setOrbit(orbit: Orbit, aspect: number, anchor?: FrameAnchor): void;
+  /**
+   * The overlay that dissolves the edges of the view (drawn after `scene`, over it): drawn only
+   * when something fades.
+   */
+  readonly fade: GardenFade;
   dispose(): void;
+}
+
+export interface GardenFade {
+  readonly scene: THREE.Scene;
+  readonly camera: THREE.Camera;
+  /** What fades, as a share of the view's smaller side (0: nothing). */
+  setWidth(width: number, aspect: number): void;
+  readonly isVisible: () => boolean;
+}
+
+/**
+ * A full-view quad that multiplies what is drawn by an alpha that falls to 0 at the four edges.
+ * The canvas is transparent and premultiplied, so colour and alpha are both scaled: the garden
+ * dissolves into whatever is under the view (the page's gradient, light or dark), with no
+ * colour to match.
+ */
+function buildFade(disposables: { dispose(): void }[]): GardenFade {
+  const uWidth = { value: 0 };
+  const uAspect = { value: 1 };
+  const material = new THREE.ShaderMaterial({
+    uniforms: { uWidth, uAspect },
+    vertexShader: `varying vec2 vUv;
+void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: `varying vec2 vUv;
+uniform float uWidth;
+uniform float uAspect;
+void main() {
+  vec2 p = vec2(vUv.x * uAspect, vUv.y);
+  float edge = min(min(p.x, uAspect - p.x), min(p.y, 1.0 - p.y));
+  float a = smoothstep(0.0, uWidth * min(uAspect, 1.0), edge);
+  gl_FragColor = vec4(a, a, a, a);
+}`,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+    blending: THREE.CustomBlending,
+    blendEquation: THREE.AddEquation,
+    blendSrc: THREE.ZeroFactor,
+    blendDst: THREE.SrcColorFactor,
+    blendSrcAlpha: THREE.ZeroFactor,
+    blendDstAlpha: THREE.SrcAlphaFactor,
+  });
+  const geometry = new THREE.PlaneGeometry(2, 2);
+  disposables.push(material, geometry);
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.frustumCulled = false;
+  mesh.visible = false;
+  const scene = new THREE.Scene();
+  scene.add(mesh);
+  return {
+    scene,
+    camera: new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1),
+    setWidth(width, aspect) {
+      uWidth.value = width;
+      uAspect.value = aspect;
+      mesh.visible = width > 0;
+    },
+    isVisible: () => mesh.visible,
+  };
 }
 
 /** The picture tool's wilt (garden.js `wilted`): green turns to straw, the rest to dust. */
@@ -221,9 +291,11 @@ export function buildGardenThree(model: GardenModel): GardenThree {
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, near, far);
   const target = new THREE.Vector3(...GARDEN_3D.picture.target);
 
+  const fade = buildFade(disposables);
   let shownKey = '';
   return {
     scene,
+    fade,
     camera,
     showStage(stage) {
       const key = `${stage.count}-${stage.water}-${stage.foliage}`;
@@ -241,8 +313,9 @@ export function buildGardenThree(model: GardenModel): GardenThree {
       }
       return true;
     },
-    setOrbit(orbit, aspect) {
-      const frame = frustumOf(orbit, aspect);
+    setOrbit(orbit, aspect, anchor = 'bottom') {
+      fade.setWidth(edgeFadeWidth(orbit.zoom), aspect);
+      const frame = frustumOf(orbit, aspect, anchor);
       camera.left = frame.left;
       camera.right = frame.right;
       camera.top = frame.top;

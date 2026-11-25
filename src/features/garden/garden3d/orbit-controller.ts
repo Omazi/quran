@@ -17,6 +17,7 @@ import {
   radiansPerPoint,
   sameOrbit,
   viewOffset,
+  type FrameAnchor,
   type Orbit,
 } from './camera-rig';
 import { GARDEN_3D } from './config';
@@ -48,6 +49,8 @@ export interface OrbitControllerOptions {
   readonly onUse: () => void;
   /** Reduce Motion: no spin after release, and the view jumps where it would glide. */
   readonly isMotionReduced: () => boolean;
+  /** Where the picture's frame rests in a taller view. Bottom if not given. */
+  readonly anchor?: () => FrameAnchor;
   readonly frames?: FrameScheduler;
 }
 
@@ -77,6 +80,10 @@ export class OrbitController {
     return height > 0 ? width / height : 1;
   }
 
+  private get anchor(): FrameAnchor {
+    return this.options.anchor?.() ?? 'bottom';
+  }
+
   private set(orbit: Orbit): void {
     this.orbit = orbit;
     this.options.onChange();
@@ -102,7 +109,9 @@ export class OrbitController {
   }
 
   dragMove(dx: number, dy: number): void {
-    this.set(orbitAfterDrag(this.start, { dx, dy }, this.options.size().width, this.aspect));
+    this.set(
+      orbitAfterDrag(this.start, { dx, dy }, this.options.size().width, this.aspect, this.anchor),
+    );
   }
 
   /** `velocityX` in points per second, as the gesture reports it. */
@@ -113,7 +122,12 @@ export class OrbitController {
       return;
     }
     // Seeded with the finger's speed: the garden leaves the finger as fast as it moved.
-    const perPoint = radiansPerPoint(this.orbit, this.options.size().width, this.aspect);
+    const perPoint = radiansPerPoint(
+      this.orbit,
+      this.options.size().width,
+      this.aspect,
+      this.anchor,
+    );
     const velocity = (-velocityX * perPoint) / MS_PER_SECOND;
     if (isSpinning(velocity)) this.animate({ kind: 'spin', velocity });
     else this.goTo(inside);
@@ -124,12 +138,12 @@ export class OrbitController {
   pinchStart(focal: { x: number; y: number }): void {
     this.touch();
     this.start = this.orbit;
-    this.focalStart = viewOffset(this.orbit, this.aspect, this.options.size(), focal);
+    this.focalStart = viewOffset(this.orbit, this.aspect, this.options.size(), focal, this.anchor);
     this.options.onUse();
   }
 
   pinchMove(scale: number, focal: { x: number; y: number }): void {
-    const focalNow = viewOffset(this.start, this.aspect, this.options.size(), focal);
+    const focalNow = viewOffset(this.start, this.aspect, this.options.size(), focal, this.anchor);
     this.set(orbitAfterPinch(this.start, scale, this.focalStart, focalNow));
   }
 
@@ -145,7 +159,7 @@ export class OrbitController {
       this.goTo(DEFAULT_ORBIT);
       return;
     }
-    const focal = viewOffset(DEFAULT_ORBIT, this.aspect, this.options.size(), point);
+    const focal = viewOffset(DEFAULT_ORBIT, this.aspect, this.options.size(), point, this.anchor);
     this.goTo(clampOrbit(orbitAfterPinch(DEFAULT_ORBIT, GARDEN_3D.zoom.doubleTap, focal)));
   }
 
