@@ -78,7 +78,7 @@ export function PassagesView({
         <AppText variant="displayTitle" color="ink" align="center">
           {t('several.title')}
         </AppText>
-        <AppText color="secondaryLabel" align="center">
+        <AppText color="inkSecondary" align="center">
           {t('several.description', { count: totalCount })}
         </AppText>
       </View>
@@ -97,7 +97,7 @@ export function PassagesView({
         ))}
       </View>
       {isComplete ? null : (
-        <AppText variant="footnote" color="secondaryLabel" align="center">
+        <AppText variant="footnote" color="inkSecondary" align="center">
           {t('several.incomplete', { shown: passages.length, count: totalCount })}
         </AppText>
       )}
@@ -154,12 +154,12 @@ function PlaceRow({ passage, openingWords, onPress }: PlaceRowProps) {
         {openingWords === null ? null : (
           <QuranText runs={[{ text: openingWords }]} variant="openingWords" align="start" />
         )}
-        <AppText variant="subhead" color="secondaryLabel">
+        <AppText variant="subhead" color="inkSecondary">
           {`${passage.surah} · ${where}`}
         </AppText>
       </View>
       {Platform.OS === 'ios' ? (
-        <Icon symbol={DISCLOSURE_SYMBOL} textStyle="footnote" color="tertiaryLabel" />
+        <Icon symbol={DISCLOSURE_SYMBOL} textStyle="footnote" color="inkSecondary" />
       ) : null}
     </Pressable>
   );

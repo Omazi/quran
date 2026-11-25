@@ -55,11 +55,19 @@ export function OnboardingScreen({
         accessibilityLabel={t('pager.label')}
         accessibilityValue={t('pager.position', { page: pageIndex + 1, total: pages.length })}
         testID="onboarding-pager"
-        renderPage={(index) => {
+        renderPage={(index, bottomInset) => {
           const page = pages[index];
           if (page === undefined) return null;
           const Page = PAGE_COMPONENTS[page.kind];
-          return <Page page={page} model={model} actions={actions} renderScene={renderScene} />;
+          return (
+            <Page
+              page={page}
+              model={model}
+              actions={actions}
+              renderScene={renderScene}
+              bottomInset={bottomInset}
+            />
+          );
         }}
       />
     </Screen>

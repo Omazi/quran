@@ -212,7 +212,7 @@ describe.each(MATRIX)(
       expect(screen.getByRole('header', { name: printedName(2, isArabic) })).toBeOnTheScreen();
       const page = quranStructure.pageOfVerse({ surah: 2, verse: 255 });
       expect(
-        screen.getByText(isArabic ? `الآية 255 · الصفحة ${page}` : `Verset 255 · page ${page}`),
+        screen.getByText(isArabic ? `الآية 255 · الصفحة ${page}` : `Verset 255 · Page ${page}`),
       ).toBeOnTheScreen();
       const open = isArabic ? `افتح الصفحة ${page}` : `Ouvrir à la page ${page}`;
       await fireEvent.press(screen.getByRole('button', { name: open }));
@@ -229,6 +229,10 @@ describe.each(MATRIX)(
       expect(isProminent(open, conditions)).toBe(true);
       expect(isProminent(text.again, conditions)).toBe(false);
       expect(isProminent(text.close, conditions)).toBe(false);
+      // The content fades into the band of buttons instead of being sliced by it, and the fade
+      // never takes a touch nor a screen reader's attention.
+      const fade = screen.getByTestId('scroll-edge-fade', HIDDEN);
+      expect(fade.props.pointerEvents).toBe('none');
     });
   },
 );
@@ -291,6 +295,7 @@ describe.each(MATRIX)(
       expect(isProminent(text.again, conditions)).toBe(false);
       expect(isProminent(text.close, conditions)).toBe(false);
       expect(screen.getByTestId('still-rosette', HIDDEN)).toBeOnTheScreen();
+      expect(screen.getByTestId('scroll-edge-fade', HIDDEN)).toBeOnTheScreen();
     });
   },
 );
@@ -302,7 +307,7 @@ describe('several passages, the rows', () => {
     const row = screen.getByTestId('listening-place-6-45');
     const opening = verse.split(' ').slice(0, 6).join(' ');
     expect(hasText(row, opening)).toBe(true);
-    expect(row.props.accessibilityLabel).toBe('Sourate Al-An’am, Verset 45 · page 133');
+    expect(row.props.accessibilityLabel).toBe('Sourate Al-An’am, Verset 45 · Page 133');
     expect(touchTargetHeight(row)).toBeGreaterThanOrEqual(44);
   });
 });

@@ -388,8 +388,14 @@ export interface PagerProps {
   page: number;
   /** Called when the person moves to another page, by a swipe or through the page indicator. */
   onPageChange: (page: number) => void;
-  /** Draws the page of the given zero-based index. */
-  renderPage: (page: number) => ReactNode;
+  /**
+   * Draws the page of the given zero-based index. `bottomInset` is how far the page indicator
+   * lies over the bottom of the page: 0 when the indicator sits under the pages, the height of
+   * the system indicator band when it floats over them (iOS). The page paints its background to
+   * the bottom edge and keeps its content clear of the inset, so that no other colour shows
+   * behind the indicator.
+   */
+  renderPage: (page: number, bottomInset: number) => ReactNode;
   /** Names the page indicator for screen readers, where the system does not name it itself. */
   accessibilityLabel: string;
   /** The position as people hear it, where the system does not say it itself. */

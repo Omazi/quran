@@ -31,6 +31,15 @@ export interface GardenReadoutProps {
   state: GardenState;
 }
 
+export interface GardenStateSectionProps extends GardenReadoutProps {
+  /**
+   * Shows the health gauge after the hizb gauge. On by default: the readout keeps the rules of the
+   * garden visible. A screen that already says the state in words (the home screen's message of
+   * the day) turns it off so that the state is not said twice.
+   */
+  showHealth?: boolean;
+}
+
 /**
  * The water: a symbol and a short sentence (flowing, still, dry), as a row of the list
  * (labels.md › Best practices). The symbol changes shape with the state and the sentence says
@@ -52,11 +61,12 @@ export function GardenWaterRow({ state }: GardenReadoutProps) {
 }
 
 /**
- * How far the garden is and how well it is: two system gauges, each with its value in words and
- * both ends of its range (gauges.md › Best practices). A gauge, not a progress indicator: these
+ * How far the garden is and how well it is: two system gauges, each with its value in words
+ * (gauges.md › Best practices). The hizb gauge draws no "0" and "60" under its ends: its value
+ * already says "24 hizb out of 60" (deviation 62). A gauge, not a progress indicator: these
  * are levels that last, not a task being waited for. Place it in a `GroupedList`.
  */
-export function GardenStateSection({ state }: GardenReadoutProps) {
+export function GardenStateSection({ state, showHealth = true }: GardenStateSectionProps) {
   const { t } = useTranslation('garden');
   return (
     <ListSection title={t('readout.state.title')}>
@@ -67,15 +77,13 @@ export function GardenStateSection({ state }: GardenReadoutProps) {
           hizb: state.hizbCompleted,
           total: GARDEN_STEP_COUNT,
         })}
-        minimumLabel={t('readout.hizb.minimum')}
-        maximumLabel={t('readout.hizb.maximum', { total: GARDEN_STEP_COUNT })}
         tone={HIZB_TONE}
         testID="garden-hizb-gauge"
       />
       {
         // Before the first hizb the garden does not exist yet: nothing can dry, so there is no
         // health to show.
-        state.phase === 'bare' ? null : (
+        state.phase === 'bare' || !showHealth ? null : (
           <Gauge
             value={state.health}
             label={t('readout.health.label')}

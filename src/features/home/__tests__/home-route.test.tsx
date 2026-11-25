@@ -59,7 +59,7 @@ describe('the "Jardin" tab', () => {
       hizbPageRanges: quranStructure.hizbPageRanges(),
     });
     await renderRoute(store);
-    await fireEvent.press(screen.getByRole('button', { name: 'Lire et arroser' }));
+    await fireEvent.press(screen.getByRole('button', { name: /^Lire et arroser/ }));
     expect(router.push).toHaveBeenCalledTimes(1);
     expect(router.push).toHaveBeenCalledWith(`/reader/${resumePage}`);
     // Nothing was added to the journal: the pages of the day are what they were.
@@ -67,16 +67,19 @@ describe('the "Jardin" tab', () => {
     expect(screen.getByTestId('home-today-pages')).toHaveTextContent('Pages lues3 sur 5');
   });
 
-  it('shows in its row the page the button opens, once the reader was opened elsewhere', async () => {
+  it('names on its button the page it opens, once the reader was opened elsewhere', async () => {
     const store = readerStore();
     store.getState().setLastOpenedPage(293);
     await renderRoute(store);
-    expect(screen.getByTestId('home-next-page')).toHaveTextContent('ReprendrePage 293');
-    await fireEvent.press(screen.getByRole('button', { name: 'Lire et arroser' }));
+    expect(screen.getByTestId('home-read')).toHaveTextContent(
+      'Lire et arroserReprendre · Page 293',
+    );
+    expect(screen.queryByTestId('home-next-page')).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: /^Lire et arroser/ }));
     expect(router.push).toHaveBeenCalledWith('/reader/293');
   });
 
-  it('shows the first unread page in the row too while the reader was never opened', async () => {
+  it('names the first unread page on the button too while the reader was never opened', async () => {
     const store = readerStore();
     await renderRoute(store);
     const resumePage = resolveResumePage({
@@ -84,6 +87,8 @@ describe('the "Jardin" tab', () => {
       journal: store.getState().journal,
       hizbPageRanges: quranStructure.hizbPageRanges(),
     });
-    expect(screen.getByTestId('home-next-page')).toHaveTextContent(`ReprendrePage ${resumePage}`);
+    expect(screen.getByTestId('home-read')).toHaveTextContent(
+      `Lire et arroserReprendre · Page ${resumePage}`,
+    );
   });
 });

@@ -39,11 +39,6 @@
       "value": "{{read}} sur {{goal}}",
       "valueReached": "{{read}} sur {{goal}}, objectif atteint"
     },
-    "page": {
-      "resume": "Reprendre",
-      "start": "Commencer",
-      "value": "Page {{page}}"
-    },
     "finish": {
       "label": "Fin estimée",
       "labelNext": "Fin de la suivante",
@@ -53,7 +48,9 @@
     "footer_other": "Estimation au rythme de ton objectif\u00a0: {{count}} pages par jour."
   },
   "actions": {
-    "read": "Lire et arroser"
+    "read": "Lire et arroser",
+    "resumeAt": "Reprendre · Page {{page}}",
+    "startAt": "Commencer · Page {{page}}"
   },
   "unavailable": {
     "title": "Jardin indisponible",

@@ -23,67 +23,67 @@
   "pages": {
     "bareEarth": {
       "title": "Bare Earth",
-      "text": "Sixty hizb to turn it into a garden. Swipe to continue."
+      "text": "Sixty hizb to turn it into a garden. Swipe to\u00a0continue."
     },
     "hizb8": {
       "title": "Read, and the Water Flows",
-      "text": "Every new page you read waters your garden. The channels fill up and the first trees arrive."
+      "text": "Every new page you read waters your garden. The channels fill up and the first trees\u00a0arrive."
     },
     "hizb20": {
       "title": "One Hizb, One New Element",
-      "text": "A tree, flowers, a fountain: each hizb you finish adds something."
+      "text": "A tree, flowers, a fountain: each hizb you finish adds\u00a0something."
     },
     "hizb30": {
       "title": "Halfway There, the Walls Rise",
-      "text": "Your garden takes shape, hizb after hizb."
+      "text": "Your garden takes shape, hizb after\u00a0hizb."
     },
     "hizb40": {
       "title": "The Gates Open",
-      "text": "The further you go, the more beautiful it becomes."
+      "text": "The further you go, the more beautiful it\u00a0becomes."
     },
     "hizb60": {
       "title": "At the Sixtieth Hizb, Your Garden Is Complete",
-      "text": "You have read the whole Quran, and this garden no longer dries."
+      "text": "You have read the whole Quran, and this garden no longer\u00a0dries."
     },
     "thirsty": {
       "title": "Stop Reading, and It Gets Thirsty",
-      "text": "The water stops flowing and the grass turns pale."
+      "text": "The water stops flowing and the grass turns\u00a0pale."
     },
     "wilting": {
       "title": "Then It Wilts",
-      "text": "The grass yellows, the trees take on autumn colors, the channels run dry."
+      "text": "The grass yellows, the trees take on autumn colors, the channels run\u00a0dry."
     },
     "dying": {
       "title": "The Trees Go Bare",
-      "text": "The flowers are gone and the earth cracks."
+      "text": "The flowers are gone and the earth\u00a0cracks."
     },
     "dead": {
       "title": "And It Turns Back into Dead Earth",
-      "text": "Two weeks without reading, and nothing is left."
+      "text": "Two weeks without reading, and nothing is\u00a0left."
     },
     "revival": {
       "title": "One Page Is Enough to Revive It",
-      "text": "The hizb you have read stay yours. Start again, and the water returns."
+      "text": "The hizb you have read stay yours. Start again, and the water\u00a0returns."
     },
     "voice": {
       "title": "Read Aloud, the App Follows You",
-      "text": "Each word lights up as you recite it. A misread word turns red, so you can read it again."
+      "text": "Each word lights up as you recite it. A misread word turns red, so you can read it\u00a0again."
     },
     "recognition": {
       "title": "Where Is This Passage From?",
-      "text": "Hearing a recitation? Let the app listen: it tells you the surah and the verse."
+      "text": "Hearing a recitation? Let the app listen: it tells you the surah and the\u00a0verse."
     },
     "friends": {
       "title": "With Your Loved Ones",
-      "text": "Visit their gardens, encourage each other, and read a khatma together."
+      "text": "Visit their gardens, encourage each other, and read a khatma\u00a0together."
     },
     "goal": {
       "title": "Your Daily Goal",
-      "text": "It is up to you. You can change it whenever you like."
+      "text": "It is up to you. You can change it whenever you\u00a0like."
     },
     "reminders": {
       "title": "Your Reminders",
-      "text": "So your garden never runs out of water."
+      "text": "So your garden never runs out of\u00a0water."
     }
   }
 }

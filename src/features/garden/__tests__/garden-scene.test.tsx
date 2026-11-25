@@ -214,6 +214,19 @@ describe('the garden in words', () => {
     });
   });
 
+  it('can leave the health gauge to the message that says it, and draws no "0" and "60" under the hizb gauge', async () => {
+    await showLanguage('fr');
+    await render(
+      <GroupedList>
+        <GardenStateSection state={after(thirstyMinDroughtDays)} showHealth={false} />
+      </GroupedList>,
+    );
+    expect(screen.getByRole('progressbar', { name: 'Hizb terminés' })).toBeOnTheScreen();
+    expect(screen.queryByRole('progressbar', { name: 'Santé' })).toBeNull();
+    expect(screen.queryByText('0')).toBeNull();
+    expect(screen.queryByText('60')).toBeNull();
+  });
+
   it('names a drought day that was watered by the water that came back, not by the drought', async () => {
     await showLanguage('fr');
     const revived = previewGardenState({

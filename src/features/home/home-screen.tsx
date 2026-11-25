@@ -103,9 +103,17 @@ function ReadyHome({ model, actions }: { model: HomeReadyModel; actions: HomeAct
         </ListSection>
         <TodaySection model={model} />
         <ListSection>
-          <ButtonRow label={t('actions.read')} onPress={actions.readAndWater} testID="home-read" />
+          <ButtonRow
+            variant="primary"
+            label={t('actions.read')}
+            detail={t(model.reading.hasStarted ? 'actions.resumeAt' : 'actions.startAt', {
+              page: model.reading.nextPage,
+            })}
+            onPress={actions.readAndWater}
+            testID="home-read"
+          />
         </ListSection>
-        <GardenStateSection state={garden} />
+        <GardenStateSection state={garden} showHealth={false} />
         <GardenElementsSection state={garden} />
         {StatePreviewSection === null ? null : <StatePreviewSection />}
       </GroupedList>

@@ -17,8 +17,9 @@ import { ReactNativeContent, SwiftUIHost } from './swiftui-host';
  * (page-controls.md › Mobile). The system mirrors the pager in a right-to-left interface and
  * describes its own indicator to VoiceOver: the two accessibility strings are not used here.
  *
- * Each page is React Native content. It keeps clear of the indicator, which lies over the bottom
- * of the pages.
+ * Each page is React Native content. The indicator lies over the bottom of the pages: each page
+ * is told how far (`bottomInset`), paints its own background down to the edge, and keeps its
+ * content clear of that band.
  */
 export function Pager(props: PagerProps) {
   if (!IOS_USES_SYSTEM_PAGER) return <DefaultPager {...props} />;
@@ -42,7 +43,7 @@ function SystemPager({ pageCount, page, onPageChange, renderPage, testID }: Page
         {pages.map((index) => (
           <TabView.Tab key={index} value={String(index)}>
             <ReactNativeContent>
-              <View style={styles.page}>{renderPage(index)}</View>
+              <View style={styles.page}>{renderPage(index, layout.touchTarget)}</View>
             </ReactNativeContent>
           </TabView.Tab>
         ))}
@@ -52,5 +53,5 @@ function SystemPager({ pageCount, page, onPageChange, renderPage, testID }: Page
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, paddingBottom: layout.touchTarget },
+  page: { flex: 1 },
 });

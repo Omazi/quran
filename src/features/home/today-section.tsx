@@ -10,8 +10,8 @@ export interface TodaySectionProps {
 }
 
 /**
- * "Aujourd'hui": the pages read out of the goal the person chose, the page to read now, and the
- * day the khatma would end at that pace. Text in rows of the system's grouped list
+ * "Aujourd'hui": the pages read out of the goal the person chose and the day the khatma would end at
+ * that pace (the page to read now is on the button, `HomeScreen`). Text in rows of the system's grouped list
  * (lists-and-tables.md › Best practices), short enough to scan (› Content). The rows are not
  * buttons: the one action of the screen is "Lire et arroser". Place it in a `GroupedList`.
  */
@@ -35,11 +35,6 @@ export function TodaySection({ model }: TodaySectionProps) {
           goal: today.goalPages,
         })}
         testID="home-today-pages"
-      />
-      <ListRow
-        label={t(reading.hasStarted ? 'today.page.resume' : 'today.page.start')}
-        value={t('today.page.value', { page: reading.nextPage })}
-        testID="home-next-page"
       />
       {estimatedFinishDate === null ? null : (
         <ListRow

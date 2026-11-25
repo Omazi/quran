@@ -13,7 +13,7 @@
   "found": {
     "announcement": "Passage reconnu : {{surah}}, {{verses}}",
     "open": "Ouvrir à la page {{page}}",
-    "where": "{{verses}} · page {{page}}",
+    "where": "{{verses}} · Page {{page}}",
     "continues": "La suite s’ouvre dans le lecteur."
   },
   "several": {
@@ -21,7 +21,7 @@
     "description_one": "Ces mots se trouvent à {{count}} endroit. Choisis celui que tu récitais.",
     "description_other": "Ces mots se trouvent à {{count}} endroits. Choisis celui que tu récitais.",
     "incomplete": "{{shown}} endroits sur {{count}}. Récite la suite pour réduire la liste.",
-    "rowValue": "Verset {{verse}} · page {{page}}",
+    "rowValue": "Verset {{verse}} · Page {{page}}",
     "rowHint": "Ouvre le lecteur à la page {{page}}."
   },
   "nothingHeard": {

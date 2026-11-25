@@ -9,10 +9,11 @@ const SCENE_MIN_HEIGHT = spacing.xxl * 4;
 /**
  * The share of the page height the scene takes. A share of the page, not of what the words leave,
  * so that the scene and the first word of every page sit at the same height as the pages slide
- * past one another. 0.6 of the page is about 57 % of the screen: the garden fills the top of the
- * screen and the words sit just under it, as in the validated mockup (docs/design/bienvenue.png).
+ * past one another. Half of the page: the garden, its words and the page indicator read in one
+ * glance, with about 14 % of the page empty above the garden where 0.6 left about 25 % (deviation
+ * 31 of docs/design/SKILLS.md).
  */
-const SCENE_PAGE_SHARE = 0.6;
+const SCENE_PAGE_SHARE = 0.5;
 
 /** The smallest height left to a list of settings: about three rows at the default text size. */
 const LIST_MIN_HEIGHT = layout.touchTarget * 3;
@@ -20,6 +21,8 @@ const LIST_MIN_HEIGHT = layout.touchTarget * 3;
 interface PageTextProps {
   title: string;
   text: string;
+  /** How far the page indicator lies over the bottom of the page (`OnboardingPageProps`). */
+  bottomInset: number;
 }
 
 /**
@@ -28,7 +31,7 @@ interface PageTextProps {
  * (accessibility.md › Vision); size and weight tell them apart. Both follow the writing direction
  * (right-to-left.md › Text alignment).
  */
-function PageText({ title, text }: PageTextProps) {
+function PageText({ title, text }: Pick<PageTextProps, 'title' | 'text'>) {
   return (
     <View style={styles.text}>
       <AppText variant="title2">{title}</AppText>
@@ -51,7 +54,7 @@ export interface ScenePageLayoutProps extends PageTextProps {
  * is cut (layout.md › Adaptability). The page paints its own background, the system's, so that
  * nothing changes colour while a neighbouring page slides in.
  */
-export function ScenePageLayout({ scene, title, text }: ScenePageLayoutProps) {
+export function ScenePageLayout({ scene, title, text, bottomInset }: ScenePageLayoutProps) {
   const colors = useColors();
   const [pageHeight, setPageHeight] = useState<number | null>(null);
   const onLayout = (event: LayoutChangeEvent) => setPageHeight(event.nativeEvent.layout.height);
@@ -64,7 +67,7 @@ export function ScenePageLayout({ scene, title, text }: ScenePageLayoutProps) {
     <ScrollView
       alwaysBounceVertical={false}
       style={{ backgroundColor: colors.background }}
-      contentContainerStyle={styles.scenePage}
+      contentContainerStyle={[styles.scenePage, { paddingBottom: spacing.md + bottomInset }]}
       onLayout={onLayout}
       testID="onboarding-page"
     >
@@ -79,8 +82,6 @@ export function ScenePageLayout({ scene, title, text }: ScenePageLayoutProps) {
 export interface SettingsPageLayoutProps extends PageTextProps {
   /** A `GroupedList`: it scrolls by itself. */
   children: ReactNode;
-  /** A control kept at the bottom of the page, under the list. */
-  footer?: ReactNode;
 }
 
 /**
@@ -89,11 +90,21 @@ export interface SettingsPageLayoutProps extends PageTextProps {
  * space left above the list, which keeps a minimum height (layout.md › Adaptability). The page
  * paints its own background, the grouped one a grouped list sits on (color.md › Mobile).
  */
-export function SettingsPageLayout({ title, text, children, footer }: SettingsPageLayoutProps) {
+export function SettingsPageLayout({
+  title,
+  text,
+  children,
+  bottomInset,
+}: SettingsPageLayoutProps) {
   const colors = useColors();
   return (
     <View
-      style={[styles.settingsPage, { backgroundColor: colors.groupedBackground }]}
+      style={[
+        styles.settingsPage,
+        // The grouped background runs to the bottom edge, behind the page indicator: the list
+        // stops above the indicator, the colour does not.
+        { backgroundColor: colors.groupedBackground, paddingBottom: bottomInset },
+      ]}
       testID="onboarding-page"
     >
       <ScrollView
@@ -104,7 +115,6 @@ export function SettingsPageLayout({ title, text, children, footer }: SettingsPa
         <PageText title={title} text={text} />
       </ScrollView>
       <View style={styles.list}>{children}</View>
-      {footer === undefined ? null : <View style={styles.footer}>{footer}</View>}
     </View>
   );
 }
@@ -112,7 +122,7 @@ export function SettingsPageLayout({ title, text, children, footer }: SettingsPa
 const styles = StyleSheet.create({
   text: { gap: spacing.sm },
   // The scene runs from the top edge to the side edges; the words follow it.
-  scenePage: { flexGrow: 1, paddingBottom: spacing.md, gap: spacing.lg },
+  scenePage: { flexGrow: 1, gap: spacing.lg },
   sceneUnmeasured: { flexGrow: 1, minHeight: SCENE_MIN_HEIGHT },
   sceneWords: { paddingHorizontal: layout.screenMargin },
   settingsPage: { flex: 1 },
@@ -120,5 +130,4 @@ const styles = StyleSheet.create({
   words: { flexGrow: 0, flexShrink: 1 },
   wordsContent: { paddingHorizontal: layout.screenMargin, paddingVertical: spacing.md },
   list: { flex: 1, minHeight: LIST_MIN_HEIGHT },
-  footer: { paddingHorizontal: layout.screenMargin, paddingVertical: spacing.md },
 });
