@@ -34,3 +34,25 @@ export function useAsync<T>(
   }, dependencies);
   return state;
 }
+
+/**
+ * Runs an action started by a button. In a release build an error that leaves a button's handler
+ * ends the app, and so can a rejected promise that no one catches: here `work` may throw before
+ * it returns its promise (a repository with no session yet) or reject, and `onDone` or `onFailed`
+ * may themselves throw. Whatever happens, this returns at once and leaves no promise rejected:
+ * a failure goes to `onFailed`, once; a failure of `onFailed` itself is dropped.
+ */
+export function runFromButton(
+  work: () => Promise<unknown>,
+  onDone: () => void,
+  onFailed: (error: unknown) => void,
+): void {
+  const fail = (error: unknown) => {
+    try {
+      onFailed(error);
+    } catch {
+      // Nothing more can be told: the screen keeps what it shows.
+    }
+  };
+  new Promise<unknown>((resolve) => resolve(work())).then(onDone, fail).catch(fail);
+}

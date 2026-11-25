@@ -177,3 +177,55 @@ describe('OrbitController: VoiceOver actions', () => {
     expect(frames.isIdle()).toBe(true);
   });
 });
+
+describe('OrbitController: after the view is gone, and with readings that are not numbers', () => {
+  it('schedules no frame and changes nothing once disposed, whatever a late gesture says', () => {
+    const { orbit, frames, changes } = controller();
+    orbit.pinchStart({ x: 100, y: 100 });
+    orbit.pinchMove(1.6, { x: 100, y: 100 });
+    orbit.dispose();
+    const before = changes.count;
+    // Gesture events already on their way to JavaScript arrive after the screen went.
+    orbit.pinchMove(1.8, { x: 120, y: 90 });
+    orbit.pinchEnd();
+    orbit.dragEnd(-900, false);
+    orbit.doubleTap({ x: 10, y: 10 });
+    orbit.turnBy(1);
+    orbit.reset();
+    expect(frames.isIdle()).toBe(true);
+    expect(changes.count).toBe(before);
+  });
+
+  it('ignores a pinch or a drag that reports no number, so the camera never becomes NaN', () => {
+    const { orbit, frames } = controller();
+    orbit.pinchStart({ x: 100, y: 100 });
+    orbit.pinchMove(Number.NaN, { x: 100, y: 100 });
+    orbit.pinchMove(0, { x: Number.NaN, y: 100 });
+    orbit.pinchEnd();
+    orbit.dragStart();
+    orbit.dragMove(Number.NaN, 4);
+    orbit.dragEnd(Number.POSITIVE_INFINITY, false);
+    for (const value of Object.values(orbit.orbit)) expect(Number.isFinite(value)).toBe(true);
+    // And every glide ends: a NaN orbit never reaches its target and would draw forever.
+    frames.advance(5000);
+    expect(frames.isIdle()).toBe(true);
+  });
+
+  it('does not divide by a view of no size', () => {
+    const frames = fakeFrames();
+    const orbit = new OrbitController({
+      size: () => ({ width: 0, height: 0 }),
+      onChange: () => undefined,
+      onUse: () => undefined,
+      isMotionReduced: () => false,
+      frames: frames.scheduler,
+    });
+    orbit.pinchStart({ x: 10, y: 10 });
+    orbit.pinchMove(1.5, { x: 20, y: 20 });
+    orbit.pinchEnd();
+    orbit.doubleTap({ x: 5, y: 5 });
+    for (const value of Object.values(orbit.orbit)) expect(Number.isFinite(value)).toBe(true);
+    frames.advance(5000);
+    expect(frames.isIdle()).toBe(true);
+  });
+});
