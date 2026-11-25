@@ -1,13 +1,13 @@
 import { parseDisplayName, SocialRuleError } from '../index';
 import { expectRefusal } from '../test-support/social-test-kit';
 
-const LINE_SEPARATOR = ' ';
-const PARAGRAPH_SEPARATOR = ' ';
-const NO_BREAK_SPACE = ' ';
-const RIGHT_TO_LEFT_OVERRIDE = '‮';
-const FIRST_STRONG_ISOLATE = '⁨';
+const LINE_SEPARATOR = '\u2028';
+const PARAGRAPH_SEPARATOR = '\u2029';
+const NO_BREAK_SPACE = '\u00A0';
+const RIGHT_TO_LEFT_OVERRIDE = '\u202E';
+const FIRST_STRONG_ISOLATE = '\u2068';
 const HALF_OF_A_CHARACTER_PAIR = '\uD83C';
-const MOON = '🌙';
+const MOON = '\u{1F319}';
 
 describe('Rule 1 — display name (nom affiché)', () => {
   it.each(['Omar', 'Mustapha', 'Sarah', 'Taghread', 'تغريد', 'Omar B.'])(
@@ -43,6 +43,26 @@ describe('Rule 1 — display name (nom affiché)', () => {
   it('removes the spaces at both ends, as the rule says, and keeps those inside', () => {
     expect(parseDisplayName('  Omar B.  ')).toBe('Omar B.');
     expect(parseDisplayName(`${NO_BREAK_SPACE}Sarah${NO_BREAK_SPACE}`)).toBe('Sarah');
+  });
+
+  it.each([
+    ['space', ' '],
+    ['no-break space', ' '],
+    ['ogham space mark', ' '],
+    ['en quad', ' '],
+    ['hair space', ' '],
+    ['narrow no-break space', ' '],
+    ['medium mathematical space', ' '],
+    ['ideographic space', '　'],
+    ['zero-width no-break space', '﻿'],
+  ])('removes the edge space the server also removes: %s', (_label, space) => {
+    expect(parseDisplayName(`${space}Sarah${space}`)).toBe('Sarah');
+  });
+
+  it('removes only the listed spaces: a zero-width space is a character of the name', () => {
+    const ZERO_WIDTH_SPACE = '​';
+
+    expect(parseDisplayName(`Sarah${ZERO_WIDTH_SPACE}`)).toBe(`Sarah${ZERO_WIDTH_SPACE}`);
   });
 
   it('counts the characters once the spaces at the ends are removed', () => {

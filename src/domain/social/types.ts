@@ -136,6 +136,12 @@ export interface ReadingBackup {
   readonly updatedOn: LocalDate;
 }
 
+/** A group with its members: what the rules of a group (rule 8) work on. */
+export interface GroupState {
+  readonly group: Group;
+  readonly members: readonly GroupMember[];
+}
+
 /** Every table of the model, as plain lists: what account deletion (rule 10) works on. */
 export interface SocialData {
   readonly profiles: readonly Profile[];
@@ -149,4 +155,152 @@ export interface SocialData {
   readonly dailyReadings: readonly DailyReading[];
   readonly badges: readonly Badge[];
   readonly readingBackups: readonly ReadingBackup[];
+}
+
+/** What my app publishes about my garden, from values given by the other modules (rule 5). */
+export interface GardenSummaryInput {
+  /** Number of the khatma whose garden is shown: it becomes the level. */
+  readonly khatmNumber: number;
+  readonly hizbCompleted: number;
+  readonly health: number;
+  readonly lastWateredOn: LocalDate | null;
+  readonly streakDays: number;
+  readonly badgeCount: number;
+}
+
+/** A completed khatma, as my app publishes it. */
+export interface BadgeInput {
+  readonly khatmNumber: number;
+  readonly completedOn: LocalDate;
+}
+
+/** What I can change in my profile. A missing field stays as it is. */
+export interface ProfileChanges {
+  readonly displayName?: string;
+  readonly showGarden?: boolean;
+  readonly showLevel?: boolean;
+}
+
+/** A word of encouragement about to be sent. `today` is the sender's day. */
+export interface NudgeRequest {
+  readonly fromId: UserId;
+  readonly toId: UserId;
+  readonly kind: NudgeKind;
+  readonly today: LocalDate;
+}
+
+/** Everything published about one person: what rule 4 chooses from. */
+export interface PersonData {
+  readonly profile: Profile;
+  /** Null until their app publishes a first summary. */
+  readonly garden: GardenSummary | null;
+  readonly badges: readonly Badge[];
+}
+
+/** What I see of myself: everything. */
+export interface SelfView {
+  readonly kind: 'self';
+  readonly profile: Profile;
+  readonly garden: GardenSummary | null;
+  readonly badges: readonly Badge[];
+}
+
+/** The garden of a friend, without what belongs to the level (level and badge count). */
+export interface SharedGarden {
+  readonly hizbCompleted: number;
+  readonly health: number;
+  readonly lastWateredOn: LocalDate | null;
+  readonly streakDays: number;
+  readonly updatedOn: LocalDate;
+}
+
+/** The level and badges of a friend. */
+export interface SharedLevel {
+  readonly level: number;
+  readonly badgeCount: number;
+  readonly badges: readonly Badge[];
+}
+
+/** What an accepted friend sees of me (rule 4). */
+export interface FriendView {
+  readonly kind: 'friend';
+  readonly userId: UserId;
+  readonly displayName: string;
+  /** Null when I hide my garden, or before my app has published it. */
+  readonly garden: SharedGarden | null;
+  /** Null when I hide my level, or before my app has published my garden summary. */
+  readonly level: SharedLevel | null;
+}
+
+/** What anyone else sees of me: my name only (rule 4). */
+export interface OtherView {
+  readonly kind: 'other';
+  readonly userId: UserId;
+  readonly displayName: string;
+}
+
+/** What `viewOf` gives; `null` stands for "nothing at all", between people a block separates. */
+export type PersonView = SelfView | FriendView | OtherView;
+
+/** A request waiting for an answer, as one of the two people sees it. */
+export interface FriendRequestView {
+  readonly person: OtherView;
+  readonly sentOn: LocalDate;
+}
+
+export interface FriendRequests {
+  /** Sent to me: I can accept or decline them. */
+  readonly incoming: readonly FriendRequestView[];
+  /** Sent by me and not answered yet. A declined request is not listed. */
+  readonly outgoing: readonly FriendRequestView[];
+}
+
+/** Someone I blocked, so that I can find them again to unblock them. */
+export interface BlockedPerson {
+  readonly userId: UserId;
+  readonly displayName: string;
+  readonly blockedOn: LocalDate;
+}
+
+/** A nudge I received. */
+export interface ReceivedNudge {
+  readonly fromId: UserId;
+  readonly fromName: string;
+  readonly kind: NudgeKind;
+  readonly sentOn: LocalDate;
+}
+
+export interface GroupMemberView {
+  readonly userId: UserId;
+  readonly displayName: string;
+  readonly role: GroupRole;
+  readonly joinedOn: LocalDate;
+}
+
+/**
+ * The period of a leaderboard (rule 9): the week, Monday to Sunday, or the calendar month that
+ * contains `day`.
+ */
+export interface LeaderboardPeriod {
+  readonly kind: 'week' | 'month';
+  readonly day: LocalDate;
+}
+
+/** A run of days, both ends included. */
+export interface DayRange {
+  readonly from: LocalDate;
+  readonly to: LocalDate;
+}
+
+/** One line of a group leaderboard (rule 9). */
+export interface LeaderboardEntry {
+  readonly userId: UserId;
+  /** Sum of the member's new pages over the period. */
+  readonly newPages: number;
+  /** 1 for the most pages; equal sums share a rank, and the next rank skips (1, 1, 3). */
+  readonly rank: number;
+}
+
+export interface NamedLeaderboardEntry extends LeaderboardEntry {
+  readonly displayName: string;
 }

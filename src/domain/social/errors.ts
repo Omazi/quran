@@ -15,7 +15,32 @@ export type SocialRefusal =
   | 'no-pending-request'
   | 'not-the-addressee'
   | 'not-friends'
-  | 'not-your-friendship';
+  | 'not-your-friendship'
+  // Rule 3: blocks. A blocked person is never told so: what they try fails with
+  // `person-unavailable`, the answer about an account that does not exist.
+  | 'cannot-block-yourself'
+  | 'already-blocked'
+  | 'not-blocked'
+  | 'you-blocked-them'
+  | 'person-unavailable'
+  // Rule 6: invitation codes.
+  | 'invite-code-malformed'
+  | 'invite-not-found'
+  | 'invite-expired'
+  | 'invite-is-yours'
+  // Rule 7: nudges.
+  | 'already-nudged-today'
+  // Rule 8: groups.
+  | 'group-not-found'
+  | 'not-a-member'
+  | 'already-a-member'
+  | 'group-full'
+  | 'owner-must-hand-over'
+  | 'successor-not-a-member'
+  // Sign-in.
+  | 'email-malformed'
+  | 'email-code-malformed'
+  | 'not-signed-in';
 
 /**
  * A rule said no to something a person can do by using the app: typing a name or a code,
