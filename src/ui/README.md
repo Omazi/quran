@@ -75,6 +75,7 @@ les tests, selon les usages de Material, sans imiter iOS.
 | `SegmentedChoice`             | `Picker` segmenté, libellé gardé pour VoiceOver ; seul ou dans une liste                                                                                       | `segmented-controls.md › Best practices`, `› Content`, `› Mobile`                                    |
 | `DetailRow`                   | bouton : libellé, ligne de détail, valeur, `chevron.forward` ; valeur `quran` : police du Coran, à l'encre, Title 2 relatif à Dynamic Type                     | `lists-and-tables.md › Mobile`, `labels.md › Best practices` (voir l'écart 1 ; écart 33 du registre) |
 | `SearchFieldRow`              | `TextField` en ligne de liste : loupe, texte indicatif, bouton Effacer, touche Rechercher                                                                      | `search-fields.md › Search as an inline field`, `text-fields.md › Mobile` (écart 32 du registre)     |
+| `TextFieldRow`                | `TextField` dans une ligne : clavier, majuscules et suggestions selon `kind` ; `search` ajoute la loupe et l'effacement                                        | `text-fields.md › Best practices`, `› Mobile`, `search-fields.md` (voir l'écart 47)                  |
 | `NumberFieldRow`              | `TextField` à pavé numérique, à côté de son libellé (`LabeledContent`)                                                                                         | `text-fields.md › Best practices`, `pickers.md › Best practices`                                     |
 | `ProgressIndicator`           | `ProgressView` : barre si `value`, indicateur d'activité sinon                                                                                                 | `progress-indicators.md › Best practices`                                                            |
 | `Gauge`                       | `Gauge` linéaire de capacité, libellés de valeur et de bornes, `tone`                                                                                          | `gauges.md › Anatomy`, `› Best practices`, `color.md › Best practices`                               |
@@ -132,6 +133,14 @@ les tests, selon les usages de Material, sans imiter iOS.
   flotte (`liquid-glass.md › Where the material belongs`).
 - Une valeur invalide (progression hors de 0 à 1, bornes inversées, heure ou page impossible,
   bouton principal destructif) lève une erreur : rien n'est corrigé en silence.
+
+### Confirmer une action
+
+`confirmAction({ title, message, confirmLabel, cancelLabel, isDestructive, onConfirm })` : sur iOS
+la feuille d'actions du système (le choix destructif en premier et en rouge, « Annuler » en bas :
+`action-sheets.md › Best practices`, `alerts.md › Mobile`) ; sur Android la boîte de dialogue de
+la plateforme ; sur le web la confirmation du navigateur. Aucun libellé à elle : l'appelant les
+traduit. Un hook la reçoit en dépendance, pour que les tests répondent à sa place.
 
 ## Tests
 

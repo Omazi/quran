@@ -39,6 +39,7 @@ export const {
   SegmentedChoice,
   StepperRow,
   SwitchRow,
+  TextFieldRow,
   TimePickerRow,
 } = controls;
 

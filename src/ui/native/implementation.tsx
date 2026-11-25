@@ -56,6 +56,7 @@ export function switchableControls(
     DetailRow: switchable((controls) => controls.DetailRow),
     SearchFieldRow: switchable((controls) => controls.SearchFieldRow),
     NumberFieldRow: switchable((controls) => controls.NumberFieldRow),
+    TextFieldRow: switchable((controls) => controls.TextFieldRow),
     ProgressIndicator: switchable((controls) => controls.ProgressIndicator),
     Gauge: switchable((controls) => controls.Gauge),
     ContentUnavailable: switchable((controls) => controls.ContentUnavailable),

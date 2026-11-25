@@ -36,6 +36,12 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Icon sf="book.fill" md="menu_book" />
         <NativeTabs.Trigger.Label>{t('tabs.quran')}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
+      {/* Friends, between the Quran and the last tab, as in the validated home screen
+          (docs/design/accueil.png). */}
+      <NativeTabs.Trigger name="friends">
+        <NativeTabs.Trigger.Icon sf="person.2.fill" md="group" />
+        <NativeTabs.Trigger.Label>{t('tabs.friends')}</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
       {/* The profile: the reading statistics, then the settings. */}
       <NativeTabs.Trigger name="profile">
         <NativeTabs.Trigger.Icon sf="person.crop.circle.fill" md="account_circle" />

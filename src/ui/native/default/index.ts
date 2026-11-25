@@ -8,3 +8,4 @@ export { ContentUnavailable, Gauge, ProgressIndicator } from './status';
 export { DetailRow } from './detail-row';
 export { SegmentedChoice } from './segmented-choice';
 export { NumberFieldRow, SearchFieldRow } from './text-fields';
+export { TextFieldRow } from './text-field-row';
