@@ -1,15 +1,21 @@
+import { Image } from 'expo-image';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import type { GardenState } from '@/domain/garden';
 import { Placeholder } from '@/ui';
 
-import { GARDEN_SCENE_BAND_MIN_HEIGHT } from './config';
+import { FadingLayer } from './fading-layer';
+import { GARDEN_PICTURE_ASPECT_RATIO, GARDEN_SCENE_BAND_MIN_HEIGHT } from './config';
+import { baseAsset, SHIPPED_GARDEN_IMAGES, waterAsset } from './garden-images';
+import { gardenPicture, pictureNames, type GardenImageNames } from './garden-picture';
 import { gardenSceneLabel, gardenSceneName } from './garden-words';
+import { useGardenPictureSequence } from './use-garden-picture';
 
 /**
- * How much room the scene takes. `band`: the width it is given and a band of height, as on the
- * home screen. `fill`: all the space of its parent, as on a page of the first-launch flow.
+ * How much room the scene takes. `band`: the width it is given and the height its picture
+ * needs, as on the home screen. `fill`: all the space of its parent, as on a page of the
+ * first-launch flow; the picture is shown whole inside it.
  */
 export type GardenSceneSize = 'band' | 'fill';
 
@@ -17,30 +23,90 @@ export interface GardenSceneProps {
   /** The garden to show, exactly as the garden module describes it. */
   state: GardenState;
   size: GardenSceneSize;
+  /** Which pictures exist. Only tests give it: the app uses the set that ships with it. */
+  images?: GardenImageNames;
 }
 
-/**
- * The garden on screen, and its only entry point (decision D12). It receives a `GardenState` and
- * a size, nothing else: the day real 3D models exist, only this component changes.
- *
- * In lot 1 nothing is drawn: a neutral, named placeholder stands for the image (SwiftUI Design,
- * principle 4), and its accessibility label says the state in words (voiceover.md ›
- * Descriptions). The state already holds what a renderer needs: continuous health, growth of the
- * next element, visible elements, variant.
- */
-export function GardenScene({ state, size }: GardenSceneProps) {
-  const { t } = useTranslation('garden');
+/** One layer of the picture: a rendered image, as tall and wide as the scene, never cropped. */
+function Layer({ asset, transitionMs }: { asset: number | undefined; transitionMs: number }) {
+  if (asset === undefined) return null;
   return (
-    <Placeholder
-      name={gardenSceneName(state, t)}
-      accessibilityLabel={gardenSceneLabel(state, t)}
-      style={styles[size]}
-      testID="garden-scene"
+    <Image
+      source={asset}
+      style={StyleSheet.absoluteFill}
+      contentFit="contain"
+      // The garden is described once, by the scene: the layers are not elements of their own.
+      accessible={false}
+      // A fade between two pictures; none when the picture comes at once.
+      transition={transitionMs > 0 ? { duration: transitionMs, effect: 'cross-dissolve' } : null}
+      // Local files: nothing to wait for, nothing to keep once the scene is gone.
+      cachePolicy="memory"
     />
   );
 }
 
+/**
+ * The garden on screen, and its only entry point (decision D12). It receives a `GardenState` and
+ * a size, nothing else: the day a 3D engine exists, only this component changes.
+ *
+ * It shows the picture of the level-1 garden that matches the state (`gardenPicture`): the dry
+ * garden, the water laid over it, and, while a hizb is being read, the picture of one more
+ * element at the opacity it has grown to. Only those images are loaded. When the state jumps
+ * several steps the pictures in between are shown in order (D26); with "reduce motion" the final
+ * one comes at once. When the set lacks a picture the state needs, a neutral named placeholder
+ * stands in, never a broken image. The accessibility label says the state in words either way
+ * (voiceover.md › Descriptions).
+ */
+export function GardenScene({ state, size, images = SHIPPED_GARDEN_IMAGES }: GardenSceneProps) {
+  const { t } = useTranslation('garden');
+  const target = gardenPicture(state, { images });
+  const { picture, transitionMs } = useGardenPictureSequence(target, images);
+  const label = gardenSceneLabel(state, t);
+
+  if (picture === null) {
+    return (
+      <Placeholder
+        name={gardenSceneName(state, t)}
+        accessibilityLabel={label}
+        style={[styles[size], styles.placeholder]}
+        testID="garden-scene"
+      />
+    );
+  }
+
+  const names = pictureNames(picture);
+  return (
+    <View
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={label}
+      style={styles[size]}
+      testID="garden-scene"
+    >
+      <Layer asset={baseAsset(names.base)} transitionMs={transitionMs} />
+      <FadingLayer
+        asset={names.water === null ? undefined : waterAsset(names.water)}
+        transitionMs={transitionMs}
+      />
+      {names.growing === null ? null : (
+        <View
+          style={[StyleSheet.absoluteFill, { opacity: names.growing.opacity }]}
+          testID="garden-growing"
+        >
+          <Layer asset={baseAsset(names.growing.base)} transitionMs={transitionMs} />
+          <FadingLayer
+            asset={names.growing.water === null ? undefined : waterAsset(names.growing.water)}
+            transitionMs={transitionMs}
+          />
+        </View>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  band: { alignSelf: 'stretch', minHeight: GARDEN_SCENE_BAND_MIN_HEIGHT },
+  band: { alignSelf: 'stretch', aspectRatio: GARDEN_PICTURE_ASPECT_RATIO },
   fill: { flex: 1 },
+  // A minimum, never a fixed height: the name can wrap at the largest text sizes.
+  placeholder: { minHeight: GARDEN_SCENE_BAND_MIN_HEIGHT },
 });

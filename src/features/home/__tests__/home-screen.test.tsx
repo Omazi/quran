@@ -244,7 +244,10 @@ describe('HomeScreen, the words of each state in French', () => {
   it('uses one word per state: the scene, the message and the gauge agree', async () => {
     await showLanguage('fr');
     await render(<HomeScreen model={modelOf('thirsty')} actions={actionsSpy()} />);
-    expect(screen.getByText('Jardin au hizb 24, assoiffé')).toBeOnTheScreen();
+    // The scene is a picture now: its words are its accessibility label.
+    expect(
+      screen.getByRole('image', { name: 'Jardin assoiffé, 24 hizb sur 60, l’eau est à sec' }),
+    ).toBeOnTheScreen();
     expect(screen.getByText('Jardin assoiffé')).toBeOnTheScreen();
     expect(screen.getByRole('progressbar', { name: 'Santé' })).toHaveAccessibilityValue({
       text: 'Assoiffé, 79\u00a0%',
@@ -255,7 +258,9 @@ describe('HomeScreen, the words of each state in French', () => {
   it('a drought day that was watered is not called dying anywhere', async () => {
     await showLanguage('fr');
     await render(<HomeScreen model={modelOf('recovering')} actions={actionsSpy()} />);
-    expect(screen.getByText('Jardin au hizb 24, ranimé')).toBeOnTheScreen();
+    expect(
+      screen.getByRole('image', { name: 'Jardin ranimé, 24 hizb sur 60, l’eau coule' }),
+    ).toBeOnTheScreen();
     expect(screen.getByRole('progressbar', { name: 'Santé' })).toHaveAccessibilityValue({
       text: 'Ranimé, 21\u00a0%',
     });

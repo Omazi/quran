@@ -56,10 +56,12 @@ function Readout({ state }: { state: GardenState }) {
   );
 }
 
-describe('GardenScene', () => {
+const noImages = { base: new Set<string>(), water: new Set<string>() };
+
+describe('GardenScene without its pictures', () => {
   it('is a named placeholder whose label says the state in words', async () => {
     await showLanguage('fr');
-    await render(<GardenScene state={thriving} size="band" />);
+    await render(<GardenScene state={thriving} size="band" images={noImages} />);
     const scene = screen.getByRole('image', { name: 'Jardin, 24 hizb sur 60, l’eau coule' });
     expect(scene).toBeOnTheScreen();
     expect(screen.getByText('Jardin au hizb 24')).toBeOnTheScreen();
@@ -96,7 +98,7 @@ describe('GardenScene', () => {
 
   it.each(frenchScenes)('names the %s garden', async (_, state, name, label) => {
     await showLanguage('fr');
-    await render(<GardenScene state={state} size="band" />);
+    await render(<GardenScene state={state} size="band" images={noImages} />);
     expect(screen.getByRole('image', { name: label })).toBeOnTheScreen();
     expect(screen.getByText(name)).toBeOnTheScreen();
   });
@@ -110,32 +112,16 @@ describe('GardenScene', () => {
       water: 'dry',
       daysSinceLastWatered: 4,
     };
-    await render(<GardenScene state={state} size="fill" />);
+    await render(<GardenScene state={state} size="fill" images={noImages} />);
     expect(screen.getByText('Jardin au hizb 60, assoiffé')).toBeOnTheScreen();
   });
 
-  it('takes a band of minimum height, or all the space of its parent', async () => {
+  it('keeps a minimum height for its name, never a fixed one', async () => {
     await showLanguage('fr');
-    const band = await render(<GardenScene state={thriving} size="band" />);
-    expect(styleOf(screen.getByTestId('garden-scene'))).toMatchObject({
-      alignSelf: 'stretch',
-      minHeight: GARDEN_SCENE_BAND_MIN_HEIGHT,
-    });
-    // A minimum, never a fixed height: the name can wrap at the largest text sizes.
-    expect(styleOf(screen.getByTestId('garden-scene')).height).toBeUndefined();
-    await band.unmount();
-    await render(<GardenScene state={thriving} size="fill" />);
-    expect(styleOf(screen.getByTestId('garden-scene'))).toMatchObject({ flex: 1 });
-  });
-
-  it('draws nothing: one named surface, no image and no drawing', async () => {
-    await showLanguage('fr');
-    await render(<GardenScene state={thriving} size="band" />);
-    const scene = screen.getByTestId('garden-scene');
-    const drawn = scene.queryAll(
-      ({ type }) => typeof type === 'string' && /image|svg|path|canvas/i.test(type),
-    );
-    expect(drawn).toHaveLength(0);
+    await render(<GardenScene state={thriving} size="band" images={noImages} />);
+    const style = styleOf(screen.getByTestId('garden-scene'));
+    expect(style).toMatchObject({ alignSelf: 'stretch', minHeight: GARDEN_SCENE_BAND_MIN_HEIGHT });
+    expect(style.height).toBeUndefined();
   });
 });
 
@@ -223,7 +209,7 @@ describe('the garden in words', () => {
     expect(revived.phase).toBe('dying');
     await render(
       <>
-        <GardenScene state={revived} size="band" />
+        <GardenScene state={revived} size="band" images={noImages} />
         <Readout state={revived} />
       </>,
     );

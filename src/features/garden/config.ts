@@ -56,3 +56,46 @@ export const HEALTH_TONES: Readonly<Record<GardenPhase, StatusTone>> = {
   dying: 'warning',
   dead: 'warning',
 };
+
+// ---------------------------------------------------------------------------------------------
+// The garden as pictures (docs/specs/garden-pictures.md)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Size of every garden picture, in points. One camera for the whole set, so two pictures overlay
+ * exactly; the scene keeps these proportions (image-views.md › Content: one size for a sequence).
+ */
+export const GARDEN_PICTURE_SIZE = { width: 1200, height: 900 } as const;
+
+/** Width over height of a garden picture. */
+export const GARDEN_PICTURE_ASPECT_RATIO = GARDEN_PICTURE_SIZE.width / GARDEN_PICTURE_SIZE.height;
+
+/** Number of foliage pictures per number of elements: full leaf, dull, half bare, all bare. */
+export const FOLIAGE_STAGE_COUNT = 4;
+
+/**
+ * Drought days between the day the trees start to lose their leaves (`wiltingMinDroughtDays`)
+ * and the day every tree is bare. The garden module has no setting for it: the rules only say
+ * "6 to 9: the trees lose their leaves". The pictures cut that stretch in two, half the trees
+ * bare, then all of them. The scene never goes past the start of the dying phase (see
+ * `foliageStageOf`).
+ */
+export const BARE_TREES_AFTER_WILTING_DAYS = 2;
+
+/**
+ * How long each picture stays when a state jumps several steps (decision D26). Drying is slow
+ * enough to be watched; reviving takes half the time ("plus vite qu'il n'a séché").
+ */
+export const STEP_DURATION_MS = { decay: 600, recovery: 300 } as const;
+
+/** Never more than this many pictures between two numbers of elements, however far apart. */
+export const MAX_ELEMENT_STEPS = 5;
+
+/**
+ * A whole transition never lasts longer than this: nobody waits for it (motion.md › Providing
+ * feedback: let people cancel motion). The steps get shorter instead.
+ */
+export const MAX_TRANSITION_MS = 4000;
+
+/** No step is shorter than this: below it a cross-fade can no longer be seen. */
+export const MIN_STEP_DURATION_MS = 150;
