@@ -19,7 +19,14 @@
 import * as THREE from 'three';
 
 import type { GardenStage } from '../garden-picture';
-import { growthPose, POP_SPRING, popScale, staggered, type GrowthForm } from '../growth-pose';
+import {
+  growthPose,
+  POP_SPRING,
+  popScale,
+  SPROUT_SHARE,
+  staggered,
+  type GrowthForm,
+} from '../growth-pose';
 import {
   growingPieces,
   plantFormOf,
@@ -46,8 +53,13 @@ export interface GrowUniforms {
   readonly uGrowWindow: { value: number };
 }
 
-/** The size of the seed mound and its sprout, in metres per metre of the baked prop. */
-export const SPROUT_SCALE = 1.5;
+/** The highest point of a mesh, in its own (quantised) space. */
+function topOf(mesh: ModelMesh): number {
+  const positions = positionsOf(mesh);
+  let top = 0;
+  for (let k = 1; k < positions.length; k += 3) top = Math.max(top, positions[k] ?? 0);
+  return top;
+}
 
 /** Plants: the last clump starts this far into the growth. Built pieces: the same, and each takes the window. */
 const PLANT_STAGGER = 0.5;
@@ -347,6 +359,15 @@ export function buildGrowthView(resources: GrowthResources, stage: GardenStage):
       const instances = trunkMesh.instances;
       const at = new THREE.Vector3().fromArray(instances.translation, (trunk.instance ?? 0) * 3);
       const turn = new THREE.Quaternion().fromArray(instances.rotation, (trunk.instance ?? 0) * 4);
+      // The sprout is a share of the tree it becomes (`SPROUT_SHARE`), whatever the tree.
+      let treeHeight = 0;
+      for (const piece of unit) {
+        const mesh = model.meshes[piece.mesh];
+        const scaleY = mesh?.instances?.scale[(piece.instance ?? 0) * 3 + 1] ?? 0;
+        if (mesh !== undefined) treeHeight = Math.max(treeHeight, topOf(mesh) * scaleY);
+      }
+      const propHeight = Math.max(...sprout.map((mesh) => topOf(mesh) * mesh.positionScale), 1e-6);
+      const sproutSize = (SPROUT_SHARE * treeHeight) / propHeight;
       for (const source of sprout) {
         const geometry = resources.geometryOf(source);
         const mesh = new THREE.Mesh(geometry, resources.materialOf(source.material));
@@ -360,7 +381,7 @@ export function buildGrowthView(resources: GrowthResources, stage: GardenStage):
         shown.push({
           object: mesh,
           update: (growth) => {
-            const s = growthPose(growth, form).sprout * SPROUT_SCALE * source.positionScale;
+            const s = growthPose(growth, form).sprout * sproutSize * source.positionScale;
             mesh.visible = s > 0.0001;
             mesh.matrix.compose(at, turn, size.set(s, s, s));
           },

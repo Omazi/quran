@@ -3,6 +3,7 @@ import {
   pictureRect,
   pictureStep,
   popScale,
+  SPROUT_SHARE,
   staggered,
   type GrowthPose,
 } from '../growth-pose';
@@ -11,46 +12,63 @@ const at = (growth: number, form: 'tree' | 'plant' | 'structure' = 'tree'): Grow
   growthPose(growth, form);
 
 describe('the pose of a growing tree, from the growth of its hizb', () => {
+  /** How tall it looks: the sprout, or the tree once it is taller, as a share of the tree. */
+  const seenHeight = (pose: GrowthPose) => Math.max(pose.sprout * SPROUT_SHARE, pose.scale);
+  /** How green it looks: the sprout's leaves, or the tree's. */
+  const seenLeaves = (pose: GrowthPose) => Math.max(pose.sprout > 0.5 ? 0.15 : 0, pose.foliage);
+
   it('nothing before the first counted page', () => {
-    expect(at(0)).toEqual({ sprout: 0, scale: 0, girth: 0, branches: 0, foliage: 0, bloom: 0 });
+    expect(at(0)).toMatchObject({ sprout: 0, scale: 0, foliage: 0, bloom: 0 });
   });
 
   it('one page of a hizb of ten: a seed mound and its sprout, no tree yet', () => {
     const pose = at(0.1);
-    expect(pose.sprout).toBe(1);
+    expect(pose.sprout).toBeGreaterThan(0.8);
     expect(pose.scale).toBe(0);
     expect(pose.foliage).toBe(0);
   });
 
-  it('a young sapling with a thin trunk takes over from the sprout', () => {
+  it('the sapling rises out of the sprout and is taller than it at 30 %, with a few leaves', () => {
     const pose = at(0.3);
-    expect(pose.sprout).toBe(0);
-    expect(pose.scale).toBeGreaterThan(0.25);
-    expect(pose.scale).toBeLessThan(0.5);
-    expect(pose.girth).toBeLessThan(0.8);
+    expect(pose.sprout).toBeGreaterThan(0.8);
+    expect(pose.scale).toBeGreaterThan(SPROUT_SHARE * pose.sprout * 1.4);
     expect(pose.branches).toBe(0);
-    // Its first leaves, a few.
-    expect(pose.foliage).toBeGreaterThan(0);
-    expect(pose.foliage).toBeLessThan(0.2);
+    expect(pose.foliage).toBeGreaterThan(0.1);
+    expect(pose.foliage).toBeLessThan(0.3);
   });
 
-  it('the young tree has its first few leaves, never the look of a bare, drying tree', () => {
-    expect(at(0.6).foliage).toBeGreaterThan(0);
-    expect(at(0.6).foliage).toBeLessThan(0.3);
+  it('the sprout gives way only once the young tree is clearly taller, between 35 % and 45 %', () => {
+    expect(at(0.35).sprout).toBeGreaterThan(0.9);
+    expect(at(0.45).sprout).toBe(0);
+    expect(at(0.35).scale).toBeGreaterThan(1.5 * SPROUT_SHARE);
+  });
+
+  it('never looks smaller nor barer than a page before', () => {
+    let previous = at(0.001);
+    for (let growth = 0.002; growth <= 1; growth += 0.001) {
+      const pose = at(Math.min(1, growth));
+      expect(seenHeight(pose)).toBeGreaterThanOrEqual(seenHeight(previous) - 1e-9);
+      expect(seenLeaves(pose)).toBeGreaterThanOrEqual(seenLeaves(previous) - 1e-9);
+      previous = pose;
+    }
+  });
+
+  it('the young tree has some leaves, never the look of a bare, drying tree', () => {
+    expect(at(0.6).foliage).toBeGreaterThan(0.2);
+    expect(at(0.6).foliage).toBeLessThan(0.4);
   });
 
   it('then the trunk thickens and rises, and the branches grow', () => {
     const pose = at(0.6);
     expect(pose.scale).toBeGreaterThan(at(0.3).scale);
-    expect(pose.girth).toBeGreaterThan(at(0.3).girth);
+    expect(pose.scale * pose.girth).toBeGreaterThan(at(0.3).scale * at(0.3).girth);
     expect(pose.branches).toBeCloseTo(0.5);
   });
 
-  it('then the leaves appear and fill out; the flowers and fruit come last', () => {
+  it('then most of the leaves come and fill out; the flowers and fruit come last', () => {
     const early = at(0.8);
     const late = at(0.95);
-    expect(early.foliage).toBeGreaterThan(at(0.75).foliage);
-    expect(late.foliage - early.foliage).toBeGreaterThan(at(0.75).foliage - at(0.6).foliage);
+    expect(1 - at(0.75).foliage).toBeGreaterThan(0.5);
     expect(early.foliage).toBeLessThan(late.foliage);
     expect(early.bloom).toBe(0);
     expect(late.bloom).toBeGreaterThan(0);
@@ -71,12 +89,14 @@ describe('the pose of a growing tree, from the growth of its hizb', () => {
     }
   });
 
-  it('only grows: the trunk, branches, leaves and flowers never shrink as pages are read', () => {
-    const keys = ['scale', 'girth', 'branches', 'foliage', 'bloom'] as const;
-    let previous = at(0.15);
-    for (let growth = 0.16; growth <= 1; growth += 0.01) {
+  it('only grows: height, drawn thickness, branches, leaves and flowers never shrink', () => {
+    let previous = at(0.1);
+    for (let growth = 0.11; growth <= 1; growth += 0.01) {
       const pose = at(Math.min(1, growth));
-      for (const key of keys) expect(pose[key]).toBeGreaterThanOrEqual(previous[key]);
+      for (const key of ['scale', 'branches', 'foliage', 'bloom'] as const) {
+        expect(pose[key]).toBeGreaterThanOrEqual(previous[key]);
+      }
+      expect(pose.scale * pose.girth).toBeGreaterThanOrEqual(previous.scale * previous.girth);
       previous = pose;
     }
   });

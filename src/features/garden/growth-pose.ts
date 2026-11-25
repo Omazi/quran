@@ -16,7 +16,9 @@ export type GrowthForm = 'tree' | 'plant' | 'structure';
 /**
  * What to draw, each from 0 to 1. For a tree: the seed mound and its sprout, the size of the
  * tree, the thickness of its trunk, how far its branches, leaves and flowers or fruit have come
- * (each part staggered by the renderer with `staggered`). For a plant, `scale` is how far it has
+ * (each part staggered by the renderer with `staggered`); `sprout` is a share of the sprout's
+ * size (`SPROUT_SHARE` of the tree), and `girth` a factor on the trunk's thickness, above 1 while
+ * the tree is young. For a plant, `scale` is how far it has
  * come up; for a built element, how far it is built.
  */
 export interface GrowthPose {
@@ -55,33 +57,47 @@ function through(points: readonly (readonly [number, number])[], x: number): num
 }
 
 /**
- * The tree. A sprout from the first page (full at 5 % of the hizb: one page of a hizb of ten
- * shows it whole); the sapling rises from just before 15 % while the sprout gives way; the trunk
- * thickens until 75 %; the branches grow from 45 % to 75 %. Its first leaves come with the
- * sapling, a few, so that the young tree never looks like the bare trees of a drying garden (foliage stages
- * 2 and 3 of the pictures); most of them come from 75 %, and the flowers or fruit over the last
- * tenth.
+ * The sprout's height, as a share of the tree it becomes: the renderer sizes the seed mound and
+ * its leaves to it, so that the sprout and the young tree compare the same way for every tree.
+ */
+export const SPROUT_SHARE = 0.27;
+
+/**
+ * The tree. Nothing ever looks smaller or barer than a page before (coordinator's check of the
+ * renders, 25 November 2026): the sprout comes with the first page (whole at 5 % of the hizb) and
+ * keeps growing a little; the sapling rises out of it from 10 %, with its first leaves at its top,
+ * and is already taller than the sprout at 30 %; the sprout only gives way between 35 % and 45 %,
+ * once the young tree is clearly taller (1.7 times at 35 %) and has leaves. The trunk is drawn thicker than its
+ * share while the tree is young (`girth` above 1), so that a sapling reads on the whole garden,
+ * and its drawn thickness (`scale * girth`) only grows. The branches grow from 45 % to 75 %; most
+ * of the leaves come from 75 % (a few before, so that the young tree never looks like the bare
+ * trees of a drying garden), the flowers or fruit over the last tenth.
  */
 const TREE = {
   sproutRise: 0.05,
-  sproutFade: [sapling, sapling + 0.15] as const,
+  sproutGrowth: [
+    [0.05, 0.85],
+    [0.35, 1],
+  ] as const,
+  sproutFade: [0.35, 0.45] as const,
   scale: [
-    [sapling - 0.03, 0],
-    [sapling + 0.03, 0.22],
-    [BRANCHES, 0.5],
-    [FOLIAGE, 0.8],
+    [0.1, 0],
+    [sapling, 0.2],
+    [0.3, 0.42],
+    [BRANCHES, 0.55],
+    [FOLIAGE, 0.82],
     [1, 1],
   ] as const,
   girth: [
-    [sapling - 0.05, 0],
-    [sapling - 0.03, 0.6],
-    [BRANCHES, 0.75],
+    [0.1, 1.8],
+    [BRANCHES, 1.25],
     [FOLIAGE, 1],
   ] as const,
   foliage: [
-    [sapling + 0.03, 0],
-    [0.3, 0.12],
-    [FOLIAGE, 0.35],
+    [sapling + 0.01, 0],
+    [0.3, 0.2],
+    [BRANCHES, 0.28],
+    [FOLIAGE, 0.4],
     [1, 1],
   ] as const,
   bloomFrom: 0.9,
@@ -115,7 +131,10 @@ export function growthPose(growth: number, form: GrowthForm): GrowthPose {
   }
   const rise = g <= 0 ? 0 : smoothstep(0, TREE.sproutRise, g);
   return {
-    sprout: rise * (1 - smoothstep(TREE.sproutFade[0], TREE.sproutFade[1], g)),
+    sprout:
+      rise *
+      through(TREE.sproutGrowth, g) *
+      (1 - smoothstep(TREE.sproutFade[0], TREE.sproutFade[1], g)),
     scale: through(TREE.scale, g),
     girth: through(TREE.girth, g),
     branches: smoothstep(BRANCHES, FOLIAGE, g),

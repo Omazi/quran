@@ -221,7 +221,8 @@ function clusterGrowth(mesh: ModelMesh, positions: Float32Array): PartGrowth {
       return n === 0 ? m : [x / n, y / n, z / n];
     });
   }
-  // The order the clusters come in: from low to high, with a share of chance.
+  // The order the clusters come in: from the top down, with a share of chance, so that a young
+  // tree has its first leaves at its tip.
   const heights = means.map((m) => m[1]!);
   const low = Math.min(...heights);
   const high = Math.max(...heights);
@@ -230,7 +231,7 @@ function clusterGrowth(mesh: ModelMesh, positions: Float32Array): PartGrowth {
     .map((_, j) => j)
     .sort((a, b) => {
       const key = (j: number): number =>
-        share * (high > low ? (heights[j]! - low) / (high - low) : 0) + (1 - share) * hash01(j);
+        share * (high > low ? (high - heights[j]!) / (high - low) : 0) + (1 - share) * hash01(j);
       return key(a) - key(b);
     });
   const order = new Int32Array(clusterCount);

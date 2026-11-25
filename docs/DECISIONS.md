@@ -783,13 +783,18 @@ n'apparaît que lorsque son hizb est terminé ».
   dernier. Sécheresse et flétrissement : inchangés.
 - **En 3D** (`garden3d/growth-three.ts`) : l'élément qui pousse est dessiné à part avec les
   morceaux du modèle cuit (tronc et feuilles y sont déjà des maillages séparés) : une butte de
-  terre et sa pousse (modèles Kenney, CC0, cuits dans le GLB, +7 Ko) dès la première page, puis
-  l'arbre grandit depuis son pied, son tronc d'abord fin ; ses branches poussent depuis le tronc,
-  ses feuilles gonflent grappe par grappe (décalées, avec un léger rebond), ses fleurs ou fruits à
-  la fin. Une plante sort de terre touffe après touffe ; un élément construit monte morceau par
-  morceau, l'eau en dernier. À 1, c'est exactement l'élément de l'étape suivante : pas de saut.
-- **Écart voulu au découpage demandé** : quelques premières feuilles viennent avec le jeune arbre
-  (jusqu'à 35 % du feuillage à 0,75), le gros du feuillage reste entre 0,75 et 1. Un jeune arbre
+  terre et sa pousse (modèles Kenney, CC0, cuits dans le GLB, +7 Ko, à 27 % de la hauteur de
+  l'arbre) dès la première page ; le jeune arbre sort de la pousse dès 10 %, plus haut qu'elle à
+  30 % avec ses premières feuilles à la cime ; la pousse ne s'efface qu'entre 35 % et 45 %, quand
+  l'arbre est nettement plus grand. Rien ne paraît jamais plus petit ni plus nu qu'une page avant
+  (testé). Le tronc d'un jeune arbre est dessiné plus épais que sa part (×1,8 au début, puis ×1 à
+  75 %), pour se lire sur le jardin entier ; son épaisseur dessinée ne fait que croître. Ses
+  branches poussent depuis le tronc, ses feuilles gonflent grappe par grappe, du haut vers le bas
+  (décalées, avec un léger rebond), ses fleurs ou fruits à la fin. Une plante sort de terre touffe
+  après touffe ; un élément construit monte morceau par morceau, l'eau en dernier. À 1, c'est
+  exactement l'élément de l'étape suivante : pas de saut.
+- **Écart voulu au découpage demandé** : des premières feuilles viennent avec le jeune arbre (20 %
+  du feuillage à 30 %, 40 % à 75 %), le gros du feuillage reste entre 0,75 et 1. Un jeune arbre
   sans aucune feuille ressemblait aux arbres nus d'un jardin qui sèche (feuillage 2 et 3) : on
   l'aurait cru mourant. **À confirmer par le propriétaire.**
 - **L'animation** : quand l'accueil revient au premier plan (retour du lecteur compris), la plante
@@ -805,7 +810,8 @@ n'apparaît que lorsque son hizb est terminé ».
 
 **Vérifié** : tests (pages et croissance, étapes, pose continue, mémoire, lecteur d'animation avec
 horloge de test, scène three.js sans GL, surface avec un faux moteur de rendu) ; rendu hors écran
-des arbres (grenadier, palmier, cyprès), fleurs, canaux et murs à 0,1, 0,3, 0,6, 0,9 et 1, regardé.
+des arbres (grenadier, palmier, cyprès) à 0,05, 0,1, 0,2, 0,3, 0,45, 0,6, 0,9 et 1, de près et à la taille
+de l'accueil, et des fleurs, canaux et murs, regardé.
 **Pas vérifié** : la fluidité sur iPhone (aucun iPhone ici, D24), en particulier l'ombre recalculée
 à chaque image pendant la pousse (environ 2 s).
 
