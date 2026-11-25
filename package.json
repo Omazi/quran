@@ -59,7 +59,9 @@
     "format:check": "prettier --check .",
     "check": "npm run typecheck && npm run lint && npm run test",
     "data:build": "node tools/quran-data/build.mjs",
-    "data:verify": "node tools/quran-data/verify.mjs"
+    "data:verify": "node tools/quran-data/verify.mjs",
+    "garden:build": "node tools/garden-pictures/build.mjs",
+    "garden:verify": "node tools/garden-pictures/build.mjs --verify"
   },
   "private": true,
   "jest": {

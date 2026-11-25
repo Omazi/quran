@@ -3,3 +3,4 @@ dist
 .expo
 assets/data
 package-lock.json
+src/features/garden/garden-images.generated.ts
