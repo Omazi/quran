@@ -149,7 +149,7 @@ oriented`, la seconde dit où il mène, sans allonger le libellé.
 
 - **Icône en rendu 3D (écart 51, version 5).** `app-icons.md › Layer design` : préférer le
   vectoriel ; `› Visual effects` : laisser le système faire reflets et ombres. La version 6 de
-  l'icône (D38) est en couches SVG d'une seule couleur, sans éclairage ni ombre dans l'image.
+  l'icône (D38) est en couches d'une seule couleur, tirées de formes vectorielles, sans éclairage ni ombre dans l'image.
 - **Pages de Proches par-dessus les onglets (écart 50).** `tab-bars.md › Best practices` : la
   barre d'onglets reste visible quand on navigue dans une section. Les pages de l'onglet sont
   maintenant poussées dans sa propre pile, sous la barre d'onglets (décision du propriétaire,

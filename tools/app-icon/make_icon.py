@@ -366,13 +366,13 @@ def ic_gradient(colours):
 
 def manifest(field, field_dark):
     """icon.json. Background: Icon Composer's gradient fill, light and dark (app-icons.md › Layer
-    design). Three groups, top first: the leaf, the water, the word, each one vector layer.
+    design). Three groups, top first: the leaf, the water, the word, each one PNG layer drawn from the vector shapes.
     The drops are a little translucent (water); the word and the leaf are not."""
 
     def group(name, translucency):
         g = {
             "name": name.capitalize(),
-            "layers": [{"image-name": f"{name}.svg", "name": name, "glass": True}],
+            "layers": [{"image-name": f"{name}.png", "name": name, "glass": True}],
             "shadow": {"kind": "neutral", "opacity": 0.5},
             "specular": True,
             "translucency": {"enabled": translucency > 0, "value": translucency},
@@ -382,7 +382,6 @@ def manifest(field, field_dark):
         return g
 
     return {
-        "color-space-for-untagged-svg-colors": "srgb",
         "fill-specializations": [
             {"value": ic_gradient(field)},
             {"appearance": "dark", "value": ic_gradient(field_dark)},
@@ -538,9 +537,10 @@ def main():
     bundle = os.path.join(root, "assets", "expo.icon")
     shutil.rmtree(os.path.join(bundle, "Assets"), ignore_errors=True)
     os.makedirs(os.path.join(bundle, "Assets"))
+    # PNG layers, 1024 square, drawn from the vector shapes: Xcode 26.6's actool crashed on SVG
+    # layers in this bundle (TestFlight build, 25 Nov 2026), and accepted PNG layers before.
     for name in LAYERS:
-        with open(os.path.join(bundle, "Assets", f"{name}.svg"), "w", encoding="utf-8") as f:
-            f.write(svgs[name])
+        rasters[name].save(os.path.join(bundle, "Assets", f"{name}.png"), optimize=True)
     with open(os.path.join(bundle, "icon.json"), "w", encoding="utf-8") as f:
         json.dump(manifest(field, field_dark), f, indent=2, ensure_ascii=False)
         f.write("\n")

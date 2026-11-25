@@ -428,7 +428,7 @@ l'eau. Le mot fait pousser le jardin. Détail, couleurs, couches, pistes écart�
 `design/brand-spec.md`, « Icône ».
 
 - **Fichiers** : `assets/expo.icon` (format Icon Composer : fond en dégradé clair et sombre, trois
-  couches SVG d'une couleur, feuille, eau, mot ; déjà désigné par `ios.icon`),
+  couches PNG d'une couleur, tirées des formes vectorielles (actool de Xcode 26.6 plantait sur des couches SVG), feuille, eau, mot ; déjà désigné par `ios.icon`),
   `assets/images/icon.png` (1024, opaque, coins carrés), les trois couches Android, `favicon.png`,
   `splash-icon.png`. Tous sortent de `tools/app-icon/make_icon.py`, à l'identique d'une fois sur
   l'autre, à partir des contours du mot, `tools/app-icon/word.svg` (HarfBuzz et fontTools,

@@ -1,5 +1,4 @@
 {
-  "color-space-for-untagged-svg-colors": "srgb",
   "fill-specializations": [
     {
       "value": {
@@ -44,7 +43,7 @@
       "name": "Leaf",
       "layers": [
         {
-          "image-name": "leaf.svg",
+          "image-name": "leaf.png",
           "name": "leaf",
           "glass": true
         }
@@ -63,7 +62,7 @@
       "name": "Water",
       "layers": [
         {
-          "image-name": "water.svg",
+          "image-name": "water.png",
           "name": "water",
           "glass": true
         }
@@ -88,7 +87,7 @@
       "name": "Word",
       "layers": [
         {
-          "image-name": "word.svg",
+          "image-name": "word.png",
           "name": "word",
           "glass": true
         }

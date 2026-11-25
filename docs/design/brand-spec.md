@@ -165,7 +165,7 @@ Aucun reflet, aucune ombre, aucun dégradé dans les couches : le système les f
 
 **Couches** (`assets/expo.icon`, format Icon Composer, `app-icons.md › Layer design` : préférer
 le vectoriel, texte converti en contours). Le fond est le dégradé d'Icon Composer lui-même (clair et
-sombre). Trois groupes, chacun une couche SVG d'une seule couleur, du dessus vers le dessous : la
+sombre). Trois groupes, chacun une couche PNG d'une seule couleur, tirée des formes vectorielles (l'actool de Xcode 26.6 plante sur des couches SVG), du dessus vers le dessous : la
 feuille, l'eau (translucidité 0,3), le mot. En teinté et en transparent, l'eau est à 70 % pour rester
 d'un ton plus clair que le mot et la feuille.
 
