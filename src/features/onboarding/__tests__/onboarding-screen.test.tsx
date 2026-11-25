@@ -27,7 +27,6 @@ import { OnboardingScreen } from '../onboarding-screen';
 import {
   ONBOARDING_PAGES_FULL,
   ONBOARDING_PAGES_SHORT,
-  onboardingPages,
   type OnboardingPage,
   type OnboardingScene,
 } from '../pages';
@@ -46,15 +45,10 @@ jest.mock('expo-notifications', () =>
 );
 
 const NO_BREAK_SPACE = ' ';
-const GOAL_PAGE = 13;
-const REMINDERS_PAGE = 14;
-const PAGE_COUNT = 15;
+const GOAL_PAGE = 14;
+const REMINDERS_PAGE = 15;
+const PAGE_COUNT = 16;
 const FINISH = 'Créer mon jardin';
-/** The flow once the three features it presents exist. */
-const PAGES_WITH_EVERY_FEATURE = onboardingPages(
-  'full',
-  new Set(['voice', 'recognition', 'friends']),
-);
 const WINDOW = { x: 0, y: 0, width: 390, height: 700 };
 
 interface HarnessProps extends OnboardingDependencies {
@@ -171,6 +165,11 @@ describe('first-launch flow', () => {
     ],
     [
       12,
+      'Lecture à voix haute : les mots récités s’allument, un mot à relire est marqué en rouge',
+      'Récite, il te suit.',
+    ],
+    [
+      13,
       /^Jardins de tes proches ; Mustapha, 38 hizb ; Sarah, 52 hizb ; Taghread, 14 hizb$/,
       'Avec tes proches.',
     ],
@@ -261,15 +260,18 @@ describe('first-launch flow', () => {
   });
 
   it.each([
-    [11, 'Lecture à voix haute, suivie mot à mot', 'Lis à voix haute, l’appli te suit.'],
-    [12, /^Passage reconnu à l’écoute/, `D’où vient ce passage${NO_BREAK_SPACE}?`],
+    [11, /^Passage reconnu à l’écoute/, `D’où vient ce passage${NO_BREAK_SPACE}?`],
+    [12, /^Lecture à voix haute/, 'Récite, il te suit.'],
     [13, /^Jardins de tes proches/, 'Avec tes proches.'],
-  ])('has page %i ready for the day its feature ships: %s', async (page, sceneName, title) => {
-    await renderOnboarding({ page, pages: PAGES_WITH_EVERY_FEATURE });
-    expect(indicator()).toHaveAccessibilityValue({ text: `Page ${page + 1} sur 16` });
-    expect(screen.getByRole('image', { name: sceneName })).toBeOnTheScreen();
-    expect(screen.getByRole('header', { name: title })).toBeOnTheScreen();
-  });
+  ])(
+    'presents the feature of page %i, after the one before it: %s',
+    async (page, sceneName, title) => {
+      await renderOnboarding({ page });
+      expect(indicator()).toHaveAccessibilityValue({ text: `Page ${page + 1} sur 16` });
+      expect(screen.getByRole('image', { name: sceneName })).toBeOnTheScreen();
+      expect(screen.getByRole('header', { name: title })).toBeOnTheScreen();
+    },
+  );
 
   it('shows the passage found as the data layer gives it, once its page is shown', async () => {
     await renderOnboarding({ page: 11 });
@@ -319,7 +321,7 @@ describe('first-launch flow', () => {
   });
 
   it('shows the short flow when given its pages, with no other change', async () => {
-    await renderOnboarding({ pages: ONBOARDING_PAGES_SHORT, page: 8 });
+    await renderOnboarding({ pages: ONBOARDING_PAGES_SHORT, page: 9 });
     expect(indicator).toBeDefined();
     expect(screen.getByRole('header', { name: 'Tes rappels.' })).toBeOnTheScreen();
     expect(await screen.findByRole('button', { name: FINISH })).toBeOnTheScreen();
@@ -331,7 +333,7 @@ describe('first-launch flow', () => {
       scenes.push(scene);
       return <Text>{`Scène ${scene.kind}`}</Text>;
     };
-    await renderOnboarding({ page: 12, renderScene });
+    await renderOnboarding({ page: 13, renderScene });
     expect(scenes).toContainEqual({ kind: 'garden', hizbCompleted: 38 });
     expect(scenes).toContainEqual({ kind: 'drought', hizbCompleted: 14, daysWithoutReading: 3 });
     expect(
@@ -372,7 +374,7 @@ describe('first-launch flow', () => {
     expect(directionDependentStyles(screen.getByTestId('onboarding'))).toEqual([]);
   });
 
-  it.each([0, 5, 11, GOAL_PAGE, REMINDERS_PAGE])(
+  it.each([0, 5, 11, 12, GOAL_PAGE, REMINDERS_PAGE])(
     'cuts no word of page %i at the largest text size',
     async (page) => {
       setDeviceConditions({ fontScale: LARGEST_FONT_SCALE });
@@ -386,9 +388,10 @@ describe('first-launch flow', () => {
     // An iPhone 15's window: tall enough for the previews (shorter screens leave them out).
     setDeviceConditions();
     await renderOnboarding({ page: REMINDERS_PAGE });
+    // The three reminders are proposed on: the reading one, the garden's and the Friday one.
     expect(
       screen.getAllByTestId('onboarding-notification', { includeHiddenElements: true }),
-    ).toHaveLength(2);
+    ).toHaveLength(3);
   });
 
   it('leaves out the previewed notifications at the largest text size, for the settings', async () => {
@@ -399,7 +402,7 @@ describe('first-launch flow', () => {
     ).toBeNull();
   });
 
-  it.each([0, 11, 12, GOAL_PAGE, REMINDERS_PAGE])(
+  it.each([0, 11, 12, 13, GOAL_PAGE, REMINDERS_PAGE])(
     'asks an iPhone for system components only on page %i, each inside a host',
     async (page) => {
       await renderOnboarding({ page, onIOS: true });
@@ -459,7 +462,12 @@ describe('reminders page', () => {
     'Les notifications de l’appli sont désactivées. Pour recevoir tes rappels, autorise-les dans les réglages du téléphone.';
   const NONE = 'Sans rappel, l’appli ne t’envoie aucune notification.';
   const FRIDAY = `Le vendredi${NO_BREAK_SPACE}: sourate Al-Kahf`;
-  const ALL_OFF = { ...DEFAULT_REMINDERS, dailyEnabled: false, thirstyGardenEnabled: false };
+  const ALL_OFF = {
+    ...DEFAULT_REMINDERS,
+    dailyEnabled: false,
+    thirstyGardenEnabled: false,
+    fridayKahfEnabled: false,
+  };
 
   function finishButton(name = FINISH) {
     return screen.getByRole('button', { name });
@@ -470,11 +478,11 @@ describe('reminders page', () => {
     expect(screen.getByText('Pour que ton jardin ne manque jamais d’eau.')).toBeOnTheScreen();
     expect(screen.getByRole('switch', { name: 'Rappel du jour' })).toBeChecked();
     expect(screen.getByRole('switch', { name: 'Quand le jardin a soif' })).toBeChecked();
-    // The Friday reminder names a surah on the lock screen: it is the person's own choice.
-    expect(screen.getByRole('switch', { name: FRIDAY })).not.toBeChecked();
+    // The Friday reminder is proposed on, like the two others (owner's decision, 25 November).
+    expect(screen.getByRole('switch', { name: FRIDAY })).toBeChecked();
     // The time row opens the system's picker; the only button that leaves the page is the last.
     await screen.findByText(WILL_ASK);
-    expect(buttonNames()).toEqual(['Heure des rappels', FINISH]);
+    expect(buttonNames()).toEqual(['Heure des rappels', 'Heure du vendredi', FINISH]);
     expect(touchTargetHeight(finishButton())).toBeGreaterThanOrEqual(44);
   });
 
@@ -488,6 +496,11 @@ describe('reminders page', () => {
     expect(store.getState().settings.reminders.thirstyGardenEnabled).toBe(false);
     expect(screen.queryByRole('button', { name: 'Heure des rappels' })).toBeNull();
 
+    // The Friday reminder starts on, with its own time; switched off, its time goes.
+    expect(screen.getByRole('button', { name: 'Heure du vendredi' })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('switch', { name: FRIDAY }));
+    expect(store.getState().settings.reminders.fridayKahfEnabled).toBe(false);
+    expect(screen.queryByRole('button', { name: 'Heure du vendredi' })).toBeNull();
     await fireEvent.press(screen.getByRole('switch', { name: FRIDAY }));
     expect(store.getState().settings.reminders.fridayKahfEnabled).toBe(true);
     expect(screen.getByRole('button', { name: 'Heure du vendredi' })).toBeOnTheScreen();
@@ -615,7 +628,7 @@ describe('reminders page', () => {
     expect(await screen.findByText(DENIED)).toBeOnTheScreen();
     expect(screen.queryByTestId('open-system-settings')).toBeNull();
     // No alert can follow: the button starts the app and says so.
-    expect(buttonNames()).toEqual(['Heure des rappels', FINISH]);
+    expect(buttonNames()).toEqual(['Heure des rappels', 'Heure du vendredi', FINISH]);
 
     await fireEvent.press(finishButton());
     await waitFor(() => expect(onFinished).toHaveBeenCalledTimes(1));

@@ -95,7 +95,11 @@ describe('what starts the planning', () => {
     const store = await renderWithStore(<Probe />, { settings: finished });
     expect(ids().length).toBeGreaterThan(0);
     await act(async () => {
-      store.getState().updateReminders({ dailyEnabled: false, thirstyGardenEnabled: false });
+      store.getState().updateReminders({
+        dailyEnabled: false,
+        thirstyGardenEnabled: false,
+        fridayKahfEnabled: false,
+      });
     });
     expect(ids()).toEqual([]);
   });
@@ -110,13 +114,13 @@ describe('what starts the planning', () => {
     expect(first?.signature).toContain('21:15');
   });
 
-  it('adds the Friday reminder when the person switches it on', async () => {
+  it('plans the Friday reminder from the first launch, and drops it when it is switched off', async () => {
     const store = await renderWithStore(<Probe />, { settings: finished });
-    expect(ids().some((id) => id.endsWith('.friday'))).toBe(false);
-    await act(async () => {
-      store.getState().updateReminders({ fridayKahfEnabled: true });
-    });
     expect(ids().some((id) => id.endsWith('.friday'))).toBe(true);
+    await act(async () => {
+      store.getState().updateReminders({ fridayKahfEnabled: false });
+    });
+    expect(ids().some((id) => id.endsWith('.friday'))).toBe(false);
   });
 
   it('takes today out once the page that meets the goal is read', async () => {
@@ -195,7 +199,7 @@ describe('when the plan cannot be made or scheduled', () => {
     await act(async () => {});
     expect(warn).toHaveBeenCalled();
     await act(async () => {
-      store.getState().updateReminders({ fridayKahfEnabled: true });
+      store.getState().updateReminders({ fridayKahfEnabled: false });
     });
     expect(sync).toHaveBeenCalledTimes(2);
   });

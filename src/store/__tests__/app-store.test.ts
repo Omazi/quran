@@ -60,16 +60,26 @@ describe('first launch', () => {
     expect(store.getState().journal).toBe(EMPTY_JOURNAL);
   });
 
-  it('proposes the two reminders about reading, and leaves the Friday one to the person', async () => {
+  it('proposes the three reminders, the Friday Al-Kahf one included (owner, 25 November)', async () => {
     const { store } = await load(createMemoryStorage());
     expect(store.getState().settings.reminders).toEqual({
       dailyEnabled: true,
       dailyTime: { hour: 20, minute: 30 },
       thirstyGardenEnabled: true,
-      fridayKahfEnabled: false,
+      fridayKahfEnabled: true,
       fridayTime: { hour: 9, minute: 0 },
       quietHours: null,
     });
+  });
+
+  it('keeps the Friday choice a person already saved: the new default is for new installs only', async () => {
+    const first = createMemoryStorage();
+    const { store } = await load(first);
+    store.getState().updateReminders({ fridayKahfEnabled: false });
+    await store.whenSaved();
+
+    const returning = await load(first);
+    expect(returning.store.getState().settings.reminders.fridayKahfEnabled).toBe(false);
   });
 
   it('writes the fresh start at once, so the next launch finds the same seed', async () => {

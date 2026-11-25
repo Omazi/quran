@@ -119,11 +119,11 @@ describe('settings screen', () => {
       expect(screen.getByRole('switch', { name: 'Rappel du jour' })).toBeChecked();
       expect(screen.getByRole('button', { name: 'Heure des rappels' })).toBeOnTheScreen();
       expect(screen.getByRole('switch', { name: 'Quand le jardin a soif' })).toBeChecked();
-      // The Friday reminder names a surah on the lock screen: it is the person's own choice.
+      // The Friday reminder is on by default, like the two others (owner, 25 November).
       expect(
         screen.getByRole('switch', { name: `Le vendredi${NO_BREAK_SPACE}: sourate Al-Kahf` }),
-      ).not.toBeChecked();
-      expect(screen.queryByRole('button', { name: 'Heure du vendredi' })).toBeNull();
+      ).toBeChecked();
+      expect(screen.getByRole('button', { name: 'Heure du vendredi' })).toBeOnTheScreen();
 
       expect(screen.getByRole('button', { name: 'Revoir la présentation' })).toBeOnTheScreen();
       expect(directionDependentStyles(screen.getByTestId('settings'))).toEqual([]);
@@ -384,11 +384,14 @@ describe('reminder settings', () => {
     });
     expect(screen.queryByRole('button', { name: 'Heure des rappels' })).toBeNull();
 
-    // Friday has its own time, shown once the person switches that reminder on.
+    // Friday starts on, with its own time, which goes when that reminder is switched off.
+    const friday = () =>
+      screen.getByRole('switch', { name: `Le vendredi${NO_BREAK_SPACE}: sourate Al-Kahf` });
+    expect(screen.getByRole('button', { name: 'Heure du vendredi' })).toBeOnTheScreen();
+    await fireEvent.press(friday());
+    expect(store.getState().settings.reminders.fridayKahfEnabled).toBe(false);
     expect(screen.queryByRole('button', { name: 'Heure du vendredi' })).toBeNull();
-    await fireEvent.press(
-      screen.getByRole('switch', { name: `Le vendredi${NO_BREAK_SPACE}: sourate Al-Kahf` }),
-    );
+    await fireEvent.press(friday());
     expect(store.getState().settings.reminders.fridayKahfEnabled).toBe(true);
     expect(screen.getByRole('button', { name: 'Heure du vendredi' })).toBeOnTheScreen();
 

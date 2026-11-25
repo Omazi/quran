@@ -108,7 +108,7 @@ Le plan devient des notifications locales (`expo-notifications`, aucun serveur) 
 - **Rappel de jardin et rappel du jour ne se cumulent pas** (priorité ci-dessus) : une
   notification de soif remplace le rappel du jour, au plus une par jour.
 - **Heures.** Rappel de lecture à `dailyTime` (20 h 30 par défaut), vendredi à `fridayTime`
-  (9 h par défaut, éteint par défaut car il nomme une sourate). Moment absolu à l'heure du
+  (9 h par défaut ; **activé par défaut depuis le 25 novembre 2026**, décision du propriétaire, alors qu'il était éteint parce qu'il nomme une sourate sur un écran verrouillé : écart 23 de `docs/design/SKILLS.md`. Valeur des nouvelles installations seulement : le choix déjà enregistré d'une personne est relu tel quel). Moment absolu à l'heure du
   téléphone au moment du calcul ; un changement de fuseau est repris à l'ouverture suivante.
 - **Toucher une notification** : `daily-goal`, `water-stopped`, `thirsty`, `wilting`,
   `dying`, `last-chance` ouvrent le lecteur à la page de reprise (lue au moment du toucher) ;

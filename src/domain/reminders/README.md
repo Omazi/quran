@@ -53,7 +53,7 @@ Rappels de lecture, à `dailyTime`, **au plus un par jour** :
 Quand plusieurs tombent le même jour, le premier de `REMINDER_PRIORITY` est gardé, les
 autres sont abandonnés. À partir du lendemain de la mort, seuls les `come-back` restent.
 
-Rappel du calendrier, à `fridayTime` : `friday-kahf`, chaque vendredi. Il ne dépend pas du
+Rappel du calendrier, à `fridayTime` : `friday-kahf`, chaque vendredi (activé par défaut dans les réglages d'une nouvelle installation, `DEFAULT_REMINDERS` du magasin ; le domaine ne connaît que les réglages qu'on lui donne). Il ne dépend pas du
 jardin et **s'ajoute** au rappel de lecture du jour : un vendredi peut porter deux rappels.
 
 Aucun rappel, d'aucun type, un jour en pause.

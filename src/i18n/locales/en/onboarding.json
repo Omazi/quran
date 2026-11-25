@@ -16,7 +16,7 @@
     "drought_one": "Garden after {{count}} day without reading",
     "drought_other": "Garden after {{count}} days without reading",
     "revival": "Garden coming back to life after one page",
-    "voice": "Reading aloud, followed word by word",
+    "voice": "Reading aloud: the words recited light up, and a word to read again is marked in red",
     "recognition": "A passage recognized by listening",
     "friends": "Your loved ones’ gardens"
   },
@@ -66,8 +66,8 @@
       "text": "The hizb you have read stay yours. Start again, and the water returns."
     },
     "voice": {
-      "title": "Read aloud, the app follows you.",
-      "text": "Each word lights up as you recite it. A misread word turns red, so you can read it again."
+      "title": "Recite, it follows you.",
+      "text": "The word you read lights up; if you skip one, it shows you."
     },
     "recognition": {
       "title": "Where is this passage from?",

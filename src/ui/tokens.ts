@@ -907,20 +907,25 @@ export const storyLayout = {
   notificationIcon: 40,
   notificationIconRadius: 9,
   notificationGap: spacing.sm,
-  /** The golden microphone of the listening page (`.orb`, `.mic`, `.radial i`, `.ring`). */
-  orb: 230,
-  orbMicrophone: 104,
-  orbRayCount: 48,
-  orbRayRadius: 96,
-  orbRayWidth: 3,
-  orbRayShortest: 8,
-  orbRayLongest: 26,
-  orbRingInset: 18,
-  /** Once the passage is found, the microphone shrinks and rises, and the card comes over it. */
-  orbFoundScale: 0.62,
-  orbFoundLift: 34,
+  /** The card of the passage found: its corners, and how far it rises as it comes. */
   foundCardRadius: 26,
-  foundCardOverlap: 34,
+  foundCardRise: 26,
+  /**
+   * The listening page shows the app's real listening screen: its rosette on paper, in a panel
+   * of the stage (judgement on the 8-point grid, the rosette's own proportions: the star's radius
+   * is 27 % of the panel's width on the real screen, less here so its petals stay in the panel).
+   * Once the passage is found the panel shortens and the rosette shrinks, as on the result.
+   */
+  rosettePanelHeight: 256,
+  rosettePanelFoundHeight: 128,
+  rosettePanelRadius: 28,
+  rosetteRadius: 76,
+  rosetteFoundScale: 0.5,
+  /** The reading demonstration of the voice page: its text size, lines, and the gap to its bar. */
+  voiceTextSize: 28,
+  voiceLineCount: 3,
+  voiceWordsPerLine: 4,
+  voiceBarGap: 16,
   /** The friends' gardens (`.fcard`, `.fg`): their card, the garden's height, the middle lift. */
   friendCardRadius: 22,
   friendGardenHeight: 86,
@@ -930,17 +935,19 @@ export const storyLayout = {
 
 /**
  * The motion of the first launch, from the prototype: how long the listening demonstration
- * listens before it finds the passage, and its whole loop; the beat of the rays and the rings;
- * the hint to swipe.
+ * listens before it finds the passage, and its whole loop; the hint to swipe; the voice page.
  */
 export const storyMotion = {
   listenMs: 2300,
   loopMs: 6600,
   foundMs: 550,
-  rayBeatMs: 1000,
-  ringMs: 2400,
   hintMs: 1600,
   hintTravel: 8,
+  /** The voice page's demonstration: one step every this long, and the pause before it starts again. */
+  voiceStepMs: 850,
+  voiceRestMs: 2200,
+  /** The simulated voice that moves the rosette and the meter: a level every this long. */
+  demoLevelMs: 90,
 } as const;
 
 /** Semibold, for a short emphasised phrase inside a text style (the watered pill). */

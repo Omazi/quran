@@ -16,7 +16,7 @@
     "drought_one": "Jardin après {{count}} jour sans lecture",
     "drought_other": "Jardin après {{count}} jours sans lecture",
     "revival": "Jardin qui revit après une page",
-    "voice": "Lecture à voix haute, suivie mot à mot",
+    "voice": "Lecture à voix haute : les mots récités s’allument, un mot à relire est marqué en rouge",
     "recognition": "Passage reconnu à l’écoute",
     "friends": "Jardins de tes proches"
   },
@@ -66,8 +66,8 @@
       "text": "Tes hizb lus restent acquis. Reprends, et l’eau revient."
     },
     "voice": {
-      "title": "Lis à voix haute, l’appli te suit.",
-      "text": "Chaque mot s’allume quand tu le récites. Un mot mal lu passe en rouge, pour que tu le reprennes."
+      "title": "Récite, il te suit.",
+      "text": "Le mot que tu lis s’illumine ; si tu en sautes un, il te le montre."
     },
     "recognition": {
       "title": "D’où vient ce passage ?",

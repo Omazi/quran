@@ -19,8 +19,8 @@ import { buildWantedNotifications, slotMoment } from '../wanted-notifications';
 // A Tuesday: the Fridays of the plan are the 27th and the following ones.
 const TODAY = parseLocalDate('2026-11-24');
 const RANGES = quranStructure.hizbPageRanges();
-// The Friday reminder is off by default (its text names a sourate): the person switches it on.
-const WITH_FRIDAY = { ...DEFAULT_REMINDERS, fridayKahfEnabled: true };
+// The Friday reminder is on by default (owner's decision of 25 November 2026).
+const WITH_FRIDAY = { ...DEFAULT_REMINDERS };
 const MORNING = { date: TODAY, time: { hour: 8, minute: 0 } };
 
 beforeAll(() => initI18n('fr'));
@@ -173,9 +173,16 @@ describe('time and language', () => {
   });
 });
 
-describe('with the Friday reminder off, as at the first launch', () => {
-  it('has no Friday notification', () => {
+describe('with the reminders as proposed at the first launch', () => {
+  it('has the Friday Al-Kahf notification, switched on by default', () => {
+    expect(DEFAULT_REMINDERS.fridayKahfEnabled).toBe(true);
     const notifications = wanted(sourceOf('thriving', { reminders: DEFAULT_REMINDERS }));
+    expect(notifications.some((notification) => notification.target === 'al-kahf')).toBe(true);
+  });
+
+  it('has none once the person has switched the Friday reminder off', () => {
+    const off = { ...DEFAULT_REMINDERS, fridayKahfEnabled: false };
+    const notifications = wanted(sourceOf('thriving', { reminders: off }));
     expect(notifications.some((notification) => notification.target === 'al-kahf')).toBe(false);
   });
 });
