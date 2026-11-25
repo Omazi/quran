@@ -3,6 +3,7 @@
   "bytes": 43537433,
   "sha256": "ef01ab441b004f9e6f1ea98d397b43452b3a45efab7c3928ab37af655dde8b52",
   "urls": [
+    "https://github.com/Omazi/quran/raw/voice-model/ggml-quran-tiny-q8_0.bin",
     "https://github.com/mano270699/watazawwadu-models/releases/download/quran-whisper-tiny-v1/ggml-quran-tiny-q8_0.bin"
   ],
   "model": "tarteel-ai/whisper-tiny-ar-quran",
