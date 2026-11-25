@@ -1,0 +1,84 @@
+name: TestFlight build
+
+# The part of the TestFlight workflow that runs code nobody here wrote: npm, CocoaPods and the
+# build phases of Xcode. It compiles the app and leaves an unsigned archive.
+#
+# It is a workflow of its own for one reason. A called workflow receives only the secrets its
+# caller hands over, and testflight.yml hands none to this one. So nothing of the Apple key can
+# be on this machine, wherever the repository that starts the send keeps that key. The same job
+# written inside testflight.yml would have been given every secret that workflow receives.
+#
+# Called by testflight.yml only (docs/TESTFLIGHT.md). The two names below must stay the same as there.
+on:
+  workflow_call:
+    inputs:
+      sha:
+        description: The commit to build, already checked to be on main
+        type: string
+        required: true
+      build:
+        description: The build number to write into the app
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  APP_REPOSITORY: Omazi/quran
+  BUNDLE_ID: com.omazi.quran
+
+jobs:
+  archive:
+    name: Archive (no secret here)
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      SHA: ${{ inputs.sha }}
+      BUILD: ${{ inputs.build }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          repository: ${{ env.APP_REPOSITORY }}
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+      # No cache: when this runs from another repository, nothing is left in that repository's cache.
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+      - name: Select the newest released Xcode and record versions
+        run: bash tools/ci/select-xcode.sh
+      - run: npm ci
+      - name: Generate the iOS project and install its pods
+        run: npx expo prebuild --platform ios
+      - name: Archive for iPhone (unsigned)
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          WORKSPACE=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" "ios/$SCHEME/Info.plist"
+          xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release \
+            -destination 'generic/platform=iOS' -derivedDataPath build/DerivedData \
+            -archivePath build/App.xcarchive CODE_SIGNING_ALLOWED=NO archive > build/xcodebuild.log 2>&1 \
+            || { grep -E "error:" build/xcodebuild.log | sort -u | cut -c1-400 | head -60; tail -60 build/xcodebuild.log; exit 1; }
+          grep -E "ARCHIVE SUCCEEDED" build/xcodebuild.log
+      - name: Check what the app contains
+        run: |
+          set -euo pipefail
+          APP=$(find build/App.xcarchive/Products/Applications -maxdepth 1 -name "*.app" | head -1)
+          echo "app: $APP ($(du -sh "$APP" | cut -f1))"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")" = "$BUNDLE_ID"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist")" = "$BUILD"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist"
+          test -s "$APP/main.jsbundle"
+          find "$APP" -name "KFGQPC-HAFS-Uthmanic-Script-v0.18.ttf" | grep -q .
+          tar -czf build/archive.tar.gz -C build App.xcarchive
+          ls -la build/archive.tar.gz
+      # The archive holds the app as anyone can build it from this public repository: nothing private.
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: unsigned-archive
+          path: build/archive.tar.gz
+          if-no-files-found: error
+          retention-days: 1

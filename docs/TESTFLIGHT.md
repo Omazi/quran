@@ -6,7 +6,8 @@ demande de fusion.
 
 | Étape                                           | État                                                      |
 | ----------------------------------------------- | --------------------------------------------------------- |
-| Scripts écrits, testés sans Mac                 | Fait (42 tests, `tools/apple/test_*.py`)                  |
+| Scripts écrits, testés sans Mac                 | Fait (53 tests, `tools/apple/test_*.py`)                  |
+| Contrôle côté Apple (clé, identifiant)          | **Réussi** le 24 novembre 2026, lancé depuis DishPlay     |
 | Signature et envoi sur un Mac de GitHub         | **Jamais encore exécutés**                                |
 | Fiche de l'appli dans App Store Connect         | **À créer par le propriétaire**, une fois (voir plus bas) |
 | Appli installée depuis TestFlight sur un iPhone | Pas encore                                                |
@@ -51,8 +52,8 @@ Deux dépendances à connaître :
 1. **Vérifier le côté Apple** (Linux). La clé répond-elle ? L'identifiant est-il enregistré
    (il l'est sinon) ? La fiche de l'appli existe-t-elle ? Sans fiche, le script s'arrête là
    et le dit : aucun Mac n'est lancé pour rien.
-2. **Compiler** (Mac, aucun secret). Même compilation que la vérification iOS, rangée dans
-   une archive non signée.
+2. **Compiler** (Mac, aucun secret : `testflight-build.yml`). Même compilation que la
+   vérification iOS, rangée dans une archive non signée.
 3. **Signer et envoyer** (Mac, avec la clé). L'archive est d'abord contrôlée : c'est bien
    cette appli, ce numéro, et rien d'autre. Le certificat est installé dans un trousseau
    temporaire, le profil est retrouvé ou créé, l'archive est signée, l'appli signée est
@@ -112,9 +113,11 @@ conversation, ni dans le dépôt.
 ## Ce qui protège la clé
 
 Voir `SECURITY.md`, « Signature et envoi ». En bref : la tâche qui compile lance des outils
-de tiers et ne voit aucun secret ; la tâche qui voit la clé ne lance que les outils d'Apple et
-les scripts de `tools/apple`, écrits sans aucune dépendance. Les journaux d'un dépôt public
-sont publics : les scripts n'y écrivent ni nom, ni adresse, ni clé.
+de tiers et ne reçoit aucun secret (c'est un script à part, `testflight-build.yml`, appelé sans
+secret) ; la tâche qui voit la clé ne lance que les outils d'Apple, Python, les scripts de
+`tools/apple`, écrits sans aucune dépendance, et `tools/ci/select-xcode.sh`, qui n'y appelle
+que Xcode. Les journaux d'un dépôt public sont publics : les scripts n'y écrivent ni nom, ni
+adresse, ni clé, et demandent à GitHub de masquer le nom du titulaire du certificat.
 
 ## Limites connues
 
@@ -125,10 +128,10 @@ sont publics : les scripts n'y écrivent ni nom, ni adresse, ni clé.
   d'Apple : le contrôle de l'archive, la signature à la main, le contrôle de l'appli signée
   et l'envoi (y compris un refus d'Apple qui ne dit pas son nom). Cela vérifie l'enchaînement
   et ce qui s'écrit dans le journal, pas le comportement des vrais outils.
-- La façon dont le script reçoit la clé depuis DishPlay suit la documentation de GitHub
-  (secrets nommés, environnement nommé dans la tâche). Elle ne sera vérifiée qu'au premier
-  lancement : en mode `prepare`, qui ne lance aucun Mac. Si la clé n'arrive pas, le script
-  s'arrête en le disant.
+- La façon dont le script reçoit la clé depuis DishPlay (secrets nommés, environnement nommé
+  dans la tâche) a été vérifiée par un vrai lancement en mode `prepare` le 24 novembre 2026 :
+  la clé a répondu et l'identifiant `com.omazi.quran` a été enregistré, sous le libellé
+  « Jannatuk ». L'ajout du fichier dans DishPlay n'a lancé aucune vérification de DishPlay.
 - L'appli n'a aucun droit particulier (pas de notifications à distance, pas d'iCloud, pas de
   widget). Le jour où elle en demandera, l'identifiant et la signature devront les porter.
 - L'ajout du titulaire au groupe de testeurs peut être refusé par Apple depuis un script ; le

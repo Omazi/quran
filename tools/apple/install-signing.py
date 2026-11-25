@@ -7,7 +7,8 @@ exists, given as a .p12, and an App Store provisioning profile that this script 
 through the App Store Connect API. It never creates or revokes a certificate.
 
 Everything private stays in a folder of RUNNER_TEMP that the workflow removes at the end. The
-log of the job is public: no name, no key, no certificate is printed.
+log of the job is public: no name, no key, no certificate is printed, and the runner is told to
+hide the certificate holder's name and the team's name in whatever the later steps print.
 
 Read from the environment, besides what tools/apple/asc.py reads:
     APPLE_TEAM_ID
@@ -49,6 +50,24 @@ def run(arguments: list[str]) -> bytes:
 def private_file(path: Path, content: bytes) -> None:
     with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb") as stream:
         stream.write(content)
+
+
+HOLDER_OF_A_CERTIFICATE = re.compile(r'"(?:Apple|iPhone|iOS) (?:Distribution|Development|Developer): ([^"\n]+?)(?: \([A-Z0-9]{10}\))?"')
+# The runner replaces a hidden value everywhere in the log: two letters would blank half of it.
+SHORTEST_NAME_HIDDEN = 3
+
+
+def names_to_hide(identities: str, profile: dict) -> list[str]:
+    """The holder of the certificate and the team of the profile, as `security` and the profile name them.
+
+    Each one is given to the runner (`::add-mask::`), which then hides it in everything the job
+    prints, whatever words Apple's tools put around it. A name with a line break is left out: it
+    would be read as another command of the log.
+    """
+    names = set(HOLDER_OF_A_CERTIFICATE.findall(identities))
+    if isinstance(profile.get("TeamName"), str):
+        names.add(profile["TeamName"])
+    return sorted({name.strip() for name in names if len(name.strip()) >= SHORTEST_NAME_HIDDEN and "\n" not in name and "\r" not in name})
 
 
 def check_profile(profile: dict, team: str, bundle: str) -> str:
@@ -102,6 +121,8 @@ def main() -> int:
     run(["security", "list-keychains", "-d", "user", "-s", str(keychain), *before])
     os.remove(folder / "distribution.p12")
     identities = run(["security", "find-identity", "-v", "-p", "codesigning", str(keychain)]).decode()
+    for name in names_to_hide(identities, {}):
+        print(f"::add-mask::{name}")  # shown as *** by the runner, here and in every later step
     fingerprints = [m.group(1).upper() for m in re.finditer(r'^\s*\d+\)\s+([0-9A-Fa-f]{40})\s+"Apple Distribution:', identities, re.M)]
     if len(fingerprints) != 1:
         raise AppleError(f"The .p12 must hold exactly one valid Apple Distribution identity; found {len(fingerprints)}.")
@@ -148,6 +169,8 @@ def main() -> int:
     profile_path = folder / "profile.mobileprovision"
     private_file(profile_path, profile_bytes)
     profile = plistlib.loads(run(["security", "cms", "-D", "-i", str(profile_path)]))
+    for name in names_to_hide("", profile):
+        print(f"::add-mask::{name}")
     uuid = check_profile(profile, team, args.bundle)
     if fingerprint not in {hashlib.sha1(c).hexdigest().upper() for c in profile.get("DeveloperCertificates", [])}:
         raise AppleError("The provisioning profile does not hold the certificate of the .p12.")

@@ -92,6 +92,14 @@ class TheArchive(InAFolder):
         (applications / "Sample.app").symlink_to(self.folder / "Elsewhere.app", target_is_directory=True)
         self.refused(archive)
 
+    def test_a_folder_of_the_archive_that_is_a_link_to_elsewhere_is_refused(self):
+        for linked in ("Products", "Products/Applications"):
+            with self.subTest(linked=linked), tempfile.TemporaryDirectory() as holder:
+                archive = make_archive(Path(holder))
+                (archive / linked).rename(Path(holder) / "elsewhere")
+                (archive / linked).symlink_to(Path(holder) / "elsewhere", target_is_directory=True)
+                self.refused(archive)
+
     def test_an_app_name_that_would_write_a_second_line_is_refused(self):
         archive = make_archive(self.folder)
         applications = archive / "Products" / "Applications"
@@ -133,6 +141,18 @@ class WhatTheAppHolds(InAFolder):
                 (self.app_of(archive) / "Frameworks" / "One.framework" / name).mkdir()
                 self.refused(archive)
 
+    def test_a_link_named_like_an_extension_is_refused(self):
+        archive = make_archive(self.folder)
+        (self.app_of(archive) / "Frameworks" / "Late.appex").symlink_to("One.framework", target_is_directory=True)
+        self.refused(archive)
+
+    def test_code_is_recognised_whatever_the_case_of_its_name(self):
+        for name in ("Evil.APPEX", "Other.App", "Helper.Xpc"):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as holder:
+                archive = make_archive(Path(holder))
+                (self.app_of(archive) / name).mkdir()
+                self.refused(archive)
+
     def test_a_link_to_a_file_outside_the_app_is_refused(self):
         outside = self.folder / "key.p8"
         outside.write_text("private")
@@ -157,6 +177,13 @@ class TheSignedApp(InAFolder):
 
     def test_the_signed_app_that_was_asked_for_is_accepted_and_returned(self):
         self.assertEqual(check_app.payload_app(self.payload(), BUNDLE, BUILD), self.folder / "Payload" / "Sample.app")
+
+    def test_a_payload_folder_that_is_a_link_to_elsewhere_is_refused(self):
+        folder = self.payload()
+        (folder / "Payload").rename(folder / "elsewhere")
+        (folder / "Payload").symlink_to(folder / "elsewhere", target_is_directory=True)
+        with self.assertRaises(asc.AppleError):
+            check_app.payload_app(folder, BUNDLE, BUILD)
 
     def test_a_signed_app_with_another_identifier_is_refused(self):
         with self.assertRaises(asc.AppleError):

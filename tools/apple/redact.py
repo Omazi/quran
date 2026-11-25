@@ -13,7 +13,8 @@ import re
 import sys
 from typing import TextIO
 
-SIGNING_CERTIFICATE = re.compile(r"\b((?:Apple|iPhone|iOS) (?:Distribution|Development|Developer)):[^\"'\n]*")
+# Up to the closing double quote or the end of the line: a name can hold an apostrophe.
+SIGNING_CERTIFICATE = re.compile(r"\b((?:Apple|iPhone|iOS) (?:Distribution|Development|Developer)):[^\"\n]*")
 TEAM_IN_QUOTES = re.compile(r"\b([Tt]eam) ([\"'])[^\"'\n]*\2")
 ADDRESS = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")
 

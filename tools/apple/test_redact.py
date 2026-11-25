@@ -28,6 +28,10 @@ class ALine(unittest.TestCase):
     def test_a_certificate_named_at_the_end_of_a_line_is_hidden(self):
         self.assertEqual(redact.redact("Signing Identity: Apple Distribution: Jane Doe (ABCDE12345)"), "Signing Identity: Apple Distribution: (hidden)")
 
+    def test_a_holder_whose_name_has_an_apostrophe_is_hidden_whole(self):
+        said = 'signer "Apple Distribution: Sean O\'Brien (ABCDE12345)" is not trusted'
+        self.assertEqual(redact.redact(said), 'signer "Apple Distribution: (hidden)" is not trusted')
+
     def test_a_team_named_in_quotes_is_hidden(self):
         said = 'error: exportArchive: Team "Jane Doe" does not have permission to create "iOS App Store" provisioning profiles.'
         self.assertEqual(redact.redact(said), 'error: exportArchive: Team (hidden) does not have permission to create "iOS App Store" provisioning profiles.')

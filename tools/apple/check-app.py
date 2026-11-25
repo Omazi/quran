@@ -5,7 +5,8 @@
 
 The archive comes from the job that compiles, which runs other people's code (npm, CocoaPods) and
 holds no secret. The job that holds the Apple key signs only what passes here:
-  - exactly one app, a real folder, with the expected identifier and build number;
+  - exactly one app, a real folder reached through real folders, with the expected identifier and
+    build number;
   - nothing else that runs: no extension, no watch app, no code bundled deeper in the app. The
     profile made for the send covers one identifier;
   - no link that leaves the app: a link to a file of the machine would travel in the signed app.
@@ -41,13 +42,16 @@ def read_plist(path: Path) -> dict:
     return content
 
 
-def only_app(container: Path) -> Path:
+def only_app(top: Path, *folders: str) -> Path:
+    """The one app found in top/folders, when every folder on the way and the app itself are real folders."""
+    container = top.joinpath(*folders)
     found = sorted(entry for entry in container.iterdir() if entry.name.endswith(".app")) if container.is_dir() else []
     if len(found) != 1:
         raise AppleError(f"Exactly one app is expected in {container.name}; found {len(found)}.")
     app = found[0]
-    if app.is_symlink() or not app.is_dir():
-        raise AppleError("The app is a link or a file, not a folder of its own.")
+    # A link anywhere on the way would make the checks read one place and the signing another.
+    if not app.is_dir() or os.path.realpath(app) != os.path.join(os.path.realpath(top), *folders, app.name):
+        raise AppleError("The app, or a folder on the way to it, is a link or a file, not a folder of its own.")
     if not SAFE_APP_NAME.fullmatch(app.name):
         raise AppleError("The app's name holds characters that are not expected.")
     return app
@@ -58,12 +62,12 @@ def check_content(app: Path) -> None:
     for folder, folders, files in os.walk(app):  # links to folders are listed, never entered
         for name in folders + files:
             path = os.path.join(folder, name)
+            if name.lower().endswith(BUNDLES_OF_CODE):  # a link with such a name too
+                raise AppleError("The app holds other code bundled inside it (an app, an extension or a service).")
             if os.path.islink(path):
                 target = os.path.realpath(path)
                 if target != root and not target.startswith(root + os.sep):
                     raise AppleError("The app holds a link that leaves the app.")
-            elif name.endswith(BUNDLES_OF_CODE):
-                raise AppleError("The app holds other code bundled inside it (an app, an extension or a service).")
 
 
 def check_app(app: Path, bundle: str, build: str) -> None:
@@ -77,7 +81,7 @@ def check_app(app: Path, bundle: str, build: str) -> None:
 
 def archive_app(archive: Path, bundle: str, build: str) -> Path:
     """The app of an Xcode archive, once it is known to be the one that was asked for."""
-    app = only_app(archive / "Products" / "Applications")
+    app = only_app(archive, "Products", "Applications")
     check_app(app, bundle, build)
     # Xcode exports the app this file names. When it names none, Xcode refuses the archive by itself.
     description = archive / "Info.plist"
@@ -90,7 +94,7 @@ def archive_app(archive: Path, bundle: str, build: str) -> Path:
 
 def payload_app(folder: Path, bundle: str, build: str) -> Path:
     """The app of an unpacked .ipa, once it is known to be the one that was asked for."""
-    app = only_app(folder / "Payload")
+    app = only_app(folder, "Payload")
     check_app(app, bundle, build)
     return app
 

@@ -266,6 +266,31 @@ class TestFlight(WithPretendApple):
         self.assertIn("No app record", out)
 
 
+
+class NamesToHide(unittest.TestCase):
+    """The runner hides what it is told to: the holder of the certificate and the team, whatever words Apple's tools use."""
+
+    IDENTITIES = '  1) 0123456789ABCDEF0123456789ABCDEF01234567 "Apple Distribution: Jane Doe (ABCDE12345)"\n     1 valid identities found\n'
+
+    def test_the_holder_of_the_certificate_and_the_team_of_the_profile_are_named(self):
+        self.assertEqual(install_signing.names_to_hide(self.IDENTITIES, {"TeamName": "Doe Studio"}), ["Doe Studio", "Jane Doe"])
+
+    def test_a_holder_whose_name_has_an_apostrophe_is_named_whole(self):
+        identities = '  1) 0123456789ABCDEF0123456789ABCDEF01234567 "Apple Distribution: Sean O\'Brien (ABCDE12345)"\n'
+        self.assertEqual(install_signing.names_to_hide(identities, {}), ["Sean O'Brien"])
+
+    def test_a_name_given_twice_is_named_once(self):
+        self.assertEqual(install_signing.names_to_hide(self.IDENTITIES, {"TeamName": "Jane Doe"}), ["Jane Doe"])
+
+    def test_nothing_is_named_when_nothing_is_known(self):
+        self.assertEqual(install_signing.names_to_hide("     0 valid identities found\n", {}), [])
+
+    def test_a_name_that_would_start_a_new_line_of_the_log_is_left_out(self):
+        self.assertEqual(install_signing.names_to_hide("", {"TeamName": "Doe\n::error::made up"}), [])
+
+    def test_a_name_too_short_to_hide_safely_is_left_out(self):
+        self.assertEqual(install_signing.names_to_hide("", {"TeamName": "ab"}), [])
+
 class Profile(unittest.TestCase):
     def good(self) -> dict:
         return {

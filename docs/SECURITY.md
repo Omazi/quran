@@ -73,39 +73,47 @@ la clé Apple. Détail dans `TESTFLIGHT.md`. Ce qui protège cette clé :
   scripts de ce commit sont lancés. Le contrôle vise la branche par son nom complet : une
   étiquette (« tag ») nommée `main` ne passe pas pour elle.
 - Deux tâches séparées. Celle qui compile lance npm, CocoaPods et les étapes de compilation
-  de Xcode, donc du code de tiers : elle ne reçoit aucun secret. Celle qui signe reçoit la
-  clé et ne lance que les outils d'Apple, Python et les scripts de `tools/apple` (plus
-  `tools/ci/select-xcode.sh`, qui n'y appelle que Xcode). Ces scripts n'utilisent que la
-  bibliothèque standard de Python : rien n'est téléchargé à côté de la clé.
+  de Xcode, donc du code de tiers : elle ne reçoit aucun secret. C'est garanti par la façon
+  dont elle est écrite : elle est un script à part (`testflight-build.yml`), appelé sans lui
+  confier le moindre secret, où que le dépôt qui lance l'envoi range les siens. Celle qui
+  signe reçoit la clé et ne lance que les outils d'Apple, Python et les scripts de
+  `tools/apple` (plus `tools/ci/select-xcode.sh`, qui n'y appelle que Xcode). Ces scripts
+  n'utilisent que la bibliothèque standard de Python : rien n'est téléchargé à côté de la clé.
 - L'archive qui passe d'une tâche à l'autre est contrôlée avant signature
-  (`tools/apple/check-app.py`, avec ses tests) : une seule appli, qui est un vrai dossier, le
-  bon identifiant, le bon numéro, aucune extension ni autre code rangé dedans, aucun lien
-  qui sort de l'appli. Les mêmes questions sont reposées à l'appli signée, avant l'envoi.
+  (`tools/apple/check-app.py`, avec ses tests) : une seule appli, qui est un vrai dossier
+  atteint par de vrais dossiers, le bon identifiant, le bon numéro, aucune extension ni autre
+  code rangé dedans (quel que soit le nom qu'on lui donne, lien compris), aucun lien qui sort
+  de l'appli. Les mêmes questions sont reposées à l'appli signée, avant l'envoi.
 - Le certificat vit dans un trousseau temporaire, retiré à la fin de la tâche avec le profil
   et la clé.
 - Les journaux d'un dépôt public sont publics. Les scripts n'y écrivent ni nom, ni adresse,
-  ni clé. Le journal de Xcode, qui nomme le titulaire du certificat, n'est jamais publié en
-  entier ; ce que dit `codesign` n'est pas montré du tout, et les lignes de Xcode et
-  d'`altool` qui sont montrées passent par `tools/apple/redact.py`, qui masque le titulaire
-  d'un certificat, une équipe nommée et les adresses.
+  ni clé. Deux protections se recouvrent. D'abord, dès que le certificat est installé, le
+  script donne à GitHub le nom de son titulaire et celui de l'équipe : GitHub les remplace
+  alors par `***` dans tout ce que la tâche affiche ensuite, quelle que soit la phrase.
+  Ensuite, le journal de Xcode n'est jamais publié en entier ; pendant la signature, rien de
+  ce que dit `codesign` n'est montré ; et les lignes de Xcode, d'`altool` et d'une
+  vérification de signature qui échoue passent par `tools/apple/redact.py`, qui masque le
+  titulaire d'un certificat, une équipe nommée et les adresses.
 - Aucun certificat n'est créé, modifié ni supprimé. Rien de DishPlay n'est lu ni modifié.
 
 Ce qui reste vrai malgré tout, à savoir avant de s'en servir :
 
 - **Qui peut écrire sur `main` de ce dépôt décide de ce qui tournera avec la clé Apple** au
   prochain lancement. Le fichier de DishPlay appelle le script de ce dépôt par le nom de sa
-  branche, pas par un commit figé : rien n'est relu du côté de DishPlay. Aujourd'hui, seuls
-  le propriétaire et les sessions de travail qu'il ouvre écrivent ici. Deux réglages du
-  propriétaire fermeraient cette porte : une règle sur `main` et sur les étiquettes de ce
-  dépôt (plus bas), et un accord demandé à chaque usage de l'environnement `testflight` de
-  DishPlay (ce réglage s'appliquerait aussi aux envois de DishPlay).
+  branche, pas par un commit figé : rien n'est relu du côté de DishPlay. Aujourd'hui, trois
+  choses peuvent écrire ici : le propriétaire, les sessions de travail qu'il ouvre, et le
+  jeton du script `ios-screens.yml` (il ne pousse que la branche `ci-screens`, mais son droit
+  d'écriture vaut pour tout le dépôt, sauf les scripts de `.github/workflows`). Deux réglages
+  du propriétaire fermeraient cette porte : une règle qui réserve les mises à jour de `main`
+  au propriétaire (plus bas), et un accord demandé à chaque usage de l'environnement
+  `testflight` de DishPlay (ce réglage s'appliquerait aussi aux envois de DishPlay).
 - N'importe quel commit déjà passé par `main` peut être envoyé, donc aussi une ancienne
   version de ces scripts. Aucune version antérieure à cette relecture n'a été poussée.
 - L'identifiant de l'équipe, celui de la clé et celui de son émetteur s'affichent dans le
   journal public : ce sont des variables, que GitHub ne masque pas. Ce sont des repères, pas
   des clés ; l'envoi de DishPlay les montre de la même façon.
-- Le masquage des noms couvre les formes connues. Un message d'Apple d'une forme inconnue
-  pourrait en laisser passer un.
+- Le masquage des noms n'a pas encore été vu à l'œuvre sur une vraie exécution. Il ne couvre
+  que le titulaire du certificat et l'équipe du profil, tels qu'Apple les écrit.
 - L'appli signée contient du code de tiers (c'est le cas de toute appli), et la clé de
   DishPlay sert désormais à deux applis.
 - Rien de tout cela n'a encore tourné sur un Mac (voir `TESTFLIGHT.md`, « Limites connues »).
@@ -120,10 +128,12 @@ Trois réglages GitHub restent à activer par le propriétaire, maintenant que l
   demande de fusion de tout contributeur extérieur.
 - Settings › Security : le signalement privé des failles, pour qu'un inconnu ait un moyen de
   prévenir sans rien publier.
-- Settings › Rules › Rulesets : une règle sur `main` qui interdit de forcer un push et de
-  supprimer la branche, pour qu'aucun script ne puisse la réécrire ; et une règle qui interdit
-  de créer une étiquette nommée `main` (GitHub la prendrait avant la branche pour choisir le
-  script d'envoi).
+- Settings › Rules › Rulesets : une règle sur `main` qui réserve ses mises à jour au
+  propriétaire (ou impose une demande de fusion), interdit de forcer un push et de supprimer
+  la branche. Interdire seulement le push forcé ne suffit pas : un push ordinaire sur `main`
+  change déjà ce qui tournera avec la clé Apple. Et une règle qui interdit de créer une
+  étiquette nommée `main` (GitHub la prendrait avant la branche pour choisir le script
+  d'envoi).
 
 ## Sauvegarde et restauration de la progression
 
