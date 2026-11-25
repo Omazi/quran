@@ -1,0 +1,50 @@
+{
+  "listening": {
+    "title": "Listening…",
+    "announcement": "Listening",
+    "stop": "Stop"
+  },
+  "surah": "Surah {{name}}",
+  "verse": "Verse {{verse}}",
+  "verses": "Verses {{first}} to {{last}}",
+  "acrossSurahs": "From verse {{first}} to verse {{last}}",
+  "page": "Page {{page}}",
+  "found": {
+    "title": "Passage Found",
+    "announcement": "Passage found: {{surah}}, {{verses}}",
+    "open": "Open at Page {{page}}"
+  },
+  "several": {
+    "title": "Several Passages",
+    "description_one": "These words appear in {{count}} place. Choose the one you were reciting.",
+    "description_other": "These words appear in {{count}} places. Choose the one you were reciting.",
+    "places": "Places",
+    "incomplete": "{{shown}} of {{count}} places. Recite what follows to narrow the list.",
+    "rowValue": "Verse {{verse}} · page {{page}}"
+  },
+  "nothingHeard": {
+    "title": "Nothing Heard",
+    "description": "Recite aloud, close to the phone, then try again."
+  },
+  "tooFewWords": {
+    "title": "Not Enough Words",
+    "description": "Recite a little longer: a few words are enough to find the passage."
+  },
+  "noMatch": {
+    "title": "No Passage Found",
+    "description": "Recite again, a little more slowly."
+  },
+  "microphoneDenied": {
+    "title": "Microphone Is Off",
+    "description": "To find a passage by reciting it, allow the microphone in Settings."
+  },
+  "failed": {
+    "title": "Listening Stopped",
+    "description": "Try again in a moment."
+  },
+  "actions": {
+    "listenAgain": "Listen Again",
+    "openSettings": "Open Settings",
+    "close": "Close"
+  }
+}

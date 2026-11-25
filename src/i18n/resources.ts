@@ -1,18 +1,21 @@
 import arCommon from './locales/ar/common.json';
 import arGarden from './locales/ar/garden.json';
 import arHome from './locales/ar/home.json';
+import arListening from './locales/ar/listening.json';
 import arOnboarding from './locales/ar/onboarding.json';
 import arReader from './locales/ar/reader.json';
 import arSettings from './locales/ar/settings.json';
 import enCommon from './locales/en/common.json';
 import enGarden from './locales/en/garden.json';
 import enHome from './locales/en/home.json';
+import enListening from './locales/en/listening.json';
 import enOnboarding from './locales/en/onboarding.json';
 import enReader from './locales/en/reader.json';
 import enSettings from './locales/en/settings.json';
 import frCommon from './locales/fr/common.json';
 import frGarden from './locales/fr/garden.json';
 import frHome from './locales/fr/home.json';
+import frListening from './locales/fr/listening.json';
 import frOnboarding from './locales/fr/onboarding.json';
 import frReader from './locales/fr/reader.json';
 import frSettings from './locales/fr/settings.json';
@@ -26,7 +29,15 @@ export const FALLBACK_LANGUAGE: AppLanguage = 'fr';
 export const RTL_LANGUAGES: readonly AppLanguage[] = ['ar'];
 
 /** One namespace per feature, so each feature owns its own translation files. */
-export const NAMESPACES = ['common', 'onboarding', 'home', 'garden', 'reader', 'settings'] as const;
+export const NAMESPACES = [
+  'common',
+  'onboarding',
+  'home',
+  'garden',
+  'reader',
+  'listening',
+  'settings',
+] as const;
 
 export const resources = {
   fr: {
@@ -35,6 +46,7 @@ export const resources = {
     home: frHome,
     garden: frGarden,
     reader: frReader,
+    listening: frListening,
     settings: frSettings,
   },
   en: {
@@ -43,6 +55,7 @@ export const resources = {
     home: enHome,
     garden: enGarden,
     reader: enReader,
+    listening: enListening,
     settings: enSettings,
   },
   ar: {
@@ -51,6 +64,7 @@ export const resources = {
     home: arHome,
     garden: arGarden,
     reader: arReader,
+    listening: arListening,
     settings: arSettings,
   },
 } as const;

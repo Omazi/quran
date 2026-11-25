@@ -164,6 +164,50 @@ describe('useColors', () => {
     expect(AccessibilityInfo.isHighTextContrastEnabled).not.toHaveBeenCalled();
   });
 
+  it('gives iOS the ornament line with the high-contrast values of the ornament', async () => {
+    setDeviceConditions({ os: 'ios' });
+    const { result } = await renderHook(() => useColors());
+    expect(result.current.ornamentLine).toEqual(
+      DynamicColorIOS({
+        light: '#CE9A3C',
+        dark: '#D9A441',
+        highContrastLight: '#6A470F',
+        highContrastDark: '#EBC272',
+      }),
+    );
+  });
+
+  it('gives iOS the strong water, the high-contrast water in every mode', async () => {
+    setDeviceConditions({ os: 'ios' });
+    const { result } = await renderHook(() => useColors());
+    expect(result.current.accentStrong).toEqual(
+      DynamicColorIOS({ light: '#0A4F59', dark: '#8FE0EA' }),
+    );
+    expect(result.current.accentStrong).toEqual(iosAppColor('accentStrong'));
+  });
+
+  it.each(['light', 'dark'] as const)(
+    'gives Android the ornament line and the strong water: %s',
+    async (scheme) => {
+      setDeviceConditions({ os: 'android', scheme });
+      const { result } = await renderHook(() => useColors());
+      expect(result.current.ornamentLine).toBe(appColors.ornamentLine[scheme]);
+      expect(result.current.accentStrong).toBe(highContrastAppColors.accent[scheme]);
+    },
+  );
+
+  it.each(['light', 'dark'] as const)(
+    'takes the high-contrast ornament line on Android, and keeps the strong water: %s',
+    async (scheme) => {
+      setDeviceConditions({ os: 'android', scheme, highContrast: true });
+      const { result } = await renderHook(() => useColors());
+      await waitFor(() => {
+        expect(result.current.ornamentLine).toBe(highContrastAppColors.ornamentLine[scheme]);
+      });
+      expect(result.current.accentStrong).toBe(highContrastAppColors.accent[scheme]);
+    },
+  );
+
   it('covers every role on both kinds of platform', async () => {
     const roles = [...Object.keys(iosSystemColorNames), ...Object.keys(appColors)].sort();
     setDeviceConditions({ os: 'ios' });
@@ -273,16 +317,25 @@ describe('AppText', () => {
     expect(styleOf(screen.getByText('Texte')).textAlign).toBe(align);
   });
 
-  it('announces the two title styles as headings', async () => {
+  it('sets the display title at 36 points in regular weight, scaling like a large title', async () => {
+    setDeviceConditions();
+    await render(<AppText variant="displayTitle">À l’écoute…</AppText>);
+    const text = screen.getByText('À l’écoute…');
+    expect(styleOf(text)).toMatchObject({ fontSize: 36, fontWeight: '400' });
+    expect(text).toHaveProp('dynamicTypeRamp', 'largeTitle');
+  });
+
+  it('announces the three title styles as headings', async () => {
     setDeviceConditions();
     await render(
       <>
         <AppText variant="largeTitle">Jardin</AppText>
+        <AppText variant="displayTitle">À l’écoute…</AppText>
         <AppText variant="title2">Ton objectif</AppText>
         <AppText>Texte</AppText>
       </>,
     );
-    expect(screen.getAllByRole('header')).toHaveLength(2);
+    expect(screen.getAllByRole('header')).toHaveLength(3);
   });
 
   it('takes its colour from a role, in both themes outside iOS', async () => {
@@ -309,6 +362,8 @@ describe('AppText', () => {
         <AppText color="paper">Papier</AppText>
         {/* @ts-expect-error Orange colours an icon, never a word. */}
         <AppText color="warning">Soif</AppText>
+        {/* @ts-expect-error The ornament line is a line, never a word. */}
+        <AppText color="ornamentLine">Filet</AppText>
       </>,
     );
     expect(styleOf(screen.getByText('Destructif')).color).toEqual(PlatformColor('systemRed'));

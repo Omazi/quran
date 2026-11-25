@@ -61,6 +61,14 @@ les couleurs de l'appli passent à ces valeurs.
 | `growth`   | `#164F36` | 9,52:1 sur blanc  | `#8FE0B4` | 13,49:1 sur noir          |
 | `ornament` | `#6A470F` | 7,78:1 sur papier | `#EBC272` | 10,44:1 sur papier sombre |
 
+Deux rôles de plus, hors des tableaux, ajoutés avec l'écran d'écoute validé par le
+propriétaire (D27, D29 ; écart 33 du registre). `ornamentLine` : les filets d'ornement
+dessinés fin, jamais un mot ni une icône ; clair `#CE9A3C` (2,36:1 sur papier : une
+décoration qui ne porte aucune information), sombre `#D9A441` (celui de `ornament`), contraste
+élevé `#6A470F` / `#EBC272` (la ligne `ornament` ci-dessus). `accentStrong` : l'eau à sa valeur
+de contraste élevé dans tous les réglages, `#0A4F59` clair, `#8FE0EA` sombre, pour l'étoile du
+cœur de la rosace ; elle n'a pas de variante à elle.
+
 Soif et alerte : orange système, pour l'icône et la jauge seulement ; le mot qui
 l'accompagne reste dans la couleur du texte, parce que l'orange n'est pas assez lisible
 sur fond clair (`accessibility.md › Vision`). Action destructive : rouge système. Aucune information
@@ -78,14 +86,15 @@ Deux familles, toutes deux du système (`typography.md` ; SwiftUI Design, règle
 embarquées ne servent qu'au texte du Coran. Quatre tailles au plus par écran. Tailles
 d'Apple, qui suivent le réglage de taille de texte de la personne :
 
-| Style       | Taille / interligne     | Usage                                        |
-| ----------- | ----------------------- | -------------------------------------------- |
-| Large Title | 34 / 41, gras, New York | Titre d'écran                                |
-| Title 2     | 22 / 28, gras, New York | Titre de page du premier lancement, de carte |
-| Headline    | 17 / 22, demi-gras      | Libellé important                            |
-| Body        | 17 / 22                 | Texte                                        |
-| Subhead     | 15 / 20                 | Texte secondaire                             |
-| Footnote    | 13 / 18                 | Notes, légendes                              |
+| Style         | Taille / interligne       | Usage                                                              |
+| ------------- | ------------------------- | ------------------------------------------------------------------ |
+| Large Title   | 34 / 41, gras, New York   | Titre d'écran                                                      |
+| Display Title | 36 / 40, normal, New York | Le mot d'un écran immersif (écran d’écoute ; écart 33 du registre) |
+| Title 2       | 22 / 28, gras, New York   | Titre de page du premier lancement, de carte                       |
+| Headline      | 17 / 22, demi-gras        | Libellé important                                                  |
+| Body          | 17 / 22                   | Texte                                                              |
+| Subhead       | 15 / 20                   | Texte secondaire                                                   |
+| Footnote      | 13 / 18                   | Notes, légendes                                                    |
 
 Minimum 11 points, pas de graisse fine (`typography.md › Ensuring legibility`).
 
