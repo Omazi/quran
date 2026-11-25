@@ -30,6 +30,7 @@ const SETTINGS: AppSettings = {
   onboardingCompleted: true,
   userSeed: 77,
   lastOpenedPage: null,
+  bookmarks: [],
   pauses: [],
   reminders: DEFAULT_REMINDERS,
 };

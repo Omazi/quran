@@ -13,6 +13,9 @@
       "remaining_other": "Encore {{count}} pages pour ton objectif",
       "reached": "Objectif du jour atteint"
     },
+    "bookmarks": {
+      "title": "Marque-pages"
+    },
     "view": {
       "label": "Afficher",
       "surahs": "Sourates",
@@ -60,10 +63,40 @@
   },
   "bar": {
     "back": "Retour",
-    "contents": "Sommaire"
+    "bookmark": "Marque-page",
+    "listen": "Écouter un passage"
   },
   "feedback": {
     "pageCounted": "+1 page, ton jardin est arrosé",
+    "pageGrows": "+1 page, {{growth}}",
+    "grows": {
+      "pomegranate": "ton grenadier grandit",
+      "date-palm": "ton palmier-dattier grandit",
+      "olive": "ton olivier grandit",
+      "fig": "ton figuier grandit",
+      "cypress": "ton cyprès grandit",
+      "orange": "ton oranger grandit",
+      "channels": "tes canaux avancent",
+      "paving": "ton dallage avance",
+      "bed": "ton parterre se remplit",
+      "stepping-stones": "ton chemin de pierres avance",
+      "flowers": "tes fleurs poussent",
+      "fountain": "ta fontaine prend forme",
+      "springs": "tes sources approchent",
+      "birds": "tes oiseaux approchent",
+      "wall": "ton mur s’élève",
+      "trellis": "ta treille grimpe",
+      "gate": "ta porte prend forme",
+      "lanterns": "tes lanternes approchent",
+      "butterflies": "tes papillons approchent",
+      "pavilion": "ton pavillon s’élève",
+      "carpets": "tes tapis se tissent",
+      "cushions": "tes coussins approchent",
+      "lectern": "ton pupitre prend forme",
+      "roses": "tes roses poussent",
+      "waterfall": "ta cascade prend forme",
+      "full-bloom": "ton jardin approche de sa pleine floraison"
+    },
     "hizbCompleted": "Hizb terminé. Nouveau dans ton jardin : {{element}}"
   },
   "notFound": {

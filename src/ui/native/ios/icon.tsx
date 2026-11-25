@@ -28,6 +28,7 @@ export function Icon({
   symbol,
   textStyle = 'body',
   color = 'label',
+  tint,
   accessibilityLabel,
   testID,
 }: IconProps) {
@@ -42,7 +43,7 @@ export function Icon({
             textStyle: appleTextStyles[textStyle],
             weight: SWIFTUI_WEIGHT[textStyles[textStyle].fontWeight],
           }),
-          foregroundStyle(colors[color]),
+          foregroundStyle(tint ?? colors[color]),
           accessibilityLabel === undefined
             ? accessibilityHidden()
             : accessibilityLabelModifier(accessibilityLabel),

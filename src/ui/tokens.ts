@@ -96,6 +96,16 @@ export const readerPalette = {
   gold: { light: '#C7A05A', dark: '#B8934A' },
   goldLight: { light: '#F1D388', dark: '#D9B86E' },
   goldDeep: { light: '#9D7526', dark: '#8A6A2E' },
+  /**
+   * The app's action colour, forest green (owner's decision of 25 November 2026): the big
+   * microphone of the reader (mushaf.png). At night the dusk green of the Proches tab and the home
+   * screen (`forest`, `gardenPalette.action`). White on it: 7.85:1 by day, 5.18:1 at night.
+   */
+  action: { light: '#1F5C45', dark: '#2E7A5B' },
+  onAction: { light: '#FFFFFF', dark: '#FFFFFF' },
+  /** The bottom bar under the page (mushaf.png #F9F7EE) and its top hairline. */
+  bar: { light: '#F9F7EE', dark: '#1B1E1D' },
+  barEdge: { light: '#E2DFD8', dark: '#333836' },
   /** Colour of the soft shadow under the page, the cards and the round buttons. */
   shadow: { light: '#50391A', dark: '#000000' },
 } as const satisfies Record<string, ColorPair>;
@@ -401,6 +411,8 @@ export const readerShapes = {
   skyHeight: 320,
   /** The round buttons of the reader's bar: 40 points drawn, 44 touched (`layout.touchTarget`). */
   roundButton: 40,
+  /** The big microphone of the reader's bottom bar (mushaf.png: 56 points). */
+  micButton: 56,
   /** The reader's bar at the default text size, then the row of the watered pill under it. */
   barHeight: 48,
   pillRowHeight: 32,

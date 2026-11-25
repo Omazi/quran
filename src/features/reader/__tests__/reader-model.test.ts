@@ -35,6 +35,7 @@ import {
   pageTopInset,
 } from '../page-layout';
 import { pageSurah } from '../page-surah';
+import { buildHomeModel } from '@/features/home';
 import { readingFeedback } from '../reading-feedback';
 import { finishVisit, pauseVisit, resumeVisit, startVisit, type PageVisit } from '../reading-timer';
 import { resolveResumePage } from '../resume-page';
@@ -197,12 +198,21 @@ describe('the 30-second rule (spec 3), with a fake clock', () => {
 describe('the feedback after a page (spec 3)', () => {
   const settings = { dailyGoalPages: 5, userSeed: 42, lastOpenedPage: null, pauses: [] };
 
-  it('says a new page counted', () => {
+  it('says a new page counted, and names what grows in the hizb in progress', () => {
     const before = readPages([1]);
     const after = readPages([2], before);
-    expect(
-      readingFeedback({ before, after, settings, today: DAY, hizbPageRanges: RANGES }),
-    ).toEqual({ kind: 'page-counted' });
+    const feedback = readingFeedback({
+      before,
+      after,
+      settings,
+      today: DAY,
+      hizbPageRanges: RANGES,
+    });
+    // The element the garden module grows with the pages of the hizb in progress.
+    const growing = buildHomeModel({ journal: after, settings, today: DAY, hizbPageRanges: RANGES })
+      .garden.nextElement?.element.kind;
+    expect(growing).toBeDefined();
+    expect(feedback).toEqual({ kind: 'page-counted', growingKind: growing });
   });
 
   it('names the new element of the garden when the page completes a hizb', () => {

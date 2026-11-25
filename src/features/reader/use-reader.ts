@@ -32,6 +32,8 @@ export interface ReaderModel {
   readonly juz: number;
   readonly hizb: number;
   readonly barsVisible: boolean;
+  /** Whether the page shown has a bookmark. */
+  readonly isBookmarked: boolean;
   /** What to tell the person about the page they just left, or null. */
   readonly feedback: ReadingFeedback | null;
 }
@@ -41,6 +43,8 @@ export interface ReaderActions {
   readonly changePage: (page: number) => void;
   /** A tap on the page: hides or shows the bars. */
   readonly toggleBars: () => void;
+  /** Bookmarks the page shown, or removes its bookmark. */
+  readonly toggleBookmark: () => void;
 }
 
 const SECOND_MS = 1000;
@@ -78,6 +82,8 @@ export function useReader(
   const pauses = useAppStore((state) => state.settings.pauses);
   const lastOpenedPage = useAppStore((state) => state.settings.lastOpenedPage);
   const rememberOpenedPage = useAppStore((state) => state.setLastOpenedPage);
+  const bookmarks = useAppStore((state) => state.settings.bookmarks);
+  const toggleBookmarkInStore = useAppStore((state) => state.toggleBookmark);
 
   // Read when a visit ends, which can be after the last render (when the reader closes).
   const settings: HomeSettings = { dailyGoalPages, userSeed, lastOpenedPage, pauses };
@@ -166,6 +172,10 @@ export function useReader(
   }, [feedback]);
 
   const toggleBars = useCallback(() => setBarsShown((shown) => !shown), []);
+  const toggleBookmark = useCallback(
+    () => toggleBookmarkInStore(page),
+    [page, toggleBookmarkInStore],
+  );
 
   return {
     model: {
@@ -174,8 +184,9 @@ export function useReader(
       juz: quranStructure.juzOfPage(page),
       hizb: quranStructure.hizbOfPage(page),
       barsVisible: areBarsShown || isScreenReaderRunning,
+      isBookmarked: bookmarks.includes(page),
       feedback,
     },
-    actions: { changePage, toggleBars },
+    actions: { changePage, toggleBars, toggleBookmark },
   };
 }

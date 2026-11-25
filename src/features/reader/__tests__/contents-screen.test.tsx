@@ -156,6 +156,43 @@ describe('the Quran tab', () => {
     );
   });
 
+  it('shows no bookmarks card before the first bookmark', async () => {
+    setDeviceConditions();
+    await showLanguage('fr');
+    await renderContents();
+    expect(screen.queryByTestId('contents-bookmarks')).toBeNull();
+  });
+
+  it('lists the bookmarks in the order of the pages, each opening its page', async () => {
+    setDeviceConditions({ os: 'android' });
+    await showLanguage('fr');
+    await renderContents(createTestAppStore({ settings: { bookmarks: [2, 293] } }));
+    const card = screen.getByTestId('contents-bookmarks');
+    expect(styleOf(card)).toMatchObject({ backgroundColor: readerPalette.card.light });
+    expect(within(card).getByRole('header', { name: 'Marque-pages' })).toBeOnTheScreen();
+    const rows = within(card).getAllByTestId(/^contents-bookmark-\d+$/);
+    expect(rows.map((row) => row.props.testID)).toEqual([
+      'contents-bookmark-2',
+      'contents-bookmark-293',
+    ]);
+    const kahf = within(card).getByRole('button', { name: 'Page 293, Al-Kahf · Juz 15' });
+    await fireEvent.press(kahf);
+    expect(openPage).toHaveBeenCalledWith(293);
+  });
+
+  it('puts the bookmarks above the lists, under the search field', async () => {
+    setDeviceConditions();
+    await showLanguage('fr');
+    await renderContents(createTestAppStore({ settings: { bookmarks: [293] } }));
+    const order = ['contents-search', 'contents-bookmarks', 'contents-view'];
+    const all = screen.container.queryAll(
+      (element) => typeof element.props.testID === 'string' && order.includes(element.props.testID),
+    );
+    const firstSeen = order.map((id) => all.findIndex((element) => element.props.testID === id));
+    expect(firstSeen.every((index) => index >= 0)).toBe(true);
+    expect([...firstSeen].sort((a, b) => a - b)).toEqual(firstSeen);
+  });
+
   it('lists the 114 surahs with their number, names, place, verses and page', async () => {
     setDeviceConditions();
     await showLanguage('fr');

@@ -5,9 +5,12 @@ import { useCallback } from 'react';
 export interface ReaderNavigation {
   readonly close: () => void;
   readonly openContents: () => void;
+  /** The listening screen, from the reader's microphone (owner's decision, 25 November 2026). */
+  readonly openListening: () => void;
 }
 
 const CONTENTS_ROUTE = '/(tabs)/quran';
+const LISTENING_ROUTE = '/listening';
 
 /**
  * Leaves the reader. Back goes where the person came from (the home screen or the Quran tab);
@@ -21,5 +24,6 @@ export function useReaderNavigation(): ReaderNavigation {
     if (router.canGoBack()) router.back();
     else router.replace(CONTENTS_ROUTE);
   }, [router]);
-  return { close, openContents };
+  const openListening = useCallback(() => router.push(LISTENING_ROUTE), [router]);
+  return { close, openContents, openListening };
 }

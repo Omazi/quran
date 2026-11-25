@@ -21,6 +21,7 @@ export function Icon({
   symbol,
   textStyle = 'body',
   color = 'label',
+  tint,
   accessibilityLabel,
   testID,
 }: IconProps) {
@@ -33,7 +34,7 @@ export function Icon({
       name={{ ios: symbol.ios, android: symbol.android, web: symbol.android }}
       size={style.fontSize * fontScale}
       weight={SYMBOL_WEIGHT[style.fontWeight]}
-      tintColor={colors[color]}
+      tintColor={tint ?? colors[color]}
       accessible={!isDecorative}
       accessibilityRole={isDecorative ? undefined : 'image'}
       accessibilityLabel={accessibilityLabel}

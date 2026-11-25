@@ -49,6 +49,7 @@ function OpenReader({
         initialPage={initialPage}
         openContents={navigation.openContents}
         close={navigation.close}
+        openListening={navigation.openListening}
       />
     </>
   );

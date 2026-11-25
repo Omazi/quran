@@ -474,3 +474,56 @@ export function SkyBand() {
     </View>
   );
 }
+
+const BOOKMARK_SYMBOL: IconSymbol = { ios: 'bookmark.fill', android: 'bookmark' };
+
+/**
+ * The pages bookmarked in the reader, in a white card under the search field, titled like the
+ * home mockup's sections, each row opening its page (owner's decision, 25 November 2026). Shown
+ * only once there is a bookmark: an empty card would only say there is nothing.
+ */
+export function BookmarksCard({
+  bookmarks,
+  onOpen,
+}: {
+  bookmarks: ContentsModel['bookmarks'];
+  onOpen: (page: number) => void;
+}) {
+  const { t } = useTranslation('reader');
+  if (bookmarks.length === 0) return null;
+  return (
+    <ReaderCard testID="contents-bookmarks">
+      <AppText variant="title2" color="ink">
+        {t('contents.bookmarks.title')}
+      </AppText>
+      <View>
+        {bookmarks.map((place, index) => {
+          const label = t('contents.search.page', { page: place.page });
+          const detail = t('contents.search.pageDetail', {
+            surah: surahDisplayName(place.surah),
+            juz: place.juz,
+          });
+          return (
+            <ListRow
+              key={place.page}
+              isFirst={index === 0}
+              accessibilityLabel={`${label}, ${detail}`}
+              onPress={() => onOpen(place.page)}
+              testID={`contents-bookmark-${place.page}`}
+            >
+              <Icon symbol={BOOKMARK_SYMBOL} textStyle="headline" color="ornament" />
+              <View style={styles.rowWords}>
+                <AppText variant="headline" color="ink">
+                  {label}
+                </AppText>
+                <AppText variant="footnote" color="inkSecondary">
+                  {detail}
+                </AppText>
+              </View>
+            </ListRow>
+          );
+        })}
+      </View>
+    </ReaderCard>
+  );
+}

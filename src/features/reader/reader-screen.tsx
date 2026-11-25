@@ -24,7 +24,7 @@ import {
 import { BookPager, type BookPagerHandle } from './book-pager';
 import { READER_CONFIG } from './config';
 import { MushafPageView, type PageTurnActions } from './mushaf-page-view';
-import { FeedbackPill, ReaderHeader } from './reader-bar';
+import { FeedbackPill, ReaderBottomBar, ReaderHeader } from './reader-bar';
 import { computePageMetrics, type PageArea, type PageMetrics } from './page-layout';
 import { nextPage, previousPage } from './page-order';
 import type { ReadingFeedback } from './reading-feedback';
@@ -35,6 +35,8 @@ import { ZoomablePage, useZoomState } from './zoomable-page';
 
 const NOT_FOUND_SYMBOL: IconSymbol = { ios: 'book.closed', android: 'book_2' };
 const FONT_SYMBOL: IconSymbol = { ios: 'textformat', android: 'text_fields' };
+/** The bottom bar runs under the home indicator and keeps it clear itself. */
+const TOP_AND_SIDES = ['top', 'left', 'right'] as const;
 const NEXT_ACTION = 'nextPage';
 const PREVIOUS_ACTION = 'previousPage';
 
@@ -50,6 +52,8 @@ export interface ReaderScreenProps {
   openContents: () => void;
   /** Leaves the reader for where the person came from. */
   close: () => void;
+  /** Opens the listening screen, from the microphone. */
+  openListening: () => void;
 }
 
 /**
@@ -71,6 +75,7 @@ export function ReaderScreen({
   initialPage,
   openContents,
   close,
+  openListening,
 }: ReaderScreenProps) {
   const { t } = useTranslation('reader');
   const [area, setArea] = useState<PageArea | null>(null);
@@ -169,12 +174,12 @@ export function ReaderScreen({
   }
 
   return (
-    <Screen background="readerCanvas" testID="reader">
+    <Screen background="readerCanvas" edges={TOP_AND_SIDES} testID="reader">
       <ReaderHeader
         model={model}
         isVisible={model.barsVisible}
         onBack={close}
-        onContents={openContents}
+        onToggleBookmark={actions.toggleBookmark}
       />
       <View style={styles.pillRow} testID="reader-pill-row">
         {feedbackText === null ? null : <FeedbackPill key={feedbackText} text={feedbackText} />}
@@ -198,6 +203,7 @@ export function ReaderScreen({
           }
         </GestureHandlerRootView>
       </View>
+      <ReaderBottomBar isVisible={model.barsVisible} onListen={openListening} />
     </Screen>
   );
 }
@@ -206,9 +212,17 @@ export function ReaderScreen({
 function useFeedbackText(feedback: ReadingFeedback | null): string | null {
   const { t } = useTranslation(['reader', 'garden']);
   if (feedback === null) return null;
-  return feedback.kind === 'page-counted'
+  if (feedback.kind === 'hizb-completed') {
+    return t('reader:feedback.hizbCompleted', {
+      element: t(`garden:kinds.${feedback.elementKind}`),
+    });
+  }
+  // What the page grows, by name ("+1 page, ton grenadier grandit"); the garden when nothing does.
+  return feedback.growingKind === null
     ? t('reader:feedback.pageCounted')
-    : t('reader:feedback.hizbCompleted', { element: t(`garden:kinds.${feedback.elementKind}`) });
+    : t('reader:feedback.pageGrows', {
+        growth: t(`reader:feedback.grows.${feedback.growingKind}`),
+      });
 }
 
 interface ReaderUnavailableProps {

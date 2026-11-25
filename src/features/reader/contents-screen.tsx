@@ -16,6 +16,7 @@ import {
 
 import { READER_CONFIG } from './config';
 import {
+  BookmarksCard,
   HizbRow,
   ReaderCard,
   ReaderSegmented,
@@ -81,6 +82,7 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
           <SearchResults model={model} actions={actions} />
         ) : (
           <>
+            <BookmarksCard bookmarks={model.bookmarks} onOpen={actions.openPage} />
             <ReaderSegmented
               label={t('contents.view.label')}
               options={viewOptions}

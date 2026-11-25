@@ -6,10 +6,10 @@ import type { ReminderSettings } from './types';
  * Version of the stored document. Version 1 had no `fridayTime` and no `quietHours` in the
  * reminders; version 2 had no `timeSpent` (the time counters, D37). Version 3 was written by two
  * lines of the app, one with `timeSpent` and one with `settings.lastOpenedPage`; version 4 has both.
- * Documents of the older versions are upgraded when they are read (stored-data.ts). A document of
+ * Version 5 adds `settings.bookmarks`, the pages bookmarked in the reader. Documents of the older versions are upgraded when they are read (stored-data.ts). A document of
  * any other version is discarded.
  */
-export const STORED_DATA_VERSION = 4;
+export const STORED_DATA_VERSION = 5;
 
 /** The key of the stored document. */
 export const STORED_DATA_KEY = 'app-data';

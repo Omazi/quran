@@ -11,6 +11,7 @@ const SETTINGS: AppSettings = {
   onboardingCompleted: true,
   userSeed: 123_456_789,
   lastOpenedPage: 293,
+  bookmarks: [18, 293, 604],
   pauses: [{ from: parseLocalDate('2026-03-01'), to: parseLocalDate('2026-03-04') }],
   reminders: {
     dailyEnabled: false,
@@ -442,6 +443,60 @@ describe('the last page opened in the reader', () => {
     ['a boolean', true],
   ])('discards the settings, and keeps the journal, for %s', (_name, lastOpenedPage) => {
     expect(readStoredData(settingsWith({ lastOpenedPage }))).toMatchObject({
+      settings: null,
+      journal: JOURNAL,
+      discarded: ['settings'],
+    });
+  });
+});
+
+describe('the bookmarks of the reader', () => {
+  it('is version 5 of the document', () => {
+    expect(STORED_DATA_VERSION).toBe(5);
+  });
+
+  it('are written and read back, in the order of the pages', () => {
+    for (const bookmarks of [[], [1], [2, 293, 604]]) {
+      const settings = { ...SETTINGS, bookmarks };
+      const reading = readStoredData(writeStoredData({ settings, journal: JOURNAL }));
+      expect(reading.settings?.bookmarks).toEqual(bookmarks);
+      expect(reading.discarded).toEqual([]);
+    }
+  });
+
+  it('are none in a document of version 4, which had no such field, and nothing else changes', () => {
+    const { bookmarks: _bookmarks, ...settingsOfVersion4 } = SETTINGS;
+    const reading = readStoredData(
+      JSON.stringify({ version: 4, settings: settingsOfVersion4, journal: JOURNAL, timeSpent: {} }),
+    );
+    expect(reading).toEqual({
+      settings: { ...SETTINGS, bookmarks: [] },
+      journal: JOURNAL,
+      timeSpent: {},
+      discarded: [],
+      wasUpgraded: true,
+    });
+  });
+
+  it('are none after the upgrade of the oldest documents too', () => {
+    const { bookmarks: _bookmarks, lastOpenedPage: _page, ...settingsOfVersion2 } = SETTINGS;
+    const reading = readStoredData(
+      JSON.stringify({ version: 2, settings: settingsOfVersion2, journal: JOURNAL }),
+    );
+    expect(reading.settings).toEqual({ ...SETTINGS, lastOpenedPage: null, bookmarks: [] });
+  });
+
+  it.each([
+    ['a page 0', [0]],
+    ['a page 605', [605]],
+    ['a page that is not whole', [1.5]],
+    ['a page written as text', ['293']],
+    ['the same page twice', [18, 18]],
+    ['pages out of order', [293, 18]],
+    ['something that is not a list', 293],
+    ['null', null],
+  ])('discards the settings, and keeps the journal, for %s', (_name, bookmarks) => {
+    expect(readStoredData(settingsWith({ bookmarks }))).toMatchObject({
       settings: null,
       journal: JOURNAL,
       discarded: ['settings'],

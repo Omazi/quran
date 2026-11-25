@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import {
@@ -22,8 +23,12 @@ import { surahDisplayName } from './surah-name';
 import type { ReaderModel } from './use-reader';
 
 const BACK_SYMBOL: IconSymbol = { ios: 'chevron.backward', android: 'arrow_back_ios_new' };
-const CONTENTS_SYMBOL: IconSymbol = { ios: 'list.bullet', android: 'format_list_bulleted' };
+const BOOKMARK_SYMBOL: IconSymbol = { ios: 'bookmark', android: 'bookmark_border' };
+const BOOKMARK_FILLED_SYMBOL: IconSymbol = { ios: 'bookmark.fill', android: 'bookmark' };
+const MICROPHONE_SYMBOL: IconSymbol = { ios: 'mic.fill', android: 'mic' };
 const WATER_SYMBOL: IconSymbol = { ios: 'drop.fill', android: 'water_drop' };
+/** The bottom bar keeps the home indicator clear by itself. */
+const BOTTOM_EDGE = ['bottom'] as const;
 const { roundButton, shadowOpacity, shadowRadius, shadowOffsetY } = readerShapes;
 /** What the round button adds around its drawn circle to reach the touch target. */
 const ROUND_BUTTON_SLOP = Math.max(0, (layout.touchTarget - roundButton) / 2);
@@ -32,6 +37,11 @@ interface RoundButtonProps {
   symbol: IconSymbol;
   label: string;
   onPress: () => void;
+  /** For a button that is on or off: VoiceOver says which (accessibility.md › VoiceOver). */
+  isSelected?: boolean;
+  /** Mirrors the symbol in Arabic outside iOS: only for symbols of reading order. */
+  followsReadingOrder?: boolean;
+  symbolTestID?: string;
   testID: string;
 }
 
@@ -43,13 +53,23 @@ interface RoundButtonProps {
  * (back, a list of lines) take their right-to-left form in Arabic (right-to-left.md › Controls,
  * › Interface icons): SF Symbols does it on iOS, Material Symbols are mirrored here.
  */
-function RoundButton({ symbol, label, onPress, testID }: RoundButtonProps) {
+function RoundButton({
+  symbol,
+  label,
+  onPress,
+  isSelected,
+  followsReadingOrder = false,
+  symbolTestID,
+  testID,
+}: RoundButtonProps) {
   const palette = useReaderPalette();
-  const isMirrored = Platform.OS !== 'ios' && getWritingDirection() === 'rtl';
+  const isMirrored =
+    followsReadingOrder && Platform.OS !== 'ios' && getWritingDirection() === 'rtl';
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={isSelected === undefined ? undefined : { selected: isSelected }}
       onPress={onPress}
       hitSlop={{
         top: ROUND_BUTTON_SLOP,
@@ -65,7 +85,7 @@ function RoundButton({ symbol, label, onPress, testID }: RoundButtonProps) {
       ]}
     >
       <View style={isMirrored ? styles.mirrored : undefined}>
-        <Icon symbol={symbol} textStyle="body" color="ink" />
+        <Icon symbol={symbol} textStyle="body" color="ink" testID={symbolTestID} />
       </View>
     </Pressable>
   );
@@ -76,18 +96,19 @@ export interface ReaderHeaderProps {
   /** False while a tap on the page hides the bars: the room stays, the page does not move. */
   isVisible: boolean;
   onBack: () => void;
-  onContents: () => void;
+  onToggleBookmark: () => void;
 }
 
 /**
  * The reader's bar, as the validated mockup draws it: a round back button, the surah of the page
- * with "Juz n, Hizb n · Page n" under it, centred, and a round button to the contents. A tap on
+ * with "Juz n, Hizb n · Page n" under it, centred, and the round bookmark button, filled when the
+ * page has a bookmark (owner's decision, 25 November 2026). A tap on
  * the page hides it for a page free of distraction and another brings it back
  * (toolbars.md › Best practices; going-full-screen.md › Best practices); hidden, it keeps its room
  * and leaves VoiceOver, so nothing on the page moves. Drawn here rather than by the system
  * navigation bar: deviation 82 of the register.
  */
-export function ReaderHeader({ model, isVisible, onBack, onContents }: ReaderHeaderProps) {
+export function ReaderHeader({ model, isVisible, onBack, onToggleBookmark }: ReaderHeaderProps) {
   const { t } = useTranslation('reader');
   return (
     <View
@@ -114,12 +135,65 @@ export function ReaderHeader({ model, isVisible, onBack, onContents }: ReaderHea
         </AppText>
       </View>
       <RoundButton
-        symbol={CONTENTS_SYMBOL}
-        label={t('bar.contents')}
-        onPress={onContents}
-        testID="reader-contents"
+        symbol={model.isBookmarked ? BOOKMARK_FILLED_SYMBOL : BOOKMARK_SYMBOL}
+        label={t('bar.bookmark')}
+        onPress={onToggleBookmark}
+        isSelected={model.isBookmarked}
+        symbolTestID={
+          model.isBookmarked ? 'reader-bookmark-symbol-filled' : 'reader-bookmark-symbol-empty'
+        }
+        testID="reader-bookmark"
       />
     </View>
+  );
+}
+
+export interface ReaderBottomBarProps {
+  isVisible: boolean;
+  onListen: () => void;
+}
+
+/**
+ * The bottom bar of the mockup, with its one control: the big forest-green microphone, centred,
+ * that opens the listening screen (owner's decision, 25 November 2026: no other tool for now).
+ * The bar is the mockup's lighter cream under a hairline and runs under the home indicator. It
+ * hides and comes back with the top bar, and keeps its room so the page does not move. The
+ * microphone is the screen's one coloured button (buttons.md › Style), 56 points, with a soft
+ * shadow of its own green as in the mockup.
+ */
+export function ReaderBottomBar({ isVisible, onListen }: ReaderBottomBarProps) {
+  const { t } = useTranslation('reader');
+  const palette = useReaderPalette();
+  return (
+    <SafeAreaView
+      edges={BOTTOM_EDGE}
+      testID="reader-bottom-bar"
+      pointerEvents={isVisible ? 'auto' : 'none'}
+      accessibilityElementsHidden={!isVisible}
+      importantForAccessibility={isVisible ? 'auto' : 'no-hide-descendants'}
+      style={[
+        styles.bottomBar,
+        isVisible
+          ? { backgroundColor: palette.bar, borderTopColor: palette.barEdge }
+          : styles.hiddenBar,
+      ]}
+    >
+      <View style={[styles.bottomBarContent, !isVisible && styles.hidden]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('bar.listen')}
+          onPress={onListen}
+          testID="reader-listen"
+          style={({ pressed }) => [
+            styles.microphone,
+            { backgroundColor: palette.action, shadowColor: palette.action },
+            pressed && styles.pressed,
+          ]}
+        >
+          <Icon symbol={MICROPHONE_SYMBOL} textStyle="title2" tint={palette.onAction} />
+        </Pressable>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -208,5 +282,22 @@ const styles = StyleSheet.create({
     ...shadow,
   },
   pillText: { flexShrink: 1 },
+  bottomBar: {
+    alignItems: 'center',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'transparent',
+  },
+  bottomBarContent: { paddingVertical: spacing.sm },
+  hiddenBar: { backgroundColor: 'transparent' },
+  microphone: {
+    width: readerShapes.micButton,
+    height: readerShapes.micButton,
+    borderRadius: readerShapes.micButton / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOpacity: shadowOpacity * 3,
+    shadowRadius: shadowRadius * 1.5,
+    shadowOffset: { width: 0, height: shadowOffsetY * 2 },
+  },
   emphasis: { fontWeight: emphasisWeight },
 });

@@ -70,6 +70,19 @@ export function isLastOpenedPage(value: unknown): value is number | null {
   return value === null || isWholeNumberWithin(value, 1, PAGE_COUNT);
 }
 
+/**
+ * Bookmarks the store can keep: whole pages from 1 to 604, each once, in increasing order, which
+ * is how the app always writes them. Anything else means the document was damaged.
+ */
+export function isBookmarkList(value: unknown): value is readonly number[] {
+  if (!Array.isArray(value) || value.length > PAGE_COUNT) return false;
+  return value.every(
+    (page, index) =>
+      isWholeNumberWithin(page, 1, PAGE_COUNT) &&
+      (index === 0 || page > (value[index - 1] as number)),
+  );
+}
+
 /** A seed the garden module accepts: a whole number from 0 to 2^53 - 1. */
 export function isUserSeed(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
@@ -157,7 +170,8 @@ function readPauses(value: unknown): readonly Pause[] | null {
  */
 function readSettings(value: unknown): AppSettings | null {
   if (!isRecord(value)) return null;
-  const { language, dailyGoalPages, onboardingCompleted, userSeed, lastOpenedPage } = value;
+  const { language, dailyGoalPages, onboardingCompleted, userSeed, lastOpenedPage, bookmarks } =
+    value;
   const reminders = readReminders(value.reminders);
   const pauses = readPauses(value.pauses);
   if (language !== null && (typeof language !== 'string' || !isSupportedLanguage(language))) {
@@ -165,13 +179,14 @@ function readSettings(value: unknown): AppSettings | null {
   }
   if (!isDailyGoalPages(dailyGoalPages) || typeof onboardingCompleted !== 'boolean') return null;
   if (!isUserSeed(userSeed) || reminders === null || pauses === null) return null;
-  if (!isLastOpenedPage(lastOpenedPage)) return null;
+  if (!isLastOpenedPage(lastOpenedPage) || !isBookmarkList(bookmarks)) return null;
   return {
     language,
     dailyGoalPages,
     onboardingCompleted,
     userSeed,
     lastOpenedPage,
+    bookmarks: [...bookmarks],
     pauses,
     reminders,
   };
@@ -235,6 +250,8 @@ const VERSION_WITHOUT_TIME_SPENT = 2;
  * added `settings.lastOpenedPage`. Its documents are told apart by their shape, not by number.
  */
 const VERSION_OF_TWO_SHAPES = 3;
+/** The version that had no bookmarks. */
+const VERSION_WITHOUT_BOOKMARKS = 4;
 
 /** Version 1 to 2: the reminders get the Friday time and the quiet hours of the defaults. */
 function upgradeFromVersion1(document: UnknownRecord): UnknownRecord {
@@ -261,10 +278,23 @@ function upgradeFromVersion2(document: UnknownRecord): UnknownRecord {
  */
 function upgradeFromVersion3(document: UnknownRecord): UnknownRecord {
   const { settings } = document;
-  let next: UnknownRecord = { ...document, version: STORED_DATA_VERSION };
+  let next: UnknownRecord = { ...document, version: VERSION_WITHOUT_BOOKMARKS };
   if (next.timeSpent === undefined) next = { ...next, timeSpent: {} };
   if (isRecord(settings) && settings.lastOpenedPage === undefined) {
     next = { ...next, settings: { ...settings, lastOpenedPage: null } };
+  }
+  return next;
+}
+
+/**
+ * Version 4 to 5: no bookmarks yet. A `bookmarks` field already there is left untouched, so that
+ * the checks that follow decide about it.
+ */
+function upgradeFromVersion4(document: UnknownRecord): UnknownRecord {
+  const { settings } = document;
+  const next: UnknownRecord = { ...document, version: STORED_DATA_VERSION };
+  if (isRecord(settings) && settings.bookmarks === undefined) {
+    return { ...next, settings: { ...settings, bookmarks: [] } };
   }
   return next;
 }
@@ -280,6 +310,7 @@ function upgradeDocument(document: UnknownRecord): UnknownRecord | null {
   if (current.version === VERSION_WITHOUT_FRIDAY_TIME) current = upgradeFromVersion1(current);
   if (current.version === VERSION_WITHOUT_TIME_SPENT) current = upgradeFromVersion2(current);
   if (current.version === VERSION_OF_TWO_SHAPES) current = upgradeFromVersion3(current);
+  if (current.version === VERSION_WITHOUT_BOOKMARKS) current = upgradeFromVersion4(current);
   return current.version === STORED_DATA_VERSION ? current : null;
 }
 

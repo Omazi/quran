@@ -13,6 +13,9 @@
       "remaining_other": "{{count}} more pages to reach your goal",
       "reached": "Today’s goal reached"
     },
+    "bookmarks": {
+      "title": "Bookmarks"
+    },
     "view": {
       "label": "Show",
       "surahs": "Surahs",
@@ -60,10 +63,40 @@
   },
   "bar": {
     "back": "Back",
-    "contents": "Contents"
+    "bookmark": "Bookmark",
+    "listen": "Listen to a Passage"
   },
   "feedback": {
     "pageCounted": "+1 page, your garden is watered",
+    "pageGrows": "+1 page, {{growth}}",
+    "grows": {
+      "pomegranate": "your pomegranate tree is growing",
+      "date-palm": "your date palm is growing",
+      "olive": "your olive tree is growing",
+      "fig": "your fig tree is growing",
+      "cypress": "your cypress is growing",
+      "orange": "your orange tree is growing",
+      "channels": "your channels are flowing further",
+      "paving": "your paving is spreading",
+      "bed": "your flower bed is filling",
+      "stepping-stones": "your stepping stones are spreading",
+      "flowers": "your flowers are growing",
+      "fountain": "your fountain is taking shape",
+      "springs": "your springs are coming",
+      "birds": "your birds are coming",
+      "wall": "your wall is rising",
+      "trellis": "your trellis is climbing",
+      "gate": "your gate is taking shape",
+      "lanterns": "your lanterns are coming",
+      "butterflies": "your butterflies are coming",
+      "pavilion": "your pavilion is rising",
+      "carpets": "your carpets are being woven",
+      "cushions": "your cushions are coming",
+      "lectern": "your lectern is taking shape",
+      "roses": "your roses are growing",
+      "waterfall": "your waterfall is taking shape",
+      "full-bloom": "your garden is nearing full bloom"
+    },
     "hizbCompleted": "Hizb complete. New in your garden: {{element}}"
   },
   "notFound": {
