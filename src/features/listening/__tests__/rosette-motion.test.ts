@@ -189,7 +189,13 @@ describe('a petal over its life (prototype: 4.6 s)', () => {
 });
 
 describe('the light of the lines', () => {
-  it('by day, keeps the contrast of the validated lines with the charter colours', () => {
+  it('by day, has the opacities of the validated prototype (heart 0.94, outer 0.88, inside 0.78 + 0.22 * level)', () => {
+    expect(lineOpacities(0, 0, 'light', false)).toMatchObject({ heart: 0.94, outer: 0.88 });
+    expect(lineOpacities(0, 0, 'light', false).inside).toBeCloseTo(0.78);
+    expect(lineOpacities(1, 0, 'light', false).inside).toBeCloseTo(1);
+  });
+
+  it('by day, takes its opacities from the settings', () => {
     expect(lineOpacities(0, 0, 'light', false)).toEqual({
       heart: ROSETTE_OPACITY.light.heart,
       outer: ROSETTE_OPACITY.light.outer,

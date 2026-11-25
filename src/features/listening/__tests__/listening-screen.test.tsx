@@ -10,7 +10,7 @@ import {
   showLanguage,
   type ScreenConditions,
 } from '@/features/garden/test-support/screen-conditions';
-import { appColors, highContrastAppColors } from '@/ui/tokens';
+import { appColors } from '@/ui/tokens';
 import {
   directionDependentStyles,
   renderOnIOS,
@@ -137,6 +137,13 @@ describe.each(MATRIX)(
       expect(screen.queryByTestId('rosette-nodes', HIDDEN) !== null).toBe(isNight);
     });
 
+    it(`${label(conditions)}: the title is the display title, 36 points, regular, as a heading`, async () => {
+      await showScenario('listening', conditions, 500);
+      const title = screen.getByRole('header');
+      expect(styleOf(title)).toMatchObject({ fontSize: 36, fontWeight: '400' });
+      expect(title.props.dynamicTypeRamp).toBe('largeTitle');
+    });
+
     it(`${label(conditions)}: drawn on paper with the app's colours, the heart in high-contrast water`, async () => {
       await showScenario('listening', conditions, 500);
       const { scheme } = conditions;
@@ -144,9 +151,9 @@ describe.each(MATRIX)(
       expect(styleOf(screen.getByTestId('listening')).backgroundColor).toBe(
         appColors.paper[appearance],
       );
-      expect(strokeOf('rosette-heart')).toEqual(brush(highContrastAppColors.accent[appearance]));
+      expect(strokeOf('rosette-heart')).toEqual(brush(appColors.accentStrong[appearance]));
       expect(strokeOf('rosette-outer')).toEqual(brush(appColors.accent[appearance]));
-      expect(strokeOf('rosette-inside')).toEqual(brush(appColors.ornament[appearance]));
+      expect(strokeOf('rosette-inside')).toEqual(brush(appColors.ornamentLine[appearance]));
     });
   },
 );

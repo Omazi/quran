@@ -83,27 +83,26 @@ export const ROSETTE_MOTION = {
 } as const;
 
 /**
- * Opacities of the lines. Night values are the prototype's (`PALETTES.night`); its colours are
- * the night values of the app's colours, so they are kept as they are.
+ * Opacities of the lines: the prototype's own (`drawRosette`, `PALETTES`). Night values are
+ * drawn with the night values of the app's colours, which are the prototype's night colours.
  *
- * Day values: the prototype's day colours are not the app's colours (gold #CE9A3C and water
- * #347A7A, where the charter has #8F611A and #0E6B78). Drawn with the charter's colours at the
- * prototype's opacities, every line would be darker than the validated image (the gold lines
- * 3.31:1 instead of 1.93:1 on paper). So each day opacity below is the one that gives the
- * charter's colour, on paper, the contrast the validated line had: same light, token colour.
+ * Day values are the prototype's too, drawn with the app's colours: the gold lines in
+ * `ornamentLine` (#CE9A3C, the prototype's gold), the outer star in water (#0E6B78, where the
+ * prototype has #347A7A), the heart in `accentStrong` (#0A4F59, where it has #0C5056). The
+ * water lines are therefore a little darker than the validated image; the report compares them.
  */
 export const ROSETTE_OPACITY = {
   light: {
-    /** Prototype rgba(12,80,86,0.94) = 7.34:1; the high-contrast water #0A4F59 at 0.94. */
+    /** `rgba(heart, 0.94)`. */
     heart: 0.94,
-    /** Prototype rgba(52,122,122,0.88) = 3.75:1; water #0E6B78 at 0.78. */
-    outer: 0.78,
-    /** Prototype rgba(206,154,60,0.78 + 0.22 * level) = 1.93 to 2.36:1; gold #8F611A at 0.46 to 0.59. */
-    inside: 0.46,
-    insideByLevel: 0.13,
-    /** Petals: prototype gold #D6AA5C and water #5CA09E; the same contrast takes these shares. */
-    goldPetal: 0.5,
-    waterPetal: 0.64,
+    /** `rgba(outer, 0.88)`. */
+    outer: 0.88,
+    /** `rgba(inside, 0.78 + 0.22 * level)`. */
+    inside: 0.78,
+    insideByLevel: 0.22,
+    /** Petals are drawn at the opacity of their own life, with no further share. */
+    goldPetal: 1,
+    waterPetal: 1,
   },
   dark: {
     heart: 0.94,

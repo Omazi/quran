@@ -43,7 +43,7 @@ export function ListeningView({ subscribeToLevel, onStop, reducedMotion }: Liste
           testID="rosette"
         />
         <View style={[styles.title, { top: size.height * LISTENING_LAYOUT.titleTop }]}>
-          <AppText variant="largeTitle" color="ink" align="center">
+          <AppText variant="displayTitle" color="ink" align="center">
             {t('listening.title')}
           </AppText>
         </View>
