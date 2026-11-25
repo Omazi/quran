@@ -4,7 +4,15 @@
  */
 
 import { normalizeArabic } from '@/domain/recognition';
-import { HIZB_PER_JUZ, JUZ_COUNT, type QuranStructure, type RevelationPlace } from '@/domain/quran';
+import {
+  HIZB_PER_JUZ,
+  JUZ_COUNT,
+  type QuranStructure,
+  type RevelationPlace,
+  type VerseRef,
+} from '@/domain/quran';
+
+import { isPageNumber } from './page-order';
 
 export interface SurahEntry {
   readonly surah: number;
@@ -20,6 +28,8 @@ export interface HizbEntry {
   readonly hizb: number;
   /** The page on which the hizb starts. */
   readonly page: number;
+  /** The verse with which it starts. */
+  readonly start: VerseRef;
 }
 
 export interface JuzEntry {
@@ -45,12 +55,37 @@ export function buildSurahEntries(structure: QuranStructure): readonly SurahEntr
   }));
 }
 
+/** The verse after `ref`, in the order of the mushaf; null after the last verse. */
+function nextVerse(structure: QuranStructure, ref: VerseRef): VerseRef | null {
+  if (ref.verse < structure.surah(ref.surah).verseCount) {
+    return { surah: ref.surah, verse: ref.verse + 1 };
+  }
+  return ref.surah < structure.surahs.length ? { surah: ref.surah + 1, verse: FIRST_VERSE } : null;
+}
+
+/**
+ * The first verse of a hizb: the first verse of its first page that belongs to it. The structure
+ * gives the page and the hizb of every verse; the start is read from them, not copied.
+ */
+function hizbStart(structure: QuranStructure, hizb: number, page: number): VerseRef {
+  let verse: VerseRef | null = structure.firstVerseOfPage(page);
+  while (verse !== null && structure.pageOfVerse(verse) === page) {
+    if (structure.hizbOfVerse(verse) === hizb) return verse;
+    verse = nextVerse(structure, verse);
+  }
+  throw new RangeError(`Hizb ${hizb} does not start on page ${page}.`);
+}
+
 export function buildJuzEntries(structure: QuranStructure): readonly JuzEntry[] {
   return Array.from({ length: JUZ_COUNT }, (_, index) => {
     const juz = index + 1;
     const hizbs = Array.from({ length: HIZB_PER_JUZ }, (__, offset) => {
       const range = structure.hizbPageRange(index * HIZB_PER_JUZ + offset + 1);
-      return { hizb: range.hizb, page: range.firstPage };
+      return {
+        hizb: range.hizb,
+        page: range.firstPage,
+        start: hizbStart(structure, range.hizb, range.firstPage),
+      };
     });
     // A juz starts with its first hizb (checked by createQuranStructure).
     return { juz, page: hizbs[0]?.page ?? FIRST_VERSE, hizbs };
@@ -75,9 +110,7 @@ function arabicKey(text: string): string {
  * The surahs that match a search (spec 1: by name or by number). A number matches its surah
  * only; a name matches when the search is part of the transliterated or the Arabic name,
  * whatever the case, accents, hyphens or vowel signs. An empty search keeps every surah.
- *
- * The system search field that will call this is not in this lot (known gap): the rule is ready
- * and tested.
+ * The inline search field of the Quran tab calls it as the person types.
  */
 export function filterSurahs(entries: readonly SurahEntry[], query: string): readonly SurahEntry[] {
   const trimmed = query.trim();
@@ -93,4 +126,22 @@ export function filterSurahs(entries: readonly SurahEntry[], query: string): rea
       (latin !== '' && latinKey(entry.nameTransliterated).includes(latin)) ||
       (arabic !== '' && arabicKey(entry.nameArabic).includes(arabic)),
   );
+}
+
+/** Arabic-Indic digits, as an Arabic keyboard types them. */
+const ARABIC_INDIC_DIGITS = /[\u0660-\u0669]/g;
+const ARABIC_INDIC_ZERO = 0x0660;
+
+/**
+ * The page typed in "Aller à la page": a whole number from 1 to 604, in Western or Arabic-Indic
+ * digits, spaces around it allowed. Anything else is null: the field then says the range and the
+ * button that opens the page is unavailable (text-fields.md › Best practices: validate fields).
+ */
+export function parseGoToPage(text: string): number | null {
+  const western = text
+    .trim()
+    .replace(ARABIC_INDIC_DIGITS, (digit) => String(digit.charCodeAt(0) - ARABIC_INDIC_ZERO));
+  if (!DIGITS_ONLY.test(western)) return null;
+  const page = Number(western);
+  return isPageNumber(page) ? page : null;
 }

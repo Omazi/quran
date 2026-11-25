@@ -126,10 +126,26 @@ const CHARTER_CONTRASTS: readonly CharterContrast[] = [
   },
   {
     table: 'standard',
+    name: 'secondary ink on paper',
+    foreground: appColors.inkSecondary.light,
+    background: appColors.paper.light,
+    written: 5.13,
+    usage: 'text',
+  },
+  {
+    table: 'standard',
     name: 'dark ink on dark paper',
     foreground: appColors.ink.dark,
     background: appColors.paper.dark,
     written: 14.38,
+    usage: 'text',
+  },
+  {
+    table: 'standard',
+    name: 'dark secondary ink on dark paper',
+    foreground: appColors.inkSecondary.dark,
+    background: appColors.paper.dark,
+    written: 6.73,
     usage: 'text',
   },
   {

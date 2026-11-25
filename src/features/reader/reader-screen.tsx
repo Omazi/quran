@@ -9,6 +9,7 @@ import {
   type AccessibilityActionEvent,
   type LayoutChangeEvent,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { quranStructure } from '@/data/quran';
 import { getDisplayedLanguage } from '@/i18n';
@@ -20,6 +21,7 @@ import {
   Screen,
   layout,
   spacing,
+  useReducedMotion,
   type IconSymbol,
 } from '@/ui';
 
@@ -31,6 +33,7 @@ import { nextPage, previousPage } from './page-order';
 import type { ReadingFeedback } from './reading-feedback';
 import type { ReaderActions, ReaderModel } from './use-reader';
 import type { QuranFontStatus } from './use-quran-font';
+import { ZoomablePage } from './zoomable-page';
 
 const WATER_SYMBOL: IconSymbol = { ios: 'drop.fill', android: 'water_drop' };
 const NOT_FOUND_SYMBOL: IconSymbol = { ios: 'book.closed', android: 'book_2' };
@@ -77,6 +80,9 @@ export function ReaderScreen({
 }: ReaderScreenProps) {
   const { t } = useTranslation('reader');
   const [area, setArea] = useState<PageArea | null>(null);
+  // While a page is enlarged, a swipe moves around it instead of turning it.
+  const [isZoomed, setZoomed] = useState(false);
+  const isMotionReduced = useReducedMotion();
   const pager = useRef<BookPagerHandle>(null);
   const { changePage, toggleBars } = actions;
 
@@ -116,15 +122,19 @@ export function ReaderScreen({
 
   const renderPage = useCallback(
     (page: number) =>
-      metrics === null ? null : (
-        <MushafPageView
-          page={page}
-          metrics={metrics}
+      metrics === null || area === null ? null : (
+        <ZoomablePage
+          width={area.width}
+          height={area.height}
           onTap={toggleBars}
-          turnActions={turnActions}
-        />
+          onZoomChange={setZoomed}
+          isMotionReduced={isMotionReduced}
+          testID={`reader-page-${page}`}
+        >
+          <MushafPageView page={page} metrics={metrics} area={area} turnActions={turnActions} />
+        </ZoomablePage>
       ),
-    [metrics, toggleBars, turnActions],
+    [area, isMotionReduced, metrics, toggleBars, turnActions],
   );
 
   if (fontStatus === 'failed') {
@@ -144,7 +154,7 @@ export function ReaderScreen({
     <Screen background="paper" testID="reader">
       <View style={styles.barRoom} />
       <FeedbackLine feedback={model.feedback} />
-      <View style={styles.pages} onLayout={onAreaLayout} testID="reader-pages">
+      <GestureHandlerRootView style={styles.pages} onLayout={onAreaLayout} testID="reader-pages">
         {
           // No page before the font: the Quran text is never shown in another one (spec).
           metrics === null || area === null || fontStatus !== 'ready' ? null : (
@@ -155,11 +165,12 @@ export function ReaderScreen({
               height={area.height}
               onPageChange={changePage}
               renderPage={renderPage}
+              scrollEnabled={!isZoomed}
               accessibilityLabel={t('page.pager')}
             />
           )
         }
-      </View>
+      </GestureHandlerRootView>
     </Screen>
   );
 }
@@ -203,10 +214,12 @@ function ReaderTitle({ model }: { model: ReaderModel }) {
   const { t } = useTranslation('reader');
   return (
     <View style={styles.title} accessible accessibilityRole="header">
-      <AppText variant="headline" align="center" numberOfLines={1}>
+      <AppText variant="headline" color="ink" align="center" numberOfLines={1}>
         {surahDisplayName(model.surah)}
       </AppText>
-      <AppText variant="footnote" color="secondaryLabel" align="center" numberOfLines={1}>
+      {/* Secondary ink, not the system's secondary label: the bar floats over the paper, on which
+          the system grey reaches only 3.35:1 (accessibility.md › Vision). */}
+      <AppText variant="footnote" color="inkSecondary" align="center" numberOfLines={1}>
         {t('page.subtitle', { juz: model.juz, hizb: model.hizb, page: model.page })}
       </AppText>
     </View>

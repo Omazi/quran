@@ -2,32 +2,40 @@
   "contents": {
     "title": "Quran",
     "resume": {
-      "title": "Continue Reading",
-      "detail": "Page {{page}}"
+      "action": "Continue · {{surah}} · Page {{page}}"
     },
     "goTo": {
       "title": "Go to Page",
-      "stepper": "Page",
-      "value": "Page {{page}}",
-      "open": "Open Page {{page}}",
-      "footer": "The mushaf has 604 pages. You can also start from a juz."
+      "open": "Open · Page {{page}}",
+      "footer": "The mushaf has {{last}} pages. You can also start from a juz.",
+      "field": "Page",
+      "placeholder": "{{first}} to {{last}}",
+      "openNone": "Open",
+      "invalid": "Enter a page number from {{first}} to {{last}}."
     },
     "view": {
       "label": "Show",
       "surahs": "Surahs",
       "juz": "Juz"
     },
+    "search": {
+      "label": "Search Surahs",
+      "placeholder": "Surah name or number",
+      "clear": "Clear Search",
+      "empty": "No surah for “{{query}}”"
+    },
     "surah": {
       "label": "{{number}}. {{name}}",
-      "detail_one": "{{place}} · {{count}} verse · page {{page}}",
-      "detail_other": "{{place}} · {{count}} verses · page {{page}}",
+      "detail_one": "{{place}} · {{count}} verse · Page {{page}}",
+      "detail_other": "{{place}} · {{count}} verses · Page {{page}}",
       "meccan": "Meccan",
-      "medinan": "Medinan"
+      "medinan": "Medinan",
+      "numberOnly": "Surah {{number}}"
     },
     "juz": {
       "title": "Juz {{juz}}",
       "hizb": "Hizb {{hizb}}",
-      "page": "Page {{page}}"
+      "start": "{{surah}}, verse {{verse}} · Page {{page}}"
     }
   },
   "page": {

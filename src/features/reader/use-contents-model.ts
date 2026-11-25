@@ -1,10 +1,12 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { quranStructure } from '@/data/quran';
 
 import {
   buildJuzEntries,
   buildSurahEntries,
+  filterSurahs,
+  parseGoToPage,
   type JuzEntry,
   type SurahEntry,
 } from './contents-model';
@@ -17,8 +19,13 @@ export interface ContentsModel {
   /** The page to resume and the surah of its first verse. */
   readonly resume: { readonly page: number; readonly surah: number };
   readonly view: ContentsView;
-  /** The page chosen in "Aller à la page". */
-  readonly goToPage: number;
+  /** What is typed in "Aller à la page". */
+  readonly goToText: string;
+  /** The page it names, or null while it names none (empty, or outside 1 to 604). */
+  readonly goToPage: number | null;
+  /** What is typed in the search field. */
+  readonly query: string;
+  /** The surahs the search keeps, in order: all 114 for an empty search. */
   readonly surahs: readonly SurahEntry[];
   readonly juz: readonly JuzEntry[];
 }
@@ -26,7 +33,8 @@ export interface ContentsModel {
 export interface ContentsActions {
   readonly openPage: (page: number) => void;
   readonly setView: (view: ContentsView) => void;
-  readonly setGoToPage: (page: number) => void;
+  readonly setGoToText: (text: string) => void;
+  readonly setQuery: (query: string) => void;
 }
 
 // Computed once: the structure never changes while the app runs.
@@ -42,20 +50,29 @@ export function useContentsModel(openPage: (page: number) => void): {
   actions: ContentsActions;
 } {
   const resumePage = useResumePage();
-  const [view, setView] = useState<ContentsView>('surahs');
-  const [chosenPage, setGoToPage] = useState<number | null>(null);
+  const [view, setShownView] = useState<ContentsView>('surahs');
+  const [goToText, setGoToText] = useState('');
+  const [query, setQuery] = useState('');
   surahEntries ??= buildSurahEntries(quranStructure);
   juzEntries ??= buildJuzEntries(quranStructure);
+  const allSurahs = surahEntries;
+  const surahs = useMemo(() => filterSurahs(allSurahs, query), [allSurahs, query]);
   const open = useCallback((page: number) => openPage(page), [openPage]);
+  // The search field belongs to the surahs: leaving them empties it, as the field does.
+  const setView = useCallback((next: ContentsView) => {
+    setShownView(next);
+    setQuery('');
+  }, []);
   return {
     model: {
       resume: { page: resumePage, surah: quranStructure.firstVerseOfPage(resumePage).surah },
       view,
-      // Until the person moves the stepper, it stands on the page to resume.
-      goToPage: chosenPage ?? resumePage,
-      surahs: surahEntries,
+      goToText,
+      goToPage: parseGoToPage(goToText),
+      query,
+      surahs,
       juz: juzEntries,
     },
-    actions: { openPage: open, setView, setGoToPage },
+    actions: { openPage: open, setView, setGoToText, setQuery },
   };
 }

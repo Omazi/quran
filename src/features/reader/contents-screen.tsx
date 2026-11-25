@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
+import { getDisplayedLanguage } from '@/i18n';
 import {
   AppText,
   ButtonRow,
@@ -8,13 +9,13 @@ import {
   GroupedList,
   ListRow,
   ListSection,
+  NumberFieldRow,
   Screen,
+  SearchFieldRow,
   SegmentedChoice,
-  StepperRow,
 } from '@/ui';
-import { getDisplayedLanguage } from '@/i18n';
 
-import type { SurahEntry } from './contents-model';
+import type { HizbEntry, SurahEntry } from './contents-model';
 import { FIRST_PAGE, LAST_PAGE } from './page-order';
 import { surahDisplayName } from './reader-screen';
 import type { ContentsActions, ContentsModel, ContentsView } from './use-contents-model';
@@ -28,13 +29,22 @@ export interface ContentsScreenProps {
  * The Quran tab: where do I resume, and how do I reach a surah? (spec 1)
  *
  * One list of the system, so the whole tab scrolls as one (lists-and-tables.md › Style). In order
- * of importance (layout.md › Visual hierarchy): the title, the page to resume, a page by its
- * number, then the surahs or the juz, which a segmented control switches
- * (segmented-controls.md › Mobile: closely related subviews). Each row that opens a page says what
- * it opens and ends with the disclosure indicator (lists-and-tables.md › Mobile).
+ * of importance (layout.md › Visual hierarchy):
  *
- * "Aller à la page" is the system stepper beside its value, then a row that opens the page: the
- * kit has no number field, and the system search field is not in this lot (known gaps).
+ * - the title;
+ * - "Reprendre", the most likely action of the screen and its only prominent button, in the
+ *   accent, naming the surah and the page it opens (buttons.md › Style; buttons.md › Content);
+ * - a page by its number: a number field with the number pad, then the button that opens it.
+ *   A wheel picker of 604 values is what pickers.md › Best practices advises against ("a very
+ *   large set of items": a list or a field), and text-fields.md › Best practices asks for the
+ *   number keyboard and for validation, given in the footer;
+ * - the surahs or the juz, which a segmented control switches (segmented-controls.md › Mobile).
+ *   Above the surahs, an inline search field filters them as the person types
+ *   (search-fields.md › Search as an inline field; search-fields.md › Best practices).
+ *
+ * Each row that opens a page says what it opens and ends with the disclosure indicator
+ * (lists-and-tables.md › Mobile). The Arabic name of each surah is the character of its row: in
+ * the Quran font, in ink.
  */
 export function ContentsScreen({ model, actions }: ContentsScreenProps) {
   const { t } = useTranslation('reader');
@@ -42,6 +52,8 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
     { value: 'surahs', label: t('contents.view.surahs') },
     { value: 'juz', label: t('contents.view.juz') },
   ] as const;
+  const { goToPage } = model;
+  const isGoToInvalid = model.goToText !== '' && goToPage === null;
   return (
     <Screen background="groupedBackground" testID="contents">
       <GroupedList testID="contents-list">
@@ -50,28 +62,43 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
             <AppText variant="largeTitle">{t('contents.title')}</AppText>
           </ContentRow>
         </ListSection>
-        <ListSection title={t('contents.resume.title')}>
-          <DetailRow
-            label={surahDisplayName(model.resume.surah)}
-            detail={t('contents.resume.detail', { page: model.resume.page })}
+        <ListSection>
+          <ButtonRow
+            variant="primary"
+            label={t('contents.resume.action', {
+              surah: surahDisplayName(model.resume.surah),
+              page: model.resume.page,
+            })}
             onPress={() => actions.openPage(model.resume.page)}
             testID="contents-resume"
           />
         </ListSection>
-        <ListSection title={t('contents.goTo.title')} footer={t('contents.goTo.footer')}>
-          <StepperRow
-            label={t('contents.goTo.stepper')}
-            value={model.goToPage}
-            valueLabel={t('contents.goTo.value', { page: model.goToPage })}
-            min={FIRST_PAGE}
-            max={LAST_PAGE}
-            onChange={actions.setGoToPage}
+        <ListSection
+          title={t('contents.goTo.title')}
+          footer={
+            isGoToInvalid
+              ? t('contents.goTo.invalid', { first: FIRST_PAGE, last: LAST_PAGE })
+              : t('contents.goTo.footer', { last: LAST_PAGE })
+          }
+        >
+          <NumberFieldRow
+            label={t('contents.goTo.field')}
+            placeholder={t('contents.goTo.placeholder', { first: FIRST_PAGE, last: LAST_PAGE })}
+            value={model.goToText}
+            onChange={actions.setGoToText}
             testID="contents-go-to-page"
           />
           <ButtonRow
             variant="plain"
-            label={t('contents.goTo.open', { page: model.goToPage })}
-            onPress={() => actions.openPage(model.goToPage)}
+            label={
+              goToPage === null
+                ? t('contents.goTo.openNone')
+                : t('contents.goTo.open', { page: goToPage })
+            }
+            disabled={goToPage === null}
+            onPress={() => {
+              if (goToPage !== null) actions.openPage(goToPage);
+            }}
             testID="contents-open-page"
           />
         </ListSection>
@@ -85,22 +112,35 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
           />
         </ListSection>
         {model.view === 'surahs' ? (
-          <ListSection>
-            {model.surahs.map((entry) => (
-              <SurahRow key={entry.surah} entry={entry} onOpen={actions.openPage} />
-            ))}
-          </ListSection>
+          <>
+            <ListSection>
+              <SearchFieldRow
+                label={t('contents.search.label')}
+                placeholder={t('contents.search.placeholder')}
+                value={model.query}
+                onChange={actions.setQuery}
+                clearLabel={t('contents.search.clear')}
+                testID="contents-search"
+              />
+            </ListSection>
+            <ListSection>
+              {model.surahs.length === 0 ? (
+                <ListRow
+                  label={t('contents.search.empty', { query: model.query.trim() })}
+                  testID="contents-search-empty"
+                />
+              ) : (
+                model.surahs.map((entry) => (
+                  <SurahRow key={entry.surah} entry={entry} onOpen={actions.openPage} />
+                ))
+              )}
+            </ListSection>
+          </>
         ) : (
           model.juz.map((juz) => (
             <ListSection key={juz.juz} title={t('contents.juz.title', { juz: juz.juz })}>
               {juz.hizbs.map((hizb) => (
-                <ListRow
-                  key={hizb.hizb}
-                  label={t('contents.juz.hizb', { hizb: hizb.hizb })}
-                  value={t('contents.juz.page', { page: hizb.page })}
-                  onPress={() => actions.openPage(hizb.page)}
-                  testID={`contents-hizb-${hizb.hizb}`}
-                />
+                <HizbRow key={hizb.hizb} entry={hizb} onOpen={actions.openPage} />
               ))}
             </ListSection>
           ))
@@ -112,26 +152,46 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
 
 /**
  * One surah: its number and name, then whether it is Meccan or Medinan, its verses and its page.
- * Outside Arabic, its Arabic name is the value of the row; in Arabic, the name is the label and a
- * transliteration would only add noise.
+ * Its Arabic name, in the Quran font and in ink, is the value of the row. Outside Arabic, the
+ * label carries the transliteration; in Arabic, the label carries the number alone, since the
+ * name is already the value.
  */
 function SurahRow({ entry, onOpen }: { entry: SurahEntry; onOpen: (page: number) => void }) {
   const { t } = useTranslation('reader');
   const isArabic = getDisplayedLanguage() === 'ar';
   return (
     <DetailRow
-      label={t('contents.surah.label', {
-        number: entry.surah,
-        name: isArabic ? entry.nameArabic : entry.nameTransliterated,
-      })}
+      label={
+        isArabic
+          ? t('contents.surah.numberOnly', { number: entry.surah })
+          : t('contents.surah.label', { number: entry.surah, name: entry.nameTransliterated })
+      }
       detail={t('contents.surah.detail', {
         count: entry.verseCount,
         place: t(`contents.surah.${entry.revelationPlace}`),
         page: entry.page,
       })}
-      value={isArabic ? undefined : entry.nameArabic}
+      value={entry.nameArabic}
+      valueStyle="quran"
       onPress={() => onOpen(entry.page)}
       testID={`contents-surah-${entry.surah}`}
+    />
+  );
+}
+
+/** One hizb: its number, then the surah and verse it starts with, and its page. */
+function HizbRow({ entry, onOpen }: { entry: HizbEntry; onOpen: (page: number) => void }) {
+  const { t } = useTranslation('reader');
+  return (
+    <DetailRow
+      label={t('contents.juz.hizb', { hizb: entry.hizb })}
+      detail={t('contents.juz.start', {
+        surah: surahDisplayName(entry.start.surah),
+        verse: entry.start.verse,
+        page: entry.page,
+      })}
+      onPress={() => onOpen(entry.page)}
+      testID={`contents-hizb-${entry.hizb}`}
     />
   );
 }

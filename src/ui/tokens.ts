@@ -31,6 +31,12 @@ export const appColors = {
   /** The mushaf page, and nothing else. */
   paper: { light: '#FBF7EC', dark: '#1B1915' },
   ink: { light: '#1C1C1E', dark: '#EFE8D8' },
+  /**
+   * Secondary text on `paper` (the reader's "Juz · Hizb · Page" line): ink at 65 % over paper,
+   * 5.13:1 and 6.73:1, where the system's secondary label reaches only 3.35:1 on paper
+   * (accessibility.md › Vision: 4.5:1 for text up to 17 points).
+   */
+  inkSecondary: { light: '#6A6966', dark: '#A5A094' },
   /** Ornaments of the mushaf, in content only. */
   ornament: { light: '#8F611A', dark: '#D9A441' },
 } as const satisfies Record<string, ColorPair>;
@@ -153,6 +159,11 @@ export const fontFamily = {
   quran: 'KFGQPCHafsUthmanic',
   /** Arabic titles (surah names). */
   quranTitle: 'Amiri_700Bold',
+  /**
+   * The Quran font by its PostScript name, for SwiftUI (`Font.custom`), which does not know the
+   * name given to it in `appFonts`. expo-font registers the file for the whole process.
+   */
+  quranPostScript: 'KFGQPCHAFSUthmanicScript-Regula',
 } as const;
 
 /**

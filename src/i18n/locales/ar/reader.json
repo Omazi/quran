@@ -2,20 +2,27 @@
   "contents": {
     "title": "القرآن",
     "resume": {
-      "title": "متابعة القراءة",
-      "detail": "صفحة {{page}}"
+      "action": "متابعة · {{surah}} · صفحة {{page}}"
     },
     "goTo": {
       "title": "الانتقال إلى صفحة",
-      "stepper": "الصفحة",
-      "value": "صفحة {{page}}",
-      "open": "فتح الصفحة {{page}}",
-      "footer": "في المصحف 604 صفحات. يمكنك أيضًا البدء من جزء."
+      "open": "فتح · صفحة {{page}}",
+      "footer": "في المصحف {{last}} صفحات. يمكنك أيضًا البدء من جزء.",
+      "field": "الصفحة",
+      "placeholder": "من {{first}} إلى {{last}}",
+      "openNone": "فتح",
+      "invalid": "اكتب رقم صفحة من {{first}} إلى {{last}}."
     },
     "view": {
       "label": "عرض",
       "surahs": "السور",
       "juz": "الأجزاء"
+    },
+    "search": {
+      "label": "البحث عن سورة",
+      "placeholder": "اسم السورة أو رقمها",
+      "clear": "مسح البحث",
+      "empty": "لا توجد سورة تطابق «{{query}}»"
     },
     "surah": {
       "label": "{{number}}. {{name}}",
@@ -26,12 +33,13 @@
       "detail_many": "{{place}} · {{count}} آية · صفحة {{page}}",
       "detail_other": "{{place}} · {{count}} آية · صفحة {{page}}",
       "meccan": "مكية",
-      "medinan": "مدنية"
+      "medinan": "مدنية",
+      "numberOnly": "السورة {{number}}"
     },
     "juz": {
       "title": "الجزء {{juz}}",
       "hizb": "الحزب {{hizb}}",
-      "page": "صفحة {{page}}"
+      "start": "{{surah}}، الآية {{verse}} · صفحة {{page}}"
     }
   },
   "page": {

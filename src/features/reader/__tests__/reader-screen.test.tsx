@@ -6,6 +6,7 @@
 
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { AccessibilityInfo, AppState } from 'react-native';
+import { fireGestureHandler, getByGestureTestId } from 'react-native-gesture-handler/jest-utils';
 
 import { quranStructure } from '@/data/quran';
 import { recordPageRead, EMPTY_JOURNAL, type ReadingJournal } from '@/domain/khatm';
@@ -14,7 +15,7 @@ import { showLanguage } from '@/features/garden/test-support/screen-conditions';
 import { deviceLocalDate } from '@/features/home';
 import { AppStoreProvider, type AppStore } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
-import { fontFamily } from '@/ui';
+import { fontFamily, layout } from '@/ui';
 import {
   renderOnIOS,
   resetDeviceConditions,
@@ -227,6 +228,30 @@ describe('the 30-second rule, through the store', () => {
   });
 });
 
+describe('the zoom of the page (deviation 30)', () => {
+  it('stops turning pages while the page is enlarged, and turns them again at its size', async () => {
+    // With Reduce Motion the double tap jumps to its size: no animation to wait for.
+    setDeviceConditions({ reducedMotion: true });
+    await showLanguage('fr');
+    await openReader(createTestAppStore(), 20);
+    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
+    const pager = () => screen.getByTestId('book-pager');
+    expect(pager().props.scrollEnabled).toBe(true);
+    await act(async () => {
+      fireGestureHandler(getByGestureTestId('reader-page-20-double-tap'), [
+        { x: WIDTH / 2, y: HEIGHT / 2 },
+      ]);
+    });
+    await waitFor(() => expect(pager().props.scrollEnabled).toBe(false));
+    await act(async () => {
+      fireGestureHandler(getByGestureTestId('reader-page-20-double-tap'), [
+        { x: WIDTH / 2, y: HEIGHT / 2 },
+      ]);
+    });
+    await waitFor(() => expect(pager().props.scrollEnabled).toBe(true));
+  });
+});
+
 describe('the bars', () => {
   it('a tap on the page hides them, another shows them again', async () => {
     const seeBars = jest.fn<void, [boolean]>();
@@ -254,9 +279,9 @@ describe('the bars', () => {
     });
     await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
     expect(barsVisible()).toBe(true);
-    await fireEvent.press(screen.getByTestId('mushaf-page-20'));
+    await act(() => fireGestureHandler(getByGestureTestId('reader-page-20-tap')));
     expect(barsVisible()).toBe(false);
-    await fireEvent.press(screen.getByTestId('mushaf-page-20'));
+    await act(() => fireGestureHandler(getByGestureTestId('reader-page-20-tap')));
     expect(barsVisible()).toBe(true);
   });
 });
@@ -283,6 +308,35 @@ describe('a line wider than the column', () => {
     }
     expect(sizeOf(lines[0]!)).toBeLessThan(fullSize);
     expect(sizeOf(lines[1]!)).toBe(fullSize);
+  });
+});
+
+describe('a short line', () => {
+  it('is centred with the font space; a line that fills the column is spread', async () => {
+    await openReader(createTestAppStore(), 507);
+    await waitFor(() => expect(screen.getByTestId('mushaf-page-507')).toBeOnTheScreen());
+    const lines = screen.container.queryAll(
+      (element) =>
+        element.props.accessibilityLanguage === 'ar' &&
+        typeof element.props.accessibilityLabel === 'string',
+    );
+    const wordsOf = (line: (typeof lines)[number]) =>
+      line.queryAll(
+        (element) => element.type === 'Text' && styleOf(element).fontFamily === fontFamily.quran,
+      );
+    const layOut = async (line: (typeof lines)[number], width: number) => {
+      for (const word of wordsOf(line)) {
+        await fireEvent(word, 'layout', { nativeEvent: { layout: { width, height: 30 } } });
+      }
+    };
+    // The first line gets 1 point a word: far under 60 % of the column.
+    await layOut(lines[0]!, 1);
+    expect(styleOf(lines[0]!).justifyContent).toBe('center');
+    // The second gets words that, with the font space, fill about 90 % of it.
+    const count = wordsOf(lines[1]!).length;
+    const column = WIDTH - 2 * layout.screenMargin;
+    await layOut(lines[1]!, (column * 0.9) / count - 4);
+    expect(styleOf(lines[1]!).justifyContent).toBe('space-between');
   });
 });
 

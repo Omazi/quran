@@ -8,7 +8,8 @@ import {
 } from '@expo/ui/swift-ui';
 import { accessibilityHidden, font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 
-import { appleTextStyles, spacing } from '../../tokens';
+import { appleTextStyles, fontFamily, spacing, textStyles } from '../../tokens';
+import { useColors } from '../../use-colors';
 import { useGroupedListGuard } from '../grouped-list-scope';
 import type { DetailRowProps } from '../types';
 
@@ -24,8 +25,29 @@ const TERTIARY = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
  * navigation stack the app does not have: the row is a button ending with `chevron.forward`,
  * which points the other way in Arabic (deviation 7 of the register).
  */
-export function DetailRow({ label, detail, value, onPress, testID }: DetailRowProps) {
+export function DetailRow({
+  label,
+  detail,
+  value,
+  valueStyle = 'standard',
+  onPress,
+  testID,
+}: DetailRowProps) {
   useGroupedListGuard('DetailRow');
+  const colors = useColors();
+  // A Quran value is drawn in the Quran font, in ink, at the size of Title 2, and grows with the
+  // person's text size (`Font.custom(_:size:relativeTo:)`; typography.md › Supporting Dynamic Type).
+  const valueModifiers =
+    valueStyle === 'quran'
+      ? [
+          font({
+            family: fontFamily.quranPostScript,
+            size: textStyles.title2.fontSize,
+            textStyle: appleTextStyles.title2,
+          }),
+          foregroundStyle(colors.ink),
+        ]
+      : undefined;
   return (
     <SwiftUIButton onPress={onPress} testID={testID}>
       <LabeledContent
@@ -39,7 +61,7 @@ export function DetailRow({ label, detail, value, onPress, testID }: DetailRowPr
         }
       >
         <HStack spacing={spacing.sm}>
-          {value === undefined ? null : <Text>{value}</Text>}
+          {value === undefined ? null : <Text modifiers={valueModifiers}>{value}</Text>}
           <Image
             systemName="chevron.forward"
             modifiers={[

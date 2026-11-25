@@ -5,7 +5,7 @@
  * data cannot be trusted shows an error and no text.
  */
 
-import { render, screen, waitFor } from '@testing-library/react-native';
+import { render, screen, waitFor, within } from '@testing-library/react-native';
 
 import { quranRepository, quranStructure } from '@/data/quran';
 import type { MushafPage } from '@/domain/quran';
@@ -21,15 +21,29 @@ import { appColors } from '@/ui/tokens';
 
 import { MushafPageView } from '../mushaf-page-view';
 import { verseNumberText } from '../page-content';
-import { computePageMetrics } from '../page-layout';
+import { computeOpeningPageMetrics, computePageMetrics } from '../page-layout';
 
-const METRICS = computePageMetrics({ width: 390, height: 700 });
+const AREA = { width: 390, height: 700 };
+const METRICS = computePageMetrics(AREA);
 const NO_TURN = { actions: [], onAction: () => {} };
 
-/** Every Text drawn in the Quran font, in tree order (the order the lines are laid out). */
+function isInsideHeader(element: RenderedElement): boolean {
+  for (let node: RenderedElement | null = element; node !== null; node = node.parent) {
+    if (node.props.accessibilityRole === 'header') return true;
+  }
+  return false;
+}
+
+/**
+ * Every Text of the page's lines drawn in the Quran font, in tree order (the order the lines are
+ * laid out). The surah title of a cartouche is in the same font but is not text of the page.
+ */
 function quranTexts(): RenderedElement[] {
   return screen.container.queryAll(
-    (element) => element.type === 'Text' && styleOf(element).fontFamily === fontFamily.quran,
+    (element) =>
+      element.type === 'Text' &&
+      styleOf(element).fontFamily === fontFamily.quran &&
+      !isInsideHeader(element),
   );
 }
 
@@ -54,9 +68,7 @@ async function expectedLines(page: MushafPage, withBasmala = true): Promise<stri
 }
 
 async function renderPage(page: number) {
-  await render(
-    <MushafPageView page={page} metrics={METRICS} onTap={() => {}} turnActions={NO_TURN} />,
-  );
+  await render(<MushafPageView page={page} metrics={METRICS} area={AREA} turnActions={NO_TURN} />);
   await waitFor(() => expect(screen.getByTestId(`mushaf-page-${page}`)).toBeOnTheScreen());
 }
 
@@ -99,6 +111,46 @@ describe('the page shows exactly the text of the repository', () => {
     expect(mushafPage.lines.findIndex((line) => line.kind === 'surah-header')).toBeGreaterThan(0);
   });
 
+  it('draws the surah name in the Quran font, in ink, between two rules of the ornament colour', async () => {
+    // Outside iOS, colours are plain values that can be compared.
+    setDeviceConditions({ os: 'android' });
+    await showLanguage('fr');
+    await renderPage(293);
+    const header = screen.getByTestId('surah-header-18');
+    const title = within(header).getByText(`سورة ${quranStructure.surah(18).nameArabic}`);
+    expect(styleOf(title)).toMatchObject({
+      fontFamily: fontFamily.quran,
+      color: appColors.ink.light,
+    });
+    const rules = [header, ...header.queryAll((element) => element.type === 'View')].filter(
+      (element) => styleOf(element).borderWidth !== undefined,
+    );
+    expect(rules).toHaveLength(2);
+    for (const rule of rules) expect(styleOf(rule).borderColor).toBe(appColors.ornament.light);
+  });
+
+  it('frames the page with one thin rule of the ornament colour, the same on every page', async () => {
+    setDeviceConditions({ os: 'android' });
+    await showLanguage('fr');
+    await renderPage(293);
+    const frame = styleOf(screen.getByTestId('mushaf-page-293-frame'));
+    expect(frame.borderColor).toBe(appColors.ornament.light);
+    await renderPage(1);
+    expect(styleOf(screen.getByTestId('mushaf-page-1-frame'))).toEqual(frame);
+  });
+
+  it.each([1, 2])('sets page %i larger, as the print does', async (page) => {
+    setDeviceConditions();
+    await showLanguage('fr');
+    const mushafPage = await quranRepository.getPage(page);
+    await renderPage(page);
+    const opening = computeOpeningPageMetrics(AREA, mushafPage.lines.length);
+    expect(opening.fontSize).toBeGreaterThan(METRICS.fontSize);
+    for (const text of quranTexts()) {
+      expect(styleOf(text).fontSize).toBeCloseTo(opening.fontSize, 5);
+    }
+  });
+
   it.each(SCREEN_CONDITIONS)(
     'writes in ink on the paper, verse marks in the ornament colour ($scheme, $language)',
     async (conditions) => {
@@ -120,9 +172,7 @@ describe('a page whose data cannot be trusted', () => {
     await showLanguage('fr');
     jest.spyOn(console, 'error').mockImplementation(() => {});
     jest.spyOn(quranRepository, 'getPage').mockRejectedValue(new RangeError('Corrupted page file'));
-    await render(
-      <MushafPageView page={12} metrics={METRICS} onTap={() => {}} turnActions={NO_TURN} />,
-    );
+    await render(<MushafPageView page={12} metrics={METRICS} area={AREA} turnActions={NO_TURN} />);
     await waitFor(() => expect(screen.getByTestId('mushaf-page-12-error')).toBeOnTheScreen());
     expect(screen.getByText('Page illisible')).toBeOnTheScreen();
     expect(quranTexts()).toEqual([]);
@@ -132,9 +182,7 @@ describe('a page whose data cannot be trusted', () => {
     setDeviceConditions();
     await showLanguage('fr');
     jest.spyOn(quranRepository, 'getPage').mockReturnValue(new Promise(() => {}));
-    await render(
-      <MushafPageView page={12} metrics={METRICS} onTap={() => {}} turnActions={NO_TURN} />,
-    );
+    await render(<MushafPageView page={12} metrics={METRICS} area={AREA} turnActions={NO_TURN} />);
     expect(screen.getByLabelText('Chargement de la page 12')).toBeOnTheScreen();
     expect(quranTexts()).toEqual([]);
   });
