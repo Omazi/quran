@@ -4,13 +4,19 @@ Une seule commande envoie l'appli : le script `TestFlight`
 (`.github/workflows/testflight.yml`). Il se lance à la main, jamais sur un push ni sur une
 demande de fusion.
 
-| Étape                                           | État                                                      |
-| ----------------------------------------------- | --------------------------------------------------------- |
-| Scripts écrits, testés sans Mac                 | Fait (53 tests, `tools/apple/test_*.py`)                  |
-| Contrôle côté Apple (clé, identifiant)          | **Réussi** le 24 novembre 2026, lancé depuis DishPlay     |
-| Signature et envoi sur un Mac de GitHub         | **Jamais encore exécutés**                                |
-| Fiche de l'appli dans App Store Connect         | **À créer par le propriétaire**, une fois (voir plus bas) |
-| Appli installée depuis TestFlight sur un iPhone | Pas encore                                                |
+| Étape                                            | État                                                  |
+| ------------------------------------------------ | ----------------------------------------------------- |
+| Scripts écrits, testés sans Mac                  | Fait (53 tests, `tools/apple/test_*.py`)              |
+| Contrôle côté Apple (clé, identifiant)           | **Réussi** le 24 novembre 2026, lancé depuis DishPlay |
+| Fiche de l'appli dans App Store Connect          | Créée par le propriétaire le 24 novembre 2026         |
+| Signature et envoi sur un Mac de GitHub          | **Réussis** au premier essai (version `20261125.136`) |
+| Version traitée par Apple, visible de TestFlight | **Oui** (état `VALID`), groupe de testeurs créé       |
+| Appli installée depuis TestFlight sur un iPhone  | Pas encore constaté                                   |
+
+Premier envoi : exécution 45531696761 de `Omazi/dishplay3d`, dans la nuit du 24 au 25 novembre
+2026, sur le commit `8446451`. Compilation 14 minutes, signature et envoi 4 minutes, attente
+du traitement par Apple 3 minutes. Xcode a exporté l'archive compilée sans signature : la signature à
+la main, prévue en secours, n'a pas servi.
 
 ## Pourquoi l'envoi part du dépôt DishPlay
 
@@ -121,13 +127,17 @@ adresse, ni clé, et demandent à GitHub de masquer le nom du titulaire du certi
 
 ## Limites connues
 
-- Rien de tout cela n'a encore tourné sur un Mac. Le point le plus incertain : Xcode
-  accepte-t-il d'exporter une archive compilée sans signature ? Si non, le script signe avec
-  l'outil `codesign` d'Apple, étape prévue dans le même script.
-- Ce qui a été essayé sans Mac, le 24 novembre 2026, avec de faux outils à la place de ceux
-  d'Apple : le contrôle de l'archive, la signature à la main, le contrôle de l'appli signée
-  et l'envoi (y compris un refus d'Apple qui ne dit pas son nom). Cela vérifie l'enchaînement
-  et ce qui s'écrit dans le journal, pas le comportement des vrais outils.
+- Le chemin normal a tourné une fois, avec succès. Les chemins de secours n'ont jamais tourné
+  sur un Mac : la signature à la main avec `codesign` (si Xcode refusait d'exporter) et
+  l'affichage des erreurs de Xcode ou d'Apple. Ils ont été essayés sans Mac, le 24 novembre
+  2026, avec de faux outils à la place de ceux d'Apple : cela vérifie l'enchaînement et ce qui
+  s'écrit dans le journal, pas le comportement des vrais outils.
+- Apple prévient (avertissement 90725) : l'appli est compilée avec le SDK d'iOS 26.5
+  (Xcode 26.6, le plus récent sur les Mac de GitHub ce jour-là). À partir d'avril 2027, Apple
+  n'acceptera que les applis compilées avec le SDK d'iOS 27 (Xcode 27). Le script prend le
+  Xcode publié le plus récent de la machine : il suivra dès que GitHub l'installera. À
+  surveiller avant avril 2027.
+- Le journal public de l'envoi a été relu après coup : aucun nom, aucune adresse, aucune clé.
 - La façon dont le script reçoit la clé depuis DishPlay (secrets nommés, environnement nommé
   dans la tâche) a été vérifiée par un vrai lancement en mode `prepare` le 24 novembre 2026 :
   la clé a répondu et l'identifiant `com.omazi.quran` a été enregistré, sous le libellé

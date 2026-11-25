@@ -112,11 +112,14 @@ Ce qui reste vrai malgré tout, à savoir avant de s'en servir :
 - L'identifiant de l'équipe, celui de la clé et celui de son émetteur s'affichent dans le
   journal public : ce sont des variables, que GitHub ne masque pas. Ce sont des repères, pas
   des clés ; l'envoi de DishPlay les montre de la même façon.
-- Le masquage des noms n'a pas encore été vu à l'œuvre sur une vraie exécution. Il ne couvre
-  que le titulaire du certificat et l'équipe du profil, tels qu'Apple les écrit.
+- Le masquage des noms ne couvre que le titulaire du certificat et l'équipe du profil, tels
+  qu'Apple les écrit. Au premier envoi, le journal public a été relu : aucun nom, aucune
+  adresse, aucune clé. Ce premier envoi n'a rencontré aucune erreur : les messages d'erreur,
+  où un nom risque le plus d'apparaître, n'ont donc pas encore été vus en vrai.
 - L'appli signée contient du code de tiers (c'est le cas de toute appli), et la clé de
   DishPlay sert désormais à deux applis.
-- Rien de tout cela n'a encore tourné sur un Mac (voir `TESTFLIGHT.md`, « Limites connues »).
+- Seul le chemin normal a tourné sur un Mac ; les chemins de secours, non (voir
+  `TESTFLIGHT.md`, « Limites connues »).
 
 ## Signaler un problème
 

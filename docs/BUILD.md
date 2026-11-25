@@ -15,7 +15,7 @@ La méthode est celle de DishPlay, l'autre appli du propriétaire (`Omazi/dishpl
 | Générer le projet iOS natif          | Vérifié le 24 novembre 2026                                         |
 | Compiler pour iPhone, sans signature | **Réussi** le 24 novembre 2026 sur un Mac de GitHub (19 min)        |
 | Ouvrir l'appli dans le simulateur    | **Réussi** le même jour (44 min) ; images regardées (voir plus bas) |
-| Signer et envoyer sur TestFlight     | Contrôle côté Apple réussi ; signature et envoi **jamais exécutés** |
+| Signer et envoyer sur TestFlight     | **Réussi** le 25 novembre 2026 (version `20261125.136`)             |
 
 Les deux premières lignes ont été vérifiées sous Linux (`npx expo export --platform ios`,
 `npx expo prebuild --platform ios --no-install`). Tout le reste a besoin d'un Mac.
@@ -65,10 +65,9 @@ fois son temps dans le quota du compte : ne plus la lancer à chaque push.
 ## L'envoi sur TestFlight
 
 Écrit le 24 novembre 2026, à la demande du propriétaire : voir `docs/TESTFLIGHT.md`. L'envoi
-part du dépôt `dishplay3d`, qui détient déjà la clé Apple (D30), et rien n'a encore tourné sur
-un Mac. L'identifiant `com.omazi.quran` est enregistré chez Apple depuis le 24 novembre 2026.
-Il reste au propriétaire à créer la fiche de l'appli dans App Store Connect : c'est à ce
-moment que cet identifiant devient définitif.
+part du dépôt `dishplay3d`, qui détient déjà la clé Apple (D30). Le premier envoi a réussi :
+la version `20261125.136` est dans TestFlight. La fiche de l'appli existe dans App Store
+Connect, donc l'identifiant `com.omazi.quran` est maintenant définitif pour elle.
 
 ## Quoi regarder en premier sur l'iPhone
 
@@ -94,6 +93,5 @@ version publiée se compile sans cette variable et ne contient pas cet aperçu
 ## Ce qui n'est pas encore activé
 
 - La copie de la progression dans iCloud : voir `docs/specs/backup.md`, « Activation ».
-- L'identifiant `com.omazi.quran` est enregistré chez Apple ; il devient définitif quand la
-  fiche de l'appli est créée. Le nom « Jannatuk » (D31) reste à faire accepter par Apple à la
-  création de cette fiche.
+- La fiche de l'appli a été créée par le propriétaire. Le nom qu'elle porte chez Apple n'a pas
+  été relu d'ici : à confirmer avec lui que c'est bien « Jannatuk » (D31).
