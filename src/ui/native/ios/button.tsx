@@ -1,5 +1,6 @@
 import { Button as SwiftUIButton, Text, VStack } from '@expo/ui/swift-ui';
 import {
+  accessibilityLabel as accessibilityLabelModifier,
   buttonStyle,
   contentShape,
   controlSize,
@@ -34,6 +35,7 @@ const SYSTEM_STYLE = {
 export function Button({
   label,
   detail,
+  accessibilityLabel,
   onPress,
   variant = 'primary',
   role,
@@ -67,7 +69,14 @@ export function Button({
         onPress={onPress}
         role={role}
         testID={testID}
-        modifiers={[...systemStyle, ...roleColor, disabledModifier(disabled)]}
+        modifiers={[
+          ...systemStyle,
+          ...roleColor,
+          disabledModifier(disabled),
+          ...(accessibilityLabel === undefined
+            ? []
+            : [accessibilityLabelModifier(accessibilityLabel)]),
+        ]}
       >
         {detail === undefined ? (
           <Text modifiers={[...labelColor, ...labelWidth, ...labelTarget]}>{label}</Text>

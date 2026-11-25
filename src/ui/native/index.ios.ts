@@ -21,6 +21,7 @@ const controls: NativeControls =
 
 export const {
   Button,
+  ButtonPairRow,
   ButtonRow,
   ChoiceRow,
   ContentRow,

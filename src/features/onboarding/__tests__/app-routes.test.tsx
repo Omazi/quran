@@ -5,7 +5,11 @@ import { getPermissionsAsync, PermissionStatus, requestPermissionsAsync } from '
 import { router } from 'expo-router';
 import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 import * as SplashScreen from 'expo-splash-screen';
+import * as React from 'react';
 
+import { DEMO_USERS } from '@/data/social';
+import { setCamera } from '@/features/friends/test-support/camera';
+import { freshAppDemoForTest } from '@/features/friends/test-support/demo';
 import { DIRECTION_RESTART_KEY } from '@/features/settings';
 import { REJECTED_DATA_KEY, RESET_NOTICE_KEY, STORED_DATA_KEY, STORED_DATA_VERSION } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
@@ -33,6 +37,13 @@ jest.mock('expo-notifications', () => ({
   getPermissionsAsync: jest.fn(),
   requestPermissionsAsync: jest.fn(),
 }));
+jest.mock(
+  'expo-camera',
+  () =>
+    jest.requireActual<typeof import('@/features/friends/test-support/camera')>(
+      '@/features/friends/test-support/camera',
+    ).fakeExpoCamera,
+);
 jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(() => Promise.resolve(true)),
   hide: jest.fn(),
@@ -98,6 +109,19 @@ async function storedSettings(): Promise<Record<string, unknown>> {
   return (JSON.parse(raw) as { settings: Record<string, unknown> }).settings;
 }
 
+/**
+ * A stored setting once the app has written the expected value. Polled without `waitFor`: under
+ * the fake timers of `renderRouter`, a `waitFor` whose check is a promise can return while its
+ * own `act()` is still advancing the clock, and that `act()`, left running, swallows the renders
+ * of the next tests (see `isAnActStillRunning`).
+ */
+async function storedSettingOnceWritten(name: string, expected: unknown): Promise<unknown> {
+  for (let turn = 0; turn < 100; turn += 1) {
+    if ((await storedSettings())[name] === expected) break;
+  }
+  return (await storedSettings())[name];
+}
+
 /** Opens the app as the phone does: the real routes of `src/app`, at the given address. */
 function openApp(initialUrl = '/') {
   return renderRouter({ appDir: 'src/app', overrides: {} }, { initialUrl });
@@ -156,9 +180,33 @@ function tabs(): RenderedElement[] {
   return screen.container.queryAll(({ type }) => type === 'RNSTabsScreenIOS');
 }
 
+/**
+ * True while an `act()` is running: React keeps a queue of the work done inside it. At the start
+ * of a test, that is an `act()` left running by an earlier test (an unawaited one, or a
+ * `waitFor` that returned while its own `act()` was still advancing the clock). Every render
+ * after it is taken for part of that `act()` and waits for it: nothing renders, and the route
+ * seems to be the one of the earlier test. React has no public way to ask, so this reads its
+ * shared internals (react, `act`); if they change, the check finds nothing rather than failing.
+ */
+function isAnActStillRunning(): boolean {
+  // `as`: the internals are not part of React's types.
+  const internals = (
+    React as unknown as {
+      __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE?: { actQueue?: unknown };
+    }
+  ).__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+  return internals?.actQueue !== null && internals?.actQueue !== undefined;
+}
+
 beforeEach(async () => {
+  if (isAnActStillRunning()) {
+    throw new Error(
+      'An act() of an earlier test is still running: this test would render nothing.',
+    );
+  }
   await AsyncStorage.clear();
   jest.clearAllMocks();
+  freshAppDemoForTest();
   setDeviceLanguage('fr');
   setPermission(PermissionStatus.UNDETERMINED, PermissionStatus.GRANTED);
 });
@@ -313,7 +361,7 @@ describe('returning person', () => {
     });
 
     await fireEvent.press(screen.getByTestId('daily-goal-increment'));
-    await waitFor(async () => expect((await storedSettings()).dailyGoalPages).toBe(13));
+    expect(await storedSettingOnceWritten('dailyGoalPages', 13)).toBe(13);
 
     // The back button of the bar returns to the profile.
     await act(() => router.back());
@@ -348,7 +396,7 @@ describe('returning person', () => {
     expect(reloadAppAsync).not.toHaveBeenCalled();
   });
 
-  it('finds the Proches tab: sign-in first, then the friends, and their pages over the tabs', async () => {
+  it('finds the Proches tab: sign-in first, then the friends, and their pages under the tab bar', async () => {
     const app = await openApp('/friends');
     expect(await screen.findByRole('header', { name: 'Proches' })).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Continuer avec Apple' }));
@@ -356,6 +404,46 @@ describe('returning person', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Ajouter un proche' }));
     await waitFor(() => expect(app.getPathname()).toBe('/friends/add'));
     expect(await screen.findByLabelText('Nom à chercher')).toBeOnTheScreen();
+    // The page is pushed inside the tab: the tab bar is still there, nothing hides it
+    // (tab-bars.md › Best practices), and the page has the system bar with its title.
+    expect(app.getSegments()).toEqual(['(tabs)', 'friends', 'add']);
+    expect(tabs()).toHaveLength(4);
+    expect(tabsHost()).toHaveProp('tabBarHidden', undefined);
+    const header = screen.container
+      .queryAll(({ type }) => type === 'RNSScreenStackHeaderConfig')
+      .find(({ props }) => props.title === 'Ajouter un proche');
+    expect(header).toHaveProp('hidden', false);
+  });
+
+  it('scans a friend, then shows their page under the tab bar, and goes back to the list', async () => {
+    const { demo } = freshAppDemoForTest();
+    const invite = await demo.repositoryAs(DEMO_USERS.yacine).createInvite();
+    setCamera('undetermined', 'granted');
+    const app = await openApp('/friends');
+    await fireEvent.press(await screen.findByRole('button', { name: 'Continuer avec Apple' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Ajouter un proche' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Scanner un QR code' }));
+    await waitFor(() => expect(app.getPathname()).toBe('/friends/scan'));
+    expect(tabs()).toHaveLength(4);
+
+    // Yacine's invitation, as his phone shows it.
+    await fireEvent(await screen.findByTestId('camera-view'), 'barcodeScanned', {
+      data: `quranapp://invite/${invite.code}`,
+      type: 'qr',
+    });
+    await waitFor(() => expect(app.getPathname()).toBe(`/friends/${DEMO_USERS.yacine}`));
+    expect(tabs()).toHaveLength(4);
+    // The scanner and "Ajouter un proche" are gone: back leads to the list.
+    await act(async () => router.back());
+    await waitFor(() => expect(app.getPathname()).toBe('/friends'));
+  });
+
+  it('opens a link of invitation on "Ajouter un proche", its code in the field', async () => {
+    const app = await openApp('/invite/ABCDEFGH');
+    await waitFor(() => expect(app.getPathname()).toBe('/friends/add'));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Continuer avec Apple' }));
+    expect(await screen.findByLabelText('Code d’invitation')).toHaveDisplayValue('ABCD EFGH');
+    expect(tabs()).toHaveLength(4);
   });
 
   it('can see the introduction again from the settings, with a back button, and finish it', async () => {
@@ -532,6 +620,39 @@ describe('writing direction at start-up', () => {
     expect(screen.getByRole('header', { name: 'أرض جرداء' })).toBeOnTheScreen();
     expect(reloadAppAsync).not.toHaveBeenCalled();
     expect(SplashScreen.hide).toHaveBeenCalled();
+  });
+});
+
+// Each pair: a test that ends on a pushed page, then one that opens the app at its root. The
+// second must find the garden, whatever the first left behind (see `isAnActStillRunning`).
+describe('isolation between tests', () => {
+  beforeEach(() => store({ onboardingCompleted: true }));
+
+  it('ends on a page pushed inside a tab', async () => {
+    const app = await openApp('/friends');
+    await fireEvent.press(await screen.findByRole('button', { name: 'Continuer avec Apple' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Ajouter un proche' }));
+    await waitFor(() => expect(app.getPathname()).toBe('/friends/add'));
+  });
+
+  it('then opens on the garden', async () => {
+    const app = await openApp();
+    await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
+    expect(app.getPathname()).toBe('/');
+  });
+
+  it('ends on a page pushed on the root stack, over the tabs', async () => {
+    const app = await openApp('/quran');
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Reprendre, Al-Fatiha · Page 1' }),
+    );
+    await waitFor(() => expect(app.getPathname()).toBe('/reader/1'));
+  });
+
+  it('then opens on the garden as well', async () => {
+    const app = await openApp();
+    await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
+    expect(app.getPathname()).toBe('/');
   });
 });
 

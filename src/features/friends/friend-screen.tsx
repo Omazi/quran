@@ -164,7 +164,7 @@ export function FriendScreen({ model, refusal, actions }: FriendScreenProps) {
             </ListSection>
           </>
         )}
-        <ListSection footer={model.isDemonstration ? t('demoNote') : undefined}>
+        <ListSection>
           <ButtonRow
             label={t('friend.remove')}
             onPress={() => actions.remove(confirmation('remove'))}

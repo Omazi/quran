@@ -21,8 +21,16 @@ import { FriendScreen } from '../friend-screen';
 import { FriendsListScreen } from '../friends-list-screen';
 import { buildFriendPageModel, buildFriendsModel, buildGroupModel } from '../friends-model';
 import { GroupScreen, NewGroupScreen } from '../group-screen';
+import { ScanInviteScreen } from '../scan-invite-screen';
 import { SignInScreen } from '../sign-in-screen';
 import { signedInDemoForTest } from '../test-support/demo';
+
+jest.mock(
+  'expo-camera',
+  () =>
+    jest.requireActual<typeof import('../test-support/camera')>('../test-support/camera')
+      .fakeExpoCamera,
+);
 
 afterEach(resetDeviceConditions);
 
@@ -122,6 +130,7 @@ describe.each(['fr', 'ar'] as const)('on iOS (%s)', (language) => {
           shareInvite: noop,
           changeCode: noop,
           submitCode: noop,
+          scan: noop,
         }}
       />,
     );
@@ -156,6 +165,22 @@ describe.each(['fr', 'ar'] as const)('on iOS (%s)', (language) => {
       />,
     );
     expect(reactNativeViewsInsideSwiftUI()).toEqual([]);
+
+    const scanActions = {
+      scanned: noop,
+      askForCamera: noop,
+      openSettings: noop,
+      cameraFailed: noop,
+    };
+    for (const camera of ['granted', 'blocked', 'askable'] as const) {
+      await renderOnIOS(
+        <ScanInviteScreen
+          model={{ camera, cameraFailed: false, note: 'not-an-invitation', isBusy: false }}
+          actions={scanActions}
+        />,
+      );
+      expect(reactNativeViewsInsideSwiftUI()).toEqual([]);
+    }
   });
 });
 

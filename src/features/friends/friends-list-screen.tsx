@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import {
   AppText,
+  ButtonPairRow,
   ButtonRow,
   ContentRow,
   DetailRow,
@@ -22,6 +23,12 @@ import type { FriendsListActions } from './use-friends';
 
 const REQUEST_SYMBOL: IconSymbol = { ios: 'person.badge.plus', android: 'person_add' };
 
+/**
+ * "Keep the number of prominent buttons to one or two per view" (buttons.md › Style): beyond two
+ * requests, "Accepter" takes the bordered style, still more visible than "Refuser".
+ */
+const MOST_PROMINENT_REQUESTS = 2;
+
 export interface FriendsListScreenProps {
   model: FriendsModel;
   refusal: ShownRefusal | null;
@@ -35,7 +42,12 @@ export interface FriendsListScreenProps {
  * importance (layout.md › Visual hierarchy): the title, the requests waiting for an answer, the
  * gardens (the signature of the screen, as cards: docs/design/accueil.png), the way to add a
  * friend, then the groups. The demonstration is said under the title, in the secondary colour:
- * discreet, but never hidden (docs/specs/social.md, section 4).
+ * discreet, but never hidden (docs/specs/social.md, section 4); it is said here only, at the root
+ * of the tab, not again on every page.
+ *
+ * A request is the person (who asks), then the answer on one row: "Accepter" and "Refuser" side
+ * by side at the same size, the preferred one in the more prominent style
+ * (buttons.md › Style: "Use style — not size — to visually distinguish the preferred choice").
  */
 export function FriendsListScreen({ model, refusal, actions }: FriendsListScreenProps) {
   const { t } = useTranslation('friends');
@@ -67,19 +79,23 @@ export function FriendsListScreen({ model, refusal, actions }: FriendsListScreen
                 symbol={REQUEST_SYMBOL}
                 testID={`request-${request.userId}`}
               />,
-              <ButtonRow
-                key={`${request.userId}-accept`}
-                label={t('list.accept', { name: request.name })}
-                onPress={() => actions.accept(request.userId)}
-                variant="plain"
-                testID={`request-accept-${request.userId}`}
-              />,
-              <ButtonRow
-                key={`${request.userId}-decline`}
-                label={t('list.decline', { name: request.name })}
-                onPress={() => actions.decline(request.userId)}
-                variant="plain"
-                testID={`request-decline-${request.userId}`}
+              <ButtonPairRow
+                key={`${request.userId}-answer`}
+                preferred={{
+                  label: t('list.acceptShort'),
+                  accessibilityLabel: t('list.accept', { name: request.name }),
+                  onPress: () => actions.accept(request.userId),
+                  testID: `request-accept-${request.userId}`,
+                }}
+                other={{
+                  label: t('list.declineShort'),
+                  accessibilityLabel: t('list.decline', { name: request.name }),
+                  onPress: () => actions.decline(request.userId),
+                  testID: `request-decline-${request.userId}`,
+                }}
+                preferredVariant={
+                  model.requests.length <= MOST_PROMINENT_REQUESTS ? 'primary' : 'secondary'
+                }
               />,
             ])}
           </ListSection>

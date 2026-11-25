@@ -62,11 +62,7 @@ export function GroupScreen({ model, refusal, actions }: GroupScreenProps) {
         </ListSection>
         <ListSection
           title={t('group.addTitle')}
-          footer={[
-            refusal === null ? undefined : t(`refusals.${refusal}`),
-            t('group.addNote'),
-            model.isDemonstration ? t('demoNote') : undefined,
-          ]
+          footer={[refusal === null ? undefined : t(`refusals.${refusal}`), t('group.addNote')]
             .filter((part) => part !== undefined)
             .join('\n\n')}
         >
@@ -113,7 +109,6 @@ export function NewGroupScreen({ model, actions }: NewGroupScreenProps) {
           footer={[
             model.refusal === null ? undefined : t(`refusals.${model.refusal}`),
             t('newGroup.note'),
-            model.isDemonstration ? t('demoNote') : undefined,
           ]
             .filter((part) => part !== undefined)
             .join('\n\n')}

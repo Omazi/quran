@@ -10,6 +10,7 @@ import { Platform, PlatformColor, Text as RNText } from 'react-native';
 
 import {
   Button,
+  ButtonPairRow,
   ButtonRow,
   ChoiceRow,
   ContentRow,
@@ -812,6 +813,73 @@ const BARE_ROW = [
   { $type: 'listRowBackground', color: 'clear' },
   { $type: 'listRowSeparator', visibility: 'hidden' },
 ];
+
+describe('iOS ButtonPairRow', () => {
+  const pair = (onAccept = jest.fn(), onDecline = jest.fn()) => (
+    <InList>
+      <ButtonPairRow
+        preferred={{
+          label: 'Accepter',
+          accessibilityLabel: 'Accepter Yacine',
+          onPress: onAccept,
+          testID: 'accept',
+        }}
+        other={{
+          label: 'Refuser',
+          accessibilityLabel: 'Refuser Yacine',
+          onPress: onDecline,
+          testID: 'decline',
+        }}
+      />
+    </InList>
+  );
+
+  it('puts two system buttons side by side at the same width: prominent, then borderless', async () => {
+    setDeviceConditions();
+    await render(pair());
+    const accept = screen.getByTestId('accept');
+    const decline = screen.getByTestId('decline');
+    expect(modifierOf(accept, 'buttonStyle')).toMatchObject({ style: 'borderedProminent' });
+    expect(modifierOf(firstChild(accept), 'foregroundStyle')).toMatchObject({ style: ON_ACCENT });
+    // Each states its style: in a list row, buttons without one would press together.
+    expect(modifierOf(decline, 'buttonStyle')).toMatchObject({ style: 'borderless' });
+    for (const button of [accept, decline]) {
+      expect(modifierOf(button, 'controlSize')).toMatchObject({ size: 'large' });
+      expect(modifierOf(firstChild(button), 'frame')).toMatchObject({ maxWidth: Infinity });
+    }
+    expect(modifierOf(firstChild(decline), 'frame')).toMatchObject({
+      minHeight: touchTargets.ios,
+    });
+    expect(accept.parent).toBe(decline.parent);
+    // An ordinary row: the list's background and insets, in the card of the request.
+    expect(accept.parent?.parent && modifiersOf(accept.parent.parent)).toEqual([]);
+    expect(modifierOf(accept, 'accessibilityLabel')).toMatchObject({ label: 'Accepter Yacine' });
+    expect(modifierOf(decline, 'accessibilityLabel')).toMatchObject({ label: 'Refuser Yacine' });
+    expect(hosts()).toHaveLength(1);
+    expect(swiftUIViewsWithoutHost(screen.container)).toEqual([]);
+  });
+
+  it('calls back the button pressed, and only that one', async () => {
+    setDeviceConditions();
+    const onAccept = jest.fn();
+    const onDecline = jest.fn();
+    await render(pair(onAccept, onDecline));
+    await fireEvent(screen.getByTestId('decline'), 'buttonPress');
+    expect(onDecline).toHaveBeenCalledTimes(1);
+    expect(onAccept).not.toHaveBeenCalled();
+  });
+
+  it('stacks the two buttons at the largest text size', async () => {
+    setDeviceConditions();
+    await render(pair());
+    // Under Jest both stacks are the same stub: the row (HStack) is the one aligned on centres.
+    expect(screen.getByTestId('accept').parent).toHaveProp('alignment', 'center');
+    setDeviceConditions({ fontScale: LARGEST_FONT_SCALE });
+    await render(pair());
+    expect(screen.getByTestId('accept').parent).not.toHaveProp('alignment', 'center');
+    expect(screen.getByTestId('decline').parent).toBe(screen.getByTestId('accept').parent);
+  });
+});
 
 describe('iOS ButtonRow', () => {
   it.each([

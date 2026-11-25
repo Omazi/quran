@@ -8,6 +8,7 @@ import { AddFriendScreen } from './add-friend-screen';
 import { FriendScreen } from './friend-screen';
 import { FriendsListScreen } from './friends-list-screen';
 import { GroupScreen, NewGroupScreen } from './group-screen';
+import { ScanInviteScreen } from './scan-invite-screen';
 import { FriendsLoading, FriendsUnavailable } from './screen-states';
 import { SignInScreen } from './sign-in-screen';
 import {
@@ -16,6 +17,7 @@ import {
   useFriendsList,
   useGroup,
   useNewGroup,
+  useScanInvite,
   type FriendsListNavigation,
 } from './use-friends';
 import { useSession, useSignIn } from './use-session';
@@ -103,13 +105,23 @@ function FriendPageContent({
 
 function AddFriendPageContent({
   openFriend,
+  openScanner,
+  linkedCode,
   share,
 }: {
   openFriend(userId: UserId): void;
+  openScanner(): void;
+  /** The code of a link of invitation that opened the page, as it came. */
+  linkedCode?: string;
   share?: (message: string) => Promise<unknown>;
 }) {
-  const { model, actions } = useAddFriend({ openFriend, share });
+  const { model, actions } = useAddFriend({ openFriend, openScanner, linkedCode, share });
   return <AddFriendScreen model={model} actions={actions} />;
+}
+
+function ScanInvitePageContent({ openFriend }: { openFriend(userId: UserId): void }) {
+  const { model, actions } = useScanInvite({ openFriend });
+  return <ScanInviteScreen model={model} actions={actions} />;
 }
 
 function GroupPageContent({
@@ -155,6 +167,14 @@ export function AddFriendPage(props: Parameters<typeof AddFriendPageContent>[0])
   return (
     <SignedIn>
       <AddFriendPageContent {...props} />
+    </SignedIn>
+  );
+}
+
+export function ScanInvitePage(props: Parameters<typeof ScanInvitePageContent>[0]) {
+  return (
+    <SignedIn>
+      <ScanInvitePageContent {...props} />
     </SignedIn>
   );
 }

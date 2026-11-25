@@ -1,9 +1,11 @@
-import { useCallback, useState } from 'react';
-import { Share } from 'react-native';
+import { useCameraPermissions } from 'expo-camera';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, Linking, Share } from 'react-native';
 
 import { compareLocalDates, type LocalDate } from '@/domain/shared/local-date';
 import {
   inviteLink,
+  parseInviteLink,
   SOCIAL_CONFIG,
   type GroupId,
   type Invite,
@@ -22,7 +24,7 @@ import {
   type FriendsModel,
   type GroupModel,
 } from './friends-model';
-import { typedInviteCode } from './invite-code-text';
+import { shownInviteCode, typedInviteCode } from './invite-code-text';
 import { isRefusal, refusalOf, type ShownRefusal } from './refusal';
 import { useSocialStore, useSocialVersion, type SocialStore } from './social-store';
 import { useAsync, type AsyncState } from './use-async';
@@ -215,21 +217,43 @@ export interface AddFriendActions {
   shareInvite(message: (link: string, code: string) => string): void;
   changeCode(text: string): void;
   submitCode(): void;
+  /** Asks for the camera if it was never asked, then opens the scanner, whatever the answer. */
+  scan(): void;
 }
 
 export interface AddFriendDependencies {
   openFriend(userId: UserId): void;
+  openScanner(): void;
+  /**
+   * The code of a link of invitation that opened the page: it fills the code field when it is a
+   * well-formed code, and is dropped otherwise (an entry from outside, read by `parseInviteLink`).
+   */
+  linkedCode?: string;
   /** The system's share sheet; injected for tests. */
   share?: (message: string) => Promise<unknown>;
 }
 
 const systemShare = (message: string) => Share.share({ message });
 
+function wellFormedCodeOrEmpty(text: string | undefined): string {
+  if (text === undefined) return '';
+  try {
+    return shownInviteCode(parseInviteLink(text));
+  } catch {
+    return '';
+  }
+}
+
 /**
  * The three ways to add a friend (D36): a search by name, my code to share and someone's code to
- * type, and the QR code (its picture and its scan are not built yet: see the screen).
+ * type, and the QR code: mine to show, theirs to scan.
  */
-export function useAddFriend({ openFriend, share = systemShare }: AddFriendDependencies): {
+export function useAddFriend({
+  openFriend,
+  openScanner,
+  linkedCode,
+  share = systemShare,
+}: AddFriendDependencies): {
   model: AddFriendModel;
   actions: AddFriendActions;
 } {
@@ -238,7 +262,7 @@ export function useAddFriend({ openFriend, share = systemShare }: AddFriendDepen
   const today = useToday();
   const { repository, isDemonstration } = store.client;
   const [query, setQuery] = useState('');
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(() => wellFormedCodeOrEmpty(linkedCode));
 
   // Search as the person types (search-fields.md › Best practices). Too short is not an error.
   const search = useAsync(async () => {
@@ -256,6 +280,9 @@ export function useAddFriend({ openFriend, share = systemShare }: AddFriendDepen
 
   const action = useAction(store);
   const codeAction = useAction(store);
+  // Nothing is read on arrival: the camera is asked about only when the person taps "Scanner"
+  // (privacy.md › Requesting permission).
+  const [, requestCamera] = useCameraPermissions({ get: false });
 
   return {
     model: {
@@ -294,6 +321,106 @@ export function useAddFriend({ openFriend, share = systemShare }: AddFriendDepen
           },
         );
       },
+      scan: () => {
+        // A permission already given or refused returns at once, without asking again: the
+        // scanner then shows the camera, or how to turn it on in Settings.
+        requestCamera().then(openScanner, openScanner);
+      },
+    },
+  };
+}
+
+// --- Scanning a friend's QR code ---------------------------------------------------------------
+
+/**
+ * What the camera may do. `blocked`: refused, and the system will not ask again; only Settings
+ * can change it. `askable`: never asked (the scanner was opened some other way than its button).
+ */
+export type CameraAccess = 'unknown' | 'granted' | 'askable' | 'blocked';
+
+/** What the scanner says under the camera. */
+export type ScanNote = 'not-an-invitation' | ShownRefusal | null;
+
+export interface ScanInviteModel {
+  readonly camera: CameraAccess;
+  /** The camera could not start (no camera, or it is used by another app). */
+  readonly cameraFailed: boolean;
+  readonly note: ScanNote;
+  readonly isBusy: boolean;
+}
+
+export interface ScanInviteActions {
+  /** Text read from a code by the camera. */
+  scanned(text: string): void;
+  /** The single button before the system question, when the camera was never asked about. */
+  askForCamera(): void;
+  openSettings(): void;
+  cameraFailed(): void;
+}
+
+/**
+ * The scanner: a text read by the camera goes through `parseInviteLink` (an entry from outside,
+ * docs/specs/social.md, section 6), then the same acceptance as a typed code. Anything else is
+ * "not an invitation", and the camera keeps looking. The same text is handled once: a camera
+ * reads a code many times a second.
+ */
+export function useScanInvite({ openFriend }: { openFriend(userId: UserId): void }): {
+  model: ScanInviteModel;
+  actions: ScanInviteActions;
+} {
+  const store = useSocialStore();
+  const { repository } = store.client;
+  const [permission, requestCamera, readCamera] = useCameraPermissions();
+  const [note, setNote] = useState<ScanNote>(null);
+  const [cameraFailed, setCameraFailed] = useState(false);
+  const { run, isBusy } = useAction(store);
+  const lastText = useRef<string | null>(null);
+
+  // Coming back from Settings: the answer may have changed there.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void readCamera();
+    });
+    return () => subscription.remove();
+  }, [readCamera]);
+
+  const camera: CameraAccess =
+    permission === null
+      ? 'unknown'
+      : permission.granted
+        ? 'granted'
+        : permission.canAskAgain
+          ? 'askable'
+          : 'blocked';
+
+  return {
+    model: { camera, cameraFailed, note, isBusy },
+    actions: {
+      scanned: (text) => {
+        if (isBusy || text === lastText.current) return;
+        lastText.current = text;
+        let code: string;
+        try {
+          code = parseInviteLink(text);
+        } catch {
+          setNote('not-an-invitation');
+          return;
+        }
+        let friendId: UserId | null = null;
+        setNote(null);
+        run(
+          async () => {
+            friendId = (await repository.acceptInvite(code)).userId;
+          },
+          () => {
+            if (friendId !== null) openFriend(friendId);
+          },
+          (error) => setNote(refusalOf(error)),
+        );
+      },
+      askForCamera: () => void requestCamera(),
+      openSettings: () => void Linking.openSettings(),
+      cameraFailed: () => setCameraFailed(true),
     },
   };
 }

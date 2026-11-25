@@ -3,8 +3,8 @@ import { router } from 'expo-router';
 import { FriendsHome } from '@/features/friends';
 
 /**
- * The Proches tab. It only composes: navigation in, the feature page out. The pages it opens are
- * routes of the root stack (src/app/friends), over the tabs, as the reader is.
+ * The root of the Proches tab. It only composes: navigation in, the feature page out. The pages
+ * it opens are pushed on the tab's own stack (./_layout.tsx), under the tab bar.
  */
 export default function FriendsRoute() {
   return (

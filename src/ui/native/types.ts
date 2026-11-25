@@ -35,6 +35,8 @@ export interface ButtonProps {
    * label stays the short action (writing.md › Be action oriented); screen readers hear both.
    */
   detail?: string;
+  /** What VoiceOver says instead of the label (and detail), when the label alone is too short. */
+  accessibilityLabel?: string;
   onPress: () => void;
   variant?: ButtonVariant;
   /**
@@ -115,6 +117,32 @@ export interface LabelRowProps {
  * alone in its section.
  */
 export type ButtonRowProps = Omit<ButtonProps, 'fullWidth'>;
+
+/** One of the two buttons of a `ButtonPairRow`. */
+export interface ButtonPairItem {
+  /** A short verb: the row above says what it applies to. */
+  label: string;
+  /** What VoiceOver says instead of the short label, such as the verb and the name. */
+  accessibilityLabel?: string;
+  onPress: () => void;
+  disabled?: boolean;
+  testID?: string;
+}
+
+/**
+ * Two choices about the same thing, side by side in one row, at the same size: the preferred one
+ * in the more prominent style, the other borderless ("Use style — not size — to visually
+ * distinguish the preferred choice", buttons.md › Style). At large text sizes they are stacked.
+ */
+export interface ButtonPairRowProps {
+  preferred: ButtonPairItem;
+  other: ButtonPairItem;
+  /**
+   * `primary` (default): the prominent style. `secondary`: bordered, for a screen that would
+   * otherwise show more than two prominent buttons (buttons.md › Style).
+   */
+  preferredVariant?: Exclude<ButtonVariant, 'plain'>;
+}
 
 export interface ContentRowProps {
   /**
@@ -425,6 +453,7 @@ export interface NativeControls {
   ListRow: (props: ListRowProps) => ReactElement;
   LabelRow: (props: LabelRowProps) => ReactElement;
   ButtonRow: (props: ButtonRowProps) => ReactElement;
+  ButtonPairRow: (props: ButtonPairRowProps) => ReactElement;
   ContentRow: (props: ContentRowProps) => ReactElement;
   SwitchRow: (props: SwitchRowProps) => ReactElement;
   StepperRow: (props: StepperRowProps) => ReactElement;

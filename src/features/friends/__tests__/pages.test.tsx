@@ -4,7 +4,8 @@
  * vérification).
  */
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { AppState, Linking } from 'react-native';
 
 import { DEMO_GROUP_ID, DEMO_USERS } from '@/data/social';
 import { SCREEN_CONDITIONS, showLanguage } from '@/features/garden/test-support/screen-conditions';
@@ -18,10 +19,53 @@ import {
   touchTargetHeight,
 } from '@/ui/test-support/environment';
 
-import { AddFriendPage, FriendPage, FriendsHome, GroupPage, NewGroupPage } from '../friends-pages';
+import { inviteLink, parseInviteLink } from '@/domain/social';
+import { qrCodeModules } from '@/ui';
+
+import {
+  AddFriendPage,
+  FriendPage,
+  FriendsHome,
+  GroupPage,
+  NewGroupPage,
+  ScanInvitePage,
+} from '../friends-pages';
+import { cameraQuestionsShown, setCamera, type FakeCameraViewProps } from '../test-support/camera';
 import { demoForTest, signedInDemoForTest, withStore } from '../test-support/demo';
 
+jest.mock(
+  'expo-camera',
+  () =>
+    jest.requireActual<typeof import('../test-support/camera')>('../test-support/camera')
+      .fakeExpoCamera,
+);
+
 afterEach(resetDeviceConditions);
+beforeEach(() => setCamera('undetermined'));
+
+/** The add page with the navigation it needs, and what it was asked to open. */
+function addFriendPage(props: Partial<Parameters<typeof AddFriendPage>[0]> = {}) {
+  return <AddFriendPage openFriend={jest.fn()} openScanner={jest.fn()} {...props} />;
+}
+
+/** The modules a path of `QrCode` draws: one rectangle per run, `M{x} {y}h{n}v1h{-n}z`. */
+function modulesOfPath(path: string, size: number): boolean[][] {
+  const modules = Array.from({ length: size }, () => Array.from({ length: size }, () => false));
+  for (const [, x, y, run] of path.matchAll(/M(\d+) (\d+)h(\d+)v1h-\d+z/g)) {
+    for (let step = 0; step < Number(run); step += 1) {
+      const row = modules[Number(y)];
+      if (row !== undefined) row[Number(x) + step] = true;
+    }
+  }
+  return modules;
+}
+
+/** Makes the fake camera read a text, as when a code comes into view. */
+async function cameraReads(text: string) {
+  const preview = await screen.findByTestId('camera-view');
+  await fireEvent(preview, 'barcodeScanned', { data: text, type: 'qr' });
+  return preview.props as FakeCameraViewProps;
+}
 
 const NAVIGATION = {
   openFriend: jest.fn(),
@@ -193,6 +237,63 @@ describe("a friend's page", () => {
 });
 
 describe('the list', () => {
+  it('answers a request on one row: Accepter prominent, Refuser plain, the name for VoiceOver', async () => {
+    setDeviceConditions({ fontScale: 1 });
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    await render(withStore(store, <FriendsHome {...NAVIGATION} />));
+    const accept = await screen.findByRole('button', { name: 'Accepter Yacine' });
+    const decline = screen.getByRole('button', { name: 'Refuser Yacine' });
+    expect(accept).toHaveTextContent('Accepter');
+    expect(decline).toHaveTextContent('Refuser');
+    // Side by side: the nearest view around both lays its children out in a row.
+    let row = accept.parent;
+    while (row !== null && !row.queryAll(() => true).includes(decline)) row = row.parent;
+    expect(row).toHaveStyle({ flexDirection: 'row' });
+    expect(touchTargetHeight(accept)).toBeGreaterThanOrEqual(44);
+    expect(touchTargetHeight(decline)).toBeGreaterThanOrEqual(44);
+  });
+
+  it('stacks Accepter and Refuser at the largest text size, each still 44 points high', async () => {
+    setDeviceConditions({ fontScale: LARGEST_FONT_SCALE });
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    await render(withStore(store, <FriendsHome {...NAVIGATION} />));
+    const accept = await screen.findByRole('button', { name: 'Accepter Yacine' });
+    const decline = screen.getByRole('button', { name: 'Refuser Yacine' });
+    let around = accept.parent;
+    while (around !== null && !around.queryAll(() => true).includes(decline)) {
+      around = around.parent;
+    }
+    expect(around).not.toHaveStyle({ flexDirection: 'row' });
+    expect(touchTargetHeight(accept)).toBeGreaterThanOrEqual(44);
+    expect(touchTargetHeight(decline)).toBeGreaterThanOrEqual(44);
+  });
+
+  it('declines a request: the person is gone from the requests, not added', async () => {
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    await render(withStore(store, <FriendsHome {...NAVIGATION} />));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Refuser Yacine' }));
+    await waitFor(() => expect(screen.queryByTestId(`request-${DEMO_USERS.yacine}`)).toBeNull());
+    expect(screen.queryByTestId(`friend-card-${DEMO_USERS.yacine}`)).toBeNull();
+  });
+
+  it('says it is a demonstration once, on the list, not on the pages it opens', async () => {
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    const demoNote = /Démonstration : ces personnes sont inventées/;
+    await render(withStore(store, <FriendPage userId={DEMO_USERS.sarah} goBack={jest.fn()} />));
+    await screen.findByTestId('friend');
+    expect(screen.queryByText(demoNote)).toBeNull();
+    await render(withStore(store, <GroupPage groupId={DEMO_GROUP_ID} openPerson={jest.fn()} />));
+    await screen.findByTestId('group');
+    expect(screen.queryByText(demoNote)).toBeNull();
+    await render(withStore(store, <NewGroupPage openGroup={jest.fn()} />));
+    await screen.findByTestId('new-group');
+    expect(screen.queryByText(demoNote)).toBeNull();
+  });
+
   it('accepts a request: the person joins the gardens', async () => {
     await showLanguage('fr');
     const { store } = await signedInDemoForTest();
@@ -221,7 +322,7 @@ describe('adding a friend', () => {
   it('finds a name as the person types and shows only the name and the relation', async () => {
     await showLanguage('fr');
     const { store } = await signedInDemoForTest();
-    await render(withStore(store, <AddFriendPage openFriend={jest.fn()} />));
+    await render(withStore(store, addFriendPage()));
     await fireEvent.changeText(await screen.findByLabelText('Nom à chercher'), 'ya');
     expect(await screen.findByTestId(`add-result-${DEMO_USERS.yacine}`)).toHaveTextContent(
       /Yacine.*T’a envoyé une demande/,
@@ -235,7 +336,7 @@ describe('adding a friend', () => {
     await showLanguage('fr');
     const { store } = await signedInDemoForTest();
     const share = jest.fn(async () => undefined);
-    await render(withStore(store, <AddFriendPage openFriend={jest.fn()} share={share} />));
+    await render(withStore(store, addFriendPage({ share })));
     await waitFor(() =>
       expect(screen.getByTestId('add-my-code')).toHaveTextContent(/[A-Z0-9]{4} [A-Z0-9]{4}/),
     );
@@ -248,7 +349,7 @@ describe('adding a friend', () => {
     const { store, demo } = await signedInDemoForTest();
     const invite = await demo.repositoryAs(DEMO_USERS.yacine).createInvite();
     const openFriend = jest.fn();
-    await render(withStore(store, <AddFriendPage openFriend={openFriend} />));
+    await render(withStore(store, addFriendPage({ openFriend })));
     const field = await screen.findByLabelText('Code d’invitation');
     await fireEvent.changeText(field, 'abcd efgh');
     await fireEvent.press(screen.getByRole('button', { name: 'Ajouter ce proche' }));
@@ -260,14 +361,169 @@ describe('adding a friend', () => {
     await waitFor(() => expect(openFriend).toHaveBeenCalledWith(DEMO_USERS.yacine));
   });
 
-  it('leaves a named slot for the QR code and a disabled scan', async () => {
+  it('draws my invitation as a QR code that carries the link of my code', async () => {
     await showLanguage('fr');
     const { store } = await signedInDemoForTest();
-    await render(withStore(store, <AddFriendPage openFriend={jest.fn()} />));
+    await render(withStore(store, addFriendPage()));
+    const qr = await screen.findByRole('image', { name: 'QR code de mon invitation' });
+    expect(qr).toBeOnTheScreen();
+    // The code drawn is the code shown in "Mon code", as the link the scanner reads back.
+    const myCode = store.invite()?.code;
+    if (myCode === undefined) throw new Error('No invitation was made.');
+    expect(screen.getByTestId('add-my-code')).toHaveTextContent(
+      new RegExp(`${myCode.slice(0, 4)} ${myCode.slice(4)}`),
+    );
+    // The path drawn, read back module by module, is the code of that link.
+    const path = screen.container.queryAll(({ type }) => type === 'RNSVGPath')[0];
+    expect(modulesOfPath(String(path?.props.d), qrCodeModules(inviteLink(myCode)).length)).toEqual(
+      qrCodeModules(inviteLink(myCode)),
+    );
+    expect(parseInviteLink(inviteLink(myCode))).toBe(myCode);
+    expect(screen.queryByText(/Démonstration/)).toBeNull();
+  });
+
+  it('asks for the camera only when the person taps Scanner, then opens the scanner', async () => {
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    const openScanner = jest.fn();
+    await render(withStore(store, addFriendPage({ openScanner })));
+    await screen.findByTestId('add-qr-code');
+    expect(cameraQuestionsShown()).toBe(0);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Scanner un QR code' }));
+    await waitFor(() => expect(openScanner).toHaveBeenCalledTimes(1));
+    expect(cameraQuestionsShown()).toBe(1);
+  });
+
+  it('opens the scanner without asking again when the camera was refused before', async () => {
+    setCamera('denied');
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    const openScanner = jest.fn();
+    await render(withStore(store, addFriendPage({ openScanner })));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Scanner un QR code' }));
+    await waitFor(() => expect(openScanner).toHaveBeenCalledTimes(1));
+    expect(cameraQuestionsShown()).toBe(0);
+  });
+
+  it('fills the code field from a link of invitation, and accepts it only on the button', async () => {
+    await showLanguage('fr');
+    const { store, demo } = await signedInDemoForTest();
+    const invite = await demo.repositoryAs(DEMO_USERS.yacine).createInvite();
+    const openFriend = jest.fn();
+    await render(withStore(store, addFriendPage({ openFriend, linkedCode: invite.code })));
+    const field = await screen.findByLabelText('Code d’invitation');
+    expect(field).toHaveDisplayValue(`${invite.code.slice(0, 4)} ${invite.code.slice(4)}`);
+    expect(openFriend).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole('button', { name: 'Ajouter ce proche' }));
+    await waitFor(() => expect(openFriend).toHaveBeenCalledWith(DEMO_USERS.yacine));
+  });
+
+  it('drops a link whose code is not well formed', async () => {
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    await render(withStore(store, addFriendPage({ linkedCode: 'abcd efgh; drop' })));
+    expect(await screen.findByLabelText('Code d’invitation')).toHaveDisplayValue('');
+  });
+});
+
+describe('scanning a QR code', () => {
+  it('adds the friend whose invitation it reads: the same rules as a typed code', async () => {
+    setCamera('granted');
+    await showLanguage('fr');
+    const { store, demo } = await signedInDemoForTest();
+    const invite = await demo.repositoryAs(DEMO_USERS.yacine).createInvite();
+    const openFriend = jest.fn();
+    await render(withStore(store, <ScanInvitePage openFriend={openFriend} />));
+    const preview = await cameraReads(inviteLink(invite.code));
+    expect(preview.barcodeScannerSettings).toEqual({ barcodeTypes: ['qr'] });
+    await waitFor(() => expect(openFriend).toHaveBeenCalledWith(DEMO_USERS.yacine));
+    expect(cameraQuestionsShown()).toBe(0);
+  });
+
+  it('says when a QR code is not an invitation, and keeps looking', async () => {
+    setCamera('granted');
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    const openFriend = jest.fn();
+    await render(withStore(store, <ScanInvitePage openFriend={openFriend} />));
+    await screen.findByText(
+      'Vise le QR code de ton proche : il est ajouté dès que le code est lu.',
+    );
+    // A link with a path after the code is not an invitation: nothing is trimmed (rule 6).
+    await cameraReads('https://example.com/quranapp://invite/ABCDEFGH');
     expect(
-      await screen.findByRole('image', { name: 'QR code de mon invitation' }),
+      await screen.findByText('Ce QR code n’est pas une invitation Jannatuk.'),
     ).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Scanner un QR code' })).toBeDisabled();
+    expect(screen.getByTestId('camera-view')).toBeOnTheScreen();
+    expect(openFriend).not.toHaveBeenCalled();
+  });
+
+  it('says what the rules refuse: my own code', async () => {
+    setCamera('granted');
+    await showLanguage('fr');
+    const { store, demo } = await signedInDemoForTest();
+    const mine = await demo.repository.createInvite();
+    await render(withStore(store, <ScanInvitePage openFriend={jest.fn()} />));
+    await cameraReads(inviteLink(mine.code));
+    expect(await screen.findByText('C’est ton propre code.')).toBeOnTheScreen();
+  });
+
+  it('explains a refused camera and leads to Settings, without asking again', async () => {
+    setCamera('denied');
+    await showLanguage('fr');
+    const openSettings = jest.spyOn(Linking, 'openSettings').mockResolvedValue(undefined);
+    const { store } = await signedInDemoForTest();
+    await render(withStore(store, <ScanInvitePage openFriend={jest.fn()} />));
+    expect(await screen.findByTestId('scan-denied')).toBeOnTheScreen();
+    expect(screen.getByText('Accès à l’appareil photo désactivé')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Tu peux aussi taper son code sur la page précédente.'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByTestId('camera-view')).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Ouvrir les réglages' }));
+    expect(openSettings).toHaveBeenCalledTimes(1);
+    expect(cameraQuestionsShown()).toBe(0);
+    openSettings.mockRestore();
+  });
+
+  it('shows the camera once it was allowed in Settings and the person comes back', async () => {
+    setCamera('denied');
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    await render(withStore(store, <ScanInvitePage openFriend={jest.fn()} />));
+    await screen.findByTestId('scan-denied');
+    setCamera('granted');
+    // AppState is a mock of the React Native preset: the page's listener is among its calls.
+    const listeners = jest
+      .mocked(AppState.addEventListener)
+      .mock.calls.filter(([event]) => event === 'change')
+      .map(([, listener]) => listener);
+    await act(async () => {
+      for (const listener of listeners) listener('active');
+    });
+    expect(await screen.findByTestId('camera-view')).toBeOnTheScreen();
+  });
+
+  it('asks with a single Continuer button when the camera was never asked about', async () => {
+    setCamera('undetermined');
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    await render(withStore(store, <ScanInvitePage openFriend={jest.fn()} />));
+    expect(await screen.findByTestId('scan-ask')).toBeOnTheScreen();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+    await fireEvent.press(screen.getByRole('button', { name: 'Continuer' }));
+    expect(await screen.findByTestId('camera-view')).toBeOnTheScreen();
+    expect(cameraQuestionsShown()).toBe(1);
+  });
+
+  it('says when the camera cannot start', async () => {
+    setCamera('granted');
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    await render(withStore(store, <ScanInvitePage openFriend={jest.fn()} />));
+    await fireEvent(await screen.findByTestId('camera-view'), 'mountError', { message: 'busy' });
+    expect(await screen.findByText('L’appareil photo ne démarre pas')).toBeOnTheScreen();
   });
 });
 

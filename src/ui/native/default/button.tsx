@@ -22,6 +22,7 @@ const LABEL_COLOR = {
 export function Button({
   label,
   detail,
+  accessibilityLabel,
   onPress,
   variant = 'primary',
   role,
@@ -36,7 +37,9 @@ export function Button({
     <View style={fullWidth ? styles.fullWidth : styles.hugging}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={detail === undefined ? undefined : `${label}, ${detail}`}
+        accessibilityLabel={
+          accessibilityLabel ?? (detail === undefined ? undefined : `${label}, ${detail}`)
+        }
         accessibilityState={{ disabled }}
         android_ripple={{ color: colors.fill }}
         disabled={disabled}

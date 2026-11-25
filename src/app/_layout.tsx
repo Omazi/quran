@@ -54,14 +54,13 @@ function RootStack() {
   // The time spent in the app and in the reader, for the statistics (D37).
   useForegroundTimeRecording();
   const { t } = useTranslation('onboarding');
-  const { t: tFriends } = useTranslation('friends');
   const { t: tSettings } = useTranslation('settings');
   const colors = useColors();
-  // The pages of the Proches tab, and the settings page of the profile, open over the tabs, as the reader does, with the system bar, its
-  // title and its back button, a chevron alone (toolbars.md › Navigation; deviation 50). The bar
+  // The settings page of the profile opens over the tabs, as the reader does, with the system bar,
+  // its title and its back button, a chevron alone (toolbars.md › Navigation; deviation 52). The bar
   // takes the system's grouped background and label colours, which follow the dark appearance:
   // without them the navigation library paints its own light theme.
-  const friendsPage = {
+  const pushedPage = {
     headerShown: true,
     headerTintColor: colors.accent,
     headerBackButtonDisplayMode: 'minimal',
@@ -75,16 +74,9 @@ function RootStack() {
       <Stack.Screen name="index" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="+not-found" />
-      <Stack.Screen name="friends/[id]" options={{ ...friendsPage, title: '' }} />
-      <Stack.Screen name="friends/add" options={{ ...friendsPage, title: tFriends('add.title') }} />
-      <Stack.Screen
-        name="friends/new-group"
-        options={{ ...friendsPage, title: tFriends('newGroup.title') }}
-      />
-      <Stack.Screen name="friends/group/[id]" options={{ ...friendsPage, title: '' }} />
       {/* Opened from the last row of the profile, with the system bar, its title and its back
-          button, like the pages of the Proches tab (deviation 52). */}
-      <Stack.Screen name="settings" options={{ ...friendsPage, title: tSettings('title') }} />
+          button, (deviation 52). */}
+      <Stack.Screen name="settings" options={{ ...pushedPage, title: tSettings('title') }} />
       {/* The reader: the system navigation bar floats over the page (the reader hides and shows
           it), with the system's back button, a chevron alone (toolbars.md › Navigation). */}
       <Stack.Screen

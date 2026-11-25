@@ -4,7 +4,14 @@
  * Everything else in this folder is private.
  */
 
-export { AddFriendPage, FriendPage, FriendsHome, GroupPage, NewGroupPage } from './friends-pages';
+export {
+  AddFriendPage,
+  FriendPage,
+  FriendsHome,
+  GroupPage,
+  NewGroupPage,
+  ScanInvitePage,
+} from './friends-pages';
 export {
   SocialProvider,
   createSocialStore,

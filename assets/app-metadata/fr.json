@@ -1,0 +1,5 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "Jannatuk utilise l’appareil photo pour scanner le QR code d’invitation d’un proche. Aucune image n’est enregistrée."
+  }
+}

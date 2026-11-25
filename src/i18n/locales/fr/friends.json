@@ -26,6 +26,8 @@
     "requestDetail": "Veut devenir ton proche",
     "accept": "Accepter {{name}}",
     "decline": "Refuser {{name}}",
+    "acceptShort": "Accepter",
+    "declineShort": "Refuser",
     "gardensTitle": "Leurs jardins",
     "noFriends": "Tu n’as pas encore de proches",
     "noFriendsNote": "Ajoute quelqu’un par son nom, ou avec ton code.",
@@ -106,9 +108,26 @@
     "enterPlaceholder": "ABCD EFGH",
     "enterSubmit": "Ajouter ce proche",
     "qrTitle": "Avec un QR code",
-    "qrSlot": "QR code de mon invitation",
+    "qrLabel": "QR code de mon invitation",
+    "qrLoading": "Préparation du QR code",
     "scan": "Scanner un QR code",
-    "qrNote": "Bientôt : le QR code de ton invitation, et son scan avec l’appareil photo."
+    "qrNote": "Fais scanner ce code à ton proche depuis Jannatuk, ou scanne le sien."
+  },
+  "scan": {
+    "title": "Scanner un QR code",
+    "instructions": "Vise le QR code de ton proche : il est ajouté dès que le code est lu.",
+    "preview": "Aperçu de l’appareil photo",
+    "adding": "Ajout de ton proche…",
+    "notAnInvitation": "Ce QR code n’est pas une invitation Jannatuk.",
+    "askTitle": "L’appareil photo lit le QR code",
+    "askText": "Jannatuk l’utilise pour lire le code de ton proche. Aucune image n’est gardée.",
+    "continue": "Continuer",
+    "deniedTitle": "Accès à l’appareil photo désactivé",
+    "deniedText": "Pour scanner le QR code d’un proche, autorise l’appareil photo dans les réglages.",
+    "openSettings": "Ouvrir les réglages",
+    "failedTitle": "L’appareil photo ne démarre pas",
+    "failedText": "Une autre app l’utilise peut-être.",
+    "typeInstead": "Tu peux aussi taper son code sur la page précédente."
   },
   "group": {
     "period": "Période du classement",
