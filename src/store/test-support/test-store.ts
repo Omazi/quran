@@ -5,6 +5,9 @@
 
 import { EMPTY_JOURNAL, type ReadingJournal } from '@/domain/khatm';
 
+import type { SecondsByDay } from '@/domain/stats';
+
+import { EMPTY_TIME_SPENT } from '../config';
 import { createFirstLaunchSettings, createStateStore, type AppStore } from '../app-store';
 import type { AppSettings, DataResetNotice } from '../types';
 
@@ -15,6 +18,7 @@ export interface TestStoreData {
   /** Changes to the settings of a first launch. */
   settings?: Partial<AppSettings>;
   journal?: ReadingJournal;
+  timeSpent?: SecondsByDay;
   /** A notice about stored data that could not be read back, still to show. */
   dataResetNotice?: DataResetNotice | null;
 }
@@ -23,12 +27,14 @@ export interface TestStoreData {
 export function createTestAppStore({
   settings,
   journal,
+  timeSpent,
   dataResetNotice = null,
 }: TestStoreData = {}): AppStore {
   const store = createStateStore(
     {
       settings: { ...createFirstLaunchSettings(TEST_USER_SEED), ...settings },
       journal: journal ?? EMPTY_JOURNAL,
+      timeSpent: timeSpent ?? EMPTY_TIME_SPENT,
     },
     { dataResetNotice },
   );

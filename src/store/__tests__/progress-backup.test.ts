@@ -26,7 +26,7 @@ import {
   type ProgressBackup,
 } from '../progress-backup';
 import { readStoredData, writeStoredData } from '../stored-data';
-import type { AppData, AppSettings } from '../types';
+import type { AppDataToWrite, AppSettings } from '../types';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
   jest.requireActual('@react-native-async-storage/async-storage/jest/async-storage-mock'),
@@ -75,7 +75,7 @@ function finishedKhatmas(count: number, daysPerKhatma = 30): ReadingJournal {
 }
 
 const JOURNAL = read(read(EMPTY_JOURNAL, START, 1, 60, 10), addDays(START, 20), 100, 104, 5);
-const DATA: AppData = { settings: SETTINGS, journal: JOURNAL };
+const DATA: AppDataToWrite = { settings: SETTINGS, journal: JOURNAL };
 
 function sorted(journal: ReadingJournal) {
   return [...journal].sort((a, b) => a.khatm - b.khatm || a.page - b.page);
@@ -106,7 +106,7 @@ describe('copy of the progress, as text', () => {
     expect(sorted(restored?.journal ?? [])).toEqual(sorted(journal));
 
     const empty = readBackupDocument(writeBackupDocument({ settings: SETTINGS, journal: [] }));
-    expect(empty).toEqual({ settings: SETTINGS, journal: [] });
+    expect(empty).toEqual({ settings: SETTINGS, journal: [], timeSpent: {} });
   });
 
   it('has nothing to bring back from a first launch in progress', () => {
@@ -120,7 +120,7 @@ describe('copy of the progress, as text', () => {
 describe('size of the copy', () => {
   it('stays under the limit with 500 khatmas, by reducing the oldest to their badge', () => {
     const journal = read(finishedKhatmas(500), parseLocalDate('2061-03-01'), 1, 37, 5);
-    const data: AppData = { settings: SETTINGS, journal };
+    const data: AppDataToWrite = { settings: SETTINGS, journal };
     expect(writeStoredData(data).length).toBeGreaterThan(10_000_000);
 
     const document = writeBackupDocument(data);
@@ -298,7 +298,10 @@ describe('restoring at start-up', () => {
 
   it('lets a device that has a page of its own win, and replaces the copy', async () => {
     const ownJournal = recordPageRead(EMPTY_JOURNAL, { page: 7, date: START });
-    const local: AppData = { settings: { ...SETTINGS, dailyGoalPages: 3 }, journal: ownJournal };
+    const local: AppDataToWrite = {
+      settings: { ...SETTINGS, dailyGoalPages: 3 },
+      journal: ownJournal,
+    };
     const storage = createMemoryStorage({ [STORED_DATA_KEY]: writeStoredData(local) });
     const backup = createMemoryProgressBackup(writeBackupDocument(DATA));
     const read = jest.spyOn(backup, 'read');
@@ -310,12 +313,12 @@ describe('restoring at start-up', () => {
 
     await store.whenBackedUp();
     expect(read).not.toHaveBeenCalled();
-    expect(readBackupDocument(backup.peek())).toEqual(local);
+    expect(readBackupDocument(backup.peek())).toEqual({ ...local, timeSpent: {} });
   });
 
   it('adopts the copy at a later start-up too, while the device has no page of its own', async () => {
     // The introduction was finished before the copy arrived: settings on the device, no page.
-    const local: AppData = { settings: { ...SETTINGS, dailyGoalPages: 3 }, journal: [] };
+    const local: AppDataToWrite = { settings: { ...SETTINGS, dailyGoalPages: 3 }, journal: [] };
     const storage = createMemoryStorage({ [STORED_DATA_KEY]: writeStoredData(local) });
     const backup = createMemoryProgressBackup(writeBackupDocument(DATA));
 
@@ -332,7 +335,7 @@ describe('restoring at start-up', () => {
   });
 
   it('keeps its own settings when the copy has no page either, and replaces the copy', async () => {
-    const local: AppData = { settings: { ...SETTINGS, dailyGoalPages: 3 }, journal: [] };
+    const local: AppDataToWrite = { settings: { ...SETTINGS, dailyGoalPages: 3 }, journal: [] };
     const storage = createMemoryStorage({ [STORED_DATA_KEY]: writeStoredData(local) });
     const backup = createMemoryProgressBackup(
       writeBackupDocument({ settings: SETTINGS, journal: [] }),
@@ -342,7 +345,7 @@ describe('restoring at start-up', () => {
     expect(restoredFromBackup).toBe(false);
     expect(store.getState().settings.dailyGoalPages).toBe(3);
     await store.whenBackedUp();
-    expect(readBackupDocument(backup.peek())).toEqual(local);
+    expect(readBackupDocument(backup.peek())).toEqual({ ...local, timeSpent: {} });
   });
 
   it('adopts any sound copy while the introduction is not finished', async () => {
@@ -350,7 +353,7 @@ describe('restoring at start-up', () => {
     const storage = createMemoryStorage({
       [STORED_DATA_KEY]: writeStoredData({ settings: unfinished, journal: [] }),
     });
-    const copy: AppData = { settings: SETTINGS, journal: [] };
+    const copy: AppDataToWrite = { settings: SETTINGS, journal: [] };
     const { store, restoredFromBackup } = await load(
       storage,
       createMemoryProgressBackup(writeBackupDocument(copy)),

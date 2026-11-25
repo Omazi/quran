@@ -381,3 +381,32 @@ pas nécessaire (25 novembre 2026). Option pour plus tard : une colonne `profile
 (vrai par défaut) et un filtre dans `search_profiles` qui cache un inconnu mais pas un ami ni une
 demande en attente ; le code et le QR fonctionneraient toujours. Sans ce réglage, toute personne
 dont le nom correspond est trouvable (hors blocages) : c'est l'exposition décrite ci-dessus.
+
+## D37 — Les compteurs de lecture : hasanat, versets, mots, temps passé
+
+Demande du propriétaire, 25 novembre 2026 (le compteur de hasanat, dès le 24) : afficher le
+nombre de hasanat, de versets lus, de mots lus et le temps passé dans l'appli, **pour le
+prochain déploiement**, dans une section remarquable, joliment présentée. Les proches voient,
+sur le profil de l'autre, ses mots lus, ses versets lus et ses hasanat.
+
+Ce qui est décidé (détail : `specs/stats.md`) :
+
+- Tout se déduit du journal de lecture et des données du mushaf : rien n'est saisi à la main.
+  Relire dans la même khatma ne compte pas (D8) ; relire dans une khatma suivante compte.
+- Un verset compte quand tous ses mots sont sur des pages lues de la même khatma.
+- Les **hasanat sont une estimation** : lettres lues × 10, d'après le hadith rapporté par
+  Ibn Mas'ûd (Sunan at-Tirmidhî n° 2910). L'écran le dit toujours, avec la source, et dit
+  qu'Allah seul connaît la récompense.
+- La règle des lettres (module `domain/stats`, fichier `letters.ts`) compte les lettres
+  **écrites** dans le texte uthmani de l'appli, sans les voyelles, la shadda, l'alif suscrit ni
+  les petites lettres. Avec les données actuelles : 77 430 mots, 325 882 lettres, 6 236 versets
+  pour une khatma complète.
+- Le temps passé (dans l'appli, et dans le lecteur) est compté au premier plan, par jour
+  local, dans le magasin ; il est sauvegardé avec la progression. Il n'est pas publié aux
+  proches.
+
+**À faire valider par une personne qualifiée avant le déploiement** : la règle des lettres (les
+savants comptent de plusieurs façons : alif suscrit, shadda, hamza sur tatweel), le facteur dix
+et la formulation de l'écran. Tant que ce n'est pas validé, l'écran garde le mot « estimation ».
+_Changerait si_ la personne qualifiée retient une autre règle : seul `letters.ts` change, avec
+ses tests ; les totaux de contrôle sont alors à relire.

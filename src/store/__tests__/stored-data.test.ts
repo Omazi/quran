@@ -26,7 +26,7 @@ const JOURNAL: ReadingJournal = [1, 2, 3].reduce(
   EMPTY_JOURNAL,
 );
 
-const DATA: AppData = { settings: SETTINGS, journal: JOURNAL };
+const DATA: AppData = { settings: SETTINGS, journal: JOURNAL, timeSpent: {} };
 
 /** The stored document with one part replaced, as text. */
 function documentWith(change: Record<string, unknown>): string {
@@ -51,12 +51,13 @@ describe('stored document', () => {
     });
   });
 
-  it('writes the version, the settings and the journal, and nothing else', () => {
+  it('writes the version, the settings, the journal and the time, and nothing else', () => {
     const state = { ...DATA, setLanguage: () => {}, somethingElse: 'x' };
     expect(JSON.parse(writeStoredData(state))).toEqual({
       version: STORED_DATA_VERSION,
       settings: SETTINGS,
       journal: JOURNAL,
+      timeSpent: {},
     });
   });
 
@@ -64,6 +65,7 @@ describe('stored document', () => {
     expect(readStoredData(null)).toEqual({
       settings: null,
       journal: null,
+      timeSpent: null,
       discarded: [],
       wasUpgraded: false,
     });
@@ -126,6 +128,7 @@ describe('document written by version 1 of the app', () => {
         reminders: { ...remindersOfVersion1, fridayTime: { hour: 9, minute: 0 }, quietHours: null },
       },
       journal: JOURNAL,
+      timeSpent: {},
       discarded: [],
       wasUpgraded: true,
     });
@@ -162,6 +165,7 @@ describe('corrupt stored document', () => {
     expect(readStoredData(raw)).toEqual({
       settings: null,
       journal: null,
+      timeSpent: null,
       discarded: ['document'],
       wasUpgraded: false,
     });
@@ -214,6 +218,7 @@ describe('corrupt stored document', () => {
     expect(readStoredData(settingsWith(change))).toEqual({
       settings: null,
       journal: JOURNAL,
+      timeSpent: {},
       discarded: ['settings'],
       wasUpgraded: false,
     });
@@ -247,6 +252,7 @@ describe('corrupt stored document', () => {
     expect(readStoredData(documentWith({ journal }))).toEqual({
       settings: SETTINGS,
       journal: null,
+      timeSpent: {},
       discarded: ['journal'],
       wasUpgraded: false,
     });
