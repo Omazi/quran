@@ -7,7 +7,6 @@ import { assertPageNumber } from '@/domain/quran';
 import { deviceLocalDate, type Clock, type HomeSettings } from '@/features/home';
 import { useAppStore } from '@/store';
 
-import { rememberOpenedPage } from './reader-session';
 import { readingFeedback, type ReadingFeedback } from './reading-feedback';
 import { finishVisit, pauseVisit, resumeVisit, startVisit, type PageVisit } from './reading-timer';
 import { useScreenReader } from './use-screen-reader';
@@ -70,9 +69,11 @@ export function useReader(
   const dailyGoalPages = useAppStore((state) => state.settings.dailyGoalPages);
   const userSeed = useAppStore((state) => state.settings.userSeed);
   const pauses = useAppStore((state) => state.settings.pauses);
+  const lastOpenedPage = useAppStore((state) => state.settings.lastOpenedPage);
+  const rememberOpenedPage = useAppStore((state) => state.setLastOpenedPage);
 
   // Read when a visit ends, which can be after the last render (when the reader closes).
-  const settings: HomeSettings = { dailyGoalPages, userSeed, pauses };
+  const settings: HomeSettings = { dailyGoalPages, userSeed, lastOpenedPage, pauses };
   const latest = useRef({ journal, recordInStore, settings, monotonicClock, clock, page });
   useEffect(() => {
     latest.current = { journal, recordInStore, settings, monotonicClock, clock, page };
@@ -123,7 +124,7 @@ export function useReader(
 
   useEffect(() => {
     rememberOpenedPage(page);
-  }, [page]);
+  }, [page, rememberOpenedPage]);
 
   // Only the time with the app in the foreground counts.
   useEffect(() => {

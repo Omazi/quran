@@ -6,6 +6,8 @@
 
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { AccessibilityInfo, AppState } from 'react-native';
+import { State } from 'react-native-gesture-handler';
+import { fireGestureHandler, getByGestureTestId } from 'react-native-gesture-handler/jest-utils';
 
 import { quranStructure } from '@/data/quran';
 import { recordPageRead, EMPTY_JOURNAL, type ReadingJournal } from '@/domain/khatm';
@@ -14,7 +16,7 @@ import { showLanguage } from '@/features/garden/test-support/screen-conditions';
 import { deviceLocalDate } from '@/features/home';
 import { AppStoreProvider, type AppStore } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
-import { fontFamily } from '@/ui';
+import { fontFamily, layout } from '@/ui';
 import {
   renderOnIOS,
   resetDeviceConditions,
@@ -24,7 +26,6 @@ import {
 
 import { READER_CONFIG } from '../config';
 import { pagerIndexOfPage } from '../page-order';
-import { forgetOpenedPage, getLastOpenedPage } from '../reader-session';
 import { ReaderNotFound, ReaderScreen } from '../reader-screen';
 import { useReader } from '../use-reader';
 import type { QuranFontStatus } from '../use-quran-font';
@@ -90,7 +91,6 @@ function pagesOf(store: AppStore): number[] {
 
 beforeEach(async () => {
   now = 0;
-  forgetOpenedPage();
   // React Native's Jest mock makes the state a function; on a device it is a string.
   Object.defineProperty(AppState, 'currentState', { value: 'active', configurable: true });
   setDeviceConditions();
@@ -101,9 +101,10 @@ afterEach(resetDeviceConditions);
 
 describe('turning the pages', () => {
   it('opens on the page asked, and remembers it as the page to resume', async () => {
-    await openReader(createTestAppStore(), 293);
+    const store = createTestAppStore();
+    await openReader(store, 293);
     await waitFor(() => expect(screen.getByTestId('mushaf-page-293')).toBeOnTheScreen());
-    expect(getLastOpenedPage()).toBe(293);
+    expect(store.getState().settings.lastOpenedPage).toBe(293);
   });
 
   it('starts the pager on that page, in the order of the book', async () => {
@@ -133,7 +134,8 @@ describe('turning the pages', () => {
   });
 
   it('offers VoiceOver an action for the next and the previous page', async () => {
-    await openReader(createTestAppStore(), 293);
+    const store = createTestAppStore();
+    await openReader(store, 293);
     await waitFor(() => expect(screen.getByTestId('mushaf-page-293')).toBeOnTheScreen());
     const firstLine = screen.container.queryAll(
       (element) => element.props.accessibilityLanguage === 'ar' && element.props.accessible,
@@ -145,7 +147,7 @@ describe('turning the pages', () => {
     await act(async () => {
       firstLine.props.onAccessibilityAction({ nativeEvent: { actionName: 'nextPage' } });
     });
-    expect(getLastOpenedPage()).toBe(294);
+    expect(store.getState().settings.lastOpenedPage).toBe(294);
   });
 });
 
@@ -156,10 +158,8 @@ describe('the 30-second rule, through the store', () => {
     await wait(5);
     await swipeTo(11);
     expect(pagesOf(store)).toEqual([]);
-    // An empty line keeps its height and is hidden from screen readers.
-    expect(
-      screen.getByTestId('reader-feedback', { includeHiddenElements: true }),
-    ).toHaveTextContent('\u00a0');
+    // Nothing to say: nothing is drawn, so the pill reserves no room.
+    expect(screen.queryByTestId('reader-feedback', { includeHiddenElements: true })).toBeNull();
   });
 
   it('a page read for 30 seconds is recorded on the local day when the page turns', async () => {
@@ -227,6 +227,88 @@ describe('the 30-second rule, through the store', () => {
   });
 });
 
+describe('the zoom of the page (deviation 34)', () => {
+  it('stops turning pages while the page is enlarged, and turns them again at its size', async () => {
+    // With Reduce Motion the double tap jumps to its size: no animation to wait for.
+    setDeviceConditions({ reducedMotion: true });
+    await showLanguage('fr');
+    await openReader(createTestAppStore(), 20);
+    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
+    const pager = () => screen.getByTestId('book-pager');
+    expect(pager().props.scrollEnabled).toBe(true);
+    await act(async () => {
+      fireGestureHandler(getByGestureTestId('reader-page-20-double-tap'), [
+        { x: WIDTH / 2, y: HEIGHT / 2 },
+      ]);
+    });
+    await waitFor(() => expect(pager().props.scrollEnabled).toBe(false));
+    await act(async () => {
+      fireGestureHandler(getByGestureTestId('reader-page-20-double-tap'), [
+        { x: WIDTH / 2, y: HEIGHT / 2 },
+      ]);
+    });
+    await waitFor(() => expect(pager().props.scrollEnabled).toBe(true));
+  });
+});
+
+describe('the enlarged page across turns and edges', () => {
+  async function zoomIn(page: number) {
+    await act(async () => {
+      fireGestureHandler(getByGestureTestId(`reader-page-${page}-double-tap`), [
+        { x: WIDTH / 2, y: HEIGHT / 2 },
+      ]);
+    });
+    await waitFor(() => expect(screen.getByTestId('book-pager').props.scrollEnabled).toBe(false));
+  }
+
+  /** A drag of one finger, `dx` points to the right, from the middle of the page. */
+  async function drag(page: number, dx: number) {
+    await act(async () => {
+      fireGestureHandler(getByGestureTestId(`reader-page-${page}-pan`), [
+        { state: State.BEGAN, x: WIDTH / 2, y: HEIGHT / 2, translationX: 0, translationY: 0 },
+        { state: State.ACTIVE, x: WIDTH / 2, y: HEIGHT / 2, translationX: 0, translationY: 0 },
+        { translationX: dx / 2, translationY: 0 },
+        { translationX: dx, translationY: 0 },
+        { state: State.END, translationX: dx, translationY: 0 },
+      ]);
+    });
+  }
+
+  beforeEach(async () => {
+    setDeviceConditions({ reducedMotion: true });
+    await showLanguage('fr');
+  });
+
+  it('keeps the zoom when the page turns', async () => {
+    await openReader(createTestAppStore(), 20);
+    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
+    await zoomIn(20);
+    await swipeTo(21);
+    // Still enlarged on the next page: the pager stays still.
+    expect(screen.getByTestId('book-pager').props.scrollEnabled).toBe(false);
+  });
+
+  it('turns the page when a drag goes far enough beyond the edge', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 20);
+    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
+    await zoomIn(20);
+    // Far enough to reach the left edge, then past it by more than the distance of a turn.
+    await drag(20, WIDTH + READER_CONFIG.zoom.edgeTurnDistance + 10);
+    // Dragging right past the left edge brings the next page, 21, in from the left.
+    await waitFor(() => expect(store.getState().settings.lastOpenedPage).toBe(21));
+  });
+
+  it('does not turn the page for a short push beyond the edge', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 20);
+    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
+    await zoomIn(20);
+    await drag(20, WIDTH / 2 + READER_CONFIG.zoom.edgeTurnDistance / 2);
+    expect(store.getState().settings.lastOpenedPage).toBe(20);
+  });
+});
+
 describe('the bars', () => {
   it('a tap on the page hides them, another shows them again', async () => {
     const seeBars = jest.fn<void, [boolean]>();
@@ -254,9 +336,9 @@ describe('the bars', () => {
     });
     await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
     expect(barsVisible()).toBe(true);
-    await fireEvent.press(screen.getByTestId('mushaf-page-20'));
+    await act(() => fireGestureHandler(getByGestureTestId('reader-page-20-tap')));
     expect(barsVisible()).toBe(false);
-    await fireEvent.press(screen.getByTestId('mushaf-page-20'));
+    await act(() => fireGestureHandler(getByGestureTestId('reader-page-20-tap')));
     expect(barsVisible()).toBe(true);
   });
 });
@@ -283,6 +365,35 @@ describe('a line wider than the column', () => {
     }
     expect(sizeOf(lines[0]!)).toBeLessThan(fullSize);
     expect(sizeOf(lines[1]!)).toBe(fullSize);
+  });
+});
+
+describe('a short line', () => {
+  it('is centred with the font space; a line that fills the column is spread', async () => {
+    await openReader(createTestAppStore(), 507);
+    await waitFor(() => expect(screen.getByTestId('mushaf-page-507')).toBeOnTheScreen());
+    const lines = screen.container.queryAll(
+      (element) =>
+        element.props.accessibilityLanguage === 'ar' &&
+        typeof element.props.accessibilityLabel === 'string',
+    );
+    const wordsOf = (line: (typeof lines)[number]) =>
+      line.queryAll(
+        (element) => element.type === 'Text' && styleOf(element).fontFamily === fontFamily.quran,
+      );
+    const layOut = async (line: (typeof lines)[number], width: number) => {
+      for (const word of wordsOf(line)) {
+        await fireEvent(word, 'layout', { nativeEvent: { layout: { width, height: 30 } } });
+      }
+    };
+    // The first line gets 1 point a word: far under 60 % of the column.
+    await layOut(lines[0]!, 1);
+    expect(styleOf(lines[0]!).justifyContent).toBe('center');
+    // The second gets words that, with the font space, fill about 90 % of it.
+    const count = wordsOf(lines[1]!).length;
+    const column = WIDTH - 2 * layout.screenMargin;
+    await layOut(lines[1]!, (column * 0.9) / count - 4);
+    expect(styleOf(lines[1]!).justifyContent).toBe('space-between');
   });
 });
 

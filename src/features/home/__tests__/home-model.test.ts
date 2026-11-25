@@ -2,6 +2,7 @@ import { quranStructure } from '@/data/quran';
 import { DEFAULT_GARDEN_CONFIG, gardenVariant } from '@/domain/garden';
 import { EMPTY_JOURNAL, recordPageRead, type ReadingJournal } from '@/domain/khatm';
 import { addDays, parseLocalDate } from '@/domain/shared/local-date';
+import { resolveResumePage } from '@/features/reader';
 
 import {
   buildReadingHistory,
@@ -254,6 +255,50 @@ describe('buildHomeModel, at the edges', () => {
     expect(() => buildHomeModel({ ...input, hizbPageRanges: RANGES.slice(0, 59) })).toThrow(
       RangeError,
     );
+  });
+});
+
+describe("the page to resume, the same as the reader's", () => {
+  const withLastOpened = (lastOpenedPage: number | null) => {
+    const input = inputOf('thriving');
+    return buildHomeModel({ ...input, settings: { ...input.settings, lastOpenedPage } });
+  };
+
+  it('is the first unread page while the reader was never opened', () => {
+    const input = inputOf('thriving');
+    const expected = resolveResumePage({
+      lastOpenedPage: null,
+      journal: input.journal,
+      hizbPageRanges: RANGES,
+    });
+    expect(withLastOpened(null).reading.nextPage).toBe(expected);
+    expect(expected).toBe(LAST_PAGE_OF_GARDEN + READING_HISTORY_CONFIG.pagesReadToday + 1);
+  });
+
+  it.each([1, 293, 604])('is the last page opened in the reader: page %i', (page) => {
+    const input = inputOf('thriving');
+    const model = withLastOpened(page);
+    expect(model.reading.nextPage).toBe(
+      resolveResumePage({ lastOpenedPage: page, journal: input.journal, hizbPageRanges: RANGES }),
+    );
+    expect(model.reading.nextPage).toBe(page);
+    expect(model.reading.hasStarted).toBe(true);
+  });
+
+  it('counts a person who opened the reader without reading as someone who resumes', () => {
+    const input = inputOf('bare-earth');
+    const model = buildHomeModel({
+      ...input,
+      settings: { ...input.settings, lastOpenedPage: 12 },
+    });
+    expect(model.reading).toMatchObject({ nextPage: 12, hasStarted: true });
+  });
+
+  it('refuses a page outside the book', () => {
+    const input = inputOf('thriving');
+    expect(() =>
+      buildHomeModel({ ...input, settings: { ...input.settings, lastOpenedPage: 605 } }),
+    ).toThrow(RangeError);
   });
 });
 

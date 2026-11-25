@@ -29,6 +29,7 @@ const SETTINGS: AppSettings = {
   dailyGoalPages: 8,
   onboardingCompleted: true,
   userSeed: 77,
+  lastOpenedPage: null,
   pauses: [],
   reminders: DEFAULT_REMINDERS,
 };

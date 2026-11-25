@@ -54,6 +54,8 @@ export function switchableControls(
       return <SegmentedChoice {...props} />;
     },
     DetailRow: switchable((controls) => controls.DetailRow),
+    SearchFieldRow: switchable((controls) => controls.SearchFieldRow),
+    NumberFieldRow: switchable((controls) => controls.NumberFieldRow),
     ProgressIndicator: switchable((controls) => controls.ProgressIndicator),
     Gauge: switchable((controls) => controls.Gauge),
     ContentUnavailable: switchable((controls) => controls.ContentUnavailable),

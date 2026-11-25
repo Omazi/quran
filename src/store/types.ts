@@ -27,6 +27,11 @@ export interface AppSettings {
    * (`gardenVariant(cycle, userSeed)`). A whole number from 0 to 2^53 - 1.
    */
   readonly userSeed: number;
+  /**
+   * The last page opened in the reader, from 1 to 604, or null when the reader was never opened.
+   * The page to resume starts from it (docs/specs/reader.md, section 1).
+   */
+  readonly lastOpenedPage: number | null;
   /** Periods during which the garden is frozen. */
   readonly pauses: readonly Pause[];
   readonly reminders: ReminderSettings;
@@ -83,6 +88,8 @@ export interface AppState extends AppData {
   /** Changes some of the reminder settings. Throws a `RangeError` for an impossible time. */
   updateReminders: (change: Partial<ReminderSettings>) => void;
   completeOnboarding: () => void;
+  /** Remembers the last page opened in the reader, or forgets it with null. */
+  setLastOpenedPage: (page: number | null) => void;
   /**
    * Adds a page to the journal through the khatm module. A page read again changes nothing.
    * Throws a `RangeError` for a day outside `STORED_DATE_RANGE`: a phone whose clock is that far

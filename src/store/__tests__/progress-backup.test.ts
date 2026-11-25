@@ -40,6 +40,7 @@ const SETTINGS: AppSettings = {
   language: 'ar',
   dailyGoalPages: 12,
   onboardingCompleted: true,
+  lastOpenedPage: 293,
   userSeed: 987_654,
   pauses: [{ from: parseLocalDate('2026-03-01'), to: parseLocalDate('2026-03-04') }],
   reminders: { ...DEFAULT_REMINDERS, fridayKahfEnabled: true },
@@ -230,6 +231,22 @@ describe('copy that cannot be trusted', () => {
     ['a text longer than any copy the app writes', `${VALID}${' '.repeat(BACKUP_SIZE_LIMIT)}`],
   ])('is left aside whole: %s', (_name, raw) => {
     expect(readBackupDocument(raw)).toBeNull();
+  });
+
+  it('accepts both kinds of version 3 copy: with only the page, and with only the time', () => {
+    const onlyPage = JSON.stringify({ f: 1, v: 3, s: SETTINGS, k: [] });
+    expect(readBackupDocument(onlyPage)).toEqual({
+      settings: SETTINGS,
+      journal: [],
+      timeSpent: {},
+    });
+    const { lastOpenedPage: _lastOpenedPage, ...withoutPage } = SETTINGS;
+    // Day 0 of a copy's time is 2026-01-01; the triple is [day, app seconds, reader seconds].
+    const onlyTime = readBackupDocument(
+      JSON.stringify({ f: 1, v: 3, s: withoutPage, k: [], t: [[10, 600, 300]] }),
+    );
+    expect(onlyTime?.settings).toEqual({ ...SETTINGS, lastOpenedPage: null });
+    expect(Object.values(onlyTime?.timeSpent ?? {})).toEqual([{ app: 600, reader: 300 }]);
   });
 
   it('accepts a copy written by version 1 of the app, upgraded like a stored document', () => {

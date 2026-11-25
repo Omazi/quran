@@ -9,6 +9,7 @@ import {
   type AccessibilityActionEvent,
   type LayoutChangeEvent,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { quranStructure } from '@/data/quran';
 import { getDisplayedLanguage } from '@/i18n';
@@ -19,7 +20,10 @@ import {
   Icon,
   Screen,
   layout,
+  radius,
   spacing,
+  useColors,
+  useReducedMotion,
   type IconSymbol,
 } from '@/ui';
 
@@ -31,14 +35,14 @@ import { nextPage, previousPage } from './page-order';
 import type { ReadingFeedback } from './reading-feedback';
 import type { ReaderActions, ReaderModel } from './use-reader';
 import type { QuranFontStatus } from './use-quran-font';
+import type { PageTurnDirection } from './zoom';
+import { ZoomablePage, useZoomState } from './zoomable-page';
 
 const WATER_SYMBOL: IconSymbol = { ios: 'drop.fill', android: 'water_drop' };
 const NOT_FOUND_SYMBOL: IconSymbol = { ios: 'book.closed', android: 'book_2' };
 const FONT_SYMBOL: IconSymbol = { ios: 'textformat', android: 'text_fields' };
 const NEXT_ACTION = 'nextPage';
 const PREVIOUS_ACTION = 'previousPage';
-/** Holds the height of the empty feedback line, at the person's text size. */
-const NO_BREAK_SPACE = '\u00a0';
 
 /** The name of a surah in the language of the interface. */
 export function surahDisplayName(surah: number): string {
@@ -61,10 +65,11 @@ export interface ReaderScreenProps {
  * system navigation bar, which floats over the top and which a tap hides or shows
  * (toolbars.md › Best practices: hide toolbars for a distraction-free experience, restore them
  * with a tap; going-full-screen.md › Best practices). The room of the bar stays empty when it is
- * hidden, so the text never moves.
+ * hidden, so the text never moves; the framed page is centred in the room under it.
  *
- * Under the bar, a line says when the page just left was counted (spec 3): status feedback in the
- * interface, near what it is about, not an alert (feedback.md › Best practices). It stays until
+ * A pill over the band of the bar says when the page just left was counted (spec 3): status
+ * feedback in the interface, near what it is about, not an alert (feedback.md › Best practices).
+ * It takes no room of its own, so the page does not move when it comes and goes. It stays until
  * the next page, never dismissed by a timer (accessibility.md › Cognitive), and it does not move:
  * nothing here is animated, so Reduce Motion has nothing to remove.
  */
@@ -77,7 +82,11 @@ export function ReaderScreen({
 }: ReaderScreenProps) {
   const { t } = useTranslation('reader');
   const [area, setArea] = useState<PageArea | null>(null);
+  // While a page is enlarged, a swipe moves around it instead of turning it.
+  const [isZoomed, setZoomed] = useState(false);
+  const isMotionReduced = useReducedMotion();
   const pager = useRef<BookPagerHandle>(null);
+  const zoom = useZoomState();
   const { changePage, toggleBars } = actions;
 
   const onAreaLayout = useCallback((event: LayoutChangeEvent) => {
@@ -114,17 +123,38 @@ export function ReaderScreen({
     [changePage, t],
   );
 
+  // A drag that reaches the edge of the enlarged page turns it, like a swipe at its own size.
+  const turnFromEdge = useCallback(
+    (direction: PageTurnDirection) => {
+      const current = pageRef.current;
+      const target = direction === 'next' ? nextPage(current) : previousPage(current);
+      if (target === null) return;
+      pager.current?.showPage(target);
+      changePage(target);
+    },
+    [changePage],
+  );
+
+  const currentPage = model.page;
   const renderPage = useCallback(
     (page: number) =>
-      metrics === null ? null : (
-        <MushafPageView
-          page={page}
-          metrics={metrics}
+      metrics === null || area === null ? null : (
+        <ZoomablePage
+          zoom={zoom}
+          isCurrent={page === currentPage}
+          side={page > currentPage ? 'next' : 'previous'}
+          onEdgeTurn={turnFromEdge}
+          width={area.width}
+          height={area.height}
           onTap={toggleBars}
-          turnActions={turnActions}
-        />
+          onZoomChange={setZoomed}
+          isMotionReduced={isMotionReduced}
+          testID={`reader-page-${page}`}
+        >
+          <MushafPageView page={page} metrics={metrics} area={area} turnActions={turnActions} />
+        </ZoomablePage>
       ),
-    [metrics, toggleBars, turnActions],
+    [area, currentPage, isMotionReduced, metrics, toggleBars, turnActions, turnFromEdge, zoom],
   );
 
   if (fontStatus === 'failed') {
@@ -143,33 +173,39 @@ export function ReaderScreen({
   return (
     <Screen background="paper" testID="reader">
       <View style={styles.barRoom} />
-      <FeedbackLine feedback={model.feedback} />
-      <View style={styles.pages} onLayout={onAreaLayout} testID="reader-pages">
-        {
-          // No page before the font: the Quran text is never shown in another one (spec).
-          metrics === null || area === null || fontStatus !== 'ready' ? null : (
-            <BookPager
-              ref={pager}
-              initialPage={initialPage}
-              width={area.width}
-              height={area.height}
-              onPageChange={changePage}
-              renderPage={renderPage}
-              accessibilityLabel={t('page.pager')}
-            />
-          )
-        }
+      <View style={styles.pages}>
+        <GestureHandlerRootView style={styles.pages} onLayout={onAreaLayout} testID="reader-pages">
+          {
+            // No page before the font: the Quran text is never shown in another one (spec).
+            metrics === null || area === null || fontStatus !== 'ready' ? null : (
+              <BookPager
+                ref={pager}
+                initialPage={initialPage}
+                width={area.width}
+                height={area.height}
+                onPageChange={changePage}
+                renderPage={renderPage}
+                scrollEnabled={!isZoomed}
+                accessibilityLabel={t('page.pager')}
+              />
+            )
+          }
+        </GestureHandlerRootView>
+        <FeedbackPill feedback={model.feedback} />
       </View>
     </Screen>
   );
 }
 
 /**
- * What the page just left gave: one short line, in the ink of the page, with the water symbol in
- * the accent (charter: the accent is water, "arrosé"). VoiceOver hears it too.
+ * What the page just left gave: one short pill, laid over the band of the navigation bar, with
+ * the water symbol (charter: the accent is water, "arrosé"). It is the accent filled with its own
+ * label colour, the prominent style of the charter, so it reads on the paper in both appearances.
+ * Nothing is drawn when there is nothing to say, so it reserves no room. VoiceOver hears it too.
  */
-function FeedbackLine({ feedback }: { feedback: ReadingFeedback | null }) {
+function FeedbackPill({ feedback }: { feedback: ReadingFeedback | null }) {
   const { t } = useTranslation(['reader', 'garden']);
+  const colors = useColors();
   const text =
     feedback === null
       ? null
@@ -183,17 +219,19 @@ function FeedbackLine({ feedback }: { feedback: ReadingFeedback | null }) {
     if (text !== null) AccessibilityInfo.announceForAccessibility(text);
   }, [text]);
 
+  if (text === null) return null;
   return (
-    <View
-      style={styles.feedback}
-      accessibilityElementsHidden={text === null}
-      importantForAccessibility={text === null ? 'no-hide-descendants' : 'auto'}
-      testID="reader-feedback"
-    >
-      {text === null ? null : <Icon symbol={WATER_SYMBOL} textStyle="footnote" color="accent" />}
-      <AppText variant="footnote" color="ink" align="center" style={styles.feedbackText}>
-        {text ?? NO_BREAK_SPACE}
-      </AppText>
+    <View style={styles.feedbackBand} pointerEvents="none">
+      <View
+        style={[styles.feedback, { backgroundColor: colors.accent }]}
+        accessible
+        testID="reader-feedback"
+      >
+        <Icon symbol={WATER_SYMBOL} textStyle="footnote" color="onAccent" />
+        <AppText variant="footnote" color="onAccent" align="center" style={styles.feedbackText}>
+          {text}
+        </AppText>
+      </View>
     </View>
   );
 }
@@ -203,10 +241,12 @@ function ReaderTitle({ model }: { model: ReaderModel }) {
   const { t } = useTranslation('reader');
   return (
     <View style={styles.title} accessible accessibilityRole="header">
-      <AppText variant="headline" align="center" numberOfLines={1}>
+      <AppText variant="headline" color="ink" align="center" numberOfLines={1}>
         {surahDisplayName(model.surah)}
       </AppText>
-      <AppText variant="footnote" color="secondaryLabel" align="center" numberOfLines={1}>
+      {/* Secondary ink, not the system's secondary label: the bar floats over the paper, on which
+          the system grey reaches only 3.35:1 (accessibility.md › Vision). */}
+      <AppText variant="footnote" color="inkSecondary" align="center" numberOfLines={1}>
         {t('page.subtitle', { juz: model.juz, hizb: model.hizb, page: model.page })}
       </AppText>
     </View>
@@ -278,12 +318,24 @@ export function ReaderNotFound({ openContents }: { openContents: () => void }) {
 
 const styles = StyleSheet.create({
   barRoom: { height: Platform.select(READER_CONFIG.navigationBarHeight) },
+  // At the top of the room under the bar (the page area, which the safe area has already moved
+  // down), in the whitespace the page leaves above its frame; it covers no text.
+  feedbackBand: {
+    position: 'absolute',
+    top: spacing.xs,
+    start: 0,
+    end: 0,
+    alignItems: 'center',
+    paddingHorizontal: layout.screenMargin,
+  },
   feedback: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.xs,
-    paddingHorizontal: layout.screenMargin,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.lg * 2,
   },
   feedbackText: { flexShrink: 1 },
   pages: { flex: 1 },

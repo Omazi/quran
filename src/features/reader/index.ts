@@ -13,7 +13,6 @@ export {
   useReaderHeaderOptions,
   type ReaderScreenProps,
 } from './reader-screen';
-export { getLastOpenedPage, useLastOpenedPage } from './reader-session';
 export { resolveResumePage } from './resume-page';
 export { useContentsModel, type ContentsActions, type ContentsModel } from './use-contents-model';
 export { useQuranFont, type QuranFontStatus } from './use-quran-font';

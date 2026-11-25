@@ -30,6 +30,11 @@ export type ButtonRole = 'destructive';
 export interface ButtonProps {
   /** Says what the button does, starting with a verb. */
   label: string;
+  /**
+   * A second line under the label, for a button that opens something named: where it leads. The
+   * label stays the short action (writing.md › Be action oriented); screen readers hear both.
+   */
+  detail?: string;
   onPress: () => void;
   variant?: ButtonVariant;
   /**
@@ -62,6 +67,11 @@ export interface GroupedListProps {
 export interface ListSectionProps {
   /** Header of the section. */
   title?: string;
+  /**
+   * Arabic text of the Quran shown at the trailing end of the header, in the Quran font and in
+   * ink, such as the opening words of a juz. Only with a `title`.
+   */
+  titleQuran?: string;
   /** Explanation shown under the section. */
   footer?: string;
   /** Rows: `ListRow`, `SwitchRow`, `StepperRow`, `ChoiceRow`, `TimePickerRow`, or a control. */
@@ -193,6 +203,13 @@ export interface SegmentedChoiceProps<Value extends string> {
 }
 
 /**
+ * How the value of a `DetailRow` is drawn. `standard`: the system's secondary text. `quran`:
+ * Arabic text of the Quran (a surah name), in the Quran font and in ink, larger than the label,
+ * growing with the person's text size: the character of the row.
+ */
+export type DetailRowValueStyle = 'standard' | 'quran';
+
+/**
  * A row of two lines that opens something: what it is, a short detail under it, and an optional
  * value at the trailing side.
  */
@@ -202,7 +219,44 @@ export interface DetailRowProps {
   detail: string;
   /** Short value shown at the trailing side. */
   value?: string;
+  /** Defaults to `standard`. */
+  valueStyle?: DetailRowValueStyle;
   onPress: () => void;
+  testID?: string;
+}
+
+/**
+ * The system's search field, inline in a list, above the rows it filters
+ * (search-fields.md › Search as an inline field). It filters as the person types
+ * (search-fields.md › Best practices) and has a Clear button once it holds text
+ * (text-fields.md › Mobile).
+ */
+export interface SearchFieldRowProps {
+  /** Names the field for screen readers: what it searches. */
+  label: string;
+  /** Says what can be searched for (search-fields.md › Best practices: placeholder text). */
+  placeholder: string;
+  /** The text typed, as the field reports it. The field starts empty. */
+  value: string;
+  onChange: (text: string) => void;
+  /** Names the Clear button for screen readers. */
+  clearLabel: string;
+  testID?: string;
+}
+
+/**
+ * A text field for a whole number, beside its label, with the number pad
+ * (text-fields.md › Best practices: show the appropriate keyboard type; use a number formatter).
+ * It accepts digits only; the caller validates the range and says so.
+ */
+export interface NumberFieldRowProps {
+  /** Names the value, at the leading side of the row and for screen readers. */
+  label: string;
+  /** A hint shown while the field is empty, such as the range accepted. */
+  placeholder: string;
+  /** The digits typed, as the field reports them. The field starts empty. */
+  value: string;
+  onChange: (text: string) => void;
   testID?: string;
 }
 
@@ -331,6 +385,8 @@ export interface NativeControls {
   TimePickerRow: (props: TimePickerRowProps) => ReactElement;
   SegmentedChoice: <Value extends string>(props: SegmentedChoiceProps<Value>) => ReactElement;
   DetailRow: (props: DetailRowProps) => ReactElement;
+  SearchFieldRow: (props: SearchFieldRowProps) => ReactElement;
+  NumberFieldRow: (props: NumberFieldRowProps) => ReactElement;
   ProgressIndicator: (props: ProgressIndicatorProps) => ReactElement;
   Gauge: (props: GaugeProps) => ReactElement;
   ContentUnavailable: (props: ContentUnavailableProps) => ReactElement;

@@ -10,7 +10,13 @@ import { PAGE_COUNT } from '@/domain/quran';
 import { parseLocalDate } from '@/domain/shared/local-date';
 
 import { READER_CONFIG } from '../config';
-import { buildJuzEntries, buildSurahEntries, filterSurahs } from '../contents-model';
+import {
+  buildJuzEntries,
+  buildSurahEntries,
+  filterSurahs,
+  openingWords,
+  parseGoToPage,
+} from '../contents-model';
 import {
   isPageNumber,
   nextPage,
@@ -19,7 +25,7 @@ import {
   parsePageParam,
   previousPage,
 } from '../page-order';
-import { computePageMetrics, fitLine } from '../page-layout';
+import { computeOpeningPageMetrics, computePageMetrics, fitLine } from '../page-layout';
 import { readingFeedback } from '../reading-feedback';
 import { finishVisit, pauseVisit, resumeVisit, startVisit, type PageVisit } from '../reading-timer';
 import { resolveResumePage } from '../resume-page';
@@ -171,7 +177,7 @@ describe('the 30-second rule (spec 3), with a fake clock', () => {
       readingFeedback({
         before: journal,
         after: journal,
-        settings: { dailyGoalPages: 5, userSeed: 42, pauses: [] },
+        settings: { dailyGoalPages: 5, userSeed: 42, lastOpenedPage: null, pauses: [] },
         today: DAY,
         hizbPageRanges: RANGES,
       }),
@@ -180,7 +186,7 @@ describe('the 30-second rule (spec 3), with a fake clock', () => {
 });
 
 describe('the feedback after a page (spec 3)', () => {
-  const settings = { dailyGoalPages: 5, userSeed: 42, pauses: [] };
+  const settings = { dailyGoalPages: 5, userSeed: 42, lastOpenedPage: null, pauses: [] };
 
   it('says a new page counted', () => {
     const before = readPages([1]);
@@ -234,11 +240,28 @@ describe('the table of contents (spec 1)', () => {
       juz: 1,
       page: 1,
       hizbs: [
-        { hizb: 1, page: 1 },
-        { hizb: 2, page: RANGES[1]!.firstPage },
+        { hizb: 1, page: 1, start: { surah: 1, verse: 1 } },
+        { hizb: 2, page: RANGES[1]!.firstPage, start: { surah: 2, verse: 75 } },
       ],
     });
-    expect(juz[29]!.hizbs[1]!.hizb).toBe(60);
+    expect(juz[29]!.hizbs[1]).toEqual({
+      hizb: 60,
+      page: RANGES[59]!.firstPage,
+      start: { surah: 87, verse: 1 },
+    });
+  });
+
+  it('starts each hizb on the verse of the structure, on the page it gives', () => {
+    for (const juz of buildJuzEntries(quranStructure)) {
+      for (const hizb of juz.hizbs) {
+        expect(quranStructure.hizbOfVerse(hizb.start)).toBe(hizb.hizb);
+        expect(quranStructure.pageOfVerse(hizb.start)).toBe(hizb.page);
+        if (hizb.start.verse > 1) {
+          const before = { surah: hizb.start.surah, verse: hizb.start.verse - 1 };
+          expect(quranStructure.hizbOfVerse(before)).toBe(hizb.hizb - 1);
+        }
+      }
+    }
   });
 
   it('finds a surah by its number', () => {
@@ -256,6 +279,24 @@ describe('the table of contents (spec 1)', () => {
 
   it('shows every surah for an empty search', () => {
     expect(filterSurahs(surahs, '   ')).toBe(surahs);
+  });
+});
+
+describe('going to a page by its number (spec 1)', () => {
+  it('reads a page between 1 and 604', () => {
+    expect(parseGoToPage('1')).toBe(1);
+    expect(parseGoToPage(' 293 ')).toBe(293);
+    expect(parseGoToPage('604')).toBe(PAGE_COUNT);
+  });
+
+  it('refuses anything else', () => {
+    for (const text of ['', '  ', '0', '605', '-3', '2.5', '1e2', 'abc', '12a', '٢٩٣x']) {
+      expect(parseGoToPage(text)).toBeNull();
+    }
+  });
+
+  it('reads Arabic-Indic digits, as an Arabic keyboard types them', () => {
+    expect(parseGoToPage('٢٩٣')).toBe(293);
   });
 });
 
@@ -288,12 +329,120 @@ describe('the size of the page text (spec 2)', () => {
     expect(() => computePageMetrics({ width: 375, height: -1 })).toThrow(RangeError);
   });
 
-  it('keeps a line that fits at full size, and shrinks one that does not, never more', () => {
-    expect(fitLine({ itemWidths: [50, 60, 70], available: 300, minimumGap: 5 })).toEqual({
+  it('spreads a line word by word only when it fills at least 60 % of the column', () => {
+    const fill = READER_CONFIG.minimumFillToJustify;
+    // Three items and two gaps of 10: 280 of 300 points.
+    expect(
+      fitLine({ itemWidths: [80, 90, 90], available: 300, wordGap: 10, tightestGap: 5 }),
+    ).toEqual({ scale: 1, justify: true });
+    // Exactly at the threshold: spread.
+    const atThreshold = 300 * fill - 20;
+    expect(
+      fitLine({
+        itemWidths: [atThreshold / 2, atThreshold / 2, 0],
+        available: 300,
+        wordGap: 10,
+        tightestGap: 5,
+      }),
+    ).toEqual({ scale: 1, justify: true });
+    // Just under it: centred, with the font's normal space.
+    expect(
+      fitLine({
+        itemWidths: [atThreshold / 2 - 1, atThreshold / 2, 0],
+        available: 300,
+        wordGap: 10,
+        tightestGap: 5,
+      }),
+    ).toEqual({ scale: 1, justify: false });
+  });
+
+  it('never spreads a line of a single item', () => {
+    expect(fitLine({ itemWidths: [290], available: 300, wordGap: 10, tightestGap: 5 })).toEqual({
       scale: 1,
+      justify: false,
     });
-    const tight = fitLine({ itemWidths: [100, 100, 100], available: 300, minimumGap: 10 });
-    expect(tight.scale).toBeCloseTo(300 / 320, 10);
-    expect(() => fitLine({ itemWidths: [], available: 300, minimumGap: 5 })).toThrow(RangeError);
+  });
+
+  it('closes the gaps of a line too wide before it shrinks it', () => {
+    // 300 + 2 x 10 = 320 with the font's space, 310 with the tightest gap: shrunk to 300 / 310.
+    const wide = fitLine({
+      itemWidths: [100, 100, 100],
+      available: 300,
+      wordGap: 10,
+      tightestGap: 5,
+    });
+    expect(wide.justify).toBe(true);
+    expect(wide.scale).toBeCloseTo(300 / 310, 10);
+    // 290 + 2 x 10 = 310, but 300 with the tightest gap: it fits at full size.
+    expect(
+      fitLine({ itemWidths: [90, 100, 100], available: 300, wordGap: 10, tightestGap: 5 }),
+    ).toEqual({ scale: 1, justify: true });
+    expect(() => fitLine({ itemWidths: [], available: 300, wordGap: 10, tightestGap: 5 })).toThrow(
+      RangeError,
+    );
+  });
+
+  it('gives the gaps of the page from the font: its space, and half of it at the tightest', () => {
+    const metrics = computePageMetrics({ width: 393, height: 700 });
+    expect(metrics.wordGap).toBeCloseTo(metrics.fontSize * READER_CONFIG.wordGapInEm, 10);
+    expect(metrics.tightestGap).toBeCloseTo(
+      metrics.fontSize * READER_CONFIG.tightestWordGapInEm,
+      10,
+    );
+    expect(metrics.tightestGap).toBeLessThan(metrics.wordGap);
+  });
+});
+
+describe('the size of pages 1 and 2 (spec 2)', () => {
+  const SIZES = [
+    { width: 375, height: 812 - 44 - 34 - 44 - 18 },
+    { width: 393, height: 852 - 59 - 34 - 44 - 18 },
+    { width: 430, height: 932 - 59 - 34 - 44 - 18 },
+    { width: 375, height: 667 - 20 - 44 - 18 },
+  ];
+  // Pages 1 and 2 have 8 lines each: the surah header, (the basmala,) then their verses.
+  const LINES = 8;
+
+  it('draws their few lines larger than the other pages', () => {
+    for (const size of SIZES) {
+      const page = computePageMetrics(size);
+      const opening = computeOpeningPageMetrics(size, LINES);
+      expect(opening.fontSize).toBeGreaterThan(page.fontSize * 1.15);
+      expect(opening.textWidth).toBe(page.textWidth);
+    }
+  });
+
+  it('fits their widest line in the column and their lines in the height, apart', () => {
+    for (const size of SIZES) {
+      const opening = computeOpeningPageMetrics(size, LINES);
+      expect(opening.fontSize * READER_CONFIG.openingPages.lineWidthInEm).toBeLessThanOrEqual(
+        opening.textWidth + 1e-9,
+      );
+      expect(opening.lineHeight * LINES).toBeLessThanOrEqual(size.height + 1e-9);
+      expect(opening.lineHeight).toBeGreaterThanOrEqual(
+        opening.fontSize * READER_CONFIG.minimumLineHeightInEm - 1e-9,
+      );
+    }
+  });
+
+  it('spreads the lines over the page, as the print does, when the screen is tall', () => {
+    const size = SIZES[1]!;
+    const page = computePageMetrics(size);
+    const opening = computeOpeningPageMetrics(size, LINES);
+    expect(opening.lineHeight * LINES).toBeGreaterThan(page.lineHeight * 15 * 0.6);
+  });
+
+  it('refuses a page without lines', () => {
+    expect(() => computeOpeningPageMetrics(SIZES[0]!, 0)).toThrow(RangeError);
+  });
+});
+
+describe('the opening words of a juz', () => {
+  it('keeps the first words of a verse, as they are written', () => {
+    expect(openingWords('سَيَقُولُ ٱلسُّفَهَآءُ مِنَ ٱلنَّاسِ مَا وَلَّىٰهُمْ', 3)).toBe('سَيَقُولُ ٱلسُّفَهَآءُ مِنَ');
+  });
+
+  it('keeps a short verse whole, and ignores the spaces around it', () => {
+    expect(openingWords('  بِسْمِ ٱللَّهِ  ', 3)).toBe('بِسْمِ ٱللَّهِ');
   });
 });

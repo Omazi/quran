@@ -10,6 +10,7 @@ const SETTINGS: AppSettings = {
   dailyGoalPages: 12,
   onboardingCompleted: true,
   userSeed: 123_456_789,
+  lastOpenedPage: 293,
   pauses: [{ from: parseLocalDate('2026-03-01'), to: parseLocalDate('2026-03-04') }],
   reminders: {
     dailyEnabled: false,
@@ -108,6 +109,75 @@ describe('stored document', () => {
   });
 });
 
+describe('documents written by the two kinds of version 3', () => {
+  const TIME = { [parseLocalDate('2026-11-24')]: { app: 600, reader: 300 } };
+  const { lastOpenedPage: _lastOpenedPage, ...settingsWithoutPage } = SETTINGS;
+  const reminders = SETTINGS.reminders;
+
+  it('upgrades a version 3 that has the last opened page and no time, keeping the page', () => {
+    const reading = readStoredData(
+      JSON.stringify({ version: 3, settings: SETTINGS, journal: JOURNAL }),
+    );
+    expect(reading).toEqual({
+      settings: SETTINGS,
+      journal: JOURNAL,
+      timeSpent: {},
+      discarded: [],
+      wasUpgraded: true,
+    });
+    expect(reading.settings?.lastOpenedPage).toBe(293);
+  });
+
+  it('upgrades a version 3 that has the time and no last opened page, keeping the time', () => {
+    const reading = readStoredData(
+      JSON.stringify({
+        version: 3,
+        settings: settingsWithoutPage,
+        journal: JOURNAL,
+        timeSpent: TIME,
+      }),
+    );
+    expect(reading).toEqual({
+      settings: { ...SETTINGS, lastOpenedPage: null },
+      journal: JOURNAL,
+      timeSpent: TIME,
+      discarded: [],
+      wasUpgraded: true,
+    });
+  });
+
+  it('keeps both when a version 3 has both, and adds both when it has neither', () => {
+    const both = readStoredData(
+      JSON.stringify({ version: 3, settings: SETTINGS, journal: JOURNAL, timeSpent: TIME }),
+    );
+    expect(both).toMatchObject({ settings: SETTINGS, timeSpent: TIME, discarded: [] });
+    const neither = readStoredData(
+      JSON.stringify({ version: 3, settings: settingsWithoutPage, journal: JOURNAL }),
+    );
+    expect(neither).toMatchObject({
+      settings: { ...SETTINGS, lastOpenedPage: null },
+      timeSpent: {},
+      discarded: [],
+    });
+    expect(reminders).toBe(SETTINGS.reminders);
+  });
+
+  it('never replaces a wrong part that is present: it is discarded by the checks', () => {
+    const badPage = readStoredData(
+      JSON.stringify({
+        version: 3,
+        settings: { ...SETTINGS, lastOpenedPage: 900 },
+        journal: JOURNAL,
+      }),
+    );
+    expect(badPage).toMatchObject({ settings: null, journal: JOURNAL, discarded: ['settings'] });
+    const badTime = readStoredData(
+      JSON.stringify({ version: 3, settings: SETTINGS, journal: JOURNAL, timeSpent: 5 }),
+    );
+    expect(badTime).toMatchObject({ settings: SETTINGS, timeSpent: null, discarded: ['time'] });
+  });
+});
+
 describe('document written by version 1 of the app', () => {
   /** What version 1 wrote: reminders without a Friday time and without quiet hours. */
   const {
@@ -115,9 +185,10 @@ describe('document written by version 1 of the app', () => {
     quietHours: _quietHours,
     ...remindersOfVersion1
   } = SETTINGS.reminders;
+  const { lastOpenedPage: _lastOpenedPage, ...settingsOfVersion1 } = SETTINGS;
   const VERSION_1 = JSON.stringify({
     version: 1,
-    settings: { ...SETTINGS, reminders: remindersOfVersion1 },
+    settings: { ...settingsOfVersion1, reminders: remindersOfVersion1 },
     journal: JOURNAL,
   });
 
@@ -125,6 +196,7 @@ describe('document written by version 1 of the app', () => {
     expect(readStoredData(VERSION_1)).toEqual({
       settings: {
         ...SETTINGS,
+        lastOpenedPage: null,
         reminders: { ...remindersOfVersion1, fridayTime: { hour: 9, minute: 0 }, quietHours: null },
       },
       journal: JOURNAL,
@@ -334,5 +406,45 @@ describe('bounds of the stored data', () => {
     expect(Date.now() - before).toBeLessThan(100);
     expect(reading).toMatchObject({ settings: null, journal: null });
     expect(reading.discarded).toEqual(['settings', 'journal']);
+  });
+});
+
+describe('the last page opened in the reader', () => {
+  it('is written and read back, as a page from 1 to 604 or as null', () => {
+    for (const lastOpenedPage of [1, 293, 604, null]) {
+      const settings = { ...SETTINGS, lastOpenedPage };
+      const reading = readStoredData(writeStoredData({ settings, journal: JOURNAL }));
+      expect(reading.settings?.lastOpenedPage).toBe(lastOpenedPage);
+      expect(reading.discarded).toEqual([]);
+    }
+  });
+
+  it('is null in a document of version 2, which had no such field, and nothing else changes', () => {
+    const { lastOpenedPage: _lastOpenedPage, ...settingsOfVersion2 } = SETTINGS;
+    const reading = readStoredData(
+      JSON.stringify({ version: 2, settings: settingsOfVersion2, journal: JOURNAL }),
+    );
+    expect(reading).toEqual({
+      settings: { ...SETTINGS, lastOpenedPage: null },
+      journal: JOURNAL,
+      timeSpent: {},
+      discarded: [],
+      wasUpgraded: true,
+    });
+  });
+
+  it.each([
+    ['page 0', 0],
+    ['page 605', 605],
+    ['a page that is not whole', 1.5],
+    ['a negative page', -3],
+    ['text', '293'],
+    ['a boolean', true],
+  ])('discards the settings, and keeps the journal, for %s', (_name, lastOpenedPage) => {
+    expect(readStoredData(settingsWith({ lastOpenedPage }))).toMatchObject({
+      settings: null,
+      journal: JOURNAL,
+      discarded: ['settings'],
+    });
   });
 });

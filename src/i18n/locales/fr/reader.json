@@ -2,32 +2,34 @@
   "contents": {
     "title": "Coran",
     "resume": {
-      "title": "Reprendre",
-      "detail": "Page {{page}}"
-    },
-    "goTo": {
-      "title": "Aller à la page",
-      "stepper": "Page",
-      "value": "Page {{page}}",
-      "open": "Ouvrir la page {{page}}",
-      "footer": "Le mushaf compte 604 pages. Tu peux aussi commencer par un juz."
+      "action": "Reprendre",
+      "detail": "{{surah}} · Page {{page}}"
     },
     "view": {
       "label": "Afficher",
       "surahs": "Sourates",
       "juz": "Juz"
     },
+    "search": {
+      "label": "Rechercher une sourate ou une page",
+      "placeholder": "Sourate ou numéro de page",
+      "clear": "Effacer la recherche",
+      "empty": "Aucune sourate pour « {{query}} »",
+      "page": "Page {{page}}",
+      "pageDetail": "{{surah}} · Juz {{juz}}"
+    },
     "surah": {
       "label": "{{number}}. {{name}}",
-      "detail_one": "{{place}} · {{count}} verset · page {{page}}",
-      "detail_other": "{{place}} · {{count}} versets · page {{page}}",
+      "detail_one": "{{place}} · {{count}} verset · Page {{page}}",
+      "detail_other": "{{place}} · {{count}} versets · Page {{page}}",
       "meccan": "Mecquoise",
-      "medinan": "Médinoise"
+      "medinan": "Médinoise",
+      "numberOnly": "Sourate {{number}}"
     },
     "juz": {
       "title": "Juz {{juz}}",
       "hizb": "Hizb {{hizb}}",
-      "page": "Page {{page}}"
+      "start": "{{surah}}, verset {{verse}} · Page {{page}}"
     }
   },
   "page": {

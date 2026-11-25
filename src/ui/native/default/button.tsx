@@ -21,6 +21,7 @@ const LABEL_COLOR = {
  */
 export function Button({
   label,
+  detail,
   onPress,
   variant = 'primary',
   role,
@@ -35,6 +36,7 @@ export function Button({
     <View style={fullWidth ? styles.fullWidth : styles.hugging}>
       <Pressable
         accessibilityRole="button"
+        accessibilityLabel={detail === undefined ? undefined : `${label}, ${detail}`}
         accessibilityState={{ disabled }}
         android_ripple={{ color: colors.fill }}
         disabled={disabled}
@@ -51,6 +53,11 @@ export function Button({
         <AppText variant="headline" color={labelColor} align="center">
           {label}
         </AppText>
+        {detail === undefined ? null : (
+          <AppText variant="subhead" color={labelColor} align="center">
+            {detail}
+          </AppText>
+        )}
       </Pressable>
     </View>
   );

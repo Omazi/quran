@@ -5,12 +5,14 @@ import {
   Image,
   LabeledContent,
   Section,
+  Spacer,
   Text,
 } from '@expo/ui/swift-ui';
 import { accessibilityHidden, font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
 import { StyleSheet, View } from 'react-native';
 
-import { appleTextStyles, spacing } from '../../tokens';
+import { appleTextStyles, fontFamily, spacing, textStyles } from '../../tokens';
+import { useColors } from '../../use-colors';
 import { GroupedListScope, useGroupedListGuard } from '../grouped-list-scope';
 import type { GroupedListProps, ListRowProps, ListSectionProps } from '../types';
 import { SwiftUIHost } from './swiftui-host';
@@ -46,10 +48,36 @@ const styles = StyleSheet.create({
   column: { flex: 1 },
 });
 
-export function ListSection({ title, footer, children }: ListSectionProps) {
+export function ListSection({ title, titleQuran, footer, children }: ListSectionProps) {
   useGroupedListGuard('ListSection');
+  const colors = useColors();
+  // With Quran text in the header, the header is built here: the title as the system draws it,
+  // the Arabic at the trailing end in the Quran font, growing with the text size.
+  const header =
+    title !== undefined && titleQuran !== undefined ? (
+      <HStack>
+        <Text>{title}</Text>
+        <Spacer />
+        <Text
+          modifiers={[
+            font({
+              family: fontFamily.quranPostScript,
+              size: textStyles.title2.fontSize,
+              textStyle: appleTextStyles.title2,
+            }),
+            foregroundStyle(colors.ink),
+          ]}
+        >
+          {titleQuran}
+        </Text>
+      </HStack>
+    ) : undefined;
   return (
-    <Section title={title} footer={footer === undefined ? undefined : <Text>{footer}</Text>}>
+    <Section
+      title={header === undefined ? title : undefined}
+      header={header}
+      footer={footer === undefined ? undefined : <Text>{footer}</Text>}
+    >
       {children}
     </Section>
   );

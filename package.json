@@ -74,7 +74,11 @@
     ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
-    }
+    },
+    "resolver": "react-native-reanimated/jest/resolver.js",
+    "setupFiles": [
+      "<rootDir>/jest.setup.js"
+    ]
   },
   "expo": {
     "autolinking": {

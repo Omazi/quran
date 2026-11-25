@@ -175,6 +175,7 @@ export function buildReadingHistory(
     settings: {
       dailyGoalPages: READING_HISTORY_CONFIG.dailyGoalPages,
       userSeed: READING_HISTORY_CONFIG.userSeed,
+      lastOpenedPage: null,
       pauses: [],
     },
   };

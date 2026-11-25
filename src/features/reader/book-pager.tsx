@@ -28,6 +28,8 @@ export interface BookPagerProps {
   /** Called when a swipe settles on another page. */
   onPageChange: (page: number) => void;
   renderPage: (page: number) => ReactNode;
+  /** False while the page on screen is enlarged: a swipe then moves around it. */
+  scrollEnabled?: boolean;
   accessibilityLabel: string;
 }
 
@@ -49,7 +51,15 @@ const PAGER_INDEXES: readonly number[] = Array.from({ length: LAST_PAGE }, (_, i
  * turn is ready before it starts and memory stays flat on an old iPhone (spec 2).
  */
 export const BookPager = forwardRef<BookPagerHandle, BookPagerProps>(function BookPager(
-  { initialPage, width, height, onPageChange, renderPage, accessibilityLabel },
+  {
+    initialPage,
+    width,
+    height,
+    onPageChange,
+    renderPage,
+    scrollEnabled = true,
+    accessibilityLabel,
+  },
   ref,
 ) {
   const list = useRef<FlatList<number>>(null);
@@ -102,6 +112,7 @@ export const BookPager = forwardRef<BookPagerHandle, BookPagerProps>(function Bo
       initialScrollIndex={initialIndex}
       horizontal
       pagingEnabled
+      scrollEnabled={scrollEnabled}
       showsHorizontalScrollIndicator={false}
       // One screen on each side of the visible page: the page and its two neighbours.
       windowSize={3}

@@ -3,7 +3,7 @@ import { gardenVariant } from '@/domain/garden';
 import { EMPTY_JOURNAL, getCurrentKhatm, getReadPages, type Pause } from '@/domain/khatm';
 import { parseLocalDate } from '@/domain/shared/local-date';
 
-import { loadAppStore } from '../app-store';
+import { createFirstLaunchSettings, loadAppStore } from '../app-store';
 import {
   DEFAULT_DAILY_GOAL_PAGES,
   DEFAULT_REMINDERS,
@@ -48,6 +48,7 @@ describe('first launch', () => {
       dailyGoalPages: DEFAULT_DAILY_GOAL_PAGES,
       onboardingCompleted: false,
       userSeed: SEED,
+      lastOpenedPage: null,
       pauses: [],
       reminders: DEFAULT_REMINDERS,
     });
@@ -105,6 +106,7 @@ describe('changes', () => {
     store.getState().setDailyGoalPages(20);
     store.getState().updateReminders({ dailyEnabled: false, dailyTime: { hour: 6, minute: 15 } });
     store.getState().completeOnboarding();
+    store.getState().setLastOpenedPage(293);
     store.getState().recordPageRead({ page: 1, date: TODAY });
     await store.whenSaved();
 
@@ -115,6 +117,7 @@ describe('changes', () => {
       dailyGoalPages: 20,
       onboardingCompleted: true,
       userSeed: SEED,
+      lastOpenedPage: 293,
       pauses: [],
       reminders: { ...DEFAULT_REMINDERS, dailyEnabled: false, dailyTime: { hour: 6, minute: 15 } },
     });
@@ -150,6 +153,40 @@ describe('changes', () => {
     expect(store.getState().journal).toBe(journal);
     expect(getCurrentKhatm(journal)).toBe(1);
     expect([...getReadPages(journal, 1)]).toEqual([7]);
+  });
+
+  it('keeps the last page opened, and nothing is written when it is the same page', async () => {
+    const storage = createMemoryStorage();
+    const { store } = await load(storage);
+    expect(store.getState().settings.lastOpenedPage).toBeNull();
+    store.getState().setLastOpenedPage(604);
+    await store.whenSaved();
+    expect(stored(storage).settings?.lastOpenedPage).toBe(604);
+
+    const setItem = jest.spyOn(storage, 'setItem');
+    store.getState().setLastOpenedPage(604);
+    await store.whenSaved();
+    expect(setItem).not.toHaveBeenCalled();
+    store.getState().setLastOpenedPage(null);
+    expect(store.getState().settings.lastOpenedPage).toBeNull();
+  });
+
+  it.each([0, 605, 2.5, Number.NaN, -1])('refuses the last page opened %p', async (page) => {
+    const { store } = await load(createMemoryStorage());
+    expect(() => store.getState().setLastOpenedPage(page)).toThrow(RangeError);
+    expect(store.getState().settings.lastOpenedPage).toBeNull();
+  });
+
+  it('gives a person with an older document no page opened, and keeps all the rest', async () => {
+    const settings = { ...createFirstLaunchSettings(SEED), onboardingCompleted: true };
+    const { lastOpenedPage: _lastOpenedPage, ...withoutField } = settings;
+    const storage = createMemoryStorage({
+      [STORED_DATA_KEY]: JSON.stringify({ version: 2, settings: withoutField, journal: [] }),
+    });
+    const { store, discarded } = await load(storage);
+    expect(discarded).toEqual([]);
+    expect(store.getState().settings).toEqual(settings);
+    expect(store.getState().settings.lastOpenedPage).toBeNull();
   });
 
   it.each([0, 61, 2.5, Number.NaN])('refuses a daily goal of %p', async (pages) => {
@@ -313,6 +350,7 @@ describe('document written by version 1 of the app', () => {
     expect(discarded).toEqual([]);
     expect(store.getState().settings).toEqual({
       ...settings,
+      lastOpenedPage: null,
       reminders: { ...DEFAULT_REMINDERS, dailyEnabled: false },
     });
     expect(store.getState().journal).toEqual(journal);
@@ -528,6 +566,7 @@ describe('telling the person, once, that something was lost', () => {
     dailyGoalPages: 5,
     onboardingCompleted: true,
     userSeed: 1,
+    lastOpenedPage: null,
     pauses: [],
     reminders: DEFAULT_REMINDERS,
   };

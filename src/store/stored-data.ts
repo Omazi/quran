@@ -10,6 +10,7 @@ import {
   type ReadingEntry,
   type ReadingJournal,
 } from '@/domain/khatm';
+import { PAGE_COUNT } from '@/domain/quran';
 import { compareLocalDates, isLocalDate, type LocalDate } from '@/domain/shared/local-date';
 import { isDaySeconds, type SecondsByDay } from '@/domain/stats';
 import { isSupportedLanguage } from '@/i18n';
@@ -62,6 +63,11 @@ function isWholeNumberWithin(value: unknown, min: number, max: number): value is
 
 export function isDailyGoalPages(value: unknown): value is number {
   return isWholeNumberWithin(value, DAILY_GOAL_RANGE.min, DAILY_GOAL_RANGE.max);
+}
+
+/** A page of the Quran book, or null for none: the last page opened in the reader. */
+export function isLastOpenedPage(value: unknown): value is number | null {
+  return value === null || isWholeNumberWithin(value, 1, PAGE_COUNT);
 }
 
 /** A seed the garden module accepts: a whole number from 0 to 2^53 - 1. */
@@ -151,7 +157,7 @@ function readPauses(value: unknown): readonly Pause[] | null {
  */
 function readSettings(value: unknown): AppSettings | null {
   if (!isRecord(value)) return null;
-  const { language, dailyGoalPages, onboardingCompleted, userSeed } = value;
+  const { language, dailyGoalPages, onboardingCompleted, userSeed, lastOpenedPage } = value;
   const reminders = readReminders(value.reminders);
   const pauses = readPauses(value.pauses);
   if (language !== null && (typeof language !== 'string' || !isSupportedLanguage(language))) {
@@ -159,7 +165,16 @@ function readSettings(value: unknown): AppSettings | null {
   }
   if (!isDailyGoalPages(dailyGoalPages) || typeof onboardingCompleted !== 'boolean') return null;
   if (!isUserSeed(userSeed) || reminders === null || pauses === null) return null;
-  return { language, dailyGoalPages, onboardingCompleted, userSeed, pauses, reminders };
+  if (!isLastOpenedPage(lastOpenedPage)) return null;
+  return {
+    language,
+    dailyGoalPages,
+    onboardingCompleted,
+    userSeed,
+    lastOpenedPage,
+    pauses,
+    reminders,
+  };
 }
 
 function readJournalEntry(value: unknown): ReadingEntry | null {
@@ -215,6 +230,11 @@ export function readTimeSpent(value: unknown): SecondsByDay | null {
 const VERSION_WITHOUT_FRIDAY_TIME = 1;
 /** The version that had no time counters. */
 const VERSION_WITHOUT_TIME_SPENT = 2;
+/**
+ * The version written by two lines of the app at once: some builds added `timeSpent` to it, others
+ * added `settings.lastOpenedPage`. Its documents are told apart by their shape, not by number.
+ */
+const VERSION_OF_TWO_SHAPES = 3;
 
 /** Version 1 to 2: the reminders get the Friday time and the quiet hours of the defaults. */
 function upgradeFromVersion1(document: UnknownRecord): UnknownRecord {
@@ -230,7 +250,23 @@ function upgradeFromVersion1(document: UnknownRecord): UnknownRecord {
 
 /** Version 2 to 3: the time counters start empty, whatever the document claims to hold. */
 function upgradeFromVersion2(document: UnknownRecord): UnknownRecord {
-  return { ...document, version: STORED_DATA_VERSION, timeSpent: {} };
+  return { ...document, version: VERSION_OF_TWO_SHAPES, timeSpent: {} };
+}
+
+/**
+ * Version 3 to 4. A version 3 document may lack the time counters (written with only the last
+ * opened page), the last opened page (written with only the time counters), or have both. Each
+ * missing part is added with its default; a part that is present is left untouched, even when it
+ * is wrong, so that the checks that follow decide about it and no valid data is ever replaced.
+ */
+function upgradeFromVersion3(document: UnknownRecord): UnknownRecord {
+  const { settings } = document;
+  let next: UnknownRecord = { ...document, version: STORED_DATA_VERSION };
+  if (next.timeSpent === undefined) next = { ...next, timeSpent: {} };
+  if (isRecord(settings) && settings.lastOpenedPage === undefined) {
+    next = { ...next, settings: { ...settings, lastOpenedPage: null } };
+  }
+  return next;
 }
 
 /**
@@ -243,6 +279,7 @@ function upgradeDocument(document: UnknownRecord): UnknownRecord | null {
   let current = document;
   if (current.version === VERSION_WITHOUT_FRIDAY_TIME) current = upgradeFromVersion1(current);
   if (current.version === VERSION_WITHOUT_TIME_SPENT) current = upgradeFromVersion2(current);
+  if (current.version === VERSION_OF_TWO_SHAPES) current = upgradeFromVersion3(current);
   return current.version === STORED_DATA_VERSION ? current : null;
 }
 
