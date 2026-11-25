@@ -10,8 +10,11 @@ import assert from 'node:assert/strict';
 
 const here = dirname(fileURLToPath(import.meta.url));
 // SOCIAL_MIGRATION lets a test run against a modified copy (used to watch a test fail).
-const MIGRATION =
+export const MIGRATION =
   process.env.SOCIAL_MIGRATION ?? join(here, '..', 'migrations', '20261124230000_social.sql');
+// SYNC_MIGRATION does the same for the sync migration (docs/specs/sync.md).
+export const SYNC_MIGRATION =
+  process.env.SYNC_MIGRATION ?? join(here, '..', 'migrations', '20261125120000_sync.sql');
 
 const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 export const U = {
@@ -33,7 +36,11 @@ function freePort() {
   });
 }
 
-export async function startDb() {
+/**
+ * Starts a database with the migrations given, in order (by default the social one alone, which
+ * its tests count object by object). The sync tests pass both, as Supabase applies them.
+ */
+export async function startDb({ migrations = [MIGRATION] } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'quran-pg-'));
   chmodSync(dir, 0o755); // a server started by root runs as another system user
   const port = await freePort();
@@ -56,7 +63,7 @@ export async function startDb() {
   await client.connect();
   try {
     await client.query(readFileSync(join(here, 'shim.sql'), 'utf8'));
-    await client.query(readFileSync(MIGRATION, 'utf8'));
+    for (const migration of migrations) await client.query(readFileSync(migration, 'utf8'));
   } catch (e) {
     await client.end().catch(() => {});
     await pg.stop().catch(() => {}); // never leave a server running behind a failed setup
@@ -169,5 +176,5 @@ export async function startDb() {
     rmSync(dir, { recursive: true, force: true });
   }
 
-  return { client, tx, stop, version, migration: MIGRATION };
+  return { client, tx, stop, version, migration: migrations.join(', ') };
 }

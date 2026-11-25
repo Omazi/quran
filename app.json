@@ -77,6 +77,12 @@
       ],
       "./modules/voice-capture/app.plugin.js"
     ],
+    "extra": {
+      "supabase": {
+        "url": "https://onjjwtegzeuajkcnzyvj.supabase.co",
+        "publishableKey": "sb_publishable_87Wj0K4pkFvMj9sF_l7dTw_YQqlQYfP"
+      }
+    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

@@ -1,5 +1,10 @@
 # Spécification — copie de la progression dans iCloud
 
+> Depuis D43, la sauvegarde solide est le compte (`specs/sync.md`). Cette copie reste le filet
+> d'un iPhone réinstallé **sans** compte ; sa règle « on ne fusionne pas » ne vaut que pour elle :
+> la fusion se fait avec le compte. Une progression revenue par cette copie démarre ses
+> métadonnées de synchronisation, et son temps sert de base (`specs/sync.md`, 2).
+
 Périmètre : `src/store` (interface et règle de restauration), `src/data/storage`
 (implémentations).
 
