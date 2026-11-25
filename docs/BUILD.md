@@ -120,10 +120,10 @@ raison. Le Mac de GitHub le télécharge à chaque compilation (43,5 Mo) ; aucun
 - Changer de modèle : nouveau fichier, nouvelle taille, nouvelle empreinte dans
   `voice-model.json`, et D42 à mettre à jour.
 
-L'adresse actuelle est la publication GitHub d'un tiers (`mano270699/watazawwadu-models`), qui a
-converti le modèle de Tarteel (Apache-2.0) sans le modifier. L'empreinte protège contre un fichier
-changé, pas contre une publication supprimée : **décision du propriétaire** dans D42 (héberger
-une copie dans une publication du dépôt `Omazi/quran`, puis mettre son adresse en premier).
+Le modèle est hébergé dans le dépôt du propriétaire, sur la branche `voice-model` de
+`Omazi/quran` (hors de l'historique de `main`), décision du propriétaire du 25 novembre 2026 ;
+la publication du tiers qui l'a converti (`mano270699/watazawwadu-models`, sans modification du
+modèle de Tarteel, Apache-2.0) reste en seconde adresse. L'empreinte refuse tout fichier changé.
 
 ## Version d'essai et version publiée
 
