@@ -11,10 +11,10 @@ import type { OnboardingPageProps } from './page-props';
  * note changes as they step (onboarding.md › Best practices: teach through interactivity).
  * A goal is already in place, so the page can be passed without touching anything.
  */
-export function GoalPage({ page, model, actions }: OnboardingPageProps) {
+export function GoalPage({ page, model, actions, bottomInset }: OnboardingPageProps) {
   const { t } = useTranslation('onboarding');
   return (
-    <SettingsPageLayout title={t(page.title)} text={t(page.text)}>
+    <SettingsPageLayout title={t(page.title)} text={t(page.text)} bottomInset={bottomInset}>
       <GroupedList testID="onboarding-goal">
         <DailyGoalSection model={model.dailyGoal} onChange={actions.setDailyGoalPages} />
       </GroupedList>

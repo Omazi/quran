@@ -311,7 +311,7 @@ describe('default Pager', () => {
   }
 
   it.each(APPEARANCES_AND_DIRECTIONS)(
-    'is a paging scroll view with the page indicator under it ($scheme, right to left: $rightToLeft)',
+    'is a paging scroll view with the page indicator over its bottom edge ($scheme, right to left: $rightToLeft)',
     async (conditions) => {
       setDeviceConditions({ os: 'android', ...conditions });
       await renderLaidOut(0);
@@ -319,11 +319,33 @@ describe('default Pager', () => {
       expect(list()).toHaveProp('pagingEnabled', true);
       expect(list()).toHaveProp('showsHorizontalScrollIndicator', false);
       expect(screen.getByText('Contenu de la page 1')).toBeOnTheScreen();
+      // The indicator lies over the pages, in a frame at the bottom that lets touches through.
       const [, indicatorFrame] = screen.getByTestId('pager').children;
-      expect(indicatorFrame).toBe(parentOf(screen.getByTestId('pager-indicator')));
+      expect(indicatorFrame).toBe(parentOf(parentOf(screen.getByTestId('pager-indicator'))));
+      expect(styleOf(indicatorFrame as RenderedElement)).toMatchObject({
+        position: 'absolute',
+        bottom: 0,
+      });
       expect(directionDependentStyles(screen.container)).toEqual([]);
     },
   );
+
+  it('tells every page how far the indicator lies over it, so that the page can paint under it', async () => {
+    setDeviceConditions();
+    const renderPage = jest.fn((index: number) => <Text>{`Page ${index}`}</Text>);
+    await render(
+      <Pager
+        pageCount={2}
+        page={0}
+        onPageChange={jest.fn()}
+        renderPage={renderPage}
+        accessibilityLabel="Page"
+        testID="pager"
+      />,
+    );
+    await layOut(pagesFrame(), WIDTH);
+    expect(renderPage).toHaveBeenCalledWith(0, touchTargets.default);
+  });
 
   it('fills its place and gives every page its own width', async () => {
     setDeviceConditions();

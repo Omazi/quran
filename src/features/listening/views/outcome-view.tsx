@@ -13,7 +13,7 @@ import { AppText, Button, layout, Screen, spacing } from '@/ui';
 import { LISTENING_LAYOUT } from '../config';
 import { rosetteFrame } from '../rosette/rosette-geometry';
 import { StillRosette } from '../rosette/still-rosette';
-import { ResultActions } from './result-layout';
+import { ResultActions, ScrollEdgeFade } from './result-layout';
 
 export interface OutcomeViewProps {
   readonly title: string;
@@ -56,21 +56,24 @@ export function OutcomeView({
     // No safe-area edge, as on the listening screen: the drawing is placed on the whole screen.
     <Screen background="paper" edges={[]} testID={testID}>
       <View style={styles.stage} onLayout={onLayout}>
-        <ScrollView alwaysBounceVertical={false} style={styles.stage}>
-          <View style={{ height: size.height * LISTENING_LAYOUT.titleTop }}>
-            <View style={[styles.rosetteLine, { top: cy }]}>
-              <StillRosette radius={radius} testID="still-rosette" />
+        <View style={styles.stage}>
+          <ScrollView alwaysBounceVertical={false} style={styles.stage}>
+            <View style={{ height: size.height * LISTENING_LAYOUT.titleTop }}>
+              <View style={[styles.rosetteLine, { top: cy }]}>
+                <StillRosette radius={radius} testID="still-rosette" />
+              </View>
             </View>
-          </View>
-          <View style={styles.words}>
-            <AppText variant="displayTitle" color="ink" align="center">
-              {title}
-            </AppText>
-            <AppText color="secondaryLabel" align="center">
-              {description}
-            </AppText>
-          </View>
-        </ScrollView>
+            <View style={styles.words}>
+              <AppText variant="displayTitle" color="ink" align="center">
+                {title}
+              </AppText>
+              <AppText color="inkSecondary" align="center">
+                {description}
+              </AppText>
+            </View>
+          </ScrollView>
+          <ScrollEdgeFade />
+        </View>
         <SafeAreaView edges={{ bottom: 'maximum' }} style={styles.actions}>
           <ResultActions
             primary={<Button label={action.label} variant="primary" onPress={action.onPress} />}

@@ -82,9 +82,7 @@
     },
     "hizb": {
       "label": "Hizb terminés",
-      "value": "{{hizb}} hizb sur {{total}}",
-      "minimum": "0",
-      "maximum": "{{total}}"
+      "value": "{{hizb}} hizb sur {{total}}"
     },
     "health": {
       "label": "Santé",

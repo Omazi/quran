@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
-import { PlatformColor, Text } from 'react-native';
+import { PlatformColor, StyleSheet, Text } from 'react-native';
 
 import {
   createInertNotificationPermissions,
@@ -10,6 +10,7 @@ import {
   type RenderWithStoreOptions,
 } from '@/features/settings/test-support/render-with-store';
 import { DEFAULT_REMINDERS } from '@/store';
+import { layout, spacing } from '@/ui';
 import {
   APPEARANCES_AND_DIRECTIONS,
   LARGEST_FONT_SCALE,
@@ -19,6 +20,7 @@ import {
   setDeviceConditions,
   styleOf,
   touchTargetHeight,
+  withDescendants,
   type RenderedElement,
 } from '@/ui/test-support/environment';
 
@@ -126,6 +128,8 @@ function buttonNames(): string[] {
 
 afterEach(resetDeviceConditions);
 
+const WILL_ASK = 'Ton téléphone te demandera ensuite d’autoriser les notifications.';
+
 describe('first-launch flow', () => {
   it.each(APPEARANCES_AND_DIRECTIONS)(
     'opens on the bare earth: a named scene, a title, one sentence and the page indicator ($scheme, right to left: $rightToLeft)',
@@ -193,9 +197,26 @@ describe('first-launch flow', () => {
     // Before the page is measured the scene takes what the words leave.
     expect(styleOf(sceneFrame).flexGrow).toBe(1);
     await fireEvent(page, 'layout', { nativeEvent: { layout: { ...WINDOW, height: 800 } } });
-    expect(styleOf(sceneFrame).height).toBe(480);
+    expect(styleOf(sceneFrame).height).toBe(400);
     // No side margin on the scene: only the words have one.
     expect(styleOf(page).paddingHorizontal).toBeUndefined();
+  });
+
+  it('paints the last page down to the bottom edge, behind the page indicator', async () => {
+    await renderOnboarding({ page: REMINDERS_PAGE });
+    const page = screen.getByTestId('onboarding-page');
+    expect(styleOf(page).backgroundColor).toEqual(PlatformColor('systemGroupedBackground'));
+    // The list stops above the indicator; the colour does not.
+    expect(styleOf(page).paddingBottom).toBe(layout.touchTarget);
+  });
+
+  it('keeps the words of a story page clear of the page indicator', async () => {
+    await renderOnboarding();
+    const page = screen.getAllByTestId('onboarding-page')[0];
+    if (page === undefined) throw new Error('No page.');
+    expect(StyleSheet.flatten(page.props.contentContainerStyle).paddingBottom).toBe(
+      spacing.md + layout.touchTarget,
+    );
   });
 
   it('has a title and a sentence on every page of the full flow', () => {
@@ -364,7 +385,6 @@ describe('daily goal page', () => {
 });
 
 describe('reminders page', () => {
-  const WILL_ASK = 'Ton téléphone te demandera ensuite d’autoriser les notifications.';
   const DENIED =
     'Les notifications de l’appli sont désactivées. Pour recevoir tes rappels, autorise-les dans les réglages du téléphone.';
   const NONE = 'Sans rappel, l’appli ne t’envoie aucune notification.';
@@ -412,20 +432,19 @@ describe('reminders page', () => {
     expect(request).not.toHaveBeenCalled();
   });
 
-  it('says that the phone is about to ask right above the button that leads to the question', async () => {
+  it('says that the phone is about to ask in the note that follows the button, in the same list', async () => {
     await renderOnboarding({ page: REMINDERS_PAGE });
-    const notice = await screen.findByTestId('onboarding-permission-notice');
-    expect(notice).toHaveTextContent(WILL_ASK);
-    // Next to the button, outside the list, so it cannot scroll away from it.
-    const footer = notice.parent;
-    expect(footer?.children.indexOf(notice)).toBe(0);
-    expect(footer?.queryAll(({ props }) => props.testID === 'onboarding-finish')).toHaveLength(1);
-    expect(
-      screen
-        .getByTestId('onboarding-reminders')
-        .queryAll(({ props }) => props.testID === 'onboarding-permission-notice'),
-    ).toEqual([]);
-    expect(styleOf(notice).color).toEqual(PlatformColor('label'));
+    const notice = await screen.findByText(WILL_ASK);
+    const list = withDescendants(screen.getByTestId('onboarding-reminders'));
+    const finish = screen.getByTestId('onboarding-finish');
+    // Right after the button that leads to the question, and in the list, so that the button
+    // sits under the reminders it concludes and not at the bottom of an empty page.
+    expect(list).toContain(finish);
+    expect(list).toContain(notice);
+    expect(list.indexOf(notice)).toBeGreaterThan(list.indexOf(finish));
+    expect(list.indexOf(finish)).toBeGreaterThan(
+      list.indexOf(screen.getByRole('switch', { name: 'Rappel du jour' })),
+    );
     // The button does not borrow the word of the system's alert.
     expect(screen.queryByText(/autoriser$|^autoriser|allow/i)).toBeNull();
   });
@@ -477,7 +496,7 @@ describe('reminders page', () => {
       settings: { reminders: ALL_OFF },
     });
     expect(await screen.findByText(NONE)).toBeOnTheScreen();
-    expect(screen.queryByTestId('onboarding-permission-notice')).toBeNull();
+    expect(screen.queryByText(WILL_ASK)).toBeNull();
     expect(buttonNames()).toEqual(['Commencer']);
 
     await fireEvent.press(finishButton('Commencer'));
@@ -582,7 +601,7 @@ describe('introduction opened again from the settings', () => {
   it('never announces the system alert, even while the person has not been asked', async () => {
     await renderOnboarding({ page: REMINDERS_PAGE, settings: REPLAY });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Terminé' })).toBeOnTheScreen());
-    expect(screen.queryByTestId('onboarding-permission-notice')).toBeNull();
+    expect(screen.queryByText(WILL_ASK)).toBeNull();
     expect(screen.queryByRole('button', { name: 'Continuer' })).toBeNull();
   });
 

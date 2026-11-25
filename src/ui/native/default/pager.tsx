@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import { useReducedMotion } from '../../device-settings';
+import { layout } from '../../tokens';
 import { PageIndicator } from '../page-indicator';
 import type { PagerProps } from '../types';
 import { assertPagePosition } from '../validation';
@@ -18,7 +19,7 @@ const SHOWN_PAGE_COVERAGE_PERCENT = 51;
 
 /**
  * Default pager, for Android, the web and tests: the platform's paging scroll view, one swipe
- * for one page, with the drawn page indicator centred under it
+ * for one page, with the drawn page indicator centred over their bottom edge
  * (page-controls.md › Best practices).
  *
  * The page comes from what the list reports as visible, not from scroll offsets, so it is the
@@ -101,7 +102,9 @@ export function Pager({
             getItemLayout={(_data, index) => ({ length: width, offset: width * index, index })}
             keyExtractor={String}
             CellRendererComponent={PageCell}
-            renderItem={({ item }) => <View style={{ width }}>{renderPage(item)}</View>}
+            renderItem={({ item }) => (
+              <View style={{ width }}>{renderPage(item, layout.touchTarget)}</View>
+            )}
             viewabilityConfigCallbackPairs={viewabilityPairs}
             // A person who starts to drag takes over from any slide in progress.
             onScrollBeginDrag={() => {
@@ -110,14 +113,16 @@ export function Pager({
           />
         )}
       </View>
-      <PageIndicator
-        count={pageCount}
-        index={page}
-        onChange={onPageChange}
-        accessibilityLabel={accessibilityLabel}
-        accessibilityValue={accessibilityValue}
-        testID={testID === undefined ? undefined : `${testID}-indicator`}
-      />
+      <View style={styles.indicator} pointerEvents="box-none">
+        <PageIndicator
+          count={pageCount}
+          index={page}
+          onChange={onPageChange}
+          accessibilityLabel={accessibilityLabel}
+          accessibilityValue={accessibilityValue}
+          testID={testID === undefined ? undefined : `${testID}-indicator`}
+        />
+      </View>
     </View>
   );
 }
@@ -143,5 +148,8 @@ function PageCell({
 const styles = StyleSheet.create({
   pager: { flex: 1 },
   pageCell: { flex: 1 },
-  pages: { flex: 1 },
+  // The pages fill the pager and the indicator lies over their bottom, as the system pager's does:
+  // each page is told how far (`bottomInset`) and paints its own background down to the edge.
+  pages: StyleSheet.absoluteFill,
+  indicator: { position: 'absolute', start: 0, end: 0, bottom: 0 },
 });

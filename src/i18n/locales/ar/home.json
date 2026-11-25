@@ -43,11 +43,6 @@
       "value": "{{read}} من {{goal}}",
       "valueReached": "{{read}} من {{goal}}، تحقق الهدف"
     },
-    "page": {
-      "resume": "المتابعة",
-      "start": "البداية",
-      "value": "الصفحة {{page}}"
-    },
     "finish": {
       "label": "الختم المتوقع",
       "labelNext": "ختم التالية",
@@ -61,7 +56,9 @@
     "footer_other": "تقدير على وتيرة هدفك: {{count}} صفحة في اليوم."
   },
   "actions": {
-    "read": "اقرأ واسقِ"
+    "read": "اقرأ واسقِ",
+    "resumeAt": "المتابعة · الصفحة {{page}}",
+    "startAt": "البداية · الصفحة {{page}}"
   },
   "unavailable": {
     "title": "الحديقة غير متاحة",

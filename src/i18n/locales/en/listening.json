@@ -21,7 +21,7 @@
     "description_one": "These words appear in {{count}} place. Choose the one you were reciting.",
     "description_other": "These words appear in {{count}} places. Choose the one you were reciting.",
     "incomplete": "{{shown}} of {{count}} places. Recite what follows to narrow the list.",
-    "rowValue": "Verse {{verse}} · page {{page}}",
+    "rowValue": "Verse {{verse}} · Page {{page}}",
     "rowHint": "Opens the reader at page {{page}}."
   },
   "nothingHeard": {

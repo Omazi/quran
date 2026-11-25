@@ -114,31 +114,38 @@ describe.each(STATES)('HomeScreen, $name', ({ model, notice }) => {
       expect(screen.getByTestId('home-today-pages')).toHaveTextContent(
         new RegExp(`${model.today.pagesRead}\\D+${model.today.goalPages}`),
       );
-      expect(screen.getByTestId('home-next-page')).toHaveTextContent(
-        new RegExp(t('today.page.value', { page: model.reading.nextPage })),
+      // The page to read is named once, on the button, not in a row of its own.
+      expect(screen.queryByTestId('home-next-page')).toBeNull();
+      expect(screen.getByTestId('home-read')).toHaveTextContent(
+        new RegExp(
+          t(model.reading.hasStarted ? 'actions.resumeAt' : 'actions.startAt', {
+            page: model.reading.nextPage,
+          }),
+        ),
       );
       expect(screen.getByTestId('home-finish')).toBeOnTheScreen();
 
       // One button, named by what it does, large enough to touch, and it calls the action.
       expect(screen.getAllByRole('button')).toHaveLength(1);
-      const read = screen.getByRole('button', { name: t('actions.read') });
+      const read = screen.getByRole('button', { name: new RegExp(`^${t('actions.read')}`) });
       expect(touchTargetHeight(read)).toBeGreaterThanOrEqual(layout.touchTarget);
       expect(touchTargetHeight(read)).toBeGreaterThanOrEqual(44);
       await fireEvent.press(read);
       expect(actions.readAndWater).toHaveBeenCalledTimes(1);
 
-      // Gauges: green for what grew; for health, water while it is fine and orange from thirst.
+      // Gauge: green for what grew.
       const fillsOf = (name: string) =>
         withDescendants(screen.getByRole('progressbar', { name })).map(
           (element) => styleOf(element).backgroundColor,
         );
       expect(fillsOf(tGarden('readout.hizb.label'))).toContain(colors.current.growth);
-      if (model.garden.phase !== 'bare') {
-        const isFine = model.garden.phase === 'thriving';
-        expect(fillsOf(tGarden('readout.health.label'))).toContain(
-          isFine ? colors.current.accent : colors.current.warning,
-        );
-      }
+      // The message of the day already says how well the garden is: no second gauge for it, and
+      // the hizb gauge has no "0" and "60" under its ends, its value says "x of 60".
+      expect(
+        screen.queryByRole('progressbar', { name: tGarden('readout.health.label') }),
+      ).toBeNull();
+      expect(screen.queryByText('60')).toBeNull();
+      expect(screen.queryByText('0')).toBeNull();
 
       // Mirrors in Arabic, cuts no text, and takes its colours from the roles of this appearance.
       expect(directionDependentStyles(screen.container)).toEqual([]);
@@ -164,7 +171,7 @@ describe.each(STATES)('HomeScreen, $name', ({ model, notice }) => {
     const inList = withDescendants(screen.getByTestId('home-list'));
     expect(inList).toContain(screen.getByRole('header', { name: 'Jardin' }));
     expect(inList).toContain(screen.getByTestId('garden-scene'));
-    expect(inList).toContain(screen.getByRole('button', { name: 'Lire et arroser' }));
+    expect(inList).toContain(screen.getByRole('button', { name: /^Lire et arroser/ }));
 
     // Scene, state of the day, today, the button right under it, then gauges, then elements.
     const order = readingOrder([
@@ -277,7 +284,7 @@ describe('HomeScreen, the words of each state in French', () => {
     await render(<HomeScreen model={model} actions={actionsSpy()} />);
     // The matcher reads every kind of space, non-breaking ones included, as one space.
     expect(screen.getByTestId(`home-notice-${notice}`)).toHaveTextContent(`${title}${text}`);
-    expect(screen.getByRole('button', { name: 'Lire et arroser' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: /^Lire et arroser/ })).toBeOnTheScreen();
   });
 
   it('uses one word per state: the scene, the message and the gauge agree', async () => {
@@ -288,9 +295,8 @@ describe('HomeScreen, the words of each state in French', () => {
       screen.getByRole('image', { name: 'Jardin assoiffé, 24 hizb sur 60, l’eau est à sec' }),
     ).toBeOnTheScreen();
     expect(screen.getByText('Jardin assoiffé')).toBeOnTheScreen();
-    expect(screen.getByRole('progressbar', { name: 'Santé' })).toHaveAccessibilityValue({
-      text: 'Assoiffé, 79\u00a0%',
-    });
+    // The state is said once, by the message: the health gauge is not repeated under it.
+    expect(screen.queryByRole('progressbar', { name: 'Santé' })).toBeNull();
     expect(screen.queryByText(/a soif/i)).toBeNull();
   });
 
@@ -300,9 +306,6 @@ describe('HomeScreen, the words of each state in French', () => {
     expect(
       screen.getByRole('image', { name: 'Jardin ranimé, 24 hizb sur 60, l’eau coule' }),
     ).toBeOnTheScreen();
-    expect(screen.getByRole('progressbar', { name: 'Santé' })).toHaveAccessibilityValue({
-      text: 'Ranimé, 21\u00a0%',
-    });
     // (The developer preview, below in the list, names the states it offers.)
     expect(screen.getByTestId('garden-scene')).not.toHaveTextContent(/mourant|dépérit/i);
     expect(screen.getByTestId('garden-scene').props.accessibilityLabel).not.toMatch(/mourant/i);
@@ -320,8 +323,8 @@ describe('HomeScreen, the words of each state in French', () => {
       /^L’eau couleUne page par jour suffit à la faire couler\.$/,
     );
     expect(screen.getByTestId('home-today-pages')).toHaveTextContent('Pages lues3 sur 5');
-    expect(screen.getByTestId('home-next-page')).toHaveTextContent(
-      `ReprendrePage ${model.reading.nextPage}`,
+    expect(screen.getByTestId('home-read')).toHaveTextContent(
+      `Lire et arroserReprendre · Page ${model.reading.nextPage}`,
     );
     expect(screen.getByTestId('home-finish')).toHaveTextContent(/^Fin estimée\d{1,2} \S+ 202\d$/);
     expect(
@@ -332,7 +335,7 @@ describe('HomeScreen, the words of each state in French', () => {
   it('new user: the page is to start, not to resume, and no streak is shown as a zero', async () => {
     await showLanguage('fr');
     await render(<HomeScreen model={modelOf('bare-earth')} actions={actionsSpy()} />);
-    expect(screen.getByTestId('home-next-page')).toHaveTextContent('CommencerPage 1');
+    expect(screen.getByTestId('home-read')).toHaveTextContent('Lire et arroserCommencer · Page 1');
     expect(screen.getByTestId('home-today-pages')).toHaveTextContent('Pages lues0 sur 5');
     expect(screen.queryByTestId('home-streak')).toBeNull();
   });
@@ -340,7 +343,7 @@ describe('HomeScreen, the words of each state in French', () => {
   it('khatma complete: the page and the estimate are those of the next khatma', async () => {
     await showLanguage('fr');
     await render(<HomeScreen model={modelOf('khatma-complete')} actions={actionsSpy()} />);
-    expect(screen.getByTestId('home-next-page')).toHaveTextContent('CommencerPage 1');
+    expect(screen.getByTestId('home-read')).toHaveTextContent('Lire et arroserCommencer · Page 1');
     expect(screen.getByTestId('home-finish')).toHaveTextContent(/^Fin de la suivante/);
   });
 
@@ -368,7 +371,7 @@ describe('HomeScreen, the words of each state in French', () => {
     await showLanguage('en');
     const english = await render(<HomeScreen model={model} actions={actionsSpy()} />);
     expect(screen.getByTestId('home-finish')).toHaveTextContent(/March 12, 2027$/);
-    expect(screen.getByRole('button', { name: 'Read and Water' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: /^Read and Water/ })).toBeOnTheScreen();
     await english.unmount();
     await showLanguage('fr');
     await render(<HomeScreen model={model} actions={actionsSpy()} />);

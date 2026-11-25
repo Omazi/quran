@@ -8,4 +8,6 @@ export interface OnboardingPageProps {
   model: OnboardingModel;
   actions: OnboardingActions;
   renderScene: SceneRenderer;
+  /** How far the page indicator lies over the bottom of the page (`Pager`, `renderPage`). */
+  bottomInset: number;
 }

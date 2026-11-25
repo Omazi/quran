@@ -39,11 +39,6 @@
       "value": "{{read}} of {{goal}}",
       "valueReached": "{{read}} of {{goal}}, goal reached"
     },
-    "page": {
-      "resume": "Resume",
-      "start": "Start",
-      "value": "Page {{page}}"
-    },
     "finish": {
       "label": "Estimated End",
       "labelNext": "End of the Next One",
@@ -53,7 +48,9 @@
     "footer_other": "Estimate based on your goal: {{count}} pages a day."
   },
   "actions": {
-    "read": "Read and Water"
+    "read": "Read and Water",
+    "resumeAt": "Resume · Page {{page}}",
+    "startAt": "Start · Page {{page}}"
   },
   "unavailable": {
     "title": "Garden Unavailable",

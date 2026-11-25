@@ -8,6 +8,9 @@ import {
   type OnboardingFeature,
   type OnboardingPage,
 } from '../pages';
+import ar from '../../../i18n/locales/ar/onboarding.json';
+import en from '../../../i18n/locales/en/onboarding.json';
+import fr from '../../../i18n/locales/fr/onboarding.json';
 import { gardenOfScene } from '../scene';
 
 const EVERY_FEATURE: ReadonlySet<OnboardingFeature> = new Set(['voice', 'recognition', 'friends']);
@@ -174,5 +177,32 @@ describe('pages about features', () => {
       ({ kind }) => kind === 'voice',
     );
     expect(voicePages.map(({ id, feature }) => [id, feature])).toEqual([['voice', 'voice']]);
+  });
+});
+
+describe('sentences of the pages', () => {
+  const NO_BREAK_SPACE = '\u00a0';
+  const LOCALES = [
+    ['fr', fr],
+    ['en', en],
+    ['ar', ar],
+  ] as const;
+
+  // A last line of one word reads as a mistake: the last two words of every sentence stay together.
+  it.each(LOCALES)('%s: the last two words of a sentence never part', (_language, strings) => {
+    for (const [name, page] of Object.entries(strings.pages)) {
+      const words = page.text.split(/[ \u00a0]/);
+      expect(words.length).toBeGreaterThan(2);
+      expect(page.text.slice(-words.at(-1)!.length - 1, -words.at(-1)!.length)).toBe(
+        NO_BREAK_SPACE,
+      );
+      expect(name).toBeTruthy();
+    }
+  });
+
+  it('keeps "et il ne reste rien" in one piece, so "il" does not hang at the end of a line', () => {
+    expect(fr.pages.dead.text).toBe(
+      `Deux semaines sans lecture, et${NO_BREAK_SPACE}il${NO_BREAK_SPACE}ne${NO_BREAK_SPACE}reste${NO_BREAK_SPACE}rien.`,
+    );
   });
 });

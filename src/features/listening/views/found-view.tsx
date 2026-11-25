@@ -77,7 +77,7 @@ export function FoundView({
             {passage.surah}
           </AppText>
         )}
-        <AppText variant="subhead" color="secondaryLabel" align="center">
+        <AppText variant="subhead" color="inkSecondary" align="center">
           {t('found.where', { verses: passage.verses, page: passage.page })}
         </AppText>
       </View>
@@ -88,7 +88,7 @@ export function FoundView({
             <View style={[styles.rule, { backgroundColor: colors.ornamentLine }]} />
             <QuranText runs={runs} variant="verse" />
             {passage.continues ? (
-              <AppText variant="footnote" color="secondaryLabel" align="center">
+              <AppText variant="footnote" color="inkSecondary" align="center">
                 {t('found.continues')}
               </AppText>
             ) : null}

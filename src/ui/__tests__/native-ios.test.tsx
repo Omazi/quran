@@ -609,6 +609,22 @@ describe('iOS Pager', () => {
     );
   }
 
+  it('tells every page how far the system indicator lies over its bottom', async () => {
+    setDeviceConditions();
+    const renderPage = jest.fn(() => <RNText>Une page</RNText>);
+    await render(
+      <Pager
+        pageCount={2}
+        page={0}
+        onPageChange={jest.fn()}
+        renderPage={renderPage}
+        accessibilityLabel="Page"
+        testID="pager"
+      />,
+    );
+    expect(renderPage).toHaveBeenCalledWith(0, touchTargets.ios);
+  });
+
   it.each(APPEARANCES_AND_DIRECTIONS)(
     'is the system paged tab view with the system page indicator ($scheme, right to left: $rightToLeft)',
     async (conditions) => {
