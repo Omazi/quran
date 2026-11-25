@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer, useRef } from 'react';
 
 import {
   INITIAL_LISTENING_STATE,
+  searchHeardWords,
   transition,
   type ListeningState,
   type SpeechEngine,
@@ -29,9 +30,10 @@ function isActive(state: ListeningState): boolean {
 
 /**
  * Drives one listening screen: asks for the microphone when needed, starts the engine, searches
- * the passage for every word heard (with the domain's search, never redone here), and stops the
- * engine as soon as the screen has its answer. The rules of the states are the domain's
- * (`transition`); this hook only tells it what happened, in the order it happened.
+ * the passage for every word heard (with the domain's search, never redone here: all the words,
+ * then the latest ones alone, `searchHeardWords`), and stops the engine as soon as the screen has
+ * its answer. The rules of the states are the domain's (`transition`); this hook only tells it
+ * what happened, in the order it happened.
  *
  * The level of the voice does not pass through here: the rosette subscribes to it directly.
  */
@@ -63,7 +65,7 @@ export function useListening({ engine, loadVerseIndex }: ListeningDependencies):
       heardWords.push(...words);
       const snapshot = [...heardWords];
       enqueue(async () => {
-        const result = (await index).search(snapshot);
+        const result = searchHeardWords(await index, snapshot);
         if (isCurrent()) {
           dispatch({ type: 'words-heard', heardWordCount: snapshot.length, result });
         }

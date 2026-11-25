@@ -1,5 +1,6 @@
 {
   "ios": {
-    "NSCameraUsageDescription": "Jannatuk uses the camera to scan a friend’s invitation QR code. No picture is saved."
+    "NSCameraUsageDescription": "Jannatuk uses the camera to scan a friend’s invitation QR code. No picture is saved.",
+    "NSMicrophoneUsageDescription": "Jannatuk listens to your recitation to find the passage and follow your reading. Your voice stays on your phone: nothing is recorded or sent."
   }
 }

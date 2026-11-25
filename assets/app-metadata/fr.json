@@ -1,5 +1,6 @@
 {
   "ios": {
-    "NSCameraUsageDescription": "Jannatuk utilise l’appareil photo pour scanner le QR code d’invitation d’un proche. Aucune image n’est enregistrée."
+    "NSCameraUsageDescription": "Jannatuk utilise l’appareil photo pour scanner le QR code d’invitation d’un proche. Aucune image n’est enregistrée.",
+    "NSMicrophoneUsageDescription": "Jannatuk écoute ta récitation pour retrouver le passage et suivre ta lecture. Ta voix reste sur ton téléphone : rien n’est enregistré ni envoyé."
   }
 }

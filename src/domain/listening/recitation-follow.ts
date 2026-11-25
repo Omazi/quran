@@ -3,12 +3,14 @@
  * word was just recited, which comes next, and which word to read again.
  *
  * A pure function over the words of the page as the data writes them and the words the speech
- * engine heard. Both are compared after the passage search's normalisation, so the Uthmani
- * script and the engine's plain spelling meet. It never guesses further than one word: a word
- * left out is noticed when the next one is recited; anything else heard is a misreading of the
- * word expected, and the place does not move.
+ * engine heard. Both are compared as the passage search compares them (`isSameWordHeard`: the
+ * Uthmani script and the engine's plain spelling meet, a little transcription noise is allowed),
+ * because a word marked to read again by mistake is worse than a mistake missed
+ * (docs/specs/recognition.md). It never guesses further than one word: a word left out is noticed
+ * when the next one is recited; the word just recited, heard again, is a repetition; anything else
+ * heard is a misreading of the word expected, and the place does not move.
  */
-import { normalizeArabic } from '../recognition';
+import { isSameWordHeard, normalizeArabic } from '../recognition';
 
 export interface FollowState {
   /** Index of the word expected next. Equal to the number of words once the last is recited. */
@@ -27,8 +29,8 @@ export function startFollowing(from: number): FollowState {
   return { next: from, current: null, reread: null };
 }
 
-function keyOf(word: string): string {
-  return normalizeArabic(word).join(' ');
+function hasLetters(word: string): boolean {
+  return normalizeArabic(word).length > 0;
 }
 
 /**
@@ -46,20 +48,22 @@ export function followRecitation(
   let { next, current, reread } = state;
   let changed = false;
   for (const word of heard) {
-    const key = keyOf(word);
-    if (key === '' || next >= pageWords.length) continue;
-    const expected = keyOf(pageWords[next] ?? '');
-    const following = next + 1 < pageWords.length ? keyOf(pageWords[next + 1] ?? '') : null;
-    if (key === expected) {
+    if (!hasLetters(word) || next >= pageWords.length) continue;
+    const isWordAt = (index: number) =>
+      index < pageWords.length && isSameWordHeard(word, pageWords[index] ?? '');
+    if (isWordAt(next)) {
       // The word misread is now recited, or the recitation went on past a word left out: the
       // reminder has done its work.
       reread = null;
       current = next;
       next += 1;
-    } else if (key === following) {
+    } else if (isWordAt(next + 1)) {
       reread = next;
       current = next + 1;
       next += 2;
+    } else if (current !== null && isWordAt(current)) {
+      // The reader said the word again, or the engine gave it twice: nothing to read again.
+      continue;
     } else {
       reread = next;
     }

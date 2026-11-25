@@ -13,7 +13,8 @@
       "supportsTablet": false,
       "infoPlist": {
         "RCTAsyncStorageExcludeFromBackup": false,
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSMicrophoneUsageDescription": "Jannatuk écoute ta récitation pour retrouver le passage et suivre ta lecture. Ta voix reste sur ton téléphone : rien n’est enregistré ni envoyé."
       }
     },
     "android": {
@@ -71,10 +72,10 @@
         "expo-camera",
         {
           "cameraPermission": "Jannatuk utilise l’appareil photo pour scanner le QR code d’invitation d’un proche. Aucune image n’est enregistrée.",
-          "microphonePermission": false,
           "recordAudioAndroid": false
         }
-      ]
+      ],
+      "./modules/voice-capture/app.plugin.js"
     ],
     "experiments": {
       "typedRoutes": true,

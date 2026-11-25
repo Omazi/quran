@@ -469,3 +469,89 @@ l'eau. Le mot fait pousser le jardin. Détail, couleurs, couches, pistes écart�
 
 _Changerait si_ le propriétaire préfère une autre écriture ou une autre couleur, ou si le rendu sur
 iPhone déçoit : les réglages sont en tête de `make_icon.py`, et on relance l'outil.
+
+## D42 — La voix reconnue sur l'iPhone : Whisper tiny spécialisé Coran, dans l'appli
+
+Décidé le 25 novembre 2026 (développeur, branche `work/voice-engine`), dans le cadre de D5. Le
+micro du lecteur ne faisait rien dans TestFlight : seul le moteur simulé existait, et il est
+retiré des versions publiées. Le vrai moteur est maintenant derrière la même interface
+(`SpeechEngine`) ; les écrans n'ont pas changé.
+
+**Le moteur** : whisper.rn 0.7.4 (MIT ; whisper.cpp 1.9.3, Metal sur iPhone, module « Turbo »
+compatible nouvelle architecture, sans plugin Expo propre) avec le modèle
+`tarteel-ai/whisper-tiny-ar-quran` (Tarteel, Whisper tiny affiné sur la récitation du Coran,
+Apache-2.0), converti en GGML et quantifié q8_0 : **43,5 Mo**. Le micro est un module local de
+l'appli (`modules/voice-capture`, Swift, AVAudioEngine converti en 16 kHz) : whisper.rn 0.7 n'a
+plus d'enregistrement intégré, et le module « audio-pcm-stream » qu'il propose est un module de
+l'ancien pont de React Native (cible iOS 8). Le côté JavaScript est `src/data/speech` : la voix
+découpée en phrases par son niveau, chaque phrase relue toutes les 1,2 s, un mot donné quand deux
+lectures de suite s'accordent (le reste à la pause), jamais de silence donné à Whisper (il écrit
+des mots sur du silence : mesuré, un mot inventé sur un enregistrement muet).
+
+**Pourquoi tiny et pas base** : sur le même enregistrement (36:1–5, 28,6 s), tiny et base
+(`whisper-base-ar-quran`, q5_1, 59,7 Mo) écrivent le même texte, base avec une faute de plus
+(« يسسس ») ; l'encodeur de base est environ 4 fois plus lent (11,9 s contre 3,2 s ici). Le temps
+compte plus : la récitation doit avancer pendant qu'on lit.
+
+**Pourquoi pas la reconnaissance d'Apple** (`SFSpeechRecognizer`, arabe sur l'appareil) : modèle
+généraliste d'arabe moderne, pas de mesure possible ici sans iPhone ; le modèle affiné sur le
+Coran était l'hypothèse de D5 et les mesures ci-dessous la soutiennent. Autre piste vue et non
+retenue : les moteurs Zipformer/ONNX récents (paquets 0.1 sur npm, licences de modèles à
+vérifier) ; à regarder si Whisper déçoit sur l'iPhone.
+
+**Livraison du modèle : dans l'appli, pas téléchargé au premier usage.** 43,5 Mo laissent l'appli
+bien sous la limite de téléchargement en données mobiles (200 Mo) ; la reconnaissance marche hors
+ligne dès l'installation ; aucun écran de téléchargement à dessiner, aucun serveur, aucune
+connexion à l'usage. Le fichier n'est pas dans le dépôt : le plugin du module le télécharge
+pendant `expo prebuild` et vérifie sa taille et son SHA-256 (`ef01ab44…8b52`) ; un fichier
+différent arrête la compilation (`docs/BUILD.md`, « Le modèle de la voix »).
+
+**Licences** (lues dans les fichiers, `NOTICE.txt`) : whisper.rn MIT ; whisper.cpp et ggml MIT ;
+safe-buffer, buffer, base64-js MIT ; ieee754 BSD-3-Clause ; Whisper d'OpenAI MIT ; le modèle de
+Tarteel Apache-2.0, d'après le fichier LICENSE de la publication qui le convertit et la NOTICE
+d'une seconde conversion indépendante. **La fiche du modèle sur huggingface.co n'a pas pu être
+ouverte** depuis la session (hôte refusé) : à vérifier une fois, en un clic.
+
+**Ce qui a été mesuré** (whisper.cpp 1.9.6 compilé sous Linux, CPU, 2 cœurs partagés ; greedy,
+arabe ; transcriptions passées dans la recherche du domaine) :
+
+- **Lecteurs ordinaires** : 28 personnes différentes, enregistrées au téléphone, avec leurs
+  fautes, récitant 83:1–3 (jeu de données de Faraj Elahjal, licence permissive, lecture de
+  Qalun). Les mots arrivant un à un comme sur l'écran : **passage trouvé pour 19 sur 28 (68 %)**
+  sur l'enregistrement entier (10 à 25 s), **14 sur 28** dans les 10 premières secondes ; **jamais
+  un autre passage**. Les 9 autres : « rien trouvé », dit honnêtement. Trouvé en général après 3 à
+  6 mots. Avant l'ajustement ci-dessous : 16 sur 28.
+- **Récitant professionnel** (36:1–5, lent, provenance de l'enregistrement inconnue : mesure
+  locale seulement, rien gardé) : trouvé à 10 s dans les six conditions essayées (propre, bruit
+  rose, bande téléphone, ralenti de 15 %, écho, 24 dB plus bas). Une fenêtre isolée de 5 s ne
+  suffit pas : elle ne contient qu'un à trois mots d'une récitation lente, sous le minimum de
+  trois mots de la recherche.
+- **Temps** : sur cette machine chargée par d'autres travaux (charge 13 à 24 sur 2 cœurs), 5,3 à
+  30 s par fenêtre de 5 s (3,6 s de calcul au mieux). **Sans valeur pour l'iPhone**, qui utilise
+  Metal : le temps réel sur le téléphone reste à mesurer.
+
+**Ajustements du domaine (avec tests)** : `searchHeardWords` cherche aussi les 8 derniers mots
+seuls quand tous les mots ne trouvent rien (le bruit d'une isti'adha mal entendue ne cache plus la
+suite) ; sur 400 suites de 14 mots tirées au hasard du vocabulaire du Coran, aucune fenêtre de 8
+mots n'a été trouvée (une fenêtre de 6 l'a été une fois : d'où 8). Le suivi mot à mot compare avec
+la tolérance de la recherche (`isSameWordHeard`) et ne marque plus en rouge un mot répété. Les
+28 transcriptions sont dans les tests (`src/domain/listening/__fixtures__/ordinary-readers.ts`).
+
+**Seulement vérifiable sur l'iPhone** : la compilation du module Swift et de whisper.rn par
+Xcode 26.6 ; l'alerte du micro et ses textes ; la qualité du micro de l'iPhone (meilleure que les
+enregistrements téléphoniques mesurés, parfois en 8 kHz) ; le temps de chaque relecture avec
+Metal ; la mémoire ; la reprise après un appel ; le seuil de voix (`minSpeechDb`, réglé sans
+iPhone) dans une pièce bruyante.
+
+**Décisions pour le propriétaire** :
+
+1. **Héberger le modèle chez lui.** L'adresse actuelle est la publication GitHub d'un tiers
+   (`mano270699/watazawwadu-models`). L'empreinte empêche un fichier changé d'entrer, pas la
+   disparition de la publication. Proposition : créer une publication dans `Omazi/quran` avec ce
+   même fichier, puis mettre son adresse en tête de `voice-model.json`.
+2. **Une page de mentions dans l'appli** (déjà ouverte dans `NOTICE.txt`) : la licence Apache du
+   modèle et la BSD d'ieee754 demandent que leur texte accompagne l'appli publiée sur l'App Store.
+
+_Changerait si_ l'iPhone est trop lent avec tiny (essayer d'abord moins de relectures), si la
+qualité déçoit chez de vrais lecteurs (base, ou un autre modèle affiné), ou si Apple propose un
+modèle arabe coranique sur l'appareil.

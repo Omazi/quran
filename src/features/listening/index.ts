@@ -1,9 +1,9 @@
 /**
- * The listening screen (docs/specs/listening.md). Not linked from any button while the real
- * speech engine (D5) does not exist: it opens by its route, for trials.
+ * The listening screens (docs/specs/listening.md): finding a passage and following a recitation,
+ * with the phone's speech engine (D42), or the simulated one in development and test builds.
  */
 export { ListeningScreen, type ListeningScreenProps } from './listening-screen';
-export { createFollowTrialEngine, createTrialEngine } from './simulated-engine-door';
+export { createFollowEngine, createListeningEngine } from './speech-engine-door';
 export { parseFollowParams, type FollowParams } from './follow/follow-params';
 export { VoiceFollowScreen, type VoiceFollowScreenProps } from './follow/voice-follow-screen';
 export { useListeningNavigation, readerHref } from './use-listening-navigation';
