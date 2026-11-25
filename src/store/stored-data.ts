@@ -54,6 +54,20 @@ export interface StoredDataReading {
   readonly discarded: readonly StoredDataPart[];
   /** True when the document was written by an older version of the app and has been upgraded. */
   readonly wasUpgraded: boolean;
+  /**
+   * The `sync` part as it was found, not yet checked (the store checks it with the sync rules,
+   * `readSyncMeta`), or undefined when there is none.
+   */
+  readonly rawSync: unknown;
+}
+
+export interface ReadOptions {
+  /**
+   * Whether a document of a newer version may be read like one of this version (true for the
+   * device's own document, docs/specs/sync.md, 1). Its settings and journal must still pass
+   * every check, or the document is discarded as a whole.
+   */
+  readonly acceptNewer?: boolean;
 }
 
 type UnknownRecord = Readonly<Record<string, unknown>>;
@@ -121,7 +135,7 @@ export function isQuietHours(value: unknown): value is QuietHours | null {
   return isRecord(value) && isReminderTime(value.from) && isReminderTime(value.to);
 }
 
-function readReminders(value: unknown): ReminderSettings | null {
+export function readReminders(value: unknown): ReminderSettings | null {
   if (!isRecord(value)) return null;
   const { dailyEnabled, dailyTime, thirstyGardenEnabled, fridayKahfEnabled } = value;
   const { fridayTime, quietHours } = value;
@@ -353,8 +367,16 @@ function upgradeFromVersion5(document: UnknownRecord): UnknownRecord {
  * a version did not have takes its default value; everything is then checked like any other
  * document. Null for a version this app does not know.
  */
-function upgradeDocument(document: UnknownRecord): UnknownRecord | null {
+function upgradeDocument(document: UnknownRecord, acceptNewer: boolean): UnknownRecord | null {
   let current = document;
+  if (
+    acceptNewer &&
+    typeof current.version === 'number' &&
+    Number.isSafeInteger(current.version) &&
+    current.version > STORED_DATA_VERSION
+  ) {
+    return { ...current, version: STORED_DATA_VERSION };
+  }
   if (current.version === VERSION_WITHOUT_FRIDAY_TIME) current = upgradeFromVersion1(current);
   if (current.version === VERSION_WITHOUT_TIME_SPENT) current = upgradeFromVersion2(current);
   if (current.version === VERSION_OF_TWO_SHAPES) current = upgradeFromVersion3(current);
@@ -368,10 +390,11 @@ const NOTHING_USABLE = {
   journal: null,
   timeSpent: null,
   wasUpgraded: false,
+  rawSync: undefined,
 } as const;
 
 /** Reads the stored document. `raw` is the text found on the device, or null when there is none. */
-export function readStoredData(raw: string | null): StoredDataReading {
+export function readStoredData(raw: string | null, options: ReadOptions = {}): StoredDataReading {
   if (raw === null) return { ...NOTHING_USABLE, discarded: [] };
 
   let parsed: unknown;
@@ -380,16 +403,25 @@ export function readStoredData(raw: string | null): StoredDataReading {
   } catch {
     return { ...NOTHING_USABLE, discarded: ['document'] };
   }
-  return readStoredDocument(parsed);
+  return readStoredDocument(parsed, options);
 }
 
 /** Checks a stored document already turned from text into a value. */
-export function readStoredDocument(parsed: unknown): StoredDataReading {
-  const document = isRecord(parsed) ? upgradeDocument(parsed) : null;
+export function readStoredDocument(
+  parsed: unknown,
+  { acceptNewer = false }: ReadOptions = {},
+): StoredDataReading {
+  const document = isRecord(parsed) ? upgradeDocument(parsed, acceptNewer) : null;
   if (document === null) return { ...NOTHING_USABLE, discarded: ['document'] };
 
   const settings = readSettings(document.settings);
   const journal = readJournal(document.journal);
+  // A newer document is only trusted whole: if its core does not pass, it is not this format.
+  const isFromNewerVersion =
+    isRecord(parsed) && typeof parsed.version === 'number' && parsed.version > STORED_DATA_VERSION;
+  if (isFromNewerVersion && (settings === null || journal === null)) {
+    return { ...NOTHING_USABLE, discarded: ['document'] };
+  }
   // A document without a time part has simply not counted any yet; a damaged one is discarded.
   const timeSpent =
     document.timeSpent === undefined ? EMPTY_TIME_SPENT : readTimeSpent(document.timeSpent);
@@ -397,15 +429,29 @@ export function readStoredDocument(parsed: unknown): StoredDataReading {
   if (settings === null) discarded.push('settings');
   if (journal === null) discarded.push('journal');
   if (timeSpent === null) discarded.push('time');
-  return { settings, journal, timeSpent, discarded, wasUpgraded: document !== parsed };
+  return {
+    settings,
+    journal,
+    timeSpent,
+    discarded,
+    wasUpgraded: document !== parsed,
+    rawSync: document.sync,
+  };
 }
 
-/** The text to keep on the device for this data. Only the data is written, never the actions. */
-export function writeStoredData({ settings, journal, timeSpent }: AppDataToWrite): string {
+/**
+ * The text to keep on the device for this data, with the sync metadata when there is some
+ * (docs/specs/sync.md). Only the data is written, never the actions.
+ */
+export function writeStoredData(
+  { settings, journal, timeSpent }: AppDataToWrite,
+  sync?: unknown,
+): string {
   return JSON.stringify({
     version: STORED_DATA_VERSION,
     settings,
     journal,
     timeSpent: timeSpent ?? EMPTY_TIME_SPENT,
+    ...(sync === undefined ? {} : { sync }),
   });
 }

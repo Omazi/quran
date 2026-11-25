@@ -17,7 +17,12 @@ export {
 export {
   SocialProvider,
   createSocialStore,
+  useSocialStore,
+  useSocialVersion,
   type SocialClient,
   type SocialStore,
 } from './social-store';
 export { useSession } from './use-session';
+// What the home screen's "Jardins voisins" reads: a friend's garden, their water, their colour.
+export { gardenStateOf, waterStatusOf } from './friend-garden';
+export { avatarIndexOf } from './friend-avatar';

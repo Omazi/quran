@@ -1,6 +1,7 @@
 import type { PageRead, Pause, ReadingJournal } from '@/domain/khatm';
 import type { LocalDate } from '@/domain/shared/local-date';
 import type { SecondsByDay } from '@/domain/stats';
+import type { SyncEvent, SyncMeta } from '@/domain/sync';
 import type { QuietHours, ReminderSettings, TimeOfDay } from '@/domain/reminders';
 import type { AppLanguage } from '@/i18n';
 
@@ -83,8 +84,33 @@ export interface ForegroundTime {
  */
 export type DataResetNotice = 'settings' | 'journal' | 'everything';
 
+/**
+ * What the sync engine (src/data/sync) does to the store: nothing else calls these. Each one is
+ * written to the device with the data, in the same document (docs/specs/sync.md).
+ */
+export interface SyncActions {
+  /** Ties the phone to an account: a new account is sent everything the phone holds. */
+  syncStartAccount: (account: string) => void;
+  /**
+   * Applies events received from the account and remembers how far the server was read
+   * (`cursor`). `now` is the corrected clock. Returns true when the progress changed.
+   */
+  syncReceive: (events: readonly SyncEvent[], cursor: number, now: number) => boolean;
+  /** After a complete pull: the time found before the sync is compared with the account's. */
+  syncSettleTime: () => void;
+  /** Forgets events the server has received. */
+  syncAcknowledge: (sent: readonly SyncEvent[]) => void;
+  /** Remembers when a sync last finished. */
+  syncMarkSynced: (at: number) => void;
+}
+
 /** The state of the store: the data and the only ways to change it. Every change is saved. */
-export interface AppState extends AppData {
+export interface AppState extends AppData, SyncActions {
+  /**
+   * What this phone remembers to sync (docs/specs/sync.md). Kept by the store itself: every
+   * change of the data records here, in the same write, what is to be sent.
+   */
+  readonly sync: SyncMeta;
   /** Not part of the stored document: kept apart, so that a reset cannot erase it. */
   readonly dataResetNotice: DataResetNotice | null;
   /** The person has read the notice: it is not shown again. */

@@ -8,20 +8,19 @@ import {
   type SearchRelation,
 } from '@/domain/social';
 import { formatLongDate } from '@/features/home/format-date';
-import { ProgressIndicator, QrCode, spacing, type IconSymbol } from '@/ui';
-
-import { avatarRoleOf, initialOf } from './friend-avatar';
 import {
-  FriendsAvatar,
-  FriendsButton,
-  FriendsCard,
-  FriendsEyebrow,
-  FriendsPage,
-  FriendsRow,
-  FriendsSeparator,
-  FriendsText,
-  FriendsTextField,
-} from './friends-kit';
+  ActionButton,
+  AppText,
+  Avatar,
+  Card,
+  ProgressIndicator,
+  QrCode,
+  spacing,
+  type IconSymbol,
+} from '@/ui';
+
+import { avatarIndexOf, initialOf } from './friend-avatar';
+import { FriendsPage, FriendsRow, FriendsSeparator, FriendsTextField } from './friends-kit';
 import { shownInviteCode, typedInviteCode } from './invite-code-text';
 import type { AddFriendActions, AddFriendModel } from './use-friends';
 
@@ -64,8 +63,10 @@ export function AddFriendScreen({ model, actions }: AddFriendScreenProps) {
   const codeIsComplete = typedInviteCode(model.code).length === SOCIAL_CONFIG.inviteCodeLength;
   return (
     <FriendsPage isUnderBar testID="add-friend">
-      <FriendsCard>
-        <FriendsEyebrow>{t('add.searchTitle')}</FriendsEyebrow>
+      <Card contentGap="md">
+        <AppText variant="subheadEmphasized" color="actionTint">
+          {t('add.searchTitle')}
+        </AppText>
         <FriendsTextField
           label={t('add.searchField')}
           placeholder={t('add.searchPlaceholder')}
@@ -77,9 +78,9 @@ export function AddFriendScreen({ model, actions }: AddFriendScreenProps) {
           testID="add-search"
         />
         {model.results === null ? null : model.results.length === 0 ? (
-          <FriendsText variant="subhead" color="inkSecondary" testID="add-no-results">
+          <AppText variant="subhead" color="muted" testID="add-no-results">
             {t('add.noResults')}
-          </FriendsText>
+          </AppText>
         ) : (
           model.results.map((result) => (
             <SearchResult
@@ -91,25 +92,27 @@ export function AddFriendScreen({ model, actions }: AddFriendScreenProps) {
             />
           ))
         )}
-        <FriendsText variant="footnote" color="inkSecondary">
+        <AppText variant="footnote" color="muted">
           {model.searchRefusal === null
             ? t('add.searchNote')
             : t(`refusals.${model.searchRefusal}`)}
-        </FriendsText>
-      </FriendsCard>
+        </AppText>
+      </Card>
 
-      <FriendsCard>
-        <FriendsEyebrow>{t('add.myCodeTitle')}</FriendsEyebrow>
+      <Card contentGap="md">
+        <AppText variant="subheadEmphasized" color="actionTint">
+          {t('add.myCodeTitle')}
+        </AppText>
         <View accessible testID="add-my-code" style={styles.code}>
-          <FriendsText variant="subhead" color="inkSecondary">
+          <AppText variant="subhead" color="muted">
             {t('add.myCode')}
-          </FriendsText>
-          <FriendsText variant="heading" color="title" accessibilityRole="text">
+          </AppText>
+          <AppText variant="title1" color="heading" accessibilityRole="text">
             {model.invite === null ? '…' : shownInviteCode(model.invite.code)}
-          </FriendsText>
+          </AppText>
         </View>
-        <FriendsButton
-          kind="primary"
+        <ActionButton
+          variant="filled"
           symbol={SHARE_SYMBOL}
           label={t('add.share')}
           onPress={() => actions.shareInvite((link, code) => t('add.shareMessage', { link, code }))}
@@ -117,14 +120,16 @@ export function AddFriendScreen({ model, actions }: AddFriendScreenProps) {
           testID="add-share"
         />
         {model.invite === null ? null : (
-          <FriendsText variant="footnote" color="inkSecondary">
+          <AppText variant="footnote" color="muted">
             {t('add.myCodeNote', { date: formatLongDate(model.invite.expiresOn, i18n.language) })}
-          </FriendsText>
+          </AppText>
         )}
-      </FriendsCard>
+      </Card>
 
-      <FriendsCard>
-        <FriendsEyebrow>{t('add.enterTitle')}</FriendsEyebrow>
+      <Card contentGap="md">
+        <AppText variant="subheadEmphasized" color="actionTint">
+          {t('add.enterTitle')}
+        </AppText>
         <FriendsTextField
           label={t('add.enterField')}
           placeholder={t('add.enterPlaceholder')}
@@ -135,22 +140,24 @@ export function AddFriendScreen({ model, actions }: AddFriendScreenProps) {
           onSubmit={actions.submitCode}
           testID="add-code"
         />
-        <FriendsButton
-          kind="soft"
+        <ActionButton
+          variant="tonal"
           label={t('add.enterSubmit')}
           onPress={actions.submitCode}
           disabled={!codeIsComplete || model.isBusy}
           testID="add-code-submit"
         />
         {model.codeRefusal === null ? null : (
-          <FriendsText variant="footnote" color="inkSecondary">
+          <AppText variant="footnote" color="muted">
             {t(`refusals.${model.codeRefusal}`)}
-          </FriendsText>
+          </AppText>
         )}
-      </FriendsCard>
+      </Card>
 
-      <FriendsCard>
-        <FriendsEyebrow>{t('add.qrTitle')}</FriendsEyebrow>
+      <Card contentGap="md">
+        <AppText variant="subheadEmphasized" color="actionTint">
+          {t('add.qrTitle')}
+        </AppText>
         <View testID="add-qr" style={styles.qrArea}>
           {model.invite === null ? (
             <ProgressIndicator accessibilityLabel={t('add.qrLoading')} />
@@ -163,17 +170,17 @@ export function AddFriendScreen({ model, actions }: AddFriendScreenProps) {
             />
           )}
         </View>
-        <FriendsButton
-          kind="soft"
+        <ActionButton
+          variant="tonal"
           symbol={SCAN_SYMBOL}
           label={t('add.scan')}
           onPress={actions.scan}
           testID="add-scan"
         />
-        <FriendsText variant="footnote" color="inkSecondary">
+        <AppText variant="footnote" color="muted">
           {t('add.qrNote')}
-        </FriendsText>
-      </FriendsCard>
+        </AppText>
+      </Card>
     </FriendsPage>
   );
 }
@@ -201,9 +208,9 @@ function SearchResult({
         label={result.displayName}
         detail={relation}
         leading={
-          <FriendsAvatar
-            initial={initialOf(result.displayName)}
-            color={avatarRoleOf(result.userId)}
+          <Avatar
+            content={{ initial: initialOf(result.displayName) }}
+            color={avatarIndexOf(result.userId)}
             size="small"
           />
         }
@@ -213,8 +220,9 @@ function SearchResult({
       />
       {result.relation === 'none' ? (
         <View style={styles.resultAction}>
-          <FriendsButton
-            kind="link"
+          <ActionButton
+            variant="plain"
+            fullWidth={false}
             label={t('add.send', { name: result.displayName })}
             onPress={() => actions.sendRequest(result.userId)}
             disabled={isBusy}
@@ -224,8 +232,9 @@ function SearchResult({
       ) : null}
       {result.relation === 'request-received' ? (
         <View style={styles.resultAction}>
-          <FriendsButton
-            kind="link"
+          <ActionButton
+            variant="plain"
+            fullWidth={false}
             label={t('add.accept', { name: result.displayName })}
             onPress={() => actions.acceptRequest(result.userId)}
             disabled={isBusy}

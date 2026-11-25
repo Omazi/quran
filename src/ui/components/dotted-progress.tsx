@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { pieceSizes, radius, spacing, stateOpacity } from '../tokens';
+import { avatarRoles, pieceSizes, radius, spacing, stateOpacity } from '../tokens';
 import { useColors } from '../use-colors';
 
 export interface DottedProgressProps {
@@ -8,6 +8,11 @@ export interface DottedProgressProps {
   total: number;
   /** Steps reached, from 0 to `total`. */
   reached: number;
+  /**
+   * The colour of the steps reached: the action green, or a friend's colour by its place in
+   * `avatarRoles`, as `Avatar` takes it (visite.png: the friend's hizb in their colour).
+   */
+  color?: 'action' | number;
   /** Whether the step after the last one reached is under way: its dot is half tone. */
   hasStepInProgress?: boolean;
   /** What is counted, for screen readers: "Hizb terminés". */
@@ -26,6 +31,7 @@ export interface DottedProgressProps {
 export function DottedProgress({
   total,
   reached,
+  color = 'action',
   hasStepInProgress = false,
   accessibilityLabel,
   accessibilityValue,
@@ -40,6 +46,10 @@ export function DottedProgress({
     throw new RangeError(`DottedProgress: reached must be a whole number from 0 to ${total}`);
   }
   const colors = useColors();
+  const filled =
+    color === 'action'
+      ? colors.actionTint
+      : colors[avatarRoles[color % avatarRoles.length] ?? 'actionTint'];
   const dots = Array.from({ length: total }, (_, index) => {
     if (index < reached) return 'reached';
     if (index === reached && hasStepInProgress) return 'inProgress';
@@ -57,10 +67,11 @@ export function DottedProgress({
       {dots.map((state, index) => (
         <View
           key={index}
+          testID={testID === undefined ? undefined : `${testID}-dot-${index}`}
           style={[
             styles.dot,
             {
-              backgroundColor: state === 'ahead' ? colors.dotEmpty : colors.actionTint,
+              backgroundColor: state === 'ahead' ? colors.dotEmpty : filled,
             },
             state === 'inProgress' ? styles.inProgress : null,
           ]}

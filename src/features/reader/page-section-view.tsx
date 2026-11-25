@@ -12,15 +12,7 @@ import {
 import { quranStructure } from '@/data/quran';
 import type { VerseRef } from '@/domain/quran';
 import type { ReaderScript } from '@/store';
-import {
-  AppText,
-  ContentUnavailable,
-  layout,
-  spacing,
-  useColors,
-  useReaderPalette,
-  type IconSymbol,
-} from '@/ui';
+import { AppText, ContentUnavailable, layout, spacing, useColors, type IconSymbol } from '@/ui';
 
 import { READER_CONFIG } from './config';
 import { pageSection } from './reading-sections';
@@ -232,7 +224,7 @@ function ScriptText({ script, textSize, lineHeight, align, children, testID }: S
  */
 function PageFooter({ page }: { page: number }) {
   const { t } = useTranslation('reader');
-  const palette = useReaderPalette();
+  const colors = useColors();
   return (
     <View
       style={styles.footer}
@@ -240,11 +232,11 @@ function PageFooter({ page }: { page: number }) {
       accessibilityLabel={t('page.footerSpoken', { page })}
       testID={`page-footer-${page}`}
     >
-      <View style={[styles.hairline, { backgroundColor: palette.frameInner }]} />
+      <View style={[styles.hairline, { backgroundColor: colors.frameInner }]} />
       <AppText variant="footnote" color="inkSecondary" align="center">
         {t('page.footer', { page })}
       </AppText>
-      <View style={[styles.hairline, { backgroundColor: palette.frameInner }]} />
+      <View style={[styles.hairline, { backgroundColor: colors.frameInner }]} />
     </View>
   );
 }

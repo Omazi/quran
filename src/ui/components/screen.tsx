@@ -3,17 +3,18 @@ import { Platform, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import type { ColorRole } from '../tokens';
-import { useColors, useReaderPalette } from '../use-colors';
+import { useColors } from '../use-colors';
 
 /**
  * `background` for an ordinary screen, `groupedBackground` when the screen shows a grouped list
- * (color.md › Mobile), `paper` for the mushaf page only, `readerCanvas` for the warm ground of the
- * validated mockups around the page and in the Quran tab (tokens `readerPalette`, deviation 80),
- * `canvas` for the warm ground of the home screen's palette (`gardenPalette`) under a list of the
- * garden appearance (the settings).
+ * (color.md › Mobile), `paper` for the mushaf page only; `canvas`, the ground of the validated
+ * mockups under the cards of a tab, and `pageGround`, their warm ground around the mushaf page
+ * (deviation 80).
  */
-export type ScreenBackground =
-  Extract<ColorRole, 'background' | 'groupedBackground' | 'paper' | 'canvas'> | 'readerCanvas';
+export type ScreenBackground = Extract<
+  ColorRole,
+  'background' | 'groupedBackground' | 'paper' | 'canvas' | 'pageGround'
+>;
 
 export interface ScreenProps {
   children: ReactNode;
@@ -45,8 +46,7 @@ export function Screen({
   testID,
 }: ScreenProps) {
   const colors = useColors();
-  const palette = useReaderPalette();
-  const backgroundColor = background === 'readerCanvas' ? palette.canvas : colors[background];
+  const backgroundColor = colors[background];
   // Only iOS can inset a scroll view for the bars by itself; elsewhere the safe area does it.
   const scrollsUnderBars = scroll && Platform.OS === 'ios';
   return (

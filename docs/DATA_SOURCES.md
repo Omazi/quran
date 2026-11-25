@@ -416,8 +416,8 @@ comparer l'empreinte SHA-256 des fichiers avec `SHA256SUMS`.
 4. **Écriture simple sans voyelles.** Le second texte (Tanzil) est de l'uthmani à signes
    réduits et n'est pas présenté comme de l'écriture simple. L'écriture simple du lecteur est la
    colonne imlâ'î du Complexe (D41), qui n'a pas de voyelles. Une écriture simple voyellée
-   demanderait une autre source dont la licence passe la règle du propriétaire : question
-   posée (D41).
+   demanderait une autre source dont la licence passe la règle du propriétaire ; le
+   propriétaire a décidé de garder le texte sans voyelles (D41).
 5. **Droits sur la mise en page.** La licence MIT couvre la compilation de l'auteur du
    paquet. La position du Complexe sur la réutilisation de la mise en page n'est pas établie.
 6. **Édition du mushaf.** Édition de 1441 H, choisie par le propriétaire. Sur 25 pages (121 à

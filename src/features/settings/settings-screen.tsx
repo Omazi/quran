@@ -15,6 +15,8 @@ import {
   type IconSymbol,
 } from '@/ui';
 
+import { SyncStatusSection } from '@/features/sync';
+
 import { DailyGoalSection } from './daily-goal-section';
 import { RemindersSection } from './reminders-section';
 import type { SettingsActions, SettingsModel } from './use-settings';
@@ -43,6 +45,8 @@ export function SettingsScreen({ model, actions }: SettingsScreenProps) {
       <GroupedList appearance="garden" testID="settings-list">
         <DataResetNoticeSection model={model} actions={actions} />
         <SettingsSections model={model} actions={actions} />
+        {/* The backup of the progress, on the phone and in the account (docs/specs/sync.md). */}
+        <SyncStatusSection />
       </GroupedList>
     </Screen>
   );

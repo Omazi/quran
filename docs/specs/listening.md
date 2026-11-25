@@ -19,6 +19,28 @@ existe en écran d'essai, `/voice-follow?page=294&from=18:10`, avec la règle du
 `followRecitation` ; ses couleurs et tailles sont dans `src/ui/listening-tokens.ts`. Écarts et
 questions au propriétaire : `design/SKILLS.md`, écarts 85 à 87.
 
+## Mise à jour du 25 novembre 2026, soir : le vrai moteur (D42)
+
+Le moteur vocal existe : `src/data/speech` (le micro natif de `modules/voice-capture` et Whisper
+sur le téléphone, modèle de Tarteel spécialisé Coran). Il implémente le même `SpeechEngine` que le
+moteur simulé ; les écrans n'ont pas changé. La porte des moteurs est
+`src/features/listening/speech-engine-door.ts` :
+
+- version publiée (TestFlight) : le vrai moteur, toujours. Le micro du lecteur ouvre `/listening`,
+  qui écoute vraiment ;
+- développement et version d'essai (`EXPO_PUBLIC_STATE_PREVIEW=1`) : un scénario nommé dans
+  l'adresse (`?scenario=several`, `?scenario=follow`) joue le moteur simulé, pour les tests et les
+  captures ; sans scénario, le vrai moteur, ou le simulé là où il n'y en a pas (web, Expo Go).
+
+Quand le moteur s'arrête de lui-même : pour trouver un passage, après 4 s de silence une fois la
+voix entendue, 8 s sans aucune voix, ou 30 s en tout ; pour suivre une récitation, après une
+minute sans voix. Réglages : `src/data/speech/config.ts`. Le suivi (`followRecitation`) compare
+désormais les mots avec la tolérance de la recherche (`isSameWordHeard`) et ne marque plus en
+rouge un mot répété : un mot en rouge à tort est pire qu'une erreur ratée.
+
+La section 4 ci-dessous (« le vrai micro et le moteur vocal » hors du lot) est dépassée sur ce
+point ; la lecture suivie dans le lecteur, la bannière et l'île dynamique restent à faire.
+
 ## Références
 
 - Le dessin validé : `/home/claude/gen/ecoute/styles/site/index.html` (prototype animé,

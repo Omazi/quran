@@ -18,7 +18,7 @@ import {
   readerShapes,
   spacing,
   stateOpacity,
-  useReaderPalette,
+  useColors,
   useReducedMotion,
   type IconSymbol,
 } from '@/ui';
@@ -75,7 +75,7 @@ function RoundButton({
   symbolTestID,
   testID,
 }: RoundButtonProps) {
-  const palette = useReaderPalette();
+  const colors = useColors();
   const isMirrored =
     followsReadingOrder && Platform.OS !== 'ios' && getWritingDirection() === 'rtl';
   return (
@@ -93,7 +93,7 @@ function RoundButton({
       testID={testID}
       style={({ pressed }) => [
         styles.roundButton,
-        { backgroundColor: palette.card, shadowColor: palette.shadow },
+        { backgroundColor: colors.surface, shadowColor: colors.shadow },
         pressed && styles.pressed,
       ]}
     >
@@ -198,8 +198,8 @@ export function ReaderBottomBar({
   onEnlargeText,
   textSizeValue,
 }: ReaderBottomBarProps) {
+  const colors = useColors();
   const { t } = useTranslation('reader');
-  const palette = useReaderPalette();
   const scripts = useMemo<readonly ReaderChoiceOption<ReaderScript>[]>(
     () => [
       { value: 'uthmani', label: t('script.uthmani') },
@@ -217,7 +217,7 @@ export function ReaderBottomBar({
       style={[
         styles.bottomBar,
         isVisible
-          ? { backgroundColor: palette.bar, borderTopColor: palette.barEdge }
+          ? { backgroundColor: colors.bar, borderTopColor: colors.barEdge }
           : styles.hiddenBar,
       ]}
     >
@@ -238,11 +238,11 @@ export function ReaderBottomBar({
             testID="reader-listen"
             style={({ pressed }) => [
               styles.microphone,
-              { backgroundColor: palette.action, shadowColor: palette.action },
+              { backgroundColor: colors.action, shadowColor: colors.action },
               pressed && styles.pressed,
             ]}
           >
-            <Icon symbol={MICROPHONE_SYMBOL} textStyle="title2" tint={palette.onAction} />
+            <Icon symbol={MICROPHONE_SYMBOL} textStyle="title2" color="onAction" />
           </Pressable>
         </View>
         <View style={styles.barEnd}>
@@ -312,7 +312,7 @@ function ToolButton({ symbol, label, value, isEnabled, onPress, testID }: ToolBu
  * with Reduce Motion it is simply there (spec 3; accessibility.md › Cognitive).
  */
 export function FeedbackPill({ text }: { text: string }) {
-  const palette = useReaderPalette();
+  const colors = useColors();
   const isMotionReduced = useReducedMotion();
   const { durationMs, dampingRatio, fromScale } = READER_CONFIG.feedbackEntrance;
   const entrance = useSharedValue(isMotionReduced ? 1 : 0);
@@ -331,7 +331,7 @@ export function FeedbackPill({ text }: { text: string }) {
       testID="reader-feedback-motion"
     >
       <View
-        style={[styles.pill, { backgroundColor: palette.card, shadowColor: palette.shadow }]}
+        style={[styles.pill, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}
         accessible
         accessibilityLiveRegion="polite"
         testID="reader-feedback"
@@ -361,7 +361,7 @@ export function FeedbackPill({ text }: { text: string }) {
  * when a page counts, once (feedback.md › Make sure all feedback is accessible, without chatter).
  */
 export function PageProgressLine({ progress }: { progress: PageCountProgress }) {
-  const palette = useReaderPalette();
+  const colors = useColors();
   const isMotionReduced = useReducedMotion();
   const { width, thickness, followMs, reducedMotionSteps } = READER_CONFIG.progressLine;
   const target =
@@ -389,13 +389,13 @@ export function PageProgressLine({ progress }: { progress: PageCountProgress }) 
       <View
         style={[
           styles.progressTrack,
-          { width, height: thickness, borderRadius: thickness, backgroundColor: palette.ringTrack },
+          { width, height: thickness, borderRadius: thickness, backgroundColor: colors.waterTrack },
         ]}
       >
         <Animated.View
           testID="reader-page-progress-fill"
           style={[
-            { height: thickness, borderRadius: thickness, backgroundColor: palette.ring },
+            { height: thickness, borderRadius: thickness, backgroundColor: colors.waterFill },
             isMotionReduced ? { width: width * target } : fillStyle,
           ]}
         />

@@ -1,0 +1,16 @@
+{
+  "title": "Backup",
+  "onPhone": "Saved on this phone",
+  "status": {
+    "syncing": "Syncing…",
+    "justNow": "Synced just now",
+    "minutes_one": "Synced {{count}} min ago",
+    "minutes_other": "Synced {{count}} min ago",
+    "hours_one": "Synced {{count}} hr ago",
+    "hours_other": "Synced {{count}} hr ago",
+    "days_one": "Synced {{count}} day ago",
+    "days_other": "Synced {{count}} days ago",
+    "offline": "Offline — will sync",
+    "waiting": "Not synced yet — will try again automatically"
+  }
+}

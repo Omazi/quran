@@ -6,6 +6,7 @@
  */
 
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
+import * as Haptics from 'expo-haptics';
 import { AccessibilityInfo, AppState } from 'react-native';
 
 import { quranRepository, quranStructure } from '@/data/quran';
@@ -16,7 +17,7 @@ import { showLanguage } from '@/features/garden/test-support/screen-conditions';
 import { deviceLocalDate } from '@/features/home';
 import { AppStoreProvider, READER_TEXT_SIZE_RANGE, type AppStore } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
-import { readerPalette } from '@/ui/tokens';
+import { palette } from '@/ui/tokens';
 import {
   changeReducedMotion,
   renderOnIOS,
@@ -42,6 +43,11 @@ import { useScriptTexts } from '../use-script-texts';
 jest.mock('expo-keep-awake', () => ({
   activateKeepAwakeAsync: jest.fn(() => Promise.resolve()),
   deactivateKeepAwake: jest.fn(() => Promise.resolve()),
+}));
+
+jest.mock('expo-haptics', () => ({
+  ...jest.requireActual('expo-haptics'),
+  impactAsync: jest.fn(() => Promise.resolve()),
 }));
 
 const WIDTH = 390;
@@ -436,14 +442,25 @@ describe('the bar follows the reading (docs/design/mushaf.png)', () => {
     expect(store.getState().settings.bookmarks).toEqual([]);
   });
 
+  it('answers each bookmark toggle with a light tap', async () => {
+    jest.mocked(Haptics.impactAsync).mockClear();
+    const store = createTestAppStore();
+    await openReader(store, 293);
+    await fireEvent.press(screen.getByRole('button', { name: 'Marque-page' }));
+    expect(Haptics.impactAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.impactAsync).toHaveBeenLastCalledWith(Haptics.ImpactFeedbackStyle.Light);
+    await fireEvent.press(screen.getByRole('button', { name: 'Marque-page' }));
+    expect(Haptics.impactAsync).toHaveBeenCalledTimes(2);
+  });
+
   it('draws its round buttons white on the warm ground, 44 points to touch, the text on paper', async () => {
     setDeviceConditions({ os: 'android' });
     await openReader(createTestAppStore(), 293);
     expect(styleOf(screen.getByTestId('reader'))).toMatchObject({
-      backgroundColor: readerPalette.canvas.light,
+      backgroundColor: palette.pageGround.light,
     });
     const back = screen.getByTestId('reader-back');
-    expect(styleOf(back)).toMatchObject({ backgroundColor: readerPalette.card.light });
+    expect(styleOf(back)).toMatchObject({ backgroundColor: palette.surface.light });
     const drawn = Number(styleOf(back).width);
     const slop = back.props.hitSlop as { top: number; bottom: number };
     expect(drawn + slop.top + slop.bottom).toBeGreaterThanOrEqual(44);
@@ -468,7 +485,7 @@ describe('the bottom bar: script, microphone, text size (mockup, D41)', () => {
     openListening.mockClear();
     await openReader(createTestAppStore(), 293);
     const microphone = screen.getByRole('button', { name: 'Écouter un passage' });
-    expect(styleOf(microphone)).toMatchObject({ backgroundColor: readerPalette.action.light });
+    expect(styleOf(microphone)).toMatchObject({ backgroundColor: palette.action.light });
     expect(Number(styleOf(microphone).width)).toBeGreaterThanOrEqual(44);
     await fireEvent.press(microphone);
     expect(openListening).toHaveBeenCalledTimes(1);
@@ -544,7 +561,7 @@ describe('the watered pill, the moment of the reader (spec 3)', () => {
     expect(
       within(pill).getByTestId('reader-feedback-drop', { includeHiddenElements: true }),
     ).toBeTruthy();
-    expect(styleOf(pill)).toMatchObject({ backgroundColor: readerPalette.card.light });
+    expect(styleOf(pill)).toMatchObject({ backgroundColor: palette.surface.light });
     expect(within(screen.getByTestId('reader-text')).queryByTestId('reader-feedback')).toBeNull();
   });
 

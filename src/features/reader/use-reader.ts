@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 
@@ -323,10 +324,13 @@ export function useReader(
   );
 
   const toggleBars = useCallback(() => setBarsShown((shown) => !shown), []);
-  const toggleBookmark = useCallback(
-    () => toggleBookmarkInStore(place.page),
-    [place.page, toggleBookmarkInStore],
-  );
+  const toggleBookmark = useCallback(() => {
+    toggleBookmarkInStore(place.page);
+    // A light impact complements the bookmark filling or emptying (playing-haptics.md › Impact;
+    // › Best practices: short haptics for discrete events, complementing visual feedback). iOS
+    // plays nothing when the person turned system haptics off (› Make haptics optional).
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+  }, [place.page, toggleBookmarkInStore]);
   const enlargeText = useCallback(() => {
     if (textSizeStep < READER_TEXT_SIZE_RANGE.max) setTextSizeInStore(textSizeStep + 1);
   }, [setTextSizeInStore, textSizeStep]);

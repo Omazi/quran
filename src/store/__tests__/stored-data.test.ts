@@ -567,6 +567,16 @@ describe('the script and the text size of the reader (D41)', () => {
     });
   });
 
+  it('keeps the sync part of a version 5 document through the upgrade', () => {
+    const { readerScript: _script, readerTextSize: _size, ...settingsOfVersion5 } = SETTINGS;
+    const sync = { deviceId: 'phone', outbox: [] };
+    const reading = readStoredData(
+      JSON.stringify({ version: 5, settings: settingsOfVersion5, journal: JOURNAL, sync }),
+    );
+    expect(reading.settings).toEqual({ ...SETTINGS, ...READER_DEFAULTS });
+    expect(reading.rawSync).toEqual(sync);
+  });
+
   it.each([
     ['the mushaf script that has no reader', { readerScript: 'uthmani-minimal' }],
     ['an unknown script', { readerScript: 'simple' }],

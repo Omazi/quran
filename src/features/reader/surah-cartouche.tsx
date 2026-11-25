@@ -10,7 +10,6 @@ import {
   readerShapes,
   spacing,
   useColors,
-  useReaderPalette,
 } from '@/ui';
 
 import { arabicIndicDigits } from './arabic-digits';
@@ -39,7 +38,6 @@ export interface SurahCartoucheProps {
 export function SurahCartouche({ surah, textSize, lineHeight }: SurahCartoucheProps) {
   const { t } = useTranslation('reader');
   const colors = useColors();
-  const palette = useReaderPalette();
   const info = quranStructure.surah(surah);
   const { heightInLines, nameScale, labelScale } = READER_CONFIG.surahHeader;
   const labelSize = Math.max(MINIMUM_FONT_SIZE, textSize * labelScale);
@@ -58,9 +56,9 @@ export function SurahCartouche({ surah, textSize, lineHeight }: SurahCartouchePr
   const medallionView = (
     <View
       testID={`surah-header-${surah}-medallion`}
-      style={[styles.medallion, { borderColor: palette.gold, backgroundColor: colors.paper }]}
+      style={[styles.medallion, { borderColor: colors.gold, backgroundColor: colors.paper }]}
     >
-      <View style={[styles.medallionDot, { backgroundColor: palette.gold }]} />
+      <View style={[styles.medallionDot, { backgroundColor: colors.gold }]} />
     </View>
   );
   return (
@@ -78,15 +76,15 @@ export function SurahCartouche({ surah, textSize, lineHeight }: SurahCartouchePr
         style={[
           styles.rule,
           {
-            borderTopColor: palette.goldLight,
-            borderBottomColor: palette.goldDeep,
-            borderStartColor: palette.gold,
-            borderEndColor: palette.gold,
+            borderTopColor: colors.goldLight,
+            borderBottomColor: colors.goldDeep,
+            borderStartColor: colors.gold,
+            borderEndColor: colors.gold,
           },
         ]}
       >
         <View
-          style={[styles.inner, { borderColor: palette.frameInner, backgroundColor: colors.paper }]}
+          style={[styles.inner, { borderColor: colors.frameInner, backgroundColor: colors.paper }]}
         >
           <View style={styles.sideStart}>{label(verses)}</View>
           <Text

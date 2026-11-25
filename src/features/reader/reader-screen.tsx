@@ -92,7 +92,7 @@ export function ReaderScreen({
   }
 
   return (
-    <Screen background="readerCanvas" edges={TOP_AND_SIDES} testID="reader">
+    <Screen background="pageGround" edges={TOP_AND_SIDES} testID="reader">
       <ReaderHeader
         model={model}
         isVisible={model.barsVisible}
@@ -189,7 +189,7 @@ export function ReaderUnavailable({
   testID,
 }: ReaderUnavailableProps) {
   return (
-    <Screen background="readerCanvas" testID={testID}>
+    <Screen background="pageGround" testID={testID}>
       <View style={styles.barRoom} />
       <ContentUnavailable title={title} description={description} symbol={symbol} />
       <View style={styles.action}>

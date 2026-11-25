@@ -459,6 +459,8 @@ describe('storage that cannot be trusted', () => {
       timeSpent: {},
       discarded: [],
       wasUpgraded: false,
+      // The sync metadata travels in the same document (docs/specs/sync.md).
+      rawSync: JSON.parse(JSON.stringify(store.getState().sync)),
     });
   });
 
@@ -725,6 +727,7 @@ describe('telling the person, once, that something was lost', () => {
       settings: SOUND_SETTINGS,
       journal: [],
       timeSpent: {},
+      sync: JSON.parse(JSON.stringify(store.getState().sync)),
     });
   });
 });

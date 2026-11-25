@@ -188,3 +188,20 @@ export function isPartOfWord(heard: ComparableWord, expected: ComparableWord): b
   if (isTooLongToBeAWord(heard) || isTooLongToBeAWord(expected)) return false;
   return isPartOfSpelling(heard.accentKey, expected.accentKey);
 }
+
+/**
+ * True when a word heard by a speech engine is the expected word of the text, with the same
+ * tolerance as the passage search: vowels and script ignored, a little transcription noise
+ * allowed (`closeWordSimilarity`), no difference at all in a word of two or three letters.
+ * A heard "word" that normalises to several words, or to none, is never the expected word.
+ */
+export function isSameWordHeard(heard: string, expected: string): boolean {
+  const heardWords = normalizeArabic(heard);
+  const expectedWords = normalizeArabic(expected);
+  if (heardWords.length !== 1 || expectedWords.length !== 1) return false;
+  const similarity = wordSimilarity(
+    toComparableWord(heardWords[0] ?? ''),
+    toComparableWord(expectedWords[0] ?? ''),
+  );
+  return isCloseEnough(similarity);
+}

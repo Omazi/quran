@@ -77,13 +77,6 @@ export const READER_CONFIG = Object.freeze({
   justifyUpToScale: 1.2,
 
   /**
-   * The size of the simple script against the Uthmani text's: Amiri draws its letters larger than
-   * the King Fahd font at the same size; at this share the two read at the same size by eye
-   * (compared on the web screenshots of Al-Kahf). Judgment.
-   */
-  simpleScriptScale: 0.93,
-
-  /**
    * The end-of-verse mark of the simple script: the verse number in Arabic-Indic digits between
    * the ornate parentheses of Unicode (U+FD3F, U+FD3E), first the one that opens on the right.
    * The simple font has no verse-mark glyph of its own, unlike the King Fahd font.

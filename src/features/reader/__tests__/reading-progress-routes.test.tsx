@@ -44,8 +44,7 @@ jest.mock('expo-notifications', () => ({
     )
     .loadQuietly(),
   // The root layout keeps the reminders scheduled and listens to taps: no system behind it here
-  // (the same stand-ins as app-routes.test.tsx; without them the taps' listener has nothing to
-  // remove when the app closes).
+  // (the same stubs as app-routes.test.tsx).
   getPermissionsAsync: jest.fn(async () => ({ status: 'undetermined', granted: false })),
   getAllScheduledNotificationsAsync: jest.fn(async () => []),
   scheduleNotificationAsync: jest.fn(async () => 'id'),
@@ -266,7 +265,7 @@ describe('pages read in the reader, seen on the tabs', () => {
     expect(
       within(await screen.findByTestId('profile-figure-pages')).getByText(`${pageCount}`),
     ).toBeOnTheScreen();
-    expect(screen.getByTestId('profile-figure-hasanat')).toHaveTextContent(/[1-9]/);
+    expect(screen.getByTestId('profile-hero-value')).toHaveTextContent(/[1-9]/);
     // The time is handed over to the store by batches of a minute (D37): some minutes are there.
     expect(screen.getByTestId('profile-figure-readingTime')).toHaveTextContent(/[1-9] min/);
 

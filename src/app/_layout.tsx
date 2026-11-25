@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 import { createDeviceProgressBackup, deviceStorage } from '@/data/storage';
 import { LaunchOverlay, useLaunch } from '@/features/launch';
+import { createSyncClock } from '@/data/sync';
 import { useForegroundTimeRecording } from '@/features/profile';
 import { useNotificationTaps, useReminderSync } from '@/features/reminders';
 import {
@@ -14,6 +15,7 @@ import {
   useAppStartup,
   type StartupDependencies,
 } from '@/features/settings';
+import { SyncProvider, useAppSync, type AppSyncDependencies } from '@/features/sync';
 import { AppStoreProvider } from '@/store';
 import { appFonts, useColors } from '@/ui';
 
@@ -23,14 +25,24 @@ void SplashScreen.preventAutoHideAsync();
 
 const hideSplash = () => SplashScreen.hide();
 const readReducedMotion = () => AccessibilityInfo.isReduceMotionEnabled();
+/** The clock of the sync: the phone's, corrected by the server's once it has answered. */
+const SYNC_CLOCK = createSyncClock();
 
 const STARTUP: StartupDependencies = {
   storage: deviceStorage,
+  now: SYNC_CLOCK.now,
   // The copy of the progress in the person's iCloud, where the app was built with it.
   backup: createDeviceProgressBackup(),
   direction: deviceWritingDirection,
   getDeviceLanguageCodes: () => getLocales().map((locale) => locale.languageCode),
 };
+
+/**
+ * The sync with the person's account (docs/specs/sync.md). `session` stays null until the
+ * sign-in with Supabase exists: the sign-in of the demonstration is not an account. Until then the
+ * progress is saved on the phone (and in its iCloud or Google backup), and the settings say so.
+ */
+const SYNC: AppSyncDependencies = { clock: SYNC_CLOCK, session: null };
 
 /**
  * Root of the app. It starts everything the first screen needs (the Quran fonts, the saved
@@ -43,6 +55,7 @@ export default function RootLayout() {
   // The interface uses the system fonts: a Quran font that fails to load must not block the app.
   const [areFontsLoaded, fontError] = useFonts(appFonts);
   const startedApp = useAppStartup(STARTUP);
+  const sync = useAppSync(startedApp?.store ?? null, SYNC);
   const isReady = startedApp !== null && (areFontsLoaded || fontError !== null);
 
   const launch = useLaunch({ isReady, hideSplash, readReducedMotion });
@@ -51,7 +64,9 @@ export default function RootLayout() {
     <View style={styles.root}>
       {isReady ? (
         <AppStoreProvider store={startedApp.store}>
-          <RootStack />
+          <SyncProvider source={sync}>
+            <RootStack />
+          </SyncProvider>
         </AppStoreProvider>
       ) : null}
       {launch.isShown ? (
