@@ -71,10 +71,4 @@ export { IconTile, type IconTileProps, type IconTileTone } from './components/ic
 export { Pill, type PillProps } from './components/pill';
 export { ProgressRing, type ProgressRingProps } from './components/progress-ring';
 export { SectionHeader, type SectionHeaderProps } from './components/section-header';
-export {
-  useColors,
-  useReaderPalette,
-  useReaderPaletteValues,
-  type Colors,
-  type ReaderPalette,
-} from './use-colors';
+export { useReaderPalette, useReaderPaletteValues, type ReaderPalette } from './use-colors';

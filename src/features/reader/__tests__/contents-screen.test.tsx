@@ -349,7 +349,7 @@ describe('the Quran tab', () => {
     await fireEvent.press(screen.getByRole('radio', { name: 'Juz' }));
     const title = screen.getByText('Juz 3');
     expect(styleOf(title)).toMatchObject({
-      fontFamily: fontFamily.serif,
+      fontFamily: textStyles.title2.fontFamily,
       fontSize: textStyles.title2.fontSize,
       color: appColors.ink.light,
     });
