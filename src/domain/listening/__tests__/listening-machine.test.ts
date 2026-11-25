@@ -145,6 +145,15 @@ describe('when the engine stops by itself', () => {
     expect(state).toMatchObject({ status: 'ambiguous', passages: { candidates: TIED } });
   });
 
+  it('lists the tied places in the order of the mushaf, whatever order the search gave', () => {
+    // The search ranks tied places by score first (see recognition/verse-index.ts): for
+    // "الحمد لله رب العالمين" it gives 1, 10, 39, 40, 6, 37. A list of equals reads like the book.
+    const searchOrder = [1, 10, 39, 40, 6, 37].map((surah) => passage(surah, 2));
+    const result: SearchResult = { status: 'ambiguous', candidates: searchOrder, tiedCount: 6 };
+    const state = after(...LISTENING, heard(4, result), ENDED);
+    expect(state).toMatchObject({ status: 'ambiguous', passages: { candidates: TIED } });
+  });
+
   it('says when the list of tied places is cut, and how many there are in all', () => {
     const cut: SearchResult = {
       status: 'ambiguous',

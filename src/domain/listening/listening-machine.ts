@@ -151,13 +151,23 @@ function conclude({ heardWordCount, latestResult }: Listening): ListeningState {
     return { status: 'not-found', reason: latestResult.reason };
   }
   // The tied places come first in the candidates; the lower-ranked ones after them are not
-  // places the words were found at, and are left out.
+  // places the words were found at, and are left out. The search ranks tied places by score
+  // before mushaf order, so they are put back in the order of the book: a list of equals must
+  // not look ranked.
   return {
     status: 'ambiguous',
     passages: {
-      candidates: latestResult.candidates.slice(0, latestResult.tiedCount),
+      candidates: [...latestResult.candidates.slice(0, latestResult.tiedCount)].sort(inMushafOrder),
       totalCount: latestResult.tiedCount,
       isComplete: latestResult.truncated !== true,
     },
   };
+}
+
+function inMushafOrder(first: PassageCandidate, second: PassageCandidate): number {
+  return (
+    first.start.surah - second.start.surah ||
+    first.start.verse - second.start.verse ||
+    first.start.word - second.start.word
+  );
 }

@@ -12,7 +12,10 @@ const structure = {
   },
 };
 
-function candidate(start: [number, number, number], end: [number, number, number]): PassageCandidate {
+function candidate(
+  start: [number, number, number],
+  end: [number, number, number],
+): PassageCandidate {
   const [surah, verse, word] = start;
   const [endSurah, endVerse, endWord] = end;
   return {
