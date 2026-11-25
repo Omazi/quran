@@ -39,6 +39,17 @@ export const appColors = {
   inkSecondary: { light: '#6A6966', dark: '#A5A094' },
   /** Ornaments of the mushaf, in content only. */
   ornament: { light: '#8F611A', dark: '#D9A441' },
+  /**
+   * The lines of an ornament drawn thin, never a word or an icon: the gold of the validated
+   * listening rosette, #CE9A3C by day (2.36:1 on paper, a decoration that carries no
+   * information). At night it is the night ornament. Approved by the owner with D27 and D29.
+   */
+  ornamentLine: { light: '#CE9A3C', dark: '#D9A441' },
+  /**
+   * Water at its high-contrast value in both appearances, whatever the contrast setting: the
+   * star at the heart of the listening rosette (D29). Equal to `highContrastAppColors.accent`.
+   */
+  accentStrong: { light: '#0A4F59', dark: '#8FE0EA' },
 } as const satisfies Record<string, ColorPair>;
 
 /**
@@ -51,6 +62,8 @@ export const highContrastAppColors = {
   accent: { light: '#0A4F59', dark: '#8FE0EA' },
   growth: { light: '#164F36', dark: '#8FE0B4' },
   ornament: { light: '#6A470F', dark: '#EBC272' },
+  /** The ornament's own row of the charter: a line asked to stand out takes the same values. */
+  ornamentLine: { light: '#6A470F', dark: '#EBC272' },
 } as const satisfies Partial<Record<keyof typeof appColors, ColorPair>>;
 
 /**
@@ -97,6 +110,8 @@ export type IconColorRole = Exclude<
   | 'separator'
   | 'fill'
   | 'paper'
+  | 'ornamentLine'
+  | 'accentStrong'
 >;
 
 /**
@@ -188,6 +203,11 @@ export interface TextStyleToken {
 export const textStyles = {
   /** Screen title. */
   largeTitle: { fontFamily: fontFamily.serif, fontSize: 34, lineHeight: 41, fontWeight: '700' },
+  /**
+   * The one word an immersive screen says ("À l'écoute…"): 36 points in regular weight, as in
+   * the prototype the owner validated (D27, D29). Scales as a large title.
+   */
+  displayTitle: { fontFamily: fontFamily.serif, fontSize: 36, lineHeight: 40, fontWeight: '400' },
   /** Title of an onboarding page or of a group. */
   title2: { fontFamily: fontFamily.serif, fontSize: 22, lineHeight: 28, fontWeight: '700' },
   /** Important label. */
@@ -210,6 +230,7 @@ export type AppleTextStyle = NonNullable<TextProps['dynamicTypeRamp']>;
  */
 export const appleTextStyles = {
   largeTitle: 'largeTitle',
+  displayTitle: 'largeTitle',
   title2: 'title2',
   headline: 'headline',
   body: 'body',

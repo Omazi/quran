@@ -1,5 +1,5 @@
 /**
- * The arithmetic of the page zoom (docs/specs/reader.md, section 2; deviation 30 of the design
+ * The arithmetic of the page zoom (docs/specs/reader.md, section 2; deviation 34 of the design
  * register). Pure functions, marked as worklets so the gestures can call them on the UI thread.
  * Offsets are measured from the centre of the page, which is the origin of its scale.
  */

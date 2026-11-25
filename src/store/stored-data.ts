@@ -12,21 +12,30 @@ import {
 } from '@/domain/khatm';
 import { PAGE_COUNT } from '@/domain/quran';
 import { compareLocalDates, isLocalDate, type LocalDate } from '@/domain/shared/local-date';
+import { isDaySeconds, type SecondsByDay } from '@/domain/stats';
 import { isSupportedLanguage } from '@/i18n';
 
 import {
   DAILY_GOAL_RANGE,
   DEFAULT_REMINDERS,
+  EMPTY_TIME_SPENT,
   LAST_HOUR,
   LAST_MINUTE,
   MAX_PAUSES,
+  MAX_TIME_DAYS,
   STORED_DATA_VERSION,
   STORED_DATE_RANGE,
 } from './config';
-import type { AppData, AppSettings, QuietHours, ReminderSettings, ReminderTime } from './types';
+import type {
+  AppDataToWrite,
+  AppSettings,
+  QuietHours,
+  ReminderSettings,
+  ReminderTime,
+} from './types';
 
 /** A part of the stored document that can be kept or discarded on its own. */
-export type StoredDataPart = 'document' | 'settings' | 'journal';
+export type StoredDataPart = 'document' | 'settings' | 'journal' | 'time';
 
 /** What could be read back from the device. */
 export interface StoredDataReading {
@@ -34,6 +43,8 @@ export interface StoredDataReading {
   readonly settings: AppSettings | null;
   /** Null when no usable journal was stored: the journal then starts empty. */
   readonly journal: ReadingJournal | null;
+  /** Null when no usable time counters were stored: the time then starts again from nothing. */
+  readonly timeSpent: SecondsByDay | null;
   /** What was stored but could not be trusted. Empty when all is well, and at the first launch. */
   readonly discarded: readonly StoredDataPart[];
   /** True when the document was written by an older version of the app and has been upgraded. */
@@ -196,34 +207,88 @@ function readJournal(value: unknown): ReadingJournal | null {
   return journal;
 }
 
-/** The version that had no `fridayTime` and no `quietHours` in the reminders. */
-const VERSION_WITHOUT_FRIDAY_TIME = 1;
-/** The version that had no `lastOpenedPage` in the settings. */
-const VERSION_WITHOUT_LAST_OPENED_PAGE = 2;
-
 /**
- * Brings a document written by an older version of the app to the current shape, so that an
- * update of the app never costs a person their settings. What a version did not have takes its
- * default value; everything is then checked like any other document. Null for a version this
- * app does not know.
+ * The time counters: a record of storable days, each with seconds `isDaySeconds` accepts, at most
+ * `MAX_TIME_DAYS` days. Kept or discarded as a whole, like the settings. The time is the one part
+ * whose loss the person is not told about: it is a count, not their reading.
  */
-function upgradeDocument(document: UnknownRecord): UnknownRecord | null {
-  if (document.version === STORED_DATA_VERSION) return document;
-  const { version, settings } = document;
-  if (version !== VERSION_WITHOUT_FRIDAY_TIME && version !== VERSION_WITHOUT_LAST_OPENED_PAGE) {
-    return null;
+export function readTimeSpent(value: unknown): SecondsByDay | null {
+  if (!isRecord(value)) return null;
+  const entries = Object.entries(value);
+  if (entries.length > MAX_TIME_DAYS) return null;
+  const days: [LocalDate, { app: number; reader: number }][] = [];
+  for (const [date, seconds] of entries) {
+    // The key is checked before anything is stored under it: "__proto__" is not a day.
+    if (!isStorableDate(date) || !isDaySeconds(seconds)) return null;
+    days.push([date, { app: seconds.app, reader: seconds.reader }]);
   }
-  if (!isRecord(settings)) return document;
-
-  let upgraded: UnknownRecord = settings;
-  if (version === VERSION_WITHOUT_FRIDAY_TIME && isRecord(settings.reminders)) {
-    const { fridayTime, quietHours } = DEFAULT_REMINDERS;
-    upgraded = { ...upgraded, reminders: { ...settings.reminders, fridayTime, quietHours } };
-  }
-  return { ...document, settings: { ...upgraded, lastOpenedPage: null } };
+  // Built from checked days only: the keys are real dates, so the cast to the branded key is safe.
+  return Object.fromEntries(days) as SecondsByDay;
 }
 
-const NOTHING_USABLE = { settings: null, journal: null, wasUpgraded: false } as const;
+/** The version that had no `fridayTime` and no `quietHours` in the reminders. */
+const VERSION_WITHOUT_FRIDAY_TIME = 1;
+/** The version that had no time counters. */
+const VERSION_WITHOUT_TIME_SPENT = 2;
+/**
+ * The version written by two lines of the app at once: some builds added `timeSpent` to it, others
+ * added `settings.lastOpenedPage`. Its documents are told apart by their shape, not by number.
+ */
+const VERSION_OF_TWO_SHAPES = 3;
+
+/** Version 1 to 2: the reminders get the Friday time and the quiet hours of the defaults. */
+function upgradeFromVersion1(document: UnknownRecord): UnknownRecord {
+  const next = { ...document, version: VERSION_WITHOUT_TIME_SPENT };
+  const { settings } = document;
+  if (!isRecord(settings) || !isRecord(settings.reminders)) return next;
+  const { fridayTime, quietHours } = DEFAULT_REMINDERS;
+  return {
+    ...next,
+    settings: { ...settings, reminders: { ...settings.reminders, fridayTime, quietHours } },
+  };
+}
+
+/** Version 2 to 3: the time counters start empty, whatever the document claims to hold. */
+function upgradeFromVersion2(document: UnknownRecord): UnknownRecord {
+  return { ...document, version: VERSION_OF_TWO_SHAPES, timeSpent: {} };
+}
+
+/**
+ * Version 3 to 4. A version 3 document may lack the time counters (written with only the last
+ * opened page), the last opened page (written with only the time counters), or have both. Each
+ * missing part is added with its default; a part that is present is left untouched, even when it
+ * is wrong, so that the checks that follow decide about it and no valid data is ever replaced.
+ */
+function upgradeFromVersion3(document: UnknownRecord): UnknownRecord {
+  const { settings } = document;
+  let next: UnknownRecord = { ...document, version: STORED_DATA_VERSION };
+  if (next.timeSpent === undefined) next = { ...next, timeSpent: {} };
+  if (isRecord(settings) && settings.lastOpenedPage === undefined) {
+    next = { ...next, settings: { ...settings, lastOpenedPage: null } };
+  }
+  return next;
+}
+
+/**
+ * Brings a document written by an older version of the app to the current shape, one version at a
+ * time, so that an update of the app never costs a person their settings or their reading. What
+ * a version did not have takes its default value; everything is then checked like any other
+ * document. Null for a version this app does not know.
+ */
+function upgradeDocument(document: UnknownRecord): UnknownRecord | null {
+  let current = document;
+  if (current.version === VERSION_WITHOUT_FRIDAY_TIME) current = upgradeFromVersion1(current);
+  if (current.version === VERSION_WITHOUT_TIME_SPENT) current = upgradeFromVersion2(current);
+  if (current.version === VERSION_OF_TWO_SHAPES) current = upgradeFromVersion3(current);
+  return current.version === STORED_DATA_VERSION ? current : null;
+}
+
+const NOTHING_USABLE = {
+  settings: null,
+  journal: null,
+  timeSpent: null,
+  wasUpgraded: false,
+} as const;
 
 /** Reads the stored document. `raw` is the text found on the device, or null when there is none. */
 export function readStoredData(raw: string | null): StoredDataReading {
@@ -245,13 +310,22 @@ export function readStoredDocument(parsed: unknown): StoredDataReading {
 
   const settings = readSettings(document.settings);
   const journal = readJournal(document.journal);
+  // A document without a time part has simply not counted any yet; a damaged one is discarded.
+  const timeSpent =
+    document.timeSpent === undefined ? EMPTY_TIME_SPENT : readTimeSpent(document.timeSpent);
   const discarded: StoredDataPart[] = [];
   if (settings === null) discarded.push('settings');
   if (journal === null) discarded.push('journal');
-  return { settings, journal, discarded, wasUpgraded: document !== parsed };
+  if (timeSpent === null) discarded.push('time');
+  return { settings, journal, timeSpent, discarded, wasUpgraded: document !== parsed };
 }
 
 /** The text to keep on the device for this data. Only the data is written, never the actions. */
-export function writeStoredData({ settings, journal }: AppData): string {
-  return JSON.stringify({ version: STORED_DATA_VERSION, settings, journal });
+export function writeStoredData({ settings, journal, timeSpent }: AppDataToWrite): string {
+  return JSON.stringify({
+    version: STORED_DATA_VERSION,
+    settings,
+    journal,
+    timeSpent: timeSpent ?? EMPTY_TIME_SPENT,
+  });
 }

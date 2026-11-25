@@ -18,8 +18,9 @@ composition des écrans.
 
 À savoir :
 
-- **Le dessin du jardin est provisoire.** Le style final n'est pas choisi ; le rendu est
-  un composant remplaçable qui affiche un `GardenState`.
+- **Le jardin des maquettes est un dessin de référence.** L'appli le montre en images
+  rendues à partir des modèles 3D choisis (D35) ; le rendu reste un composant remplaçable
+  qui affiche un `GardenState`.
 - Les boutons « Continuer avec Apple / Google » de l'écran de bienvenue appartiennent au
   lot 3 (comptes). Au lot 1, l'appli démarre sans compte.
 - Couleurs, typographies et espacements : `src/ui/tokens.ts` fait foi, pas les captures.

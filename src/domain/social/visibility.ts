@@ -29,8 +29,8 @@ function assertPersonData(data: PersonData): void {
  *
  * - The person themselves: everything.
  * - Blocked, in either direction: `null`, nothing at all (not even the name).
- * - An accepted friend: the name; the garden if `showGarden`; the level and badges if
- *   `showLevel`. A pending or declined request is not a friendship.
+ * - An accepted friend: the name; the garden if `showGarden`; the level, badges and reading
+ *   counters (words, verses, hasanat estimate) if `showLevel`. A pending or declined request is not a friendship.
  * - Anyone else: the name only.
  *
  * A friend sees at most the fields of `SharedGarden` and `SharedLevel`: they hold no page
@@ -65,7 +65,14 @@ export function viewOf(owner: PersonData, viewerId: UserId, bond: Bond): PersonV
       : null;
   const sharedLevel: SharedLevel | null =
     profile.showLevel && garden !== null
-      ? { level: garden.level, badgeCount: garden.badgeCount, badges }
+      ? {
+          level: garden.level,
+          badgeCount: garden.badgeCount,
+          badges,
+          wordsRead: garden.wordsRead,
+          versesRead: garden.versesRead,
+          hasanatEstimate: garden.hasanatEstimate,
+        }
       : null;
 
   return {

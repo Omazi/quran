@@ -13,6 +13,7 @@ import type {
   LeaderboardPeriod,
   NamedLeaderboardEntry,
   NudgeKind,
+  PersonSearchResult,
   PersonView,
   Profile,
   ProfileChanges,
@@ -74,6 +75,13 @@ export interface SocialRepository {
   listFriendRequests(): Promise<FriendRequests>;
   /** What I see of a person; null when a block separates us. */
   getPersonView(userId: UserId): Promise<PersonView | null>;
+
+  /**
+   * People whose name starts like `query` (rule 11), at most 20, never me nor anyone blocked
+   * either way. A refused query is a `SocialRuleError`; too many searches in a minute is
+   * `too-many-searches` (the server counts them).
+   */
+  searchPeople(query: string): Promise<readonly PersonSearchResult[]>;
 
   sendFriendRequest(toId: UserId): Promise<void>;
   acceptFriendRequest(fromId: UserId): Promise<void>;

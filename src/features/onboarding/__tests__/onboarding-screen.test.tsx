@@ -182,6 +182,22 @@ describe('first-launch flow', () => {
     },
   );
 
+  it('gives the scene the top of the page, edge to edge, and the same height on every page', async () => {
+    await renderOnboarding();
+    const page = screen.getAllByTestId('onboarding-page')[0];
+    if (page === undefined) throw new Error('No page.');
+    const scene = page.queryAll((element) => element.props.accessibilityRole === 'image')[0];
+    const sceneFrame = scene?.parent;
+    if (sceneFrame === undefined) throw new Error('The page has no scene.');
+    if (sceneFrame === null) throw new Error('The scene has no frame.');
+    // Before the page is measured the scene takes what the words leave.
+    expect(styleOf(sceneFrame).flexGrow).toBe(1);
+    await fireEvent(page, 'layout', { nativeEvent: { layout: { ...WINDOW, height: 800 } } });
+    expect(styleOf(sceneFrame).height).toBe(480);
+    // No side margin on the scene: only the words have one.
+    expect(styleOf(page).paddingHorizontal).toBeUndefined();
+  });
+
   it('has a title and a sentence on every page of the full flow', () => {
     expect(SCENES_AND_TITLES).toHaveLength(ONBOARDING_PAGES_FULL.length);
   });

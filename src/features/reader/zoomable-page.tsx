@@ -38,7 +38,7 @@ export interface ZoomablePageProps {
 const ZOOMED_EPSILON = 0.01;
 
 /**
- * A page that can be enlarged like an image (spec 2, deviation 30 of the register): pinch to
+ * A page that can be enlarged like an image (spec 2, deviation 34 of the register): pinch to
  * zoom, double tap to zoom in and back out (gestures.md › Standard gestures: double tap and
  * zoom), drag to move around the enlarged page. The scale stays between the page's size and
  * `READER_CONFIG.zoom.maximumScale` (scroll-views.md › Best practices). At the page's size, a

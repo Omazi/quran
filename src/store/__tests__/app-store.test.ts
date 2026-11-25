@@ -388,6 +388,7 @@ describe('storage that cannot be trusted', () => {
     expect(stored(storage)).toEqual({
       settings: store.getState().settings,
       journal: [],
+      timeSpent: {},
       discarded: [],
       wasUpgraded: false,
     });
@@ -652,6 +653,7 @@ describe('telling the person, once, that something was lost', () => {
       version: STORED_DATA_VERSION,
       settings: SOUND_SETTINGS,
       journal: [],
+      timeSpent: {},
     });
   });
 });

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 
-import { Placeholder } from '@/ui';
+import { Placeholder, layout } from '@/ui';
 
 import type { OnboardingScene } from './pages';
 
@@ -74,5 +74,6 @@ function sceneName(scene: OnboardingScene, t: TFunction<'onboarding'>): string {
 }
 
 const styles = StyleSheet.create({
-  scene: { flex: 1 },
+  // The garden runs to the side edges; a placeholder, which stands for a feature, keeps the margin.
+  scene: { flex: 1, marginHorizontal: layout.screenMargin },
 });

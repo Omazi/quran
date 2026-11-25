@@ -4,6 +4,7 @@ import {
   StyleSheet,
   View,
   type LayoutChangeEvent,
+  type ViewProps,
   type ListViewToken,
 } from 'react-native';
 
@@ -24,6 +25,8 @@ const SHOWN_PAGE_COVERAGE_PERCENT = 51;
  * same in a right-to-left interface, where the list starts from the right. Moving to a page
  * asked from outside (the indicator, a screen reader) slides, or jumps when the person asked
  * the device to reduce motion (accessibility.md › Cognitive).
+ *
+ * Every page has the width and the height of the pager, as the pages of the system pager have.
  */
 export function Pager({
   pageCount,
@@ -97,6 +100,7 @@ export function Pager({
             initialScrollIndex={page}
             getItemLayout={(_data, index) => ({ length: width, offset: width * index, index })}
             keyExtractor={String}
+            CellRendererComponent={PageCell}
             renderItem={({ item }) => <View style={{ width }}>{renderPage(item)}</View>}
             viewabilityConfigCallbackPairs={viewabilityPairs}
             // A person who starts to drag takes over from any slide in progress.
@@ -118,7 +122,26 @@ export function Pager({
   );
 }
 
+/**
+ * The frame of a page in the list. A list of pages does not give its cells the height of the
+ * list on every platform (on the web a cell is only as high as its content): without this a page
+ * that lays itself out in the height it is given, a scene above its words, gets the height of
+ * its content instead. The page has no height of its own written here: it takes the list's.
+ */
+function PageCell({
+  children,
+  style,
+  onLayout,
+}: Pick<ViewProps, 'children' | 'style' | 'onLayout'>) {
+  return (
+    <View style={[style, styles.pageCell]} onLayout={onLayout}>
+      {children}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   pager: { flex: 1 },
+  pageCell: { flex: 1 },
   pages: { flex: 1 },
 });

@@ -146,6 +146,33 @@ describe('Demonstration of accounts and friends', () => {
       ).toBe('Abu Omar');
     });
 
+    it('a friend sees the reading counters of the demonstration people, as numbers that fit their gardens', async () => {
+      const { demo } = await signedIn();
+
+      const seen = await demo.repository.getPersonView(taghread);
+      // Taghread has finished one whole khatma: 77,430 words and 6,236 verses.
+      expect(seen).toMatchObject({
+        level: { wordsRead: 77_430, versesRead: 6236, hasanatEstimate: 3_329_490 },
+      });
+      for (const person of [mustapha, sarah, taghread]) {
+        const view = await demo.repository.getPersonView(person);
+        if (view === null || view.kind !== 'friend' || view.level === null)
+          throw new Error('Expected a friend with a level');
+        expect(Number.isSafeInteger(view.level.wordsRead)).toBe(true);
+        expect(view.level.versesRead).toBeLessThan(view.level.wordsRead);
+        expect(view.level.hasanatEstimate).toBeGreaterThan(view.level.wordsRead);
+      }
+    });
+
+    it('hiding the level hides the reading counters from friends too (rule 4)', async () => {
+      const { demo } = await signedIn();
+      await demo.repository.updateMyProfile({ showLevel: false });
+
+      const seenBySarah = await demo.repositoryAs(sarah).getPersonView(omar);
+
+      expect(JSON.stringify(seenBySarah)).not.toMatch(/wordsRead|versesRead|hasanatEstimate/);
+    });
+
     it('hiding the garden hides it from friends at once (rule 4)', async () => {
       const { demo } = await signedIn();
       await demo.repository.updateMyProfile({ showGarden: false, showLevel: false });
@@ -153,6 +180,58 @@ describe('Demonstration of accounts and friends', () => {
       const seenBySarah = await demo.repositoryAs(sarah).getPersonView(omar);
 
       expect(seenBySarah).toMatchObject({ kind: 'friend', garden: null, level: null });
+    });
+  });
+
+  describe('search by name (rule 11)', () => {
+    it('finds a friend and a waiting request by the start of the name, with the relation', async () => {
+      const { demo } = await signedIn();
+
+      expect(await demo.repository.searchPeople('sa')).toEqual([
+        { userId: sarah, displayName: 'Sarah', relation: 'friend' },
+      ]);
+      expect(await demo.repository.searchPeople(' YA ')).toEqual([
+        { userId: yacine, displayName: 'Yacine', relation: 'request-received' },
+      ]);
+    });
+
+    it('never finds oneself', async () => {
+      const { demo } = await signedIn();
+
+      expect(await demo.repository.searchPeople('omar')).toEqual([]);
+    });
+
+    it('a refused query is a refusal of the rule, and nothing is searched', async () => {
+      const { demo } = await signedIn();
+
+      await refusedWith(() => demo.repository.searchPeople('o'), 'search-query-too-short');
+      await refusedWith(
+        () => demo.repository.searchPeople('a\nb'),
+        'search-query-forbidden-character',
+      );
+    });
+
+    it('a stranger is found with relation none, and the request I send shows as sent', async () => {
+      const { demo } = await signedIn();
+      const mustaphas = demo.repositoryAs(mustapha);
+
+      expect(await mustaphas.searchPeople('yac')).toEqual([
+        { userId: yacine, displayName: 'Yacine', relation: 'none' },
+      ]);
+      await mustaphas.sendFriendRequest(yacine);
+      expect((await mustaphas.searchPeople('yac'))[0]?.relation).toBe('request-sent');
+    });
+
+    it('a block hides both people from each other, whoever blocked', async () => {
+      const { demo } = await signedIn();
+      await demo.repository.blockPerson(sarah);
+
+      expect(await demo.repository.searchPeople('sa')).toEqual([]);
+      expect(await demo.repositoryAs(sarah).searchPeople('om')).toEqual([]);
+      // Others are not affected.
+      expect((await demo.repositoryAs(mustapha).searchPeople('sa')).map((r) => r.userId)).toEqual([
+        sarah,
+      ]);
     });
   });
 
@@ -511,6 +590,9 @@ describe('Demonstration of accounts and friends', () => {
         lastWateredOn: START,
         streakDays: 6,
         badgeCount: 1,
+        wordsRead: 99_367,
+        versesRead: 8000,
+        hasanatEstimate: 4_272_781,
       });
 
       const view = await demo.repositoryAs(mustapha).getPersonView(omar);
@@ -532,6 +614,9 @@ describe('Demonstration of accounts and friends', () => {
           lastWateredOn: START,
           streakDays: 6,
           badgeCount: 1,
+          wordsRead: 99_367,
+          versesRead: 8000,
+          hasanatEstimate: 4_272_781,
         }),
       ).rejects.toThrow(RangeError);
       await expect(

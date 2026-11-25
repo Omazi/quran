@@ -17,6 +17,7 @@ import {
   removeFriendship,
   replaceBond,
   requestFriendship,
+  searchPeople,
   sendNudge,
   SocialRuleError,
   toBadges,
@@ -185,6 +186,13 @@ export function createDemoRepository(options: DemoRepositoryOptions): SocialRepo
 
     async getPersonView(userId) {
       return otherView(userId);
+    },
+
+    async searchPeople(query) {
+      const candidates = store.data.profiles
+        .filter((profile) => profile.id !== me())
+        .map((profile) => ({ profile, bond: bondWith(profile.id) }));
+      return searchPeople(me(), query, candidates);
     },
 
     async sendFriendRequest(toId) {

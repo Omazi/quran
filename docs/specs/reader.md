@@ -58,7 +58,7 @@ données sont incohérentes donne un état d'erreur clair, jamais un texte parti
   un cadre orné demande une image, et il n'y en a pas (D12, charte « Icônes et images »).
 - La taille du texte de la page suit la largeur de l'écran, pas le réglage de taille de
   texte : la page est un contenu composé, comme une image. C'est un écart à
-  `typography.md › Supporting Dynamic Type`, inscrit au registre (écart 30) : la page s’agrandit par le zoom. Les
+  `typography.md › Supporting Dynamic Type`, inscrit au registre (écart 34) : la page s’agrandit par le zoom. Les
   barres et le sommaire, eux, suivent le réglage.
 - Seules la page courante et ses voisines sont montées. Les données se chargent par
   tranches, à la demande. Tourner une page doit rester fluide sur un iPhone X.

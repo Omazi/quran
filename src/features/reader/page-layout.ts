@@ -59,7 +59,7 @@ function metricsOf(fontSize: number, lineHeight: number, textWidth: number): Pag
  * The size of the page text, from the room the screen gives: as wide as the column allows (see
  * `READER_CONFIG.lineWidthInEm`), unless the 15 lines would then not fit in the height. The text
  * size setting of the person is not read: the page is composed like an image, and enlarged by
- * zoom (spec 2, deviation 30).
+ * zoom (spec 2, deviation 34).
  */
 export function computePageMetrics(area: PageArea): PageMetrics {
   const { textWidth, linesHeight } = columnOf(area);

@@ -43,6 +43,12 @@ export interface GardenSummary {
   readonly lastWateredOn: LocalDate | null;
   readonly streakDays: number;
   readonly badgeCount: number;
+  /** Words read since the beginning, all khatmas together. A whole number, 0 or more. */
+  readonly wordsRead: number;
+  /** Verses read since the beginning. */
+  readonly versesRead: number;
+  /** Estimated hasanat since the beginning (letters read x 10): an estimate, never a promise. */
+  readonly hasanatEstimate: number;
   readonly updatedOn: LocalDate;
 }
 
@@ -166,6 +172,9 @@ export interface GardenSummaryInput {
   readonly lastWateredOn: LocalDate | null;
   readonly streakDays: number;
   readonly badgeCount: number;
+  readonly wordsRead: number;
+  readonly versesRead: number;
+  readonly hasanatEstimate: number;
 }
 
 /** A completed khatma, as my app publishes it. */
@@ -205,7 +214,7 @@ export interface SelfView {
   readonly badges: readonly Badge[];
 }
 
-/** The garden of a friend, without what belongs to the level (level and badge count). */
+/** The garden of a friend, without what belongs to the level (level, badge count and reading counters). */
 export interface SharedGarden {
   readonly hizbCompleted: number;
   readonly health: number;
@@ -214,10 +223,13 @@ export interface SharedGarden {
   readonly updatedOn: LocalDate;
 }
 
-/** The level and badges of a friend. */
+/** The level, badges and reading counters of a friend: all follow `showLevel`. */
 export interface SharedLevel {
   readonly level: number;
   readonly badgeCount: number;
+  readonly wordsRead: number;
+  readonly versesRead: number;
+  readonly hasanatEstimate: number;
   readonly badges: readonly Badge[];
 }
 
@@ -241,6 +253,16 @@ export interface OtherView {
 
 /** What `viewOf` gives; `null` stands for "nothing at all", between people a block separates. */
 export type PersonView = SelfView | FriendView | OtherView;
+
+/** What a person I found by name is to me. A declined request shows as `none`: no one is told. */
+export type SearchRelation = 'none' | 'friend' | 'request-sent' | 'request-received';
+
+/** One line of a search by name (rule 11): the name and the relation, nothing else. */
+export interface PersonSearchResult {
+  readonly userId: UserId;
+  readonly displayName: string;
+  readonly relation: SearchRelation;
+}
 
 /** A request waiting for an answer, as one of the two people sees it. */
 export interface FriendRequestView {

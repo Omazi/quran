@@ -12,8 +12,10 @@ skill Apple Design (étapes 1 à 3). Voir [SKILLS.md](SKILLS.md).
 - **Rôle de l'interface** : s'effacer devant deux contenus, la page du mushaf et le
   jardin. Tout le reste est du système.
 - **Signature** : le jardin. C'est le seul endroit où l'on met 120 % d'effort
-  (SwiftUI Design, étape 4). Tant que ses vrais modèles n'existent pas, la signature est
-  un emplacement neutre, et on l'assume.
+  (SwiftUI Design, étape 4). Depuis D35, il s'affiche en images rendues à partir des modèles
+  3D choisis par le propriétaire (D22), pas dessinées en code (D12 reste vrai). Il court d'un
+  bord à l'autre de l'écran, sans cadre. Une image absente donne l'emplacement neutre et
+  nommé.
 
 ## 2. Trois directions
 
@@ -59,6 +61,14 @@ les couleurs de l'appli passent à ces valeurs.
 | `growth`   | `#164F36` | 9,52:1 sur blanc  | `#8FE0B4` | 13,49:1 sur noir          |
 | `ornament` | `#6A470F` | 7,78:1 sur papier | `#EBC272` | 10,44:1 sur papier sombre |
 
+Deux rôles de plus, hors des tableaux, ajoutés avec l'écran d'écoute validé par le
+propriétaire (D27, D29 ; écart 33 du registre). `ornamentLine` : les filets d'ornement
+dessinés fin, jamais un mot ni une icône ; clair `#CE9A3C` (2,36:1 sur papier : une
+décoration qui ne porte aucune information), sombre `#D9A441` (celui de `ornament`), contraste
+élevé `#6A470F` / `#EBC272` (la ligne `ornament` ci-dessus). `accentStrong` : l'eau à sa valeur
+de contraste élevé dans tous les réglages, `#0A4F59` clair, `#8FE0EA` sombre, pour l'étoile du
+cœur de la rosace ; elle n'a pas de variante à elle.
+
 Soif et alerte : orange système, pour l'icône et la jauge seulement ; le mot qui
 l'accompagne reste dans la couleur du texte, parce que l'orange n'est pas assez lisible
 sur fond clair (`accessibility.md › Vision`). Action destructive : rouge système. Aucune information
@@ -76,14 +86,15 @@ Deux familles, toutes deux du système (`typography.md` ; SwiftUI Design, règle
 embarquées ne servent qu'au texte du Coran. Quatre tailles au plus par écran. Tailles
 d'Apple, qui suivent le réglage de taille de texte de la personne :
 
-| Style       | Taille / interligne     | Usage                                        |
-| ----------- | ----------------------- | -------------------------------------------- |
-| Large Title | 34 / 41, gras, New York | Titre d'écran                                |
-| Title 2     | 22 / 28, gras, New York | Titre de page du premier lancement, de carte |
-| Headline    | 17 / 22, demi-gras      | Libellé important                            |
-| Body        | 17 / 22                 | Texte                                        |
-| Subhead     | 15 / 20                 | Texte secondaire                             |
-| Footnote    | 13 / 18                 | Notes, légendes                              |
+| Style         | Taille / interligne       | Usage                                                              |
+| ------------- | ------------------------- | ------------------------------------------------------------------ |
+| Large Title   | 34 / 41, gras, New York   | Titre d'écran                                                      |
+| Display Title | 36 / 40, normal, New York | Le mot d'un écran immersif (écran d’écoute ; écart 33 du registre) |
+| Title 2       | 22 / 28, gras, New York   | Titre de page du premier lancement, de carte                       |
+| Headline      | 17 / 22, demi-gras        | Libellé important                                                  |
+| Body          | 17 / 22                   | Texte                                                              |
+| Subhead       | 15 / 20                   | Texte secondaire                                                   |
+| Footnote      | 13 / 18                   | Notes, légendes                                                    |
 
 Minimum 11 points, pas de graisse fine (`typography.md › Ensuring legibility`).
 
@@ -109,7 +120,8 @@ animations » (`motion.md › Best practices`). Rien d'autre que les animations 
 ### Icônes et images
 
 SF Symbols, de la graisse du texte voisin (`sf-symbols.md › Weights and scales`). Pas d'emoji, pas
-d'illustration dessinée en code. Image manquante = emplacement neutre et nommé.
+d'illustration dessinée en code. Le jardin est la seule image : des rendus de modèles 3D (D35). Image manquante = emplacement
+neutre et nommé.
 
 ### Voix
 
@@ -120,7 +132,8 @@ titres, comme le système.
 
 ## 4. Ce qui manque encore
 
-- Le style et les modèles du jardin (voir D12).
+- Le moteur 3D du jardin : faire tourner le jardin et visiter celui d'un proche (D4, D35).
+  Les jardins des autres niveaux (D23). Le jardin en images est celui du niveau 1.
 - La présentation du texte du Coran : à revoir avec le propriétaire.
 - Le nom de l'appli et son icône.
 - Version iPad (largeur « regular ») : lot ultérieur ; le lot 1 vise l'iPhone.

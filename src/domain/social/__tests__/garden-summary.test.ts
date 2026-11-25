@@ -17,6 +17,9 @@ const INPUT: GardenSummaryInput = {
   lastWateredOn: day('2026-11-23'),
   streakDays: 4,
   badgeCount: 1,
+  wordsRead: 99_367,
+  versesRead: 8000,
+  hasanatEstimate: 4_272_781,
 };
 
 function withInput(
@@ -35,6 +38,9 @@ describe('Rule 5 — garden summary (toGardenSummary)', () => {
       lastWateredOn: day('2026-11-23'),
       streakDays: 4,
       badgeCount: 1,
+      wordsRead: 99_367,
+      versesRead: 8000,
+      hasanatEstimate: 4_272_781,
       updatedOn: TODAY,
     };
 
@@ -53,12 +59,15 @@ describe('Rule 5 — garden summary (toGardenSummary)', () => {
       [
         'badgeCount',
         'health',
+        'hasanatEstimate',
         'hizbCompleted',
         'lastWateredOn',
         'level',
         'streakDays',
         'updatedOn',
         'userId',
+        'versesRead',
+        'wordsRead',
       ].sort(),
     );
     expect(JSON.stringify(toGardenSummary(OMAR, crowded, TODAY))).not.toMatch(/page|At"/);
@@ -89,6 +98,17 @@ describe('Rule 5 — garden summary (toGardenSummary)', () => {
     ).toThrow(RangeError);
   });
 
+  it('accepts the edges of the reading counters: all zero, and the largest safe integer', () => {
+    const zero = { wordsRead: 0, versesRead: 0, hasanatEstimate: 0 };
+    expect(toGardenSummary(OMAR, withInput(zero), TODAY)).toMatchObject(zero);
+    const largest = {
+      wordsRead: Number.MAX_SAFE_INTEGER,
+      versesRead: Number.MAX_SAFE_INTEGER,
+      hasanatEstimate: Number.MAX_SAFE_INTEGER,
+    };
+    expect(toGardenSummary(OMAR, withInput(largest), TODAY)).toMatchObject(largest);
+  });
+
   describe('invalid input', () => {
     it.each([
       ['hizbCompleted below 0', { hizbCompleted: -1 }],
@@ -102,9 +122,24 @@ describe('Rule 5 — garden summary (toGardenSummary)', () => {
       ['a negative streak', { streakDays: -1 }],
       ['a streak that is infinite', { streakDays: Number.POSITIVE_INFINITY }],
       ['a negative badge count', { badgeCount: -1 }],
+      ['a negative number of words read', { wordsRead: -1 }],
+      ['a fractional number of words read', { wordsRead: 1.5 }],
+      ['a number of words read beyond a safe integer', { wordsRead: Number.MAX_SAFE_INTEGER + 1 }],
+      ['a negative number of verses read', { versesRead: -1 }],
+      ['a fractional number of verses read', { versesRead: 0.5 }],
+      ['verses read that are NaN', { versesRead: Number.NaN }],
+      ['a negative hasanat estimate', { hasanatEstimate: -10 }],
+      ['a hasanat estimate that is infinite', { hasanatEstimate: Number.POSITIVE_INFINITY }],
       ['an impossible last watered day', { lastWateredOn: IMPOSSIBLE_DAY }],
     ])('refuses %s with a RangeError', (_label, changes) => {
       expect(() => toGardenSummary(OMAR, withInput(changes), TODAY)).toThrow(RangeError);
+    });
+
+    it('refuses a reading counter given as text, or missing, with a TypeError', () => {
+      expect(() => toGardenSummary(OMAR, withInput({ wordsRead: '10' }), TODAY)).toThrow(TypeError);
+      expect(() => toGardenSummary(OMAR, withInput({ hasanatEstimate: undefined }), TODAY)).toThrow(
+        TypeError,
+      );
     });
 
     it('refuses a number given as text with a TypeError', () => {

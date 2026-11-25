@@ -50,8 +50,8 @@ function Layer({ asset, transitionMs }: { asset: number | undefined; transitionM
  * a size, nothing else: the day a 3D engine exists, only this component changes.
  *
  * It shows the picture of the level-1 garden that matches the state (`gardenPicture`): the dry
- * garden, the water laid over it, and, while a hizb is being read, the picture of one more
- * element at the opacity it has grown to. Only those images are loaded. When the state jumps
+ * garden and the water laid over it. An element appears only when its hizb is complete: nothing
+ * is drawn half-grown (D35); the growth in progress is in the words. Only those images are loaded. When the state jumps
  * several steps the pictures in between are shown in order (D26); with "reduce motion" the final
  * one comes at once. When the set lacks a picture the state needs, a neutral named placeholder
  * stands in, never a broken image. The accessibility label says the state in words either way
@@ -88,18 +88,6 @@ export function GardenScene({ state, size, images = SHIPPED_GARDEN_IMAGES }: Gar
         asset={names.water === null ? undefined : waterAsset(names.water)}
         transitionMs={transitionMs}
       />
-      {names.growing === null ? null : (
-        <View
-          style={[StyleSheet.absoluteFill, { opacity: names.growing.opacity }]}
-          testID="garden-growing"
-        >
-          <Layer asset={baseAsset(names.growing.base)} transitionMs={transitionMs} />
-          <FadingLayer
-            asset={names.growing.water === null ? undefined : waterAsset(names.growing.water)}
-            transitionMs={transitionMs}
-          />
-        </View>
-      )}
     </View>
   );
 }

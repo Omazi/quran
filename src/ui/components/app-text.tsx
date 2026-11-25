@@ -30,8 +30,12 @@ export interface AppTextProps extends Omit<
 /** San Francisco, the platform font, unless the text style names the system serif. */
 const SYSTEM_FONT = { fontFamily: undefined };
 
-/** The two title styles are headings for screen readers (voiceover.md › Navigation). */
-const HEADING_VARIANTS: ReadonlySet<TextStyleName> = new Set(['largeTitle', 'title2']);
+/** The title styles are headings for screen readers (voiceover.md › Navigation). */
+const HEADING_VARIANTS: ReadonlySet<TextStyleName> = new Set([
+  'largeTitle',
+  'displayTitle',
+  'title2',
+]);
 
 /**
  * The text component of the interface: one variant per text style of the charter.

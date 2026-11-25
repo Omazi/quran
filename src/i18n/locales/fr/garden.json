@@ -28,6 +28,11 @@
       "dry": "L’eau est à sec",
       "none": "Pas encore d’eau"
     },
+    "detail": {
+      "flowing": "Une page par jour suffit à la faire couler.",
+      "still": "Une page la fera couler de nouveau.",
+      "dry": "Une page la fera revenir."
+    },
     "clause": {
       "flowing": "l’eau coule",
       "still": "l’eau est immobile",

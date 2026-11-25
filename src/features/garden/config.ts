@@ -6,6 +6,8 @@
 import { GARDEN_CATALOG, type GardenPhase, type WaterState } from '@/domain/garden';
 import { spacing, type IconSymbol, type LabelRowTone, type StatusTone } from '@/ui';
 
+import { GARDEN_PICTURE_PIXELS } from './garden-images.generated';
+
 /** How many steps a garden has: one element per hizb. The catalogue is the garden's own count. */
 export const GARDEN_STEP_COUNT = GARDEN_CATALOG.length;
 
@@ -62,10 +64,12 @@ export const HEALTH_TONES: Readonly<Record<GardenPhase, StatusTone>> = {
 // ---------------------------------------------------------------------------------------------
 
 /**
- * Size of every garden picture, in points. One camera for the whole set, so two pictures overlay
- * exactly; the scene keeps these proportions (image-views.md › Content: one size for a sequence).
+ * Size of every garden picture. One camera for the whole set, cut to the same box, so two
+ * pictures overlay exactly; the scene keeps these proportions (image-views.md › Content: one size
+ * for a sequence). The tool measures it and writes it with the table of pictures: it is the
+ * rendered picture without the empty margin around what the set draws.
  */
-export const GARDEN_PICTURE_SIZE = { width: 1200, height: 900 } as const;
+export const GARDEN_PICTURE_SIZE = GARDEN_PICTURE_PIXELS;
 
 /** Width over height of a garden picture. */
 export const GARDEN_PICTURE_ASPECT_RATIO = GARDEN_PICTURE_SIZE.width / GARDEN_PICTURE_SIZE.height;

@@ -27,7 +27,7 @@ const JOURNAL: ReadingJournal = [1, 2, 3].reduce(
   EMPTY_JOURNAL,
 );
 
-const DATA: AppData = { settings: SETTINGS, journal: JOURNAL };
+const DATA: AppData = { settings: SETTINGS, journal: JOURNAL, timeSpent: {} };
 
 /** The stored document with one part replaced, as text. */
 function documentWith(change: Record<string, unknown>): string {
@@ -52,12 +52,13 @@ describe('stored document', () => {
     });
   });
 
-  it('writes the version, the settings and the journal, and nothing else', () => {
+  it('writes the version, the settings, the journal and the time, and nothing else', () => {
     const state = { ...DATA, setLanguage: () => {}, somethingElse: 'x' };
     expect(JSON.parse(writeStoredData(state))).toEqual({
       version: STORED_DATA_VERSION,
       settings: SETTINGS,
       journal: JOURNAL,
+      timeSpent: {},
     });
   });
 
@@ -65,6 +66,7 @@ describe('stored document', () => {
     expect(readStoredData(null)).toEqual({
       settings: null,
       journal: null,
+      timeSpent: null,
       discarded: [],
       wasUpgraded: false,
     });
@@ -107,6 +109,75 @@ describe('stored document', () => {
   });
 });
 
+describe('documents written by the two kinds of version 3', () => {
+  const TIME = { [parseLocalDate('2026-11-24')]: { app: 600, reader: 300 } };
+  const { lastOpenedPage: _lastOpenedPage, ...settingsWithoutPage } = SETTINGS;
+  const reminders = SETTINGS.reminders;
+
+  it('upgrades a version 3 that has the last opened page and no time, keeping the page', () => {
+    const reading = readStoredData(
+      JSON.stringify({ version: 3, settings: SETTINGS, journal: JOURNAL }),
+    );
+    expect(reading).toEqual({
+      settings: SETTINGS,
+      journal: JOURNAL,
+      timeSpent: {},
+      discarded: [],
+      wasUpgraded: true,
+    });
+    expect(reading.settings?.lastOpenedPage).toBe(293);
+  });
+
+  it('upgrades a version 3 that has the time and no last opened page, keeping the time', () => {
+    const reading = readStoredData(
+      JSON.stringify({
+        version: 3,
+        settings: settingsWithoutPage,
+        journal: JOURNAL,
+        timeSpent: TIME,
+      }),
+    );
+    expect(reading).toEqual({
+      settings: { ...SETTINGS, lastOpenedPage: null },
+      journal: JOURNAL,
+      timeSpent: TIME,
+      discarded: [],
+      wasUpgraded: true,
+    });
+  });
+
+  it('keeps both when a version 3 has both, and adds both when it has neither', () => {
+    const both = readStoredData(
+      JSON.stringify({ version: 3, settings: SETTINGS, journal: JOURNAL, timeSpent: TIME }),
+    );
+    expect(both).toMatchObject({ settings: SETTINGS, timeSpent: TIME, discarded: [] });
+    const neither = readStoredData(
+      JSON.stringify({ version: 3, settings: settingsWithoutPage, journal: JOURNAL }),
+    );
+    expect(neither).toMatchObject({
+      settings: { ...SETTINGS, lastOpenedPage: null },
+      timeSpent: {},
+      discarded: [],
+    });
+    expect(reminders).toBe(SETTINGS.reminders);
+  });
+
+  it('never replaces a wrong part that is present: it is discarded by the checks', () => {
+    const badPage = readStoredData(
+      JSON.stringify({
+        version: 3,
+        settings: { ...SETTINGS, lastOpenedPage: 900 },
+        journal: JOURNAL,
+      }),
+    );
+    expect(badPage).toMatchObject({ settings: null, journal: JOURNAL, discarded: ['settings'] });
+    const badTime = readStoredData(
+      JSON.stringify({ version: 3, settings: SETTINGS, journal: JOURNAL, timeSpent: 5 }),
+    );
+    expect(badTime).toMatchObject({ settings: SETTINGS, timeSpent: null, discarded: ['time'] });
+  });
+});
+
 describe('document written by version 1 of the app', () => {
   /** What version 1 wrote: reminders without a Friday time and without quiet hours. */
   const {
@@ -129,6 +200,7 @@ describe('document written by version 1 of the app', () => {
         reminders: { ...remindersOfVersion1, fridayTime: { hour: 9, minute: 0 }, quietHours: null },
       },
       journal: JOURNAL,
+      timeSpent: {},
       discarded: [],
       wasUpgraded: true,
     });
@@ -165,6 +237,7 @@ describe('corrupt stored document', () => {
     expect(readStoredData(raw)).toEqual({
       settings: null,
       journal: null,
+      timeSpent: null,
       discarded: ['document'],
       wasUpgraded: false,
     });
@@ -217,6 +290,7 @@ describe('corrupt stored document', () => {
     expect(readStoredData(settingsWith(change))).toEqual({
       settings: null,
       journal: JOURNAL,
+      timeSpent: {},
       discarded: ['settings'],
       wasUpgraded: false,
     });
@@ -250,6 +324,7 @@ describe('corrupt stored document', () => {
     expect(readStoredData(documentWith({ journal }))).toEqual({
       settings: SETTINGS,
       journal: null,
+      timeSpent: {},
       discarded: ['journal'],
       wasUpgraded: false,
     });
@@ -352,6 +427,7 @@ describe('the last page opened in the reader', () => {
     expect(reading).toEqual({
       settings: { ...SETTINGS, lastOpenedPage: null },
       journal: JOURNAL,
+      timeSpent: {},
       discarded: [],
       wasUpgraded: true,
     });

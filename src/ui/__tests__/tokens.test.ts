@@ -230,6 +230,8 @@ const CHARTER_ROWS: Record<CharterTable, string[]> = {
   highContrast: colorTableRows(highContrastText),
 };
 const TABLES: readonly CharterTable[] = ['standard', 'highContrast'];
+/** Roles the charter writes in a paragraph after the tables (the owner's approval of D27 and D29). */
+const ROLES_OUTSIDE_THE_TABLES: ReadonlySet<string> = new Set(['ornamentLine', 'accentStrong']);
 
 function roundToCharterPrecision(ratio: number): number {
   return Math.round(ratio * 100) / 100;
@@ -237,7 +239,9 @@ function roundToCharterPrecision(ratio: number): number {
 
 /** The surface a role is measured against in the charter: paper for the ornament, else the screen. */
 function charterBackground(role: keyof typeof highContrastAppColors, appearance: Appearance) {
-  return role === 'ornament' ? appColors.paper[appearance] : surface[appearance];
+  return role === 'ornament' || role === 'ornamentLine'
+    ? appColors.paper[appearance]
+    : surface[appearance];
 }
 
 describe('colours of the charter', () => {
@@ -269,15 +273,49 @@ describe('colours of the charter', () => {
     expect(contrastThresholds).toEqual({ text: 4.5, largeTextAndGraphics: 3 });
   });
 
-  it.each(Object.entries(appColors))('%s has the values of the charter', (_role, pair) => {
-    const table = CHARTER_ROWS.standard.join('\n');
-    // The label drawn on the accent is written in words in the charter: white, then black.
-    if (pair === appColors.onAccent) {
-      expect(pair).toEqual({ light: '#FFFFFF', dark: '#000000' });
-      return;
-    }
-    expect(table).toContain(`\`${pair.light}\``);
-    expect(table).toContain(`\`${pair.dark}\``);
+  it.each(Object.entries(appColors).filter(([role]) => !ROLES_OUTSIDE_THE_TABLES.has(role)))(
+    '%s has the values of the charter',
+    (_role, pair) => {
+      const table = CHARTER_ROWS.standard.join('\n');
+      // The label drawn on the accent is written in words in the charter: white, then black.
+      if (pair === appColors.onAccent) {
+        expect(pair).toEqual({ light: '#FFFFFF', dark: '#000000' });
+        return;
+      }
+      expect(table).toContain(`\`${pair.light}\``);
+      expect(table).toContain(`\`${pair.dark}\``);
+    },
+  );
+
+  describe('the two roles the owner approved with the listening screen (D27, D29)', () => {
+    const paragraph = colorSection.slice(colorSection.indexOf('Deux rôles de plus'));
+
+    it('writes them in the charter, outside the tables', () => {
+      expect(paragraph).toContain('`ornamentLine`');
+      expect(paragraph).toContain('`accentStrong`');
+      expect(paragraph).toContain(`\`${appColors.ornamentLine.light}\``);
+      expect(paragraph).toContain(`\`${appColors.accentStrong.light}\``);
+      expect(paragraph).toContain(`\`${appColors.accentStrong.dark}\``);
+    });
+
+    it('gives the ornament line the gold of the validated prototype by day', () => {
+      expect(appColors.ornamentLine.light).toBe('#CE9A3C');
+    });
+
+    it('gives the ornament line the dark ornament at night, and its high-contrast values', () => {
+      expect(appColors.ornamentLine.dark).toBe(appColors.ornament.dark);
+      expect(highContrastAppColors.ornamentLine).toEqual(highContrastAppColors.ornament);
+    });
+
+    it('keeps the ornament line a line: 2.36:1 on paper by day, a decoration with no information', () => {
+      const ratio = contrastRatio(appColors.ornamentLine.light, appColors.paper.light);
+      expect(roundToCharterPrecision(ratio)).toBe(2.36);
+    });
+
+    it('gives the strong water the high-contrast water in both appearances', () => {
+      expect(appColors.accentStrong).toEqual(highContrastAppColors.accent);
+      expect(highContrastAppColors).not.toHaveProperty('accentStrong');
+    });
   });
 });
 
@@ -286,14 +324,17 @@ describe('high-contrast colours of the charter', () => {
 
   it('has a variant for every role of the high-contrast table, and for no other', () => {
     const rolesInCharter = CHARTER_ROWS.highContrast.map((row) => /^\| `(\w+)`/.exec(row)?.[1]);
-    expect(roles).toEqual(rolesInCharter);
+    expect(roles.filter((role) => !ROLES_OUTSIDE_THE_TABLES.has(role))).toEqual(rolesInCharter);
   });
 
-  it.each(roles)('%s has the high-contrast values of the charter', (role) => {
-    const row = CHARTER_ROWS.highContrast.find((line) => line.startsWith(`| \`${role}\``));
-    expect(row).toContain(`\`${highContrastAppColors[role].light}\``);
-    expect(row).toContain(`\`${highContrastAppColors[role].dark}\``);
-  });
+  it.each(roles.filter((role) => !ROLES_OUTSIDE_THE_TABLES.has(role)))(
+    '%s has the high-contrast values of the charter',
+    (role) => {
+      const row = CHARTER_ROWS.highContrast.find((line) => line.startsWith(`| \`${role}\``));
+      expect(row).toContain(`\`${highContrastAppColors[role].light}\``);
+      expect(row).toContain(`\`${highContrastAppColors[role].dark}\``);
+    },
+  );
 
   describe.each(APPEARANCES)('%s', (appearance) => {
     it.each(roles)('%s stands out more than its standard value', (role) => {
@@ -370,6 +411,7 @@ describe('text styles', () => {
   /** How the charter names each style in its typography table. */
   const CHARTER_NAMES: Record<TextStyleName, string> = {
     largeTitle: 'Large Title',
+    displayTitle: 'Display Title',
     title2: 'Title 2',
     headline: 'Headline',
     body: 'Body',
@@ -385,9 +427,10 @@ describe('text styles', () => {
     expect(textStyles[name].lineHeight).toBe(Number(row?.[2]));
   });
 
-  it('keeps the weights of the charter: bold titles, semibold headline, regular text', () => {
+  it('keeps the weights of the charter: bold titles, regular display title, semibold headline, regular text', () => {
     expect(names.map((name) => textStyles[name].fontWeight)).toEqual([
       '700',
+      '400',
       '700',
       '600',
       '400',
@@ -396,9 +439,10 @@ describe('text styles', () => {
     ]);
   });
 
-  it('sets the two titles in the system serif and the rest in the system font', () => {
+  it('sets the three titles in the system serif and the rest in the system font', () => {
     expect(textStyles.largeTitle.fontFamily).toBe(fontFamily.serif);
     expect(textStyles.title2.fontFamily).toBe(fontFamily.serif);
+    expect(textStyles.displayTitle.fontFamily).toBe(fontFamily.serif);
     for (const name of ['headline', 'body', 'subhead', 'footnote'] as const) {
       expect(textStyles[name]).not.toHaveProperty('fontFamily');
     }
@@ -418,6 +462,7 @@ describe('text styles', () => {
   it("maps every style to Apple's Dynamic Type style of the same name", () => {
     expect(appleTextStyles).toEqual({
       largeTitle: 'largeTitle',
+      displayTitle: 'largeTitle',
       title2: 'title2',
       headline: 'headline',
       body: 'body',

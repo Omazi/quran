@@ -72,16 +72,52 @@ describe('pictureSteps', () => {
     expect(steps.at(-1)?.count).toBe(0);
   });
 
-  it('brings a dead garden back the other way round: elements, leaves, then water', () => {
+  it('brings a garden back with the water first, then the leaves, then the elements (D35)', () => {
+    const from: GardenStage = { count: 10, foliage: 3, water: 0 };
+    const to: GardenStage = { count: 24, foliage: 0, water: 2 };
+    const steps = pictureSteps(from, to, IMAGES);
+    expect(steps.every(({ direction }) => direction === 'recovery')).toBe(true);
+    expect(steps.at(-1)?.stage).toEqual(to);
+    const stages = steps.map(({ stage }) => stage);
+    // Water 1, 2 with everything else unchanged.
+    expect(stages.slice(0, 2)).toEqual([
+      { count: 10, foliage: 3, water: 1 },
+      { count: 10, foliage: 3, water: 2 },
+    ]);
+    // Then the leaves, 2, 1, 0, with the water flowing and the same elements.
+    expect(stages.slice(2, 5)).toEqual([
+      { count: 10, foliage: 2, water: 2 },
+      { count: 10, foliage: 1, water: 2 },
+      { count: 10, foliage: 0, water: 2 },
+    ]);
+    // Then the elements, ever more of them, on a garden whose water already flows.
+    const elements = stages.slice(5);
+    expect(elements.length).toBeGreaterThan(0);
+    expect(elements.every(({ foliage, water }) => foliage === 0 && water === 2)).toBe(true);
+    const counts = elements.map(({ count }) => count);
+    expect(counts).toEqual([...counts].sort((a, b) => a - b));
+  });
+
+  it('brings a dead garden back with the water already flowing when the first element returns', () => {
     const dead = stageOf(40, DEFAULT_GARDEN_CONFIG.droughtDaysToDeath);
     const revived = stageOf(40, DEFAULT_GARDEN_CONFIG.droughtDaysToDeath, true);
+    expect(dead.count).toBe(0);
     const steps = pictureSteps(dead, revived, IMAGES);
     expect(steps.every(({ direction }) => direction === 'recovery')).toBe(true);
     expect(steps.at(-1)?.stage).toEqual(revived);
-    // The water comes last, after the elements.
-    expect(steps.slice(-2).map(({ stage }) => stage.water)).toEqual([1, 2]);
-    expect(steps[0]?.stage.water).toBe(0);
-    expect(steps[0]?.stage.count).toBeGreaterThan(0);
+    // No water picture exists on an earth with no element: no step is spent on it.
+    expect(steps.every(({ stage }) => stage.count > 0)).toBe(true);
+    expect(steps.every(({ stage }) => stage.water === 2)).toBe(true);
+  });
+
+  it('never shows the same picture twice in a row', () => {
+    const dead = stageOf(40, DEFAULT_GARDEN_CONFIG.droughtDaysToDeath);
+    const revived = stageOf(40, DEFAULT_GARDEN_CONFIG.droughtDaysToDeath, true);
+    let previous: GardenStage = dead;
+    for (const { stage } of pictureSteps(dead, revived, IMAGES)) {
+      expect(stage).not.toEqual(previous);
+      previous = stage;
+    }
   });
 
   it('puts the worse steps before the better ones when both happen at once', () => {
@@ -90,6 +126,11 @@ describe('pictureSteps', () => {
     const to = { ...alive, count: 25, water: 0 as const };
     const steps = pictureSteps(from, to, IMAGES);
     expect(steps.map(({ direction }) => direction)).toEqual(['decay', 'decay', 'recovery']);
+    expect(steps.map(({ stage }) => [stage.count, stage.water])).toEqual([
+      [24, 1],
+      [24, 0],
+      [25, 0],
+    ]);
   });
 
   it('goes through consecutive pictures only: one thing changes at each step', () => {

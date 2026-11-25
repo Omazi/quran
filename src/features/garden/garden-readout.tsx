@@ -19,7 +19,13 @@ import {
   WATER_SYMBOLS,
   WATER_TONES,
 } from './config';
-import { gardenElementName, gardenStateWord, gardenWaterStatus, toPercent } from './garden-words';
+import {
+  gardenElementName,
+  gardenStateWord,
+  gardenWaterDetail,
+  gardenWaterStatus,
+  toPercent,
+} from './garden-words';
 
 export interface GardenReadoutProps {
   state: GardenState;
@@ -28,7 +34,8 @@ export interface GardenReadoutProps {
 /**
  * The water: a symbol and a short sentence (flowing, still, dry), as a row of the list
  * (labels.md › Best practices). The symbol changes shape with the state and the sentence says
- * it, so colour is never the only signal (accessibility.md › Vision). Its own row, alone in a
+ * it, so colour is never the only signal (accessibility.md › Vision). A second line says what a
+ * page does for it, as the messages of the home screen do. Its own row, alone in a
  * section or with other rows of status.
  */
 export function GardenWaterRow({ state }: GardenReadoutProps) {
@@ -36,6 +43,7 @@ export function GardenWaterRow({ state }: GardenReadoutProps) {
   return (
     <LabelRow
       label={gardenWaterStatus(state, t)}
+      detail={gardenWaterDetail(state, t) ?? undefined}
       symbol={WATER_SYMBOLS[state.water]}
       tone={state.phase === 'bare' ? NO_WATER_YET_TONE : WATER_TONES[state.water]}
       testID="garden-water"

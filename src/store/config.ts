@@ -1,11 +1,15 @@
+import type { SecondsByDay } from '@/domain/stats';
+
 import type { ReminderSettings } from './types';
 
 /**
  * Version of the stored document. Version 1 had no `fridayTime` and no `quietHours` in the
- * reminders; version 2 had no `lastOpenedPage` in the settings. Older documents are upgraded when
- * they are read (stored-data.ts). A document of any other version is discarded.
+ * reminders; version 2 had no `timeSpent` (the time counters, D37). Version 3 was written by two
+ * lines of the app, one with `timeSpent` and one with `settings.lastOpenedPage`; version 4 has both.
+ * Documents of the older versions are upgraded when they are read (stored-data.ts). A document of
+ * any other version is discarded.
  */
-export const STORED_DATA_VERSION = 3;
+export const STORED_DATA_VERSION = 4;
 
 /** The key of the stored document. */
 export const STORED_DATA_KEY = 'app-data';
@@ -34,6 +38,13 @@ export const STORED_DATE_RANGE = { earliest: '2020-01-01', latest: '2099-12-31' 
  * cost. A pause is a rare event (an illness, a journey): fifty leaves room for years of them.
  */
 export const MAX_PAUSES = 50;
+
+/**
+ * The most days of time kept (docs/specs/stats.md, time counters): ten years of days with time.
+ * The days are written in the progress backup too, which is small (a quarter of a megabyte); past
+ * this number the oldest days are dropped, so the time of all time slowly forgets its first days.
+ */
+export const MAX_TIME_DAYS = 3660;
 
 /** The daily goal the stepper allows (docs/specs/ui-lot1.md, A.3). */
 export const DAILY_GOAL_RANGE = { min: 1, max: 60 } as const;
@@ -64,3 +75,6 @@ export const LAST_MINUTE = 59;
 
 /** The garden module accepts a seed from 0 to 2^53 - 1: this is the number of possible seeds. */
 export const USER_SEED_COUNT = Number.MAX_SAFE_INTEGER + 1;
+
+/** No time counted yet: the state of a first launch, and of time that could not be read back. */
+export const EMPTY_TIME_SPENT: SecondsByDay = Object.freeze({});

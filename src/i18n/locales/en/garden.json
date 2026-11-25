@@ -28,6 +28,11 @@
       "dry": "The water has run dry",
       "none": "No water yet"
     },
+    "detail": {
+      "flowing": "One page a day keeps it flowing.",
+      "still": "One page will get it flowing again.",
+      "dry": "One page will bring it back."
+    },
     "clause": {
       "flowing": "the water is flowing",
       "still": "the water is still",

@@ -128,8 +128,9 @@ export async function startDb() {
         values ('${U.omar}', '${U.sarah}', 'accepted', private.today());
       insert into public.blocks (blocker_id, blocked_id) values ('${U.omar}', '${U.taghread}');
       insert into public.garden_summaries
-        (user_id, level, hizb_completed, health, last_watered_on, streak_days, badge_count)
-        values ('${U.omar}', 2, 14, 0.8, private.today(), 5, 1);
+        (user_id, level, hizb_completed, health, last_watered_on, streak_days, badge_count,
+         words_read, verses_read, hasanat_estimate)
+        values ('${U.omar}', 2, 14, 0.8, private.today(), 5, 1, 99367, 8000, 4272781);
       insert into public.badges (user_id, khatm_number, completed_on)
         values ('${U.omar}', 1, private.today() - 30);
       insert into public.daily_readings (user_id, day, new_pages)

@@ -29,6 +29,9 @@ const GARDEN: GardenSummary = {
   lastWateredOn: day('2026-11-23'),
   streakDays: 12,
   badgeCount: 2,
+  wordsRead: 209_061,
+  versesRead: 16_837,
+  hasanatEstimate: 8_989_623,
   updatedOn: TODAY,
 };
 const BADGES: readonly Badge[] = [
@@ -73,7 +76,14 @@ describe('Rule 4 — what another person sees of me (viewOf)', () => {
           streakDays: 12,
           updatedOn: TODAY,
         },
-        level: { level: 3, badgeCount: 2, badges: BADGES },
+        level: {
+          level: 3,
+          badgeCount: 2,
+          badges: BADGES,
+          wordsRead: 209_061,
+          versesRead: 16_837,
+          hasanatEstimate: 8_989_623,
+        },
       });
     });
 
@@ -89,7 +99,15 @@ describe('Rule 4 — what another person sees of me (viewOf)', () => {
 
       expect(view).toMatchObject({ kind: 'friend', level: null, garden: { hizbCompleted: 42 } });
       expect(JSON.stringify(view)).not.toContain('badgeCount');
+      expect(JSON.stringify(view)).not.toMatch(/wordsRead|versesRead|hasanatEstimate/);
       expect(JSON.stringify(view)).not.toContain('khatmNumber');
+    });
+
+    it('sees the reading counters with the level, and still sees them when the garden is hidden', () => {
+      expect(viewOf(sarah({ showGarden: false }), OMAR, FRIENDS)).toMatchObject({
+        garden: null,
+        level: { wordsRead: 209_061, versesRead: 16_837, hasanatEstimate: 8_989_623 },
+      });
     });
 
     it('sees the name only when both are off', () => {

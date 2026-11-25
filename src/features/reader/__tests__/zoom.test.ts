@@ -1,5 +1,5 @@
 /**
- * The arithmetic of the page zoom (spec 2, deviation 30): the scale stays between the page's size
+ * The arithmetic of the page zoom (spec 2, deviation 34): the scale stays between the page's size
  * and its maximum, the point under the fingers stays under them, the enlarged page never leaves
  * the screen, and a double tap goes in, then back out.
  */

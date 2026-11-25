@@ -92,6 +92,7 @@ export function ButtonRow({ variant = 'primary', ...button }: ButtonRowProps) {
  * above them. The row gives up its margins, background and separator, and follows the height of
  * its content.
  */
+// `isEdgeToEdge` changes nothing here: the row already gives up every margin of its own.
 export function ContentRow({ children, accessibilityLabel, testID }: ContentRowProps) {
   useGroupedListGuard('ContentRow');
   return (

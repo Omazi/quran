@@ -228,7 +228,7 @@ describe('the 30-second rule, through the store', () => {
   });
 });
 
-describe('the zoom of the page (deviation 30)', () => {
+describe('the zoom of the page (deviation 34)', () => {
   it('stops turning pages while the page is enlarged, and turns them again at its size', async () => {
     // With Reduce Motion the double tap jumps to its size: no animation to wait for.
     setDeviceConditions({ reducedMotion: true });

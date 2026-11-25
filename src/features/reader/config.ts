@@ -12,7 +12,7 @@ export const READER_CONFIG = Object.freeze({
 
   /**
    * The width of the text column, in ems of the Quran font: the font size is the column width
-   * divided by this number, whatever the person's text size setting (spec 2, deviation 30 of the
+   * divided by this number, whatever the person's text size setting (spec 2, deviation 34 of the
    * register: the page is sized by width and enlarged by zoom).
    *
    * Measured, not chosen: every text line of the 604 pages was shaped with HarfBuzz in the
@@ -45,7 +45,7 @@ export const READER_CONFIG = Object.freeze({
   openingPages: { lastPage: 2, lineWidthInEm: 15.2, lineHeightInEm: 3 },
 
   /**
-   * Zoom of the page (spec 2, deviation 30): pinch from the page's size up to this factor, never
+   * Zoom of the page (spec 2, deviation 34): pinch from the page's size up to this factor, never
    * so far that one word fills the screen (scroll-views.md › Best practices: set appropriate
    * maximum and minimum scale values). A double tap toggles between the page's size and the
    * second factor (gestures.md › Standard gestures: double tap zooms in, then out).

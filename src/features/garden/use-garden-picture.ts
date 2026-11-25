@@ -61,7 +61,6 @@ export function useGardenPictureSequence(
   useEffect(() => {
     const from = onScreen.current;
     if (target === null || from === null || reducedMotion || sameStage(from, target)) {
-      // Growth moves the opacity of one layer: it is not a step, and nothing slides.
       show({ picture: target, transitionMs: 0 });
       return undefined;
     }
@@ -75,7 +74,7 @@ export function useGardenPictureSequence(
       if (step === undefined || duration === undefined) return;
       const isLast = index === steps.length - 1;
       show({
-        picture: isLast ? target : { stage: step.stage, growth: null },
+        picture: isLast ? target : { stage: step.stage },
         transitionMs: duration,
       });
       if (!isLast) timer = setTimeout(() => run(index + 1), duration);

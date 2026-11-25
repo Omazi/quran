@@ -332,6 +332,14 @@ describe('default Pager', () => {
     expect(styleOf(parentOf(screen.getByText('Contenu de la page 1'))).width).toBe(WIDTH);
   });
 
+  it('gives the frame of every page the whole height of the list, with no height of its own', async () => {
+    setDeviceConditions();
+    await renderLaidOut(0);
+    const frame = parentOf(parentOf(screen.getByText('Contenu de la page 1')));
+    expect(styleOf(frame).flex).toBe(1);
+    expect(styleOf(frame).height).toBeUndefined();
+  });
+
   it('starts on the page it is given, without sliding to it', async () => {
     setDeviceConditions();
     // The list places itself on its initial page as soon as it knows the size of its content.

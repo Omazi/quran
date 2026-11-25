@@ -4,6 +4,12 @@
  * the tool writes them from the set it has checked (docs/specs/garden-pictures.md, section 4).
  */
 
+/**
+ * Size of every picture, in pixels. All the pictures have this size, cut to what the set draws
+ * (a margin of 16 pixels around it), so that two pictures overlay exactly.
+ */
+export const GARDEN_PICTURE_PIXELS = { width: 1170, height: 816 } as const;
+
 /** What `require` gives for an image: an asset number. */
 type PictureAsset = number;
 

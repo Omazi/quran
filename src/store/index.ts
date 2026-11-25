@@ -14,7 +14,9 @@ export {
   DAILY_GOAL_RANGE,
   DEFAULT_DAILY_GOAL_PAGES,
   DEFAULT_REMINDERS,
+  EMPTY_TIME_SPENT,
   MAX_PAUSES,
+  MAX_TIME_DAYS,
   REJECTED_DATA_KEY,
   RESET_NOTICE_KEY,
   STORED_DATA_KEY,
@@ -34,9 +36,11 @@ export type { KeyValueStorage } from './storage';
 export type { StoredDataPart } from './stored-data';
 export type {
   AppData,
+  AppDataToWrite,
   AppSettings,
   AppState,
   DataResetNotice,
+  ForegroundTime,
   QuietHours,
   ReminderSettings,
   ReminderTime,

@@ -58,6 +58,12 @@ export interface ListSectionProps {
   footer?: string;
   /** Rows: `ListRow`, `SwitchRow`, `StepperRow`, `ChoiceRow`, `TimePickerRow`, or a control. */
   children: ReactNode;
+  /**
+   * For a section that holds only bare content (`ContentRow`): a page header, a scene. The
+   * default implementation then draws no divider and no padding of its own, so that the content
+   * runs into the next one. On iOS the system draws sections without either: no difference.
+   */
+  isBare?: boolean;
 }
 
 /**
@@ -99,6 +105,13 @@ export interface ContentRowProps {
    * its own. The row has no background: put it alone in its section.
    */
   children: ReactNode;
+  /**
+   * The content runs to the side edges of the screen instead of the margin of the other rows:
+   * a picture that is the signature of the screen, not a row of text. Its own content then keeps
+   * its margins. Use it in a `ListSection` with `isBare`. On iOS the row is as wide as the
+   * system gives a row of a list, which has its own side inset (not verified on a device).
+   */
+  isEdgeToEdge?: boolean;
   /**
    * For content that screen readers cannot read by itself, such as a drawn scene. The row is
    * then one element with this label, and what it contains is no longer read piece by piece.
