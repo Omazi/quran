@@ -1,0 +1,18 @@
+App icon: provenance
+====================
+
+Files: assets/expo.icon/ (icon.json, Assets/beds.svg, Assets/spring.svg) and, in
+assets/images/, icon.png, android-icon-foreground.png, android-icon-background.png,
+android-icon-monochrome.png, favicon.png, splash-icon.png.
+
+All of them are drawn by tools/app-icon/make_icon.py, written for this project on
+25 November 2026 (decision D38). They are plain geometric shapes: no font, no picture, no
+3D model and no other third-party material is in them. The eight-pointed star follows the
+geometry of the project's own src/features/listening/rosette.
+
+Tools used to make them, not shipped in the app: Python, Pillow (MIT-CMU licence), numpy
+(BSD-3-Clause) and librsvg's rsvg-convert (LGPL-2.1+, run as a separate program; nothing of
+it ends up in the files).
+
+The explorations behind the choice (not shipped) also used the garden's 3D renders, whose
+models are CC0: see assets/images/garden/NOTICE.txt.

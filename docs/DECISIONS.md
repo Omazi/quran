@@ -410,3 +410,39 @@ savants comptent de plusieurs façons : alif suscrit, shadda, hamza sur tatweel)
 et la formulation de l'écran. Tant que ce n'est pas validé, l'écran garde le mot « estimation ».
 _Changerait si_ la personne qualifiée retient une autre règle : seul `letters.ts` change, avec
 ses tests ; les totaux de contrôle sont alors à relire.
+
+## D38 — L'icône de l'appli : le plan du jardin autour de sa source
+
+Proposée le 25 novembre 2026 (développeur d'interface), à la demande du propriétaire, qui veut
+une icône ; jusque-là l'appli portait celle d'Expo. **Le choix final revient au propriétaire.**
+
+Ce que montre l'icône : le jardin de l'appli vu d'en haut, tourné comme l'appli le montre ;
+quatre parterres verts autour d'un bassin rond, posés sur l'eau ; dans le bassin, l'étoile à huit
+branches de la rosace d'écoute (la marque du hizb). Lire, c'est arroser : la source est au cœur,
+le jardin pousse hizb après hizb. Détail, couleurs, couches et pistes écartées :
+`design/brand-spec.md`, « Icône ».
+
+- **Fichiers** : `assets/expo.icon` (format Icon Composer, couches séparées pour les apparences
+  par défaut, sombre, teintée et transparente ; déjà désigné par `ios.icon`), `assets/images/icon.png`
+  (1024, opaque, coins carrés), les trois couches Android, `favicon.png`, `splash-icon.png`. Tous
+  sortent de `tools/app-icon/make_icon.py`, qui les refait à l'identique.
+- **Écran de lancement** : inchangé, une couleur unie (blanc, noir en sombre), celle du fond du
+  premier écran ; pas de logo (`launching.md › Launch screens`).
+- **Licences** : tout est dessiné par le projet (formes géométriques ; l'étoile reprend la
+  géométrie de `src/features/listening/rosette`). Aucune police, aucune image, aucun modèle de
+  tiers dans les fichiers livrés. Les rendus 3D d'exploration (modèles CC0, D35) ne sont pas livrés.
+- **Vérifié** : rendus à 1024, 180, 120, 60 et 29 pixels, sur fond clair et sombre, version
+  sombre, masque rond Android et silhouette monochrome ; `icon.json` valide selon un schéma non
+  officiel du format ; `npx expo config` lit l'icône.
+- **Pas vérifié** : le rendu réel du verre d'iOS 26 (reflets, translucidité, versions teintée et
+  transparente calculées par le système) ; il faut Icon Composer ou un iPhone, et personne n'a de
+  Mac (D24). Les aperçus teintés sont une approximation. À regarder sur la prochaine version
+  TestFlight, et dans les captures du simulateur si elles montrent l'écran d'accueil.
+- **Risques connus** : un dessin fait en code, alors que les jardins dessinés en code ont été
+  refusés (D12) : ici ce n'est pas le jardin de l'écran mais une marque géométrique, comme Apple le
+  demande pour une icône (écart 38 de `design/SKILLS.md`). Les quatre parterres peuvent aussi se
+  lire comme une fleur ou un trèfle. L'emploi de la marque du hizb et l'écho au jardin « sous lequel
+  coulent les rivières » sont à faire confirmer par une personne qualifiée, comme le nom (D31).
+
+_Changerait si_ le propriétaire préfère une autre piste, ou si le rendu sur iPhone déçoit : seules
+les constantes de `make_icon.py` bougent, et on relance l'outil.

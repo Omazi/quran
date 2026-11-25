@@ -120,7 +120,7 @@ animations » (`motion.md › Best practices`). Rien d'autre que les animations 
 ### Icônes et images
 
 SF Symbols, de la graisse du texte voisin (`sf-symbols.md › Weights and scales`). Pas d'emoji, pas
-d'illustration dessinée en code. Le jardin est la seule image : des rendus de modèles 3D (D35). Image manquante = emplacement
+d'illustration dessinée en code. Le jardin est la seule image : des rendus de modèles 3D (D35). L'icône de l'appli, hors de l'interface, a sa règle (plus bas, « Icône »). Image manquante = emplacement
 neutre et nommé.
 
 ### Voix
@@ -130,12 +130,58 @@ fait et garde le même nom tout le long (Apple Design, angle 5). Majuscules : en
 en début de phrase seulement ; en anglais, celles des titres pour les boutons et les
 titres, comme le système.
 
+### Icône
+
+Décision D38. Source : `app-icons.md` (Apple Design), skill Frontend design (une seule idée
+forte, pas de défaut du genre). Fichiers produits par `tools/app-icon/make_icon.py`.
+
+**L'idée.** Le plan du jardin de l'appli vu d'en haut, tourné comme l'appli le montre : quatre
+parterres autour du bassin où se croisent les canaux (c'est l'ordre du jardin : les canaux au
+premier hizb, puis les parterres). Le bassin porte l'étoile à huit branches de la rosace d'écoute,
+la marque du hizb dans le mushaf : la source qui arrose le jardin, hizb après hizb. L'eau est le
+fond sur lequel le jardin est posé. (Écho voulu au jardin « sous lequel coulent les rivières » :
+comme tout contenu religieux, à faire confirmer par une personne qualifiée, D31.)
+
+**Couleurs, par rôle.** Toutes viennent de la section 3, sauf les deux tons du fond.
+
+| Rôle              | Où                   | Valeur                                                                          |
+| ----------------- | -------------------- | ------------------------------------------------------------------------------- |
+| Eau (`accent`)    | Fond, de haut en bas | `#13838F` → `#0A4F59` (`accentStrong`) ; apparence sombre `#0D3A40` → `#04191C` |
+| Jardin (`growth`) | Les quatre parterres | `#63C794` (`growth` sombre) → `#2E9160`                                         |
+| Source            | L'étoile du bassin   | `#8FE0EA` (`accentStrong` sombre) : la forme la plus claire                     |
+
+Ni or ni papier : ils restent au mushaf.
+
+**Couches** (`assets/expo.icon`, format Icon Composer, `app-icons.md › Layer design`) : le fond
+est le dégradé d'Icon Composer lui-même (clair et sombre), pas une image ; au-dessus, deux groupes
+de verre, les parterres (`beds.svg`) puis la source (`spring.svg`), en vectoriel, bords nets,
+aucun effet dessiné (`app-icons.md › Visual effects`). En teinté et en transparent, les parterres
+passent à 70 % d'opacité pour que la source reste la forme la plus claire
+(`app-icons.md › Appearances`). Les autres fichiers (`icon.png`, couches Android, favicon) sont
+aplatis à partir des mêmes formes. L'écran de lancement reste une couleur unie, sans logo
+(`launching.md › Launch screens`) ; `splash-icon.png` existe mais n'est pas affiché.
+
+**Lisibilité.** Vérifiée sur des rendus à 180, 120, 60 et 29 pixels : 40 points d'eau à 1024
+séparent l'étoile des parterres, pour que la silhouette tienne en monochrome.
+
+**Écarté, et pourquoi** (rendus dans le dossier de prévisualisation, voir D38) :
+
+- Un arbre ou le plan rendus avec les modèles 3D du jardin : détail de photo, textures qui
+  deviennent de la bouillie à 29 px, pas de couches nettes pour le verre (`app-icons.md › Design` :
+  « prefer illustrations to photos », « clearly defined edges »), et le pavement crème du rendu.
+- Une goutte qui devient feuille : ressemble à une poire, et c'est le logo écologique courant.
+- La rosace seule : l'étoile à huit branches est la marque de beaucoup d'applis musulmanes ; seule,
+  elle ne dit rien du jardin ni de l'eau.
+- Le plan droit (canaux en « + ») : se lit comme une croix ou un ruban de cadeau ; plan en gros plan
+  tourné : se lit comme une enveloppe ; parterres en carrés : une grille d'applis.
+- La calligraphie de جنتك : aucune police arabe à licence libre sur la machine, et
+  `app-icons.md › Design` déconseille le texte (le nom est déjà sous l'icône).
+
 ## 4. Ce qui manque encore
 
 - Le moteur 3D du jardin : faire tourner le jardin et visiter celui d'un proche (D4, D35).
   Les jardins des autres niveaux (D23). Le jardin en images est celui du niveau 1.
 - La présentation du texte du Coran : à revoir avec le propriétaire.
-- Le nom de l'appli et son icône.
 - Version iPad (largeur « regular ») : lot ultérieur ; le lot 1 vise l'iPhone.
 
 ## 5. Critique du plan
