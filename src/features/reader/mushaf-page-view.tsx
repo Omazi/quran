@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 
 import { quranStructure } from '@/data/quran';
-import { LINES_PER_PAGE } from '@/domain/quran';
 import {
   ContentUnavailable,
   ProgressIndicator,
@@ -28,6 +27,8 @@ import {
   computeOpeningPageMetrics,
   fitLine,
   isOpeningPage,
+  pageFrameHeight,
+  pageTopInset,
   type PageArea,
   type PageMetrics,
 } from './page-layout';
@@ -57,7 +58,8 @@ export interface MushafPageViewProps {
 /**
  * One page of the mushaf: its lines, in order, on the paper of the page, inside a single thin
  * rule in the ornament line colour (spec 2: no ornament drawn in code beyond a rule). The frame has
- * the same size on every page, so it does not move when a page turns; pages 1 and 2 set their
+ * the same size and place on every page, right under the bar, so it does not move when a page
+ * turns; pages 1 and 2 set their
  * few lines larger inside it (`computeOpeningPageMetrics`), as the print does. Memoised: the
  * pager mounts the current page and its neighbours, and a page already drawn does not draw again
  * while the person reads. Taps and zoom belong to `ZoomablePage`, around it.
@@ -92,14 +94,17 @@ export const MushafPageView = memo(function MushafPageView({
   const isOpening = isOpeningPage(page);
   const lineMetrics = isOpening ? computeOpeningPageMetrics(area, state.lines.length) : metrics;
   return (
-    <View style={styles.page} testID={`mushaf-page-${page}`}>
+    <View
+      style={[styles.page, { paddingTop: pageTopInset(area, metrics) }]}
+      testID={`mushaf-page-${page}`}
+    >
       <View
         testID={`mushaf-page-${page}-frame`}
         style={[
           styles.frame,
           {
             width: area.width - 2 * FRAME_INSET,
-            height: LINES_PER_PAGE * metrics.lineHeight + 2 * (spacing.sm + layout.outlineWidth),
+            height: pageFrameHeight(metrics),
             borderColor: colors.ornamentLine,
           },
         ]}
@@ -294,7 +299,8 @@ function QuranText({ text, fontSize, isVerseEnd = false, onLayout }: QuranTextPr
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  // Right under the bar (`pageTopInset`); a tall room leaves its rest under the page.
+  page: { flex: 1, alignItems: 'center', justifyContent: 'flex-start' },
   // One thin rule around the page, in the side margins: the text column keeps its width.
   frame: {
     alignItems: 'center',

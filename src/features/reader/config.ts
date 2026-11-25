@@ -11,6 +11,23 @@ export const READER_CONFIG = Object.freeze({
   minimumSecondsOnPage: 30,
 
   /**
+   * How long the watered pill stays in the bar after a page counted, before the title of the page
+   * comes back (spec 3). Brief, because it takes the place of the title; VoiceOver hears it when it
+   * comes, and the garden keeps the water. A time-boxed element is a deviation to
+   * accessibility.md › Cognitive (deviation 64 of the register). Judgment.
+   */
+  feedbackSeconds: 4,
+
+  /**
+   * The entrance of the watered pill: the system's snappy spring (animation-patterns,
+   * core-animations.md › Spring Presets: `.snappy` is 0.3 s with a bounce of 0.15, so a damping
+   * ratio of 0.85), from this scale and transparent to its size and opaque. Brief and tied to the
+   * page that counted (motion.md › Aim for brevity and precision in feedback animations). With
+   * Reduce Motion it simply appears (spec 3).
+   */
+  feedbackEntrance: { durationMs: 300, dampingRatio: 0.85, fromScale: 0.9 },
+
+  /**
    * The width of the text column, in ems of the Quran font: the font size is the column width
    * divided by this number, whatever the person's text size setting (spec 2, deviation 34 of the
    * register: the page is sized by width and enlarged by zoom).
@@ -107,6 +124,12 @@ export const READER_CONFIG = Object.freeze({
    * app bar. Not verified on iOS 26.
    */
   navigationBarHeight: { ios: 44, default: 64 },
+
+  /**
+   * The surah a search with no result gives as an example of what to type (writing.md › Provide
+   * clear next steps): Al-Kahf, a name most readers know, short in every language. Judgment.
+   */
+  searchExampleSurah: 18,
 
   /** Words of the verse a juz starts with that its header shows, in the Quran font. Judgment. */
   juzOpeningWords: 3,

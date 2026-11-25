@@ -36,6 +36,27 @@ export interface PageMetrics {
  */
 export const PAGE_FRAME_ROOM = spacing.sm + layout.outlineWidth;
 
+/**
+ * The most space left between the bar and the frame of the page: the frame starts right under the
+ * bar (layout.md › Visual hierarchy: the content first, at the top), and is centred in the room
+ * only while what is left is smaller than twice this. The rest of a tall room goes under the page.
+ */
+export const PAGE_TOP_INSET_MAX = spacing.sm;
+
+/** Height of the frame of a page: its 15 lines and the room of the frame above and below. */
+export function pageFrameHeight(metrics: PageMetrics): number {
+  return LINES_PER_PAGE * metrics.lineHeight + 2 * PAGE_FRAME_ROOM;
+}
+
+/**
+ * Space between the top of the room and the frame of the page: half of what the frame leaves,
+ * at most `PAGE_TOP_INSET_MAX`, never negative. The same on every page, so the frame never moves.
+ */
+export function pageTopInset(area: PageArea, metrics: PageMetrics): number {
+  const left = Math.max(0, area.height - pageFrameHeight(metrics));
+  return Math.min(left / 2, PAGE_TOP_INSET_MAX);
+}
+
 function columnOf({ width, height }: PageArea): { textWidth: number; linesHeight: number } {
   const textWidth = width - 2 * layout.screenMargin;
   const linesHeight = height - 2 * PAGE_FRAME_ROOM;

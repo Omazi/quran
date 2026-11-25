@@ -1,22 +1,29 @@
 import { useTranslation } from 'react-i18next';
 
+import { PAGE_COUNT } from '@/domain/quran';
 import { getDisplayedLanguage } from '@/i18n';
 import {
   AppText,
   ButtonRow,
   ContentRow,
   DetailRow,
+  Gauge,
   GroupedList,
-  ListRow,
+  LabelRow,
   ListSection,
   Screen,
   SearchFieldRow,
   SegmentedChoice,
+  type IconSymbol,
 } from '@/ui';
+
+import { READER_CONFIG } from './config';
 
 import type { HizbEntry, SurahEntry } from './contents-model';
 import { surahDisplayName } from './reader-screen';
 import type { ContentsActions, ContentsModel, ContentsView } from './use-contents-model';
+
+const NO_RESULT_SYMBOL: IconSymbol = { ios: 'magnifyingglass', android: 'search' };
 
 export interface ContentsScreenProps {
   model: ContentsModel;
@@ -32,7 +39,10 @@ export interface ContentsScreenProps {
  * - the title;
  * - "Reprendre", the most likely action of the screen and its only prominent button, in the
  *   accent: a short verb, with the surah and the page it opens on a second line (buttons.md ›
- *   Style; writing.md › Be action oriented);
+ *   Style; writing.md › Be action oriented). Under it, in the same group (layout.md › Visual
+ *   hierarchy: group related items), the water given today: the system gauge, filled in the
+ *   accent, with today's new pages toward the daily goal in words (gauges.md: a value within a
+ *   range; charter: the accent is water). It is what "Reprendre" is for, so it sits with it;
  * - the inline search field, directly under it, above the list it searches (search-fields.md ›
  *   Search as an inline field). It filters the surahs as the person types and takes a page
  *   number too: a number from 1 to 604 puts a "Page n" row at the top of the results. It is not
@@ -72,6 +82,7 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
             onPress={() => actions.openPage(model.resume.page)}
             testID="contents-resume"
           />
+          <TodayGauge today={model.today} />
         </ListSection>
         <ListSection>
           <SearchFieldRow
@@ -107,8 +118,16 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
             )}
             {model.surahs.length === 0 ? (
               goTo === null ? (
-                <ListRow
+                // Never a dead end: what to type instead, with an example (writing.md › Provide
+                // clear next steps on any blank screens; ux-writing › Empty states).
+                <LabelRow
                   label={t('contents.search.empty', { query: model.query.trim() })}
+                  detail={t('contents.search.emptyHint', {
+                    example: surahDisplayName(READER_CONFIG.searchExampleSurah),
+                    last: PAGE_COUNT,
+                  })}
+                  symbol={NO_RESULT_SYMBOL}
+                  tone="secondaryLabel"
                   testID="contents-search-empty"
                 />
               ) : null
@@ -139,6 +158,31 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
         )}
       </GroupedList>
     </Screen>
+  );
+}
+
+/**
+ * Today's new pages toward the daily goal: a value in a range, so the system gauge (gauges.md),
+ * in the accent of the host. The value says the goal ("3 pages sur 5"), so the ends of the range
+ * are not labelled again under the main button (deviation 65 of the register).
+ */
+function TodayGauge({ today }: { today: ContentsModel['today'] }) {
+  const { t } = useTranslation('reader');
+  const value = t(today.goalReached ? 'contents.today.valueReached' : 'contents.today.value', {
+    count: today.pagesRead,
+    goal: today.goalPages,
+  });
+  // A bare row, like the button above it: the two read as one group, without a card of its own
+  // under a button that has none.
+  return (
+    <ContentRow>
+      <Gauge
+        value={Math.min(1, today.pagesRead / today.goalPages)}
+        label={t('contents.today.label')}
+        valueLabel={value}
+        testID="contents-today"
+      />
+    </ContentRow>
   );
 }
 

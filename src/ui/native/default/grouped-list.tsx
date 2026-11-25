@@ -46,7 +46,13 @@ export function ListSection({
     >
       {title === undefined ? null : (
         <View style={styles.header} accessible accessibilityRole="header">
-          <AppText variant="footnote" color="secondaryLabel" style={styles.headerTitle}>
+          {/* Beside Quran text, which is larger, the title takes the prominence of a heading, as
+              the iOS header does (layout.md › Visual hierarchy). */}
+          <AppText
+            variant={titleQuran === undefined ? 'footnote' : 'headline'}
+            color={titleQuran === undefined ? 'secondaryLabel' : 'label'}
+            style={styles.headerTitle}
+          >
             {title}
           </AppText>
           {titleQuran === undefined ? null : (

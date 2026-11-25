@@ -14,6 +14,7 @@ import {
   accessibilityLabel,
   font,
   foregroundStyle,
+  headerProminence,
 } from '@expo/ui/swift-ui/modifiers';
 import { StyleSheet, View } from 'react-native';
 
@@ -58,7 +59,9 @@ export function ListSection({ title, titleQuran, footer, children }: ListSection
   useGroupedListGuard('ListSection');
   const colors = useColors();
   // With Quran text in the header, the header is built here: the title as the system draws it,
-  // the Arabic at the trailing end in the Quran font, growing with the text size.
+  // the Arabic at the trailing end in the Quran font, growing with the text size. The system's
+  // increased header prominence raises the title next to the Arabic, which is larger: otherwise
+  // the number would be the smallest text of the group (layout.md › Visual hierarchy).
   const header =
     title !== undefined && titleQuran !== undefined ? (
       <HStack>
@@ -80,6 +83,7 @@ export function ListSection({ title, titleQuran, footer, children }: ListSection
     ) : undefined;
   return (
     <Section
+      modifiers={header === undefined ? undefined : [headerProminence('increased')]}
       title={header === undefined ? title : undefined}
       header={header}
       footer={footer === undefined ? undefined : <Text>{footer}</Text>}

@@ -5,6 +5,21 @@
       "action": "متابعة",
       "detail": "{{surah}} · صفحة {{page}}"
     },
+    "today": {
+      "label": "اليوم",
+      "value_zero": "الصفحات: {{count}} من {{goal}}",
+      "value_one": "الصفحات: {{count}} من {{goal}}",
+      "value_two": "الصفحات: {{count}} من {{goal}}",
+      "value_few": "الصفحات: {{count}} من {{goal}}",
+      "value_many": "الصفحات: {{count}} من {{goal}}",
+      "value_other": "الصفحات: {{count}} من {{goal}}",
+      "valueReached_zero": "الصفحات: {{count}} من {{goal}}، تحقق الهدف",
+      "valueReached_one": "الصفحات: {{count}} من {{goal}}، تحقق الهدف",
+      "valueReached_two": "الصفحات: {{count}} من {{goal}}، تحقق الهدف",
+      "valueReached_few": "الصفحات: {{count}} من {{goal}}، تحقق الهدف",
+      "valueReached_many": "الصفحات: {{count}} من {{goal}}، تحقق الهدف",
+      "valueReached_other": "الصفحات: {{count}} من {{goal}}، تحقق الهدف"
+    },
     "view": {
       "label": "عرض",
       "surahs": "السور",
@@ -15,6 +30,7 @@
       "placeholder": "اسم السورة أو رقم الصفحة",
       "clear": "مسح البحث",
       "empty": "لا توجد سورة تطابق «{{query}}»",
+      "emptyHint": "جرّب اسمًا آخر مثل {{example}}، أو رقم صفحة من 1 إلى {{last}}.",
       "page": "صفحة {{page}}",
       "pageDetail": "{{surah}} · الجزء {{juz}}"
     },

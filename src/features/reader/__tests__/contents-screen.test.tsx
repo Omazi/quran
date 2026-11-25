@@ -7,6 +7,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react-native
 
 import { EMPTY_JOURNAL, recordPageRead } from '@/domain/khatm';
 import { parseLocalDate } from '@/domain/shared/local-date';
+import { deviceLocalDate } from '@/features/home';
 import { SCREEN_CONDITIONS, showLanguage } from '@/features/garden/test-support/screen-conditions';
 import { AppStoreProvider, type AppStore } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
@@ -18,7 +19,7 @@ import {
   setDeviceConditions,
   styleOf,
 } from '@/ui/test-support/environment';
-import { appColors } from '@/ui/tokens';
+import { appColors, fallbackSystemColors, textStyles } from '@/ui/tokens';
 
 import { ContentsScreen } from '../contents-screen';
 import { useContentsModel } from '../use-contents-model';
@@ -89,6 +90,44 @@ describe('the Quran tab', () => {
     expect(screen.getByRole('button', { name: 'Reprendre, Al-Isra · Page 293' })).toBeOnTheScreen();
   });
 
+  it('shows, under "Reprendre", today\'s pages toward the daily goal, in water', async () => {
+    setDeviceConditions({ os: 'android' });
+    await showLanguage('fr');
+    const today = deviceLocalDate(new Date());
+    const journal = [1, 2, 3].reduce(
+      (current, page) => recordPageRead(current, { page, date: today }),
+      EMPTY_JOURNAL,
+    );
+    await renderContents(createTestAppStore({ journal, settings: { dailyGoalPages: 5 } }));
+    const gauge = screen.getByTestId('contents-today');
+    expect(gauge).toHaveTextContent(/^Aujourd’hui3 pages sur 5$/);
+    expect(gauge.props.accessibilityValue).toEqual({ text: '3 pages sur 5' });
+    // Right under the button, in the same group (layout.md › Visual hierarchy).
+    const order = ['contents-resume', 'contents-today', 'contents-search'];
+    const all = screen.container.queryAll(
+      (element) => typeof element.props.testID === 'string' && order.includes(element.props.testID),
+    );
+    const firstSeen = order.map((id) => all.findIndex((element) => element.props.testID === id));
+    expect([...firstSeen].sort((a, b) => a - b)).toEqual(firstSeen);
+  });
+
+  it('says the goal is reached, and counts one page in the singular', async () => {
+    setDeviceConditions({ os: 'android' });
+    await showLanguage('fr');
+    const today = deviceLocalDate(new Date());
+    const one = recordPageRead(EMPTY_JOURNAL, { page: 1, date: today });
+    await renderContents(createTestAppStore({ journal: one, settings: { dailyGoalPages: 5 } }));
+    expect(screen.getByTestId('contents-today')).toHaveTextContent(/1 page sur 5$/);
+    const six = [1, 2, 3, 4, 5, 6].reduce(
+      (current, page) => recordPageRead(current, { page, date: today }),
+      EMPTY_JOURNAL,
+    );
+    await renderContents(createTestAppStore({ journal: six, settings: { dailyGoalPages: 5 } }));
+    expect(screen.getByTestId('contents-today')).toHaveTextContent(
+      /6 pages sur 5, objectif atteint$/,
+    );
+  });
+
   it('lists the 114 surahs with their number, names, place, verses and page', async () => {
     setDeviceConditions();
     await showLanguage('fr');
@@ -128,6 +167,10 @@ describe('the Quran tab', () => {
     await fireEvent.changeText(search, 'zzz');
     expect(screen.queryAllByTestId(/^contents-surah-/)).toHaveLength(0);
     expect(screen.getByText('Aucune sourate pour « zzz »')).toBeOnTheScreen();
+    // Not a dead end: the next step, with an example (writing.md › Provide clear next steps).
+    expect(
+      screen.getByText('Essaie un autre nom, comme Al-Kahf, ou un numéro de page de 1 à 604.'),
+    ).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Effacer la recherche' }));
     expect(screen.getAllByTestId(/^contents-surah-/)).toHaveLength(114);
   });
@@ -220,6 +263,18 @@ describe('the Quran tab', () => {
     await fireEvent.press(screen.getByRole('radio', { name: 'Juz' }));
     await fireEvent.changeText(screen.getByLabelText('Rechercher une sourate ou une page'), 'kahf');
     expect(screen.getByTestId('contents-surah-18')).toBeOnTheScreen();
+  });
+
+  it('makes the juz number a heading as prominent as a row, not the smallest text', async () => {
+    setDeviceConditions({ os: 'android' });
+    await showLanguage('fr');
+    await renderContents();
+    await fireEvent.press(screen.getByRole('radio', { name: 'Juz' }));
+    const title = screen.getByText('Juz 3');
+    expect(styleOf(title)).toMatchObject({
+      fontSize: textStyles.headline.fontSize,
+      color: fallbackSystemColors.label.light,
+    });
   });
 
   it('gives each juz its opening words in the Quran font', async () => {
