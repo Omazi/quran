@@ -25,9 +25,53 @@ export interface SettingsScreenProps {
  * The settings: a grouped list of the few things the system does not already decide
  * (settings.md › Best practices) — the language, the daily goal, the reminders
  * (managing-notifications.md › Best practices) — and the way back to the introduction
- * (onboarding.md › Best practices).
+ * (onboarding.md › Best practices). The profile tab shows the same sections under the
+ * statistics (`DataResetNoticeSection`, `SettingsSections`).
  */
 export function SettingsScreen({ model, actions }: SettingsScreenProps) {
+  const { t } = useTranslation('settings');
+  return (
+    <Screen background="groupedBackground" testID="settings">
+      <AppText variant="largeTitle" style={styles.title}>
+        {t('title')}
+      </AppText>
+      <GroupedList testID="settings-list">
+        <DataResetNoticeSection model={model} actions={actions} />
+        <SettingsSections model={model} actions={actions} />
+      </GroupedList>
+    </Screen>
+  );
+}
+
+/**
+ * Stored data that could not be read back, said in the interface, not in an alert at launch
+ * (alerts.md › Best practices), and only until the person has read it. Nothing otherwise.
+ */
+export function DataResetNoticeSection({ model, actions }: SettingsScreenProps) {
+  const { t } = useTranslation('settings');
+  if (model.dataResetNotice === null) return null;
+  return (
+    <ListSection
+      title={t('dataResetNotice.title')}
+      footer={t(`dataResetNotice.${model.dataResetNotice}`)}
+    >
+      <Button
+        label={t('dataResetNotice.dismiss')}
+        variant="plain"
+        onPress={actions.dismissDataResetNotice}
+        testID="dismiss-data-reset-notice"
+      />
+    </ListSection>
+  );
+}
+
+export interface SettingsSectionsProps extends SettingsScreenProps {
+  /** Header of the first section, to name the settings where other content comes before them. */
+  title?: string;
+}
+
+/** The sections of the settings, to place in a `GroupedList`. */
+export function SettingsSections({ model, actions, title }: SettingsSectionsProps) {
   const { t } = useTranslation('settings');
   const languageOptions = model.language.options.map((choice) => ({
     value: choice,
@@ -41,64 +85,44 @@ export function SettingsScreen({ model, actions }: SettingsScreenProps) {
       ? t('language.deviceLanguageMissing')
       : undefined;
   return (
-    <Screen background="groupedBackground" testID="settings">
-      <AppText variant="largeTitle" style={styles.title}>
-        {t('title')}
-      </AppText>
-      <GroupedList testID="settings-list">
-        {/* Said in the interface, not in an alert at launch (alerts.md › Best practices), and
-            only until the person has read it. */}
-        {model.dataResetNotice === null ? null : (
-          <ListSection
-            title={t('dataResetNotice.title')}
-            footer={t(`dataResetNotice.${model.dataResetNotice}`)}
-          >
-            <Button
-              label={t('dataResetNotice.dismiss')}
-              variant="plain"
-              onPress={actions.dismissDataResetNotice}
-              testID="dismiss-data-reset-notice"
-            />
-          </ListSection>
-        )}
-        <ListSection footer={languageNote}>
-          <ChoiceRow
-            label={t('language.label')}
-            options={languageOptions}
-            value={model.language.selected}
-            onChange={actions.selectLanguage}
-            testID="language"
-          />
-          {model.language.needsRestart ? (
-            <Button
-              label={t('language.restart')}
-              variant="plain"
-              onPress={actions.restartApp}
-              testID="restart-app"
-            />
-          ) : null}
-        </ListSection>
-        <DailyGoalSection
-          title={t('goal.title')}
-          model={model.dailyGoal}
-          onChange={actions.setDailyGoalPages}
+    <>
+      <ListSection title={title} footer={languageNote}>
+        <ChoiceRow
+          label={t('language.label')}
+          options={languageOptions}
+          value={model.language.selected}
+          onChange={actions.selectLanguage}
+          testID="language"
         />
-        <RemindersSection
-          title={t('reminders.title')}
-          model={model.reminders}
-          onChange={actions.changeReminders}
-          onOpenSystemSettings={actions.openSystemSettings}
-          onRequestPermission={actions.requestNotificationPermission}
-        />
-        <ListSection>
-          <ListRow
-            label={t('introduction.replay')}
-            onPress={actions.replayIntroduction}
-            testID="replay-introduction"
+        {model.language.needsRestart ? (
+          <Button
+            label={t('language.restart')}
+            variant="plain"
+            onPress={actions.restartApp}
+            testID="restart-app"
           />
-        </ListSection>
-      </GroupedList>
-    </Screen>
+        ) : null}
+      </ListSection>
+      <DailyGoalSection
+        title={t('goal.title')}
+        model={model.dailyGoal}
+        onChange={actions.setDailyGoalPages}
+      />
+      <RemindersSection
+        title={t('reminders.title')}
+        model={model.reminders}
+        onChange={actions.changeReminders}
+        onOpenSystemSettings={actions.openSystemSettings}
+        onRequestPermission={actions.requestNotificationPermission}
+      />
+      <ListSection>
+        <ListRow
+          label={t('introduction.replay')}
+          onPress={actions.replayIntroduction}
+          testID="replay-introduction"
+        />
+      </ListSection>
+    </>
   );
 }
 

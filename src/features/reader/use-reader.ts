@@ -5,6 +5,7 @@ import { quranStructure } from '@/data/quran';
 import { recordPageRead as addPageToJournal, type ReadingJournal } from '@/domain/khatm';
 import { assertPageNumber } from '@/domain/quran';
 import { deviceLocalDate, type Clock, type HomeSettings } from '@/features/home';
+import { useReaderPresence } from '@/features/profile';
 import { useAppStore } from '@/store';
 
 import { rememberOpenedPage } from './reader-session';
@@ -64,6 +65,8 @@ export function useReader(
   const [areBarsShown, setBarsShown] = useState(true);
   const [feedback, setFeedback] = useState<ReadingFeedback | null>(null);
   const isScreenReaderRunning = useScreenReader();
+  // The time with the reader open is reading time (D37), counted at the root of the app.
+  useReaderPresence();
 
   const journal = useAppStore((state) => state.journal);
   const recordInStore = useAppStore((state) => state.recordPageRead);

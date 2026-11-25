@@ -52,3 +52,11 @@ temps passé n'est pas publié (la demande ne le cite pas, et c'est plus personn
 Une section à part entière, signature visuelle du profil : les quatre nombres en grand, la
 période au choix, l'évolution par jour. Dessinée d'abord en maquettes fil de fer (skill
 Wireframe), puis revue de design avant d'être montrée (D28). Spécification d'écran à venir.
+
+État (25 novembre 2026, branche `work/profile`) : l'onglet « Profil » remplace « Réglages »
+(`src/features/profile`). Maquette fil de fer retenue : « Le récit » (la période, les hasanat en
+grand avec leur source, l'évolution du chiffre choisi, les autres chiffres, chaque khatma, puis
+les réglages). Le temps est compté par `useForegroundTimeRecording` (racine de l'appli), par
+lots d'une minute et au passage en arrière-plan ; le temps de lecture est le temps où un
+lecteur est ouvert, appli au premier plan. La table des pages est construite une fois, après le
+premier affichage (`page-stats-table.ts`). Formulations des hasanat : **à faire valider**.

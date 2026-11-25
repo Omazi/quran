@@ -256,6 +256,20 @@ export const radius = {
 /** Comfortable touch target of each platform (accessibility.md › Mobility; 48 dp on Material). */
 export const touchTargets = { ios: 44, android: 48, default: 44 } as const;
 
+/**
+ * The bar chart of the design system (charts.md; marks after the dataviz skill's mark specs):
+ * bars no wider than 24 points, with a 4-point rounded data end and a square foot on the
+ * baseline, hairline grid lines.
+ */
+export const chart = {
+  /** Height of the plot area, without its labels. */
+  plotHeight: 160,
+  barMaxWidth: 24,
+  /** Share of its slot a bar takes at most: the rest is air between bars. */
+  barSlotShare: '60%',
+  barCornerRadius: 4,
+} as const;
+
 export const layout = {
   /** Margin between the screen edge and its content. */
   screenMargin: spacing.md,
