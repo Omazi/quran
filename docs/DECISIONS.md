@@ -244,3 +244,27 @@ la voix ; l'intérieur des cases reste net.
 - Reste à faire en natif (revue de design) : une branche « augmenter le contraste » avec
   les valeurs prévues par la charte (`#8FE0EA`, `#EBC272`) ; avec « réduire les
   animations », aucun pétale ne grandit, la voix n'agit que sur la lumière des lignes.
+
+## D31 — Le nom de l'appli : Jannatuk (جنتك)
+
+Décision du propriétaire, 24 novembre 2026, après une longue recherche (« Utilise le »).
+جنتك veut dire « ton jardin » : en arabe, le même mot, _janna_, désigne le jardin et le
+Paradis. C'est le jardin de l'appli, celui qui pousse hizb après hizb. Comme tout contenu
+religieux, ce sens reste à faire confirmer par une personne qualifiée.
+
+- **Vérifié** (recherche sur le web, 24 novembre 2026) : aucune appli de l'App Store portant
+  exactement ce nom n'a été trouvée.
+- **Risque connu, accepté par le propriétaire** : trois applis ont un nom voisin (« Jannaty »,
+  « Jannati - جنَّتْي », « جنتي: القران الكريم »). Apple peut refuser un nom trop proche d'un
+  autre.
+- **Pas vérifié** : que le nom est libre auprès d'Apple (seul le formulaire d'App Store Connect
+  le dit) ; qu'aucune marque déposée ne porte ce nom.
+
+Ce qui porte le nom : le nom affiché de l'appli (`app.json`), les textes (`appName` : Jannatuk
+en français et en anglais, جنتك en arabe), le libellé de l'identifiant chez Apple. Sur l'écran
+d'accueil du téléphone, le nom est « Jannatuk » dans toutes les langues pour l'instant.
+
+Ce qui ne le porte pas, exprès : l'identifiant `com.omazi.quran`, le nom du dépôt, le `slug`
+et le schéma de lien (`quranapp`). Ils sont neutres, personne ne les voit, et ils survivent
+ainsi à un changement de nom.
+_Changerait si_ Apple refuse le nom : on en choisit un autre, seul le nom affiché bouge.

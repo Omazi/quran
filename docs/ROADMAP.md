@@ -103,7 +103,8 @@ mode enfants.
   « rappels » non validées).
 - Présentation du texte du Coran (police, mise en page) à revoir avec le propriétaire.
 
-- Nom de l'application.
+- Nom de l'application : **Jannatuk** (D31). Reste à le faire accepter par Apple (création
+  de la fiche) et à faire confirmer son sens par une personne qualifiée.
 - Style final du jardin.
 - Autorisation des polices du complexe du roi Fahd.
 - Validation des contenus religieux par un enseignant (versets associés au jardin, récits).

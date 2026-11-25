@@ -1,4 +1,4 @@
-# Quran App (nom provisoire)
+# Jannatuk (جنتك)
 
 Application Coran gratuite pour iOS et Android : lecture du mushaf hors ligne, suivi de la
 lecture à voix haute, et un jardin qui pousse hizb après hizb.
