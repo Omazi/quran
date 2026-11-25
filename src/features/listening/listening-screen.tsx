@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo } from 'react-native';
 
@@ -10,11 +10,10 @@ import { useReducedMotion } from '@/ui';
 import { describePassage } from './passage-words';
 import { useListening } from './use-listening';
 import type { LoadVerseText } from './use-verse-texts';
-import { ListeningStage } from './scene/listening-stage';
-import { MICROPHONE_OFF_SYMBOL, MICROPHONE_SYMBOL } from './scene/voice-orb';
-import { FoundCard } from './views/found-card';
-import { OutcomeCard } from './views/outcome-card';
-import { PlacesCard } from './views/places-card';
+import { FoundView } from './views/found-view';
+import { ListeningView } from './views/listening-view';
+import { OutcomeView } from './views/outcome-view';
+import { PassagesView } from './views/passages-view';
 
 export interface ListeningScreenProps {
   readonly engine: SpeechEngine;
@@ -38,10 +37,9 @@ const NOT_FOUND: Readonly<Record<NothingFoundReason, string>> = {
 };
 
 /**
- * The listening screen (docs/specs/listening.md), drawn as the validated mockup shazam.png: one
- * gesture, a whole screen that listens, a result that arrives plainly in a card (D27). It
- * composes the scene and the card of each state; the listening itself is `useListening`, the
- * rules are the domain's.
+ * The listening screen (docs/specs/listening.md): one gesture, a whole screen that listens, a
+ * result that arrives plainly (D27). It composes the views of each state; the listening itself
+ * is `useListening`, the rules are the domain's.
  */
 export function ListeningScreen({
   engine,
@@ -71,91 +69,73 @@ export function ListeningScreen({
     if (closed) onClose();
   }, [closed, onClose]);
 
-  const header = {
-    title: t('listening.heading'),
-    backLabel: t('actions.back'),
-    onBack: onClose,
-  };
-  const isActive =
-    state.status === 'idle' || state.status === 'starting' || state.status === 'listening';
-  const isDenied = state.status === 'microphone-denied';
-  // The microphone is the one gesture of the scene: it stops a listening, listens again after
-  // one, or, when the microphone is off, opens the settings where it is allowed.
-  const orb = {
-    subscribeToLevel: isActive ? engine.onLevel : null,
-    reducedMotion,
-    symbol: isDenied ? MICROPHONE_OFF_SYMBOL : MICROPHONE_SYMBOL,
-    accessibilityLabel: isActive
-      ? t('listening.stop')
-      : isDenied
-        ? t('actions.openSettings')
-        : t('actions.listenAgain'),
-    onPress: isActive ? stop : isDenied ? onOpenSettings : listenAgain,
-  };
+  const close = { closeLabel: t('actions.close'), onClose };
   const again = { label: t('actions.listenAgain'), onPress: listenAgain };
 
-  return (
-    <ListeningStage
-      testID="listening"
-      header={isActive ? { ...header, subtitle: t('listening.prompt') } : header}
-      orb={orb}
-      card={cardOf()}
-    />
-  );
-
-  function cardOf(): ReactNode {
-    switch (state.status) {
-      case 'found': {
-        const passage = describe(state.passage);
-        return (
-          <FoundCard passage={passage} loadVerseText={loadVerseText} onOpenPage={onOpenPage} />
-        );
-      }
-      case 'ambiguous': {
-        const { passages } = state;
-        return (
-          <PlacesCard
-            passages={passages.candidates.map(describe)}
-            totalCount={passages.totalCount}
-            isComplete={passages.isComplete}
-            loadVerseText={loadVerseText}
-            onOpenPage={onOpenPage}
-          />
-        );
-      }
-      case 'not-found': {
-        const key = NOT_FOUND[state.reason];
-        return (
-          <OutcomeCard
-            title={t(`${key}.title`)}
-            description={t(`${key}.description`)}
-            action={again}
-            testID="listening-not-found"
-          />
-        );
-      }
-      case 'microphone-denied':
-        return (
-          <OutcomeCard
-            title={t('microphoneDenied.title')}
-            description={t('microphoneDenied.description')}
-            action={{ label: t('actions.openSettings'), onPress: onOpenSettings }}
-            testID="listening-microphone-denied"
-          />
-        );
-      case 'failed':
-        return (
-          <OutcomeCard
-            title={t('failed.title')}
-            description={t('failed.description')}
-            action={again}
-            testID="listening-failed"
-          />
-        );
-      default:
-        // Idle, starting, listening, and the instant before a closed screen goes away.
-        return undefined;
+  switch (state.status) {
+    case 'found':
+      return (
+        <FoundView
+          passage={describe(state.passage)}
+          loadVerseText={loadVerseText}
+          onOpenPage={onOpenPage}
+          onListenAgain={listenAgain}
+          onClose={onClose}
+        />
+      );
+    case 'ambiguous':
+      return (
+        <PassagesView
+          passages={state.passages.candidates.map(describe)}
+          totalCount={state.passages.totalCount}
+          isComplete={state.passages.isComplete}
+          loadVerseText={loadVerseText}
+          onOpenPage={onOpenPage}
+          onListenAgain={listenAgain}
+          onClose={onClose}
+        />
+      );
+    case 'not-found': {
+      const key = NOT_FOUND[state.reason];
+      return (
+        <OutcomeView
+          title={t(`${key}.title`)}
+          description={t(`${key}.description`)}
+          action={again}
+          {...close}
+          testID="listening-not-found"
+        />
+      );
     }
+    case 'microphone-denied':
+      return (
+        <OutcomeView
+          title={t('microphoneDenied.title')}
+          description={t('microphoneDenied.description')}
+          action={{ label: t('actions.openSettings'), onPress: onOpenSettings }}
+          {...close}
+          testID="listening-microphone-denied"
+        />
+      );
+    case 'failed':
+      return (
+        <OutcomeView
+          title={t('failed.title')}
+          description={t('failed.description')}
+          action={again}
+          {...close}
+          testID="listening-failed"
+        />
+      );
+    default:
+      // Idle, starting, listening, and the instant before a closed screen goes away.
+      return (
+        <ListeningView
+          subscribeToLevel={engine.onLevel}
+          onStop={stop}
+          reducedMotion={reducedMotion}
+        />
+      );
   }
 }
 

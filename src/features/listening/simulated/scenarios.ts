@@ -35,11 +35,8 @@ const LISTENING_LOOP_MS = 12000;
 /** How long "silence" listens before the engine gives up. */
 const SILENCE_MS = 6000;
 
-/** The beginning of 2:255: ambiguous with 3:2 at first. */
+/** The beginning of 2:255: ambiguous with 3:2 at first, then found. */
 const AYAT_AL_KURSI = 'الله لا إله إلا هو الحي القيوم لا تأخذه سنة ولا نوم'.split(' ');
-/** 18:10, the passage of the validated mockup (shazam.png). */
-const AL_KAHF_10 =
-  'إذ أوى الفتية إلى الكهف فقالوا ربنا آتنا من لدنك رحمة وهيئ لنا من أمرنا رشدا'.split(' ');
 /** "Praise be to God, Lord of the worlds": six places in the Quran. */
 const PRAISE = 'الحمد لله رب العالمين'.split(' ');
 /** "I went to the market this morning to buy bread": not from the Quran. */
@@ -64,7 +61,7 @@ function recitation(words: readonly string[], seed: number): SimulatedScript {
 function scriptOf(name: ScenarioName): SimulatedScript {
   switch (name) {
     case 'found':
-      return recitation(AL_KAHF_10, 1);
+      return recitation(AYAT_AL_KURSI, 1);
     case 'several':
       return recitation(PRAISE, 2);
     case 'nothing':

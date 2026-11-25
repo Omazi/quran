@@ -88,3 +88,6 @@ const styles = StyleSheet.create({
     elevation: listeningShape.raisedShadow.elevation,
   },
 });
+
+/** The back symbol: it points the other way in Arabic (right-to-left.md › Controls). */
+export const BACK_SYMBOL: IconSymbol = { ios: 'chevron.backward', android: 'chevron_left' };

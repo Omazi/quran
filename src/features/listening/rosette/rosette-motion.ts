@@ -1,14 +1,12 @@
 /**
- * How the voice moves the listening scene: the level of the voice as it is drawn, and the
- * ripples ("petals" in the validated rosette prototype, whose rhythm is kept: D27, D29) that
- * leave the microphone at each breath. A translation of the prototype's frame loop (`frame`,
- * `syllable`).
+ * How the rosette moves: the level of the voice as it is drawn, and the petals that leave the
+ * star. A translation of the prototype's frame loop (`frame`, `syllable`, `drawRosette`).
  *
  * Worklets, run on the UI thread at every frame. The state is one object, changed in place by
  * `receiveLevel` and `advance` (a frame must not allocate a new list of petals sixty times a
  * second); everything else is a pure function of it.
  */
-import { ROSETTE_GEOMETRY, ROSETTE_MOTION, VOICE_LIGHT } from '../config';
+import { ROSETTE_GEOMETRY, ROSETTE_MOTION, ROSETTE_OPACITY } from '../config';
 
 export interface PetalSlot {
   /** When the petal left, in seconds of the motion clock; never for an empty slot. */
@@ -126,13 +124,50 @@ export function petalAppearance(slot: PetalSlot, time: number): PetalAppearance 
   };
 }
 
+export type Appearance = 'light' | 'dark';
+
+export interface LineOpacities {
+  heart: number;
+  outer: number;
+  inside: number;
+  /** Night only: the light on the lines, and the points at the tips. 0 by day. */
+  glow: number;
+  nodes: number;
+}
+
 /**
- * How bright the rings around the microphone are, as a share of their own opacity: they light
- * up with the voice, also with reduced motion, where nothing else moves.
+ * The opacity of each family of lines. By day the lines are steady, and the voice brightens the
+ * gold. By night they breathe with the voice and never dim below their silent light; with
+ * reduced motion they keep only what the voice gives, without the slow wave.
  */
-export function ringsLight(level: number): number {
+export function lineOpacities(
+  level: number,
+  time: number,
+  appearance: Appearance,
+  reducedMotion: boolean,
+): LineOpacities {
   'worklet';
-  return VOICE_LIGHT.ringsBase + (1 - VOICE_LIGHT.ringsBase) * Math.min(1, Math.max(0, level));
+  if (appearance === 'light') {
+    const day = ROSETTE_OPACITY.light;
+    return {
+      heart: day.heart,
+      outer: day.outer,
+      inside: day.inside + day.insideByLevel * level,
+      glow: 0,
+      nodes: 0,
+    };
+  }
+  const night = ROSETTE_OPACITY.dark;
+  const motion = ROSETTE_MOTION;
+  const wave = reducedMotion ? 0 : motion.breatheWave * Math.sin(time * motion.breatheSpeed);
+  const breathe = motion.breatheBase + motion.breatheByLevel * level + wave;
+  return {
+    heart: Math.min(1, night.heart * breathe),
+    outer: Math.min(1, night.outer * breathe),
+    inside: Math.min(1, (night.inside + night.insideByLevel * level) * breathe),
+    glow: Math.min(1, night.glowLayer * (night.glow + night.glowByLevel * level) * breathe),
+    nodes: night.node * (night.nodeFloor + (1 - night.nodeFloor) * level),
+  };
 }
 
 /** How much the whole drawing grows with the voice; not at all with reduced motion. */

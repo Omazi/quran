@@ -17,8 +17,7 @@ import {
   useReducedMotion,
 } from '@/ui';
 
-import { RoundButton } from '../scene/round-button';
-import { BACK_SYMBOL } from '../scene/scene-header';
+import { BACK_SYMBOL, RoundButton } from './round-button';
 import { FollowBar } from './follow-bar';
 import { FollowPage } from './follow-page';
 import { useVoiceFollow } from './use-voice-follow';
@@ -92,7 +91,7 @@ export function VoiceFollowScreen({
           accessibilityLabel={t('actions.back')}
           onPress={model.stop}
           background={colors.followControl}
-          foreground={colors.cardTitle}
+          foreground={colors.onFollowControl}
           isDirectional
           isRaised
           testID="follow-back"

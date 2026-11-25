@@ -1,28 +1,39 @@
 /**
  * Named settings of the listening screen.
  *
- * The look is that of the validated mockups (`docs/design/shazam.png`, `voix.png`; sizes and
- * colours are tokens of `src/ui/listening-tokens.ts`). The rhythm of the voice is that of the
- * validated rosette prototype (`gen/ecoute/styles/site/index.html`, outside the repository;
- * docs/DECISIONS.md D27, D29): each value says where it comes from in that file. Times are in seconds unless the name says
+ * The geometry and the motion are those of the validated prototype
+ * (`gen/ecoute/styles/site/index.html`, outside the repository; docs/DECISIONS.md D27, D29):
+ * each value says where it comes from in that file. Times are in seconds unless the name says
  * otherwise, sizes in points or as a share of the screen.
  */
 
 export const ROSETTE_GEOMETRY = {
-  /** How much the microphone grows at full voice (`1 + 0.02 * level`). */
+  /** The centre of the rosette, as a share of the screen width and height (`W * 0.5, H * 0.38`). */
+  centreX: 0.5,
+  centreY: 0.38,
+  /** Radius of the outer star: the smaller of these shares of the width and height (`drawRosette`). */
+  radiusOfWidth: 0.262,
+  radiusOfHeight: 0.168,
+  /** How much the whole drawing grows at full voice (`1 + 0.02 * level`). */
   levelGrowth: 0.02,
-  /** A ripple's line starts at this width and loses `petalWidthLoss` over its life. */
+  /**
+   * Where the two squares cross, as a share of the radius (`HOLLOW`): cos(45°) / cos(22.5°).
+   * Written out because it is the definition, not a tuned value.
+   */
+  hollow: Math.SQRT1_2 / Math.cos(Math.PI / 8),
+  /** Where the eight small squares meet: the radius of the heart star (`INNER = √2 − 1`). */
+  inner: Math.SQRT2 - 1,
+  /** How far a petal's tip reaches past the star while it is still sharp (`1 + 0.16 * …`). */
+  petalTipReach: 0.16,
+  /** Line widths in points (`ctx.lineWidth = … * dpr`). */
+  heartWidth: 1.5,
+  outerWidth: 1.25,
+  insideWidth: 1.05,
+  /** A petal's line starts at this width and loses `petalWidthLoss` over its life. */
   petalWidth: 1.25,
   petalWidthLoss: 0.5,
-} as const;
-
-/**
- * The light of the voice on the rings around the microphone (shazam.png draws them still; how
- * they light with the voice is a judgement): at rest they keep this share of their opacity,
- * at full voice all of it.
- */
-export const VOICE_LIGHT = {
-  ringsBase: 0.7,
+  /** Night only: radius of the quiet point of light at the eight tips of the heart star. */
+  nodeRadius: 3.5,
 } as const;
 
 export const ROSETTE_MOTION = {
@@ -69,6 +80,78 @@ export const ROSETTE_MOTION = {
    */
   syllableMinimum: 0.3,
   syllableRise: 0.15,
+} as const;
+
+/**
+ * Opacities of the lines: the prototype's own (`drawRosette`, `PALETTES`). Night values are
+ * drawn with the night values of the app's colours, which are the prototype's night colours.
+ *
+ * Day values are the prototype's too, drawn with the app's colours: the gold lines in
+ * `ornamentLine` (#CE9A3C, the prototype's gold), the outer star in water (#0E6B78, where the
+ * prototype has #347A7A), the heart in `accentStrong` (#0A4F59, where it has #0C5056). The
+ * water lines are therefore a little darker than the validated image; the report compares them.
+ */
+export const ROSETTE_OPACITY = {
+  light: {
+    /** `rgba(heart, 0.94)`. */
+    heart: 0.94,
+    /** `rgba(outer, 0.88)`. */
+    outer: 0.88,
+    /** `rgba(inside, 0.78 + 0.22 * level)`. */
+    inside: 0.78,
+    insideByLevel: 0.22,
+    /** Petals are drawn at the opacity of their own life, with no further share. */
+    goldPetal: 1,
+    waterPetal: 1,
+  },
+  dark: {
+    heart: 0.94,
+    outer: 0.78,
+    inside: 0.55,
+    insideByLevel: 0,
+    goldPetal: 1,
+    waterPetal: 1,
+    /** The light on the lines (`(0.30 + 0.45 * level) * breathe`, canvas at opacity 0.7). */
+    glow: 0.3,
+    glowByLevel: 0.45,
+    glowLayer: 0.7,
+    /** Blur of that light, in points (`filter: blur(13px)`). */
+    glowBlur: 13,
+    /** Width of the light on the heart and outer stars at mid voice (`2.2 + 4.5 * level`, `1.6 + 3.5 * level`). */
+    heartGlowWidth: 4.45,
+    outerGlowWidth: 3.35,
+    /** The points of light at the tips (`0.40 * (0.25 + 0.75 * level)`). */
+    node: 0.4,
+    nodeFloor: 0.25,
+  },
+} as const;
+
+export const LISTENING_LAYOUT = {
+  /** The title's top, as a share of the screen height (`.title { top: 62.5% }`). */
+  titleTop: 0.625,
+  /**
+   * Radius of the outer star of the small rosette above a result (found, several places):
+   * 40 points, a star 80 points wide, the size of a large symbol rather than a picture
+   * (judgement on the 8-point grid; the prototype has no result screen).
+   */
+  resultRosetteRadius: 40,
+} as const;
+
+/**
+ * The rosette at rest, once the listening is over. It is a still frame of the silent rosette of
+ * the prototype: the stars at their silent light, and the two silent petals that are alive at
+ * any moment of silence (one leaves every `silentPetalInterval`, each lives `petalLife`, so two
+ * overlap, half a life apart). Their shape, size and opacity come from `petalAppearance`.
+ */
+export const SETTLED_ROSETTE = {
+  /** The ages of the two petals, as shares of a petal's life (the phase is a judgement). */
+  petalAges: [0.25, 0.75],
+  /**
+   * The width of the screen the prototype's night light was drawn for (an iPhone of 393 points;
+   * the validated images are of that size). A rosette smaller than the one on that screen gets a
+   * proportionally smaller light, so a small rosette does not drown in its own glow.
+   */
+  lightReferenceScreenWidth: 393,
 } as const;
 
 /**

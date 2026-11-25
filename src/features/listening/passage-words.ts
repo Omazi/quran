@@ -9,10 +9,6 @@ import { RESULT_TEXT } from './config';
 export interface PassageWords {
   /** "Sourate Al-Baqarah", "سورة البقرة": the name of the interface's language. */
   readonly surah: string;
-  /**
-   * The place as the card titles it (shazam.png): "Al-Kahf, verset 10", "الكهف، الآية 10".
-   */
-  readonly place: string;
   /** The surah's Arabic name, as the data layer gives it, for the title in the Quran's script. */
   readonly surahArabic: string;
   /** "Verset 255", "Versets 255 à 257", or both ends of a passage over two surahs. */
@@ -52,19 +48,15 @@ export function describePassage(
       ? info.nameArabic
       : info.nameTransliterated.replace(STRAIGHT_APOSTROPHE, TYPOGRAPHIC_APOSTROPHE);
   let verses: string;
-  let versesInline: string;
   if (firstVerse.surah !== lastVerse.surah) {
     verses = t('acrossSurahs', {
       first: `${firstVerse.surah}:${firstVerse.verse}`,
       last: `${lastVerse.surah}:${lastVerse.verse}`,
     });
-    versesInline = verses;
   } else if (firstVerse.verse === lastVerse.verse) {
     verses = t('verse', { verse: firstVerse.verse });
-    versesInline = t('verseInline', { verse: firstVerse.verse });
   } else {
     verses = t('verses', { first: firstVerse.verse, last: lastVerse.verse });
-    versesInline = t('versesInline', { first: firstVerse.verse, last: lastVerse.verse });
   }
   const lastInSurah = firstVerse.surah === lastVerse.surah ? lastVerse.verse : info.verseCount;
   const shownCount = Math.min(RESULT_TEXT.maxVerses, lastInSurah - firstVerse.verse + 1);
@@ -76,7 +68,6 @@ export function describePassage(
     firstVerse.surah !== lastVerse.surah || lastInSurah > firstVerse.verse + shownCount - 1;
   return {
     surah: t('surah', { name }),
-    place: t('place', { name, verses: versesInline }),
     surahArabic: info.nameArabic,
     verses,
     firstVerse,

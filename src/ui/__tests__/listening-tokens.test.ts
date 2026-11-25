@@ -8,26 +8,18 @@ import { contrastRatio } from '../test-support/contrast';
  * for symbols).
  */
 const TEXT_PAIRS: readonly [ListeningPaletteRole, ListeningPaletteRole][] = [
-  ['onScene', 'sceneTop'],
-  ['onScene', 'sceneMiddle'],
-  ['onSceneSecondary', 'sceneMiddle'],
-  ['cardTitle', 'card'],
-  ['cardSecondary', 'card'],
-  ['cardAccent', 'card'],
-  ['cardAccent', 'cardTint'],
-  ['onCardAction', 'cardAction'],
   ['followRereadInk', 'followRereadBack'],
+  ['onFollowControl', 'followControl'],
   ['onFollowBar', 'followBarStart'],
   ['onFollowBarSecondary', 'followBarStart'],
   ['onFollowBarSecondary', 'followBarEnd'],
 ];
 
 const SYMBOL_PAIRS: readonly [ListeningPaletteRole, ListeningPaletteRole][] = [
-  ['onOrb', 'orbBody'],
-  ['onOrb', 'orbEdge'],
+  ['onFollowBar', 'followBarEnd'],
 ];
 
-describe('the colours of the listening screens', () => {
+describe('the colours of the voice-following view', () => {
   it.each(TEXT_PAIRS.flatMap((pair) => (['light', 'dark'] as const).map((a) => [...pair, a])))(
     '%s on %s (%s) reaches 4.5:1',
     (foreground, background, appearance) => {
@@ -58,17 +50,9 @@ describe('the colours of the listening screens', () => {
   });
 });
 
-describe('the shapes of the listening screens', () => {
+describe('the shapes of the voice-following view', () => {
   it('keeps every control at 44 points or more', () => {
     expect(listeningShape.sceneButtonHit).toBeGreaterThanOrEqual(44);
-    expect(listeningShape.cardButtonHeight).toBeGreaterThanOrEqual(44);
-    expect(listeningShape.orbDiameter).toBeGreaterThanOrEqual(44);
     expect(listeningShape.followStopDiameter).toBeGreaterThanOrEqual(44);
-  });
-
-  it('draws the rings outside the microphone, growing outwards', () => {
-    const radii = listeningShape.ringRadii;
-    expect(radii[0]).toBeGreaterThan(listeningShape.orbDiameter / 2);
-    expect([...radii].sort((a, b) => a - b)).toEqual([...radii]);
   });
 });

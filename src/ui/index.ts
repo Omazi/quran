@@ -18,8 +18,6 @@ export { useHighContrast, useReducedMotion } from './device-settings';
 export {
   listeningOpacity,
   listeningShape,
-  listeningTextRamps,
-  listeningTextStyles,
   useListeningColors,
   useUpcomingInk,
   type ListeningColors,

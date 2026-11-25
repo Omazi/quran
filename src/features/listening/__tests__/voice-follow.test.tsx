@@ -170,3 +170,22 @@ describe('the address of the voice-following trial', () => {
     expect(parseFollowParams('x', undefined)).toBeNull();
   });
 });
+
+describe('the files of the voice-following view', () => {
+  // The project compiles without Node's type definitions: the functions needed are typed here.
+  const { readdirSync, readFileSync } = jest.requireActual<{
+    readdirSync: (path: string) => string[];
+    readFileSync: (path: string, encoding: 'utf8') => string;
+  }>('node:fs');
+  const { resolve } = jest.requireActual<{ resolve: (...segments: string[]) => string }>(
+    'node:path',
+  );
+  const folder = resolve(expect.getState().testPath ?? '', '../../follow');
+  const files = readdirSync(folder).filter((name) => name.endsWith('.tsx'));
+
+  it.each(files)('%s writes no colour of its own', (name) => {
+    const source = readFileSync(resolve(folder, name), 'utf8');
+    expect(source).not.toMatch(/['"]#[0-9A-Fa-f]{3,8}['"]/);
+    expect(source).not.toMatch(/rgba?\(/);
+  });
+});

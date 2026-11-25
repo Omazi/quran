@@ -1,9 +1,8 @@
 {
   "listening": {
+    "title": "Listening…",
     "announcement": "Listening",
-    "stop": "Stop Listening",
-    "heading": "Recognize a Passage",
-    "prompt": "Recite or play a passage"
+    "stop": "Stop"
   },
   "surah": "Surah {{name}}",
   "surahArabic": "سورة {{name}}",
@@ -13,10 +12,9 @@
   "page": "Page {{page}}",
   "found": {
     "announcement": "Passage found: {{surah}}, {{verses}}",
-    "open": "Open in the Mushaf",
-    "continues": "The rest opens in the reader.",
-    "label": "Passage Found",
-    "openHint": "Opens the reader at page {{page}}."
+    "open": "Open at Page {{page}}",
+    "where": "{{verses}} · Page {{page}}",
+    "continues": "The rest opens in the reader."
   },
   "several": {
     "title": "Several Passages",
@@ -24,8 +22,7 @@
     "description_other": "These words appear in {{count}} places. Choose the one you were reciting.",
     "incomplete": "{{shown}} of {{count}} places. Recite what follows to narrow the list.",
     "rowValue": "Verse {{verse}} · Page {{page}}",
-    "rowHint": "Opens the reader at page {{page}}.",
-    "choose": "Which one were you reciting?"
+    "rowHint": "Opens the reader at page {{page}}."
   },
   "nothingHeard": {
     "title": "Nothing Heard",
@@ -53,9 +50,6 @@
     "close": "Close",
     "back": "Back"
   },
-  "verseInline": "verse {{verse}}",
-  "versesInline": "verses {{first}} to {{last}}",
-  "place": "{{name}}, {{verses}}",
   "follow": {
     "title": "Listening",
     "reread": "Read this word again:",

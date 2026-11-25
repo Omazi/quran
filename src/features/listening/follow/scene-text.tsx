@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react';
 import { Text, type StyleProp, type TextStyle } from 'react-native';
 
-import { listeningTextRamps, listeningTextStyles } from '@/ui';
 import { appleTextStyles, textStyles, type TextStyleName } from '@/ui/tokens';
 
-export type SceneTextVariant = TextStyleName | keyof typeof listeningTextStyles;
+export type SceneTextVariant = TextStyleName;
 
 export interface SceneTextProps {
   readonly children: ReactNode;
@@ -21,14 +20,11 @@ export interface SceneTextProps {
 }
 
 function styleOf(variant: SceneTextVariant) {
-  if (variant === 'title3' || variant === 'footnoteStrong') {
-    return { token: listeningTextStyles[variant], ramp: listeningTextRamps[variant] };
-  }
   return { token: textStyles[variant], ramp: appleTextStyles[variant] };
 }
 
 /**
- * Interface text of the listening screens, in the colours of the mockups, which are not roles
+ * Interface text of the voice-following view, in the colours of the mockup, which are not roles
  * of the charter (`AppText` takes roles only). San Francisco, a text style of Apple's, and its
  * Dynamic Type ramp, so it grows with the person's text size (typography.md › Supporting Dynamic
  * Type). Not for Quran text.

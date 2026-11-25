@@ -13,14 +13,14 @@ import type { Unsubscribe } from '@/domain/listening';
 import { fontFamily, listeningShape, spacing, useListeningColors, type IconSymbol } from '@/ui';
 
 import { METER_MOTION } from '../config';
-import { RoundButton } from '../scene/round-button';
-import { SceneText } from '../scene/scene-text';
+import { RoundButton } from './round-button';
+import { SceneText } from './scene-text';
 import {
   advance,
   createRosetteMotion,
   receiveLevel,
   type RosetteMotion,
-} from '../scene/voice-motion';
+} from '../rosette/rosette-motion';
 
 const STOP_SYMBOL: IconSymbol = { ios: 'stop.fill', android: 'stop' };
 
