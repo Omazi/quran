@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import type { GardenState } from '@/domain/garden';
-import { GardenScene } from '@/features/garden';
+import { GardenView3D } from '@/features/garden';
 import {
   AppText,
   Icon,
@@ -24,8 +24,8 @@ export interface GardenStageProps {
 }
 
 /**
- * The garden, edge to edge on its gradient (the signature of the screen; charter, section 1), and
- * over it the label of the element the hizb in progress grows, with a ring of how much of that
+ * The garden, edge to edge on its gradient (the signature of the screen; charter, section 1), in
+ * 3D: it turns under the finger and zooms with a pinch (D40). Over it the label of the element the hizb in progress grows, with a ring of how much of that
  * hizb is read. The label sits at the trailing side, so it moves to the left in Arabic; the garden
  * itself is never mirrored (right-to-left.md › Images).
  */
@@ -33,7 +33,7 @@ export function GardenStage({ garden, showsGrowing }: GardenStageProps) {
   const next = garden.nextElement;
   return (
     <View style={styles.stage}>
-      <GardenScene state={garden} size="band" />
+      <GardenView3D state={garden} testID="home-garden-3d" />
       {showsGrowing && next !== null ? (
         <GrowingLabel
           hizb={garden.hizbCompleted + 1}

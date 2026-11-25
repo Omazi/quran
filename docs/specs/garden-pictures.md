@@ -88,7 +88,9 @@ pages des auteurs ; les fichiers ont été pris sur des miroirs GitHub : voir
 ## 5. Limites à dire
 
 - Le jardin ne tourne pas : ce sont des images. La visite en 3D du jardin d'un proche
-  demande le moteur 3D (D4).
+  demande le moteur 3D (D4). **Depuis D40**, l'accueil et la page d'un proche montrent le
+  jardin en 3D (`GardenView3D`), qui choisit son étape avec la même fonction (`gardenStage`) et
+  retombe sur ces images tant qu'il charge ou s'il échoue ; les vignettes restent des images.
 - Un seul jardin, celui du niveau 1. Les jardins des autres niveaux (D23) n'existent pas
   encore.
 - Les images ajoutent une vingtaine de mégaoctets à l'appli.

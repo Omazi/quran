@@ -168,5 +168,12 @@
     "roses": "Des roses fleurissent dans ton jardin",
     "waterfall": "Une cascade coule dans ton jardin",
     "full-bloom": "Ton jardin est en pleine floraison"
+  },
+  "view3d": {
+    "hint": "Glisse pour tourner, pince pour zoomer",
+    "accessibilityHint": "Les actions font tourner le jardin.",
+    "turnLeft": "Tourner vers la gauche",
+    "turnRight": "Tourner vers la droite",
+    "reset": "Revenir à la vue de départ"
   }
 }

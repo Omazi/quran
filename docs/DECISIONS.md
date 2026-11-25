@@ -466,3 +466,76 @@ l'eau. Le mot fait pousser le jardin. Détail, couleurs, couches, pistes écart�
 
 _Changerait si_ le propriétaire préfère une autre écriture ou une autre couleur, ou si le rendu sur
 iPhone déçoit : les réglages sont en tête de `make_icon.py`, et on relance l'outil.
+
+## D40 — Le jardin en vraie 3D : expo-gl et three.js, un modèle cuit à l'avance
+
+Exigence du propriétaire (25 novembre 2026) : « Le jardin on avait dit 3D et donc on doit pouvoir
+le tourner », comme sur `design/visite.png` (« Glisse pour tourner, pince pour zoomer »). Proposé
+par le développeur d'interface le 25 novembre 2026 ; remplace D35 pour le grand jardin de
+l'accueil et la page d'un proche. Les images de D35 restent pour les vignettes (cartes des
+proches, jardins voisins, profil, premier lancement, khatma terminée) et comme repli.
+
+**Le moteur : expo-gl 58 et three.js 0.187, pas react-native-filament (D4).** Ce qui a été
+vérifié le 25 novembre 2026 :
+
+- react-native-filament 1.11.0 (MIT, dernière version du 27 mai 2026) : 343 Mo une fois
+  installé ; demande un second moteur de worklets (`react-native-worklets-core`) à côté de celui
+  de l'appli ; tickets ouverts sur Expo et la nouvelle architecture (plantage NSException avec
+  Expo 54, module `Worklets` introuvable, chemins `file://` mal lus sur iOS) ; le dessèchement
+  des plantes demanderait une matière Filament compilée hors ligne (`matc`) ; et rien ne s'en voit
+  sur Linux, donc rien ne se vérifie ici.
+- expo-gl 58.0.4 (MIT, version choisie par `npx expo install` pour le SDK 58) ; three 0.187.0
+  (MIT), la version qui a rendu les images : mêmes matières, même ombre, même dessèchement, donc
+  au repos le jardin 3D est l'image. Le rendu web d'expo-gl se photographie dans Chromium sans
+  écran : tout ce qui suit a été regardé.
+- La crainte de D4 (expo-gl dessine sur le fil JavaScript) est réduite, pas supprimée : on ne
+  dessine que quand quelque chose bouge (geste, glissement, nouvelle étape ; zéro image en 3 s
+  d'immobilité, mesuré) ; peu de dessins (43 pour le jardin au hizb 24, 74 pour le jardin
+  complet, contre 1 par modèle placé sans fusion) ; les ombres ne sont recalculées qu'au
+  changement d'étape (le soleil ne bouge pas avec la caméra) ; three.js n'est chargé qu'avec le
+  premier contexte GL.
+
+**Le modèle : cuit à l'avance, un seul fichier.** `tools/garden-3d` exécute le constructeur des
+images (`garden.js`) pour les 732 étapes du jardin (60 éléments, 3 niveaux d'eau, 4 états du
+feuillage) et note chaque morceau avec les étapes où il paraît ; les morceaux sont fusionnés par
+matière (23 maillages) ou dessinés par instances quand un modèle revient (53 maillages : arbres,
+fleurs, herbes, murs). Le fichier, `assets/models/garden/level-1/garden.glb`, est un GLB standard
+(positions quantifiées, instances `EXT_mesh_gpu_instancing`), avec les textures en pixels bruts :
+le téléphone ne décode aucune image et ne lit aucun FBX ; l'appli lit le fichier sans chargeur
+glTF ni `TextDecoder` (`garden3d/glb.ts`). Montrer une étape, c'est choisir des plages de
+triangles et des instances. 82 600 triangles stockés, 236 000 dessinés pour le jardin complet.
+
+**Poids.** Le modèle : 4,9 Mo (dont 2,1 Mo de textures), 1,65 Mo compressé (gzip -9, ordre de
+grandeur du paquet de l'appli). three.js : environ 0,7 Mo de JavaScript minifié. Les images de D35
+(21 Mo) restent.
+
+**Ce que fait le jardin** (`GardenView3D`, `specs/garden-pictures.md` pour l'étape montrée) :
+même cadrage que les images par défaut ; glisser tourne autour de l'axe vertical, le bord du
+jardin sous le doigt, avec élan qui ralentit comme une liste et qu'un toucher arrête ; une
+légère inclinaison bornée (22° à 58°, le cadre s'élargit pour garder tout le jardin) ; pincer
+zoome de 1 à 2,5 autour des doigts ; toucher deux fois zoome, ou revient à la vue de départ ;
+« réduire les animations » : pas d'élan ni de glissement ; VoiceOver : une seule image, décrite
+comme avant, avec trois actions (tourner à gauche, à droite, revenir) ; une consigne au premier
+usage, retirée pour de bon dès le premier geste. Tant que le modèle charge, ou si le GL échoue,
+l'image reste : jamais de cadre vide.
+
+**Vérifié** : tests (lecture du fichier livré, étapes montrées, caméra, gestes et glissements
+avec une horloge de test, repli sur l'image) ; export web regardé dans Chromium (accueil et page
+d'un proche, angle par défaut, tourné de 90°, incliné, zoomé, fané, mourant, terre morte, clair
+et sombre) ; comparaison à l'image de la même étape : contours superposés, écart moyen de 5 sur
+255 pour les états secs (textures réduites, tachetures de la terre) ; `npx expo export --platform
+ios` contient le GLB.
+
+**Pas vérifié** : la fluidité et la mémoire sur un iPhone (aucun iPhone ni Mac ici, D24) ; les
+textures téléversées par expo-gl en `Uint8Array`, les ombres (textures de profondeur de WebGL 2)
+et la transparence du fond sur iOS ; Android. expo-gl dessine à la définition native de l'écran
+(3x sur iPhone) : la limite de densité ne s'applique qu'au web. Si l'iPhone peine, réglages
+dans l'ordre : `light.shadow.mapSize`, puis les ombres, puis `msaaSamples` du `GLView`.
+
+**Licences** : expo-gl, three, expo-asset, expo-file-system : MIT (`NOTICE.txt`). Modèles :
+Quaternius et Kenney, CC0, pris sur des miroirs GitHub : **à retélécharger chez les auteurs et à
+recuire avant l'App Store** (`assets/models/garden/NOTICE.txt`, comme D22 et D35).
+
+_Changerait si_ le premier essai sur iPhone est saccadé : le modèle cuit reste valable (GLB
+standard) pour un autre moteur, Filament compris ; seuls `garden-three.ts` et
+`garden-renderer.ts` changent.
