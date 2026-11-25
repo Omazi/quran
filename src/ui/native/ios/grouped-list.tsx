@@ -3,12 +3,18 @@ import {
   Form,
   HStack,
   Image,
+  Label,
   LabeledContent,
   Section,
   Spacer,
   Text,
 } from '@expo/ui/swift-ui';
-import { accessibilityHidden, font, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
+import {
+  accessibilityHidden,
+  accessibilityLabel,
+  font,
+  foregroundStyle,
+} from '@expo/ui/swift-ui/modifiers';
 import { StyleSheet, View } from 'react-native';
 
 import { appleTextStyles, fontFamily, spacing, textStyles } from '../../tokens';
@@ -89,22 +95,67 @@ export function ListSection({ title, titleQuran, footer, children }: ListSection
  * link, which needs a SwiftUI navigation stack the app does not have: the row is a button with
  * the `chevron.forward` symbol, which points the other way in Arabic.
  */
-export function ListRow({ label, value, onPress, testID }: ListRowProps) {
+export function ListRow({
+  label,
+  symbol,
+  value,
+  valueAccessibilityLabel,
+  onPress,
+  testID,
+}: ListRowProps) {
   useGroupedListGuard('ListRow');
-  if (onPress === undefined) {
+  // The value as written, and as VoiceOver says it when its written form is abbreviated.
+  const valueText =
+    value === undefined ? null : (
+      <Text
+        modifiers={
+          valueAccessibilityLabel === undefined
+            ? undefined
+            : [accessibilityLabel(valueAccessibilityLabel)]
+        }
+      >
+        {value}
+      </Text>
+    );
+  if (onPress === undefined && symbol === undefined) {
     return value === undefined ? (
       <Text testID={testID}>{label}</Text>
     ) : (
       <LabeledContent label={label} testID={testID}>
-        <Text>{value}</Text>
+        {valueText}
+      </LabeledContent>
+    );
+  }
+  // With a symbol, the system label: the symbol at the leading end, in the tint the list gives
+  // a button (the accent), at the size of the body text; the words in the label colour.
+  const words = <Text modifiers={[PRIMARY]}>{label}</Text>;
+  const title =
+    symbol === undefined ? (
+      words
+    ) : (
+      <Label
+        icon={
+          <Image
+            systemName={symbol.ios}
+            modifiers={[font({ textStyle: appleTextStyles.body }), accessibilityHidden()]}
+          />
+        }
+      >
+        {words}
+      </Label>
+    );
+  if (onPress === undefined) {
+    return (
+      <LabeledContent label={title} testID={testID}>
+        {valueText}
       </LabeledContent>
     );
   }
   return (
     <SwiftUIButton onPress={onPress} testID={testID}>
-      <LabeledContent label={<Text modifiers={[PRIMARY]}>{label}</Text>}>
+      <LabeledContent label={title}>
         <HStack spacing={spacing.sm}>
-          {value === undefined ? null : <Text>{value}</Text>}
+          {valueText}
           <Image
             systemName="chevron.forward"
             modifiers={[

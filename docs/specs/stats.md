@@ -56,7 +56,11 @@ Wireframe), puis revue de design avant d'être montrée (D28). Spécification d'
 État (25 novembre 2026, branche `work/profile`) : l'onglet « Profil » remplace « Réglages »
 (`src/features/profile`). Maquette fil de fer retenue : « Le récit » (la période, les hasanat en
 grand avec leur source, l'évolution du chiffre choisi, les autres chiffres, chaque khatma, puis
-les réglages). Le temps est compté par `useForegroundTimeRecording` (racine de l'appli), par
+les réglages). Puis (25 novembre 2026, branche `work/profile2`) : le jardin de la personne en
+tête (D23 : on reconnaît un niveau à son jardin), les khatmas racontées comme des jardins (« Jardin 1 ·
+achevé le … »), la source des hasanat dite une seule fois, sous le chiffre ; les réglages sur une page
+à part, ouverte par la dernière ligne du profil (décision du propriétaire) ; période par défaut :
+la semaine. Le temps est compté par `useForegroundTimeRecording` (racine de l'appli), par
 lots d'une minute et au passage en arrière-plan ; le temps de lecture est le temps où un
 lecteur est ouvert, appli au premier plan. La table des pages est construite une fois, après le
 premier affichage (`page-stats-table.ts`). Formulations des hasanat : **à faire valider**.

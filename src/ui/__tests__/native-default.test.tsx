@@ -339,6 +339,41 @@ describe('default GroupedList', () => {
     await userEvent.press(screen.getByRole('button', { name: 'Revoir la présentation' }));
     expect(onPress).toHaveBeenCalledTimes(1);
   });
+
+  it('puts a decorative symbol before the words of a row, in the accent', async () => {
+    setDeviceConditions();
+    const onPress = jest.fn();
+    await render(
+      <InList>
+        <ListRow label="Réglages" symbol={BOOK} onPress={onPress} testID="row" />
+      </InList>,
+    );
+    const button = screen.getByRole('button', { name: 'Réglages' });
+    const icons = button.queryAll(({ props }) => props.tintColor !== undefined);
+    expect(icons).toHaveLength(1);
+    expect(icons[0]).toHaveProp('accessibilityElementsHidden', true);
+    await userEvent.press(button);
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads a value the way it is said when its written form is abbreviated', async () => {
+    setDeviceConditions();
+    await render(
+      <InList>
+        <ListRow
+          label="Temps de lecture"
+          value="1 h 35 min"
+          valueAccessibilityLabel="1 heure 35 minutes"
+          testID="row"
+        />
+      </InList>,
+    );
+    expect(screen.getByTestId('row')).toHaveProp(
+      'accessibilityLabel',
+      'Temps de lecture, 1 heure 35 minutes',
+    );
+    expect(screen.getByText('1 h 35 min')).toBeOnTheScreen();
+  });
 });
 
 describe('default SwitchRow', () => {

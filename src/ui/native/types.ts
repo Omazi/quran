@@ -140,8 +140,18 @@ export interface ContentRowProps {
 
 export interface ListRowProps {
   label: string;
+  /**
+   * A symbol before the words, in the accent (lists-and-tables.md › Style: a small image at the
+   * leading end, followed by a brief label). Decorative: screen readers hear the words only.
+   */
+  symbol?: IconSymbol;
   /** Short value shown at the trailing side. */
   value?: string;
+  /**
+   * The value as screen readers should say it, when its written form is abbreviated ("1 h 35
+   * min" read as "1 heure 35 minutes"; voiceover.md › Descriptions).
+   */
+  valueAccessibilityLabel?: string;
   /** Makes the row open something: it then shows that it can be pressed. */
   onPress?: () => void;
   testID?: string;

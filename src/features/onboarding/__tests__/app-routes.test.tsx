@@ -2,7 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { reloadAppAsync } from 'expo';
 import { getLocales } from 'expo-localization';
 import { getPermissionsAsync, PermissionStatus, requestPermissionsAsync } from 'expo-notifications';
-import { fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
+import { router } from 'expo-router';
+import { act, fireEvent, renderRouter, screen, waitFor } from 'expo-router/testing-library';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { DIRECTION_RESTART_KEY } from '@/features/settings';
@@ -298,12 +299,25 @@ describe('returning person', () => {
     setPermission(PermissionStatus.GRANTED);
     const app = await openApp('/profile');
     await waitFor(() => expect(app.getPathname()).toBe('/profile'));
+    // The settings are behind the last row of the profile, on a page with the system bar.
+    expect(screen.queryByRole('adjustable', { name: 'Pages par jour' })).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Réglages' }));
+    await waitFor(() => expect(app.getPathname()).toBe('/settings'));
+    const header = screen.container
+      .queryAll(({ type }) => type === 'RNSScreenStackHeaderConfig')
+      .find(({ props }) => props.title === 'Réglages');
+    expect(header).toHaveProp('hidden', false);
+    expect(header).toHaveProp('color', iosAppColor('accent'));
     expect(screen.getByRole('adjustable', { name: 'Pages par jour' })).toHaveAccessibilityValue({
       text: '12',
     });
 
     await fireEvent.press(screen.getByTestId('daily-goal-increment'));
     await waitFor(async () => expect((await storedSettings()).dailyGoalPages).toBe(13));
+
+    // The back button of the bar returns to the profile.
+    await act(() => router.back());
+    await waitFor(() => expect(app.getPathname()).toBe('/profile'));
   });
 
   it('keeps the language they chose, whatever the language of the device', async () => {
@@ -344,9 +358,11 @@ describe('returning person', () => {
     expect(await screen.findByLabelText('Nom à chercher')).toBeOnTheScreen();
   });
 
-  it('can see the introduction again from the profile, with a back button, and finish it', async () => {
+  it('can see the introduction again from the settings, with a back button, and finish it', async () => {
     setPermission(PermissionStatus.GRANTED);
     const app = await openApp('/profile');
+    await fireEvent.press(await screen.findByRole('button', { name: 'Réglages' }));
+    await waitFor(() => expect(app.getPathname()).toBe('/settings'));
     await fireEvent.press(await screen.findByRole('button', { name: 'Revoir la présentation' }));
     await waitFor(() => expect(app.getPathname()).toBe('/onboarding'));
     await layOutIntroduction();
@@ -362,9 +378,9 @@ describe('returning person', () => {
     // Opened again, the flow simply ends: "Terminé", and the system is asked nothing.
     await swipeToPage(LAST_PAGE);
     await fireEvent.press(await screen.findByRole('button', { name: 'Terminé' }));
-    await waitFor(() => expect(app.getPathname()).toBe('/profile'));
+    await waitFor(() => expect(app.getPathname()).toBe('/settings'));
     expect(requestPermissionsAsync).not.toHaveBeenCalled();
-    expect(screen.getByRole('header', { name: 'Profil' })).toBeOnTheScreen();
+    expect(screen.getByRole('adjustable', { name: 'Pages par jour' })).toBeOnTheScreen();
   });
 });
 
@@ -409,6 +425,8 @@ describe('stored data that could not be read back', () => {
     // What could not be read is kept aside on the device, as it was.
     expect(await writtenUnder(REJECTED_DATA_KEY, raw)).toBe(raw);
     expect(await writtenUnder(RESET_NOTICE_KEY, 'journal')).toBe('journal');
+    // The settings have their own page now: the row that opens it is still on the profile.
+    expect(screen.getByRole('button', { name: 'Réglages' })).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'D’accord' }));
     await waitFor(() =>

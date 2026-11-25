@@ -17,6 +17,7 @@ import {
 
 import { ProfileScreen } from '../profile-screen';
 import { buildFixtureTable, day, FIXTURE_PAGE, journalOf } from '../test-support/stats-fixtures';
+import { useProfileGarden } from '../use-profile-garden';
 import { useProfileStats } from '../use-profile-stats';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -35,9 +36,13 @@ const loadTable = () => Promise.resolve(table);
 // Wednesday 25 November 2026, in the afternoon.
 const clock = () => new Date('2026-11-25T15:00:00');
 
+const openSettings = jest.fn();
+const read = jest.fn();
+
 /** The profile tab as its route composes it, with a table and a clock the test controls. */
 function ProfileHarness() {
   const { model: stats, actions: statsActions } = useProfileStats({ clock, loadTable });
+  const garden = useProfileGarden({ clock });
   const { model: settings, actions: settingsActions } = useSettings({
     notifications: createInertNotificationPermissions({ status: 'granted' }),
     direction: createFixedDirection(false).platform,
@@ -51,6 +56,8 @@ function ProfileHarness() {
       statsActions={statsActions}
       settings={settings}
       settingsActions={settingsActions}
+      garden={garden}
+      actions={{ openSettings, read }}
     />
   );
 }
@@ -88,7 +95,11 @@ function plain(text: string): string {
   return text.replace(/[  ]/g, ' ');
 }
 
-afterEach(resetDeviceConditions);
+afterEach(async () => {
+  await resetDeviceConditions();
+  openSettings.mockClear();
+  read.mockClear();
+});
 
 describe('ProfileScreen › statistics', () => {
   it('opens on the week: the hasanat estimate large, with its source right under it', async () => {
@@ -129,8 +140,11 @@ describe('ProfileScreen › statistics', () => {
 
   it('draws the evolution day by day, each day read by VoiceOver with its value', async () => {
     await renderProfile();
-    expect(screen.getByText('Chaque jour')).toBeOnTheScreen();
-    expect(screen.getByTestId('profile-chart-summary')).toHaveTextContent(
+    // The summary is the subtitle of the chart's title, right under it (charts.md › Descriptive
+    // content).
+    const title = screen.getByTestId('profile-chart-title');
+    expect(within(title).getByRole('header', { name: 'Chaque jour' })).toBeOnTheScreen();
+    expect(within(title).getByTestId('profile-chart-summary')).toHaveTextContent(
       /^Meilleur jour : lundi 23 novembre, 16[\s\u202f]000$/,
     );
     expect(screen.getByLabelText(/^lundi 23 novembre, Hasanat : /)).toBeOnTheScreen();
@@ -152,11 +166,32 @@ describe('ProfileScreen › statistics', () => {
     );
   });
 
-  it('lists each khatma, the one in progress first, the estimate with its source', async () => {
+  it('tells each khatma as the garden it grew, the one in progress first', async () => {
     await renderProfile();
-    expect(screen.getByText('Khatma 2 · en cours')).toBeOnTheScreen();
-    expect(screen.getByText(/^Khatma 1 · terminée le 1 sept\. 2026$/)).toBeOnTheScreen();
-    expect(screen.getByText(/Hasanat : une estimation \(Tirmidhî n° 2910\)/)).toBeOnTheScreen();
+    expect(screen.getByText('Tes jardins')).toBeOnTheScreen();
+    expect(screen.getByText('Jardin 2 · en cours')).toBeOnTheScreen();
+    expect(screen.getByText(/^Jardin 1 · achevé le 1 sept\. 2026$/)).toBeOnTheScreen();
+    expect(
+      within(screen.getByTestId('profile-khatma-1')).getByText(/^Khatma 1 · 604 pages/),
+    ).toBeOnTheScreen();
+  });
+
+  it('gives the source of the estimate once, under the figure', async () => {
+    await renderProfile();
+    expect(screen.getAllByText(/Tirmidhî/)).toHaveLength(1);
+  });
+
+  it('shows the person’s garden above the figures, named after the khatma it grows with', async () => {
+    await renderProfile();
+    const garden = screen.getByTestId('profile-garden');
+    expect(within(garden).getByTestId('garden-scene')).toBeOnTheScreen();
+    expect(within(garden).getByText('Jardin 2')).toBeOnTheScreen();
+  });
+
+  it('reads the times in words, not in abbreviations', async () => {
+    await renderProfile();
+    expect(screen.getByLabelText('Temps de lecture, 1 heure 35 minutes')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Temps dans l’appli, 1 heure 45 minutes')).toBeOnTheScreen();
   });
 
   it('says what will be counted, without a zero, before anything is read', async () => {
@@ -164,6 +199,17 @@ describe('ProfileScreen › statistics', () => {
     expect(screen.getByText('Ta première page t’attend')).toBeOnTheScreen();
     expect(screen.queryByTestId('profile-hasanat')).toBeNull();
     expect(screen.queryByTestId('profile-period')).toBeNull();
+    // The bare garden, with no zero written under it.
+    expect(
+      within(screen.getByTestId('profile-garden')).getByTestId('garden-scene'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(/hizb/)).toBeNull();
+  });
+
+  it('gives a blank profile its next step: the button that opens the reader', async () => {
+    await renderProfile({ empty: true });
+    await fireEvent.press(screen.getByRole('button', { name: 'Lire et arroser' }));
+    expect(read).toHaveBeenCalledTimes(1);
   });
 
   it('is written in Arabic, mirrored, with Western digits', async () => {
@@ -176,13 +222,18 @@ describe('ProfileScreen › statistics', () => {
   });
 });
 
-describe('ProfileScreen › settings below the statistics', () => {
-  it('keeps every setting of the former settings tab', async () => {
+describe('ProfileScreen › settings behind one row', () => {
+  it('lists no setting itself: one row, at the end, opens the settings', async () => {
     await renderProfile();
-    expect(screen.getByText('Réglages')).toBeOnTheScreen();
-    expect(screen.getByTestId('language')).toBeOnTheScreen();
-    expect(screen.getByRole('adjustable', { name: 'Pages par jour' })).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Revoir la présentation' })).toBeOnTheScreen();
+    expect(screen.queryByTestId('language')).toBeNull();
+    expect(screen.queryByRole('adjustable', { name: 'Pages par jour' })).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Réglages' }));
+    expect(openSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the row on a blank profile', async () => {
+    await renderProfile({ empty: true });
+    expect(screen.getByRole('button', { name: 'Réglages' })).toBeOnTheScreen();
   });
 
   it('says first, above the statistics, what data could not be read back', async () => {

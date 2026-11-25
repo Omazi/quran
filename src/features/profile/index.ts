@@ -1,9 +1,10 @@
 /**
- * The profile tab: the reading statistics (docs/specs/stats.md, section 3) above the settings,
- * and the recording of the time spent in the app and in the reader (D37).
+ * The profile tab: the person's garden and reading statistics (docs/specs/stats.md, section 3),
+ * a row that opens the settings page, and the recording of the time spent in the app and in the reader (D37).
  */
 
-export { ProfileScreen, type ProfileScreenProps } from './profile-screen';
+export { ProfileScreen, type ProfileActions, type ProfileScreenProps } from './profile-screen';
+export { useProfileGarden, type ProfileGardenDependencies } from './use-profile-garden';
 export { StatsSections, type StatsSectionsProps } from './stats-sections';
 export {
   buildProfileStats,

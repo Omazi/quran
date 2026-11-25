@@ -97,7 +97,7 @@ describe('settings screen', () => {
       setDeviceConditions(conditions);
       await renderSettings({ rightToLeft: conditions.rightToLeft });
 
-      expect(screen.getByRole('header', { name: 'Réglages' })).toBeOnTheScreen();
+      expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'Langue');
       expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'Langue');
       // Nothing chosen in the app: it follows the phone (D32).
       expect(screen.getByRole('radio', { name: 'Langue du téléphone' })).toBeChecked();
@@ -131,7 +131,7 @@ describe('settings screen', () => {
   it('is written in Arabic, mirrored, for a person who reads Arabic', async () => {
     setDeviceConditions({ rightToLeft: true });
     await renderSettings({ language: 'ar', rightToLeft: true, settings: { language: 'ar' } });
-    expect(screen.getByRole('header', { name: 'الإعدادات' })).toBeOnTheScreen();
+    expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'اللغة');
     expect(screen.getByRole('radio', { name: 'العربية' })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'لغة الهاتف' })).not.toBeChecked();
     expect(screen.getByRole('adjustable', { name: 'الصفحات في اليوم' })).toBeOnTheScreen();
@@ -199,7 +199,7 @@ describe('language setting', () => {
 
     await fireEvent.press(screen.getByRole('radio', { name: 'Phone Language' }));
     expect(store.getState().settings.language).toBeNull();
-    expect(screen.getByRole('header', { name: 'Réglages' })).toBeOnTheScreen();
+    expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'Langue');
     expect(screen.getByRole('radio', { name: 'Langue du téléphone' })).toBeChecked();
     expect(direction.recorded()).toBe(false);
     expect(screen.queryByTestId('restart-app')).toBeNull();
@@ -214,7 +214,7 @@ describe('language setting', () => {
     await fireEvent.press(screen.getByRole('radio', { name: 'Langue du téléphone' }));
 
     expect(store.getState().settings.language).toBeNull();
-    expect(screen.getByRole('header', { name: 'الإعدادات' })).toBeOnTheScreen();
+    expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'اللغة');
     expect(screen.getByRole('radio', { name: 'لغة الهاتف' })).toBeChecked();
     expect(
       screen.getByText('سيتغيّر اتجاه الكتابة عند تشغيل التطبيق في المرة القادمة.'),
@@ -264,7 +264,7 @@ describe('language setting', () => {
     await fireEvent.press(screen.getByRole('radio', { name: 'English' }));
 
     expect(store.getState().settings.language).toBe('en');
-    expect(screen.getByRole('header', { name: 'Settings' })).toBeOnTheScreen();
+    expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'Language');
     expect(screen.getByRole('radio', { name: 'English' })).toBeChecked();
     expect(direction.recorded()).toBe(false);
     expect(screen.queryByTestId('restart-app')).toBeNull();
@@ -276,7 +276,7 @@ describe('language setting', () => {
 
     expect(store.getState().settings.language).toBe('ar');
     // The texts are in Arabic, so the note can be read by the person who chose it.
-    expect(screen.getByRole('header', { name: 'الإعدادات' })).toBeOnTheScreen();
+    expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'اللغة');
     expect(
       screen.getByText('سيتغيّر اتجاه الكتابة عند تشغيل التطبيق في المرة القادمة.'),
     ).toBeOnTheScreen();
@@ -296,7 +296,7 @@ describe('language setting', () => {
     await fireEvent.press(screen.getByRole('radio', { name: 'Français' }));
     expect(screen.queryByTestId('restart-app')).toBeNull();
     expect(direction.recorded()).toBe(false);
-    expect(screen.getByRole('header', { name: 'Réglages' })).toBeOnTheScreen();
+    expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'Langue');
   });
 
   it('says a restart is needed when the app runs in the other direction than its language', async () => {

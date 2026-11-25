@@ -310,6 +310,43 @@ describe('iOS GroupedList', () => {
     await fireEvent(row, 'buttonPress');
     expect(onPress).toHaveBeenCalledTimes(1);
   });
+
+  it('puts the symbol of a row before its words with the system label, the words in the label colour', async () => {
+    setDeviceConditions();
+    await render(
+      <GroupedList>
+        <ListSection>
+          <ListRow label="Réglages" symbol={BOOK} onPress={jest.fn()} testID="row" />
+        </ListSection>
+      </GroupedList>,
+    );
+    const row = screen.getByTestId('row');
+    const symbols = row.queryAll(({ props }) => props.systemName === 'book.closed');
+    expect(symbols).toHaveLength(1);
+    // Decorative: VoiceOver reads the words of the row.
+    expect(modifierOf(symbols[0]!, 'accessibilityHidden')).toMatchObject({ hidden: true });
+    expect(swiftUITexts(row)).toEqual(['Réglages']);
+    expect(row.queryAll(({ props }) => props.systemName === 'chevron.forward')).toHaveLength(1);
+  });
+
+  it('gives an abbreviated value the words VoiceOver should say', async () => {
+    setDeviceConditions();
+    await render(
+      <GroupedList>
+        <ListSection>
+          <ListRow
+            label="Temps de lecture"
+            value="1 h 35 min"
+            valueAccessibilityLabel="1 heure 35 minutes"
+            testID="row"
+          />
+        </ListSection>
+      </GroupedList>,
+    );
+    const value = screen.getByTestId('row').queryAll(({ props }) => props.text === '1 h 35 min')[0];
+    expect(value).toBeDefined();
+    expect(modifierOf(value!, 'accessibilityLabel')).toMatchObject({ label: '1 heure 35 minutes' });
+  });
 });
 
 describe('iOS rows', () => {

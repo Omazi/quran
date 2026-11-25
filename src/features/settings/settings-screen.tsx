@@ -1,16 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
-
-import {
-  AppText,
-  Button,
-  ChoiceRow,
-  GroupedList,
-  ListRow,
-  ListSection,
-  Screen,
-  layout,
-} from '@/ui';
+import { Button, ChoiceRow, GroupedList, ListRow, ListSection, Screen } from '@/ui';
 
 import { DailyGoalSection } from './daily-goal-section';
 import { RemindersSection } from './reminders-section';
@@ -25,16 +14,12 @@ export interface SettingsScreenProps {
  * The settings: a grouped list of the few things the system does not already decide
  * (settings.md › Best practices) — the language, the daily goal, the reminders
  * (managing-notifications.md › Best practices) — and the way back to the introduction
- * (onboarding.md › Best practices). The profile tab shows the same sections under the
- * statistics (`DataResetNoticeSection`, `SettingsSections`).
+ * (onboarding.md › Best practices). A page opened from the last row of the profile: its title is
+ * in the system navigation bar, which the route gives it.
  */
 export function SettingsScreen({ model, actions }: SettingsScreenProps) {
-  const { t } = useTranslation('settings');
   return (
     <Screen background="groupedBackground" testID="settings">
-      <AppText variant="largeTitle" style={styles.title}>
-        {t('title')}
-      </AppText>
       <GroupedList testID="settings-list">
         <DataResetNoticeSection model={model} actions={actions} />
         <SettingsSections model={model} actions={actions} />
@@ -125,9 +110,3 @@ export function SettingsSections({ model, actions, title }: SettingsSectionsProp
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  title: {
-    paddingHorizontal: layout.screenMargin,
-  },
-});

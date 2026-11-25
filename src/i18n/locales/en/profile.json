@@ -1,5 +1,8 @@
 {
   "title": "Profile",
+  "garden": {
+    "title": "Garden {{number}}"
+  },
   "periods": {
     "label": "Period",
     "today": "Today",
@@ -16,8 +19,7 @@
     },
     "value": "≈ {{value}}",
     "valueSpoken": "About {{value}} hasanat, an estimate",
-    "note": "An estimate: ten hasanat for each letter read, after the hadith reported by Ibn Mas‘ud (Sunan al-Tirmidhi no. 2910). Only Allah knows the reward.",
-    "shortNote": "Hasanat: an estimate (al-Tirmidhi no. 2910). Only Allah knows the reward."
+    "note": "An estimate: ten hasanat for each letter read, after the hadith reported by Ibn Mas‘ud (Sunan al-Tirmidhi no. 2910). Only Allah knows the reward."
   },
   "figures": {
     "versesRead": "Verses Read",
@@ -43,10 +45,10 @@
     "bar": "{{date}}, {{metric}}: {{value}}"
   },
   "khatmas": {
-    "title": "By Khatma",
-    "inProgress": "Khatma {{number}} · in progress",
-    "complete": "Khatma {{number}} · finished on {{date}}",
-    "detail": "{{pages}} pages · {{verses}} verses · {{words}} words · ≈ {{hasanat}} hasanat"
+    "title": "Your Gardens",
+    "inProgress": "Garden {{number}} · in progress",
+    "complete": "Garden {{number}} · completed on {{date}}",
+    "detail": "Khatma {{number}} · {{pages}} pages · {{verses}} verses · {{words}} words · ≈ {{hasanat}} hasanat"
   },
   "empty": {
     "title": "Your First Page Is Waiting",

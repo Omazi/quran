@@ -12,7 +12,8 @@ import {
 } from '../../tokens';
 import { useColors } from '../../use-colors';
 import { GroupedListScope, useGroupedListGuard } from '../grouped-list-scope';
-import type { GroupedListProps, ListRowProps, ListSectionProps } from '../types';
+import type { GroupedListProps, IconSymbol, ListRowProps, ListSectionProps } from '../types';
+import { Icon } from './icon';
 
 /**
  * Default grouped list, for Android, the web and tests: a Material list. Rows span the width,
@@ -71,6 +72,8 @@ export function ListSection({
 
 interface RowLayoutProps {
   label: string;
+  /** Decorative symbol before the label, in the accent. */
+  symbol?: IconSymbol;
   /** Value or control shown after the label. */
   trailing?: ReactNode;
 }
@@ -80,27 +83,39 @@ interface RowLayoutProps {
  * sizes or with a long translation, the trailing part wraps under the label instead of being
  * cut (typography.md › Supporting Dynamic Type).
  */
-export function RowLayout({ label, trailing }: RowLayoutProps) {
+export function RowLayout({ label, symbol, trailing }: RowLayoutProps) {
   return (
     <View style={styles.row}>
+      {symbol === undefined ? null : <Icon symbol={symbol} color="accent" />}
       <AppText style={styles.rowLabel}>{label}</AppText>
       {trailing}
     </View>
   );
 }
 
-export function ListRow({ label, value, onPress, testID }: ListRowProps) {
+export function ListRow({
+  label,
+  symbol,
+  value,
+  valueAccessibilityLabel,
+  onPress,
+  testID,
+}: ListRowProps) {
   useGroupedListGuard('ListRow');
   const colors = useColors();
   const content = (
     <RowLayout
       label={label}
+      symbol={symbol}
       trailing={value === undefined ? null : <AppText color="secondaryLabel">{value}</AppText>}
     />
   );
+  // An abbreviated value is read in words: the row, one element, says the label and that value.
+  const spokenLabel =
+    valueAccessibilityLabel === undefined ? undefined : `${label}, ${valueAccessibilityLabel}`;
   if (onPress === undefined) {
     return (
-      <View accessible testID={testID}>
+      <View accessible accessibilityLabel={spokenLabel} testID={testID}>
         {content}
       </View>
     );
@@ -108,6 +123,7 @@ export function ListRow({ label, value, onPress, testID }: ListRowProps) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={spokenLabel}
       android_ripple={{ color: colors.fill }}
       onPress={onPress}
       testID={testID}

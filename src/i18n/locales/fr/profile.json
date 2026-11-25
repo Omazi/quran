@@ -1,5 +1,8 @@
 {
   "title": "Profil",
+  "garden": {
+    "title": "Jardin {{number}}"
+  },
   "periods": {
     "label": "Période",
     "today": "Aujourd’hui",
@@ -16,8 +19,7 @@
     },
     "value": "≈ {{value}}",
     "valueSpoken": "Environ {{value}} hasanat, une estimation",
-    "note": "Estimation : dix hasanat par lettre lue, d’après le hadith rapporté par Ibn Mas‘ûd (Sunan at-Tirmidhî n° 2910). Allah seul connaît la récompense.",
-    "shortNote": "Hasanat : une estimation (Tirmidhî n° 2910). Allah seul connaît la récompense."
+    "note": "Estimation : dix hasanat par lettre lue, d’après le hadith rapporté par Ibn Mas‘ûd (Sunan at-Tirmidhî n° 2910). Allah seul connaît la récompense."
   },
   "figures": {
     "versesRead": "Versets lus",
@@ -43,10 +45,10 @@
     "bar": "{{date}}, {{metric}} : {{value}}"
   },
   "khatmas": {
-    "title": "Par khatma",
-    "inProgress": "Khatma {{number}} · en cours",
-    "complete": "Khatma {{number}} · terminée le {{date}}",
-    "detail": "{{pages}} pages · {{verses}} versets · {{words}} mots · ≈ {{hasanat}} hasanat"
+    "title": "Tes jardins",
+    "inProgress": "Jardin {{number}} · en cours",
+    "complete": "Jardin {{number}} · achevé le {{date}}",
+    "detail": "Khatma {{number}} · {{pages}} pages · {{verses}} versets · {{words}} mots · ≈ {{hasanat}} hasanat"
   },
   "empty": {
     "title": "Ta première page t’attend",

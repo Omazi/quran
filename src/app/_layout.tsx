@@ -55,8 +55,9 @@ function RootStack() {
   useForegroundTimeRecording();
   const { t } = useTranslation('onboarding');
   const { t: tFriends } = useTranslation('friends');
+  const { t: tSettings } = useTranslation('settings');
   const colors = useColors();
-  // The pages of the Proches tab open over the tabs, as the reader does, with the system bar, its
+  // The pages of the Proches tab, and the settings page of the profile, open over the tabs, as the reader does, with the system bar, its
   // title and its back button, a chevron alone (toolbars.md › Navigation; deviation 50). The bar
   // takes the system's grouped background and label colours, which follow the dark appearance:
   // without them the navigation library paints its own light theme.
@@ -81,6 +82,9 @@ function RootStack() {
         options={{ ...friendsPage, title: tFriends('newGroup.title') }}
       />
       <Stack.Screen name="friends/group/[id]" options={{ ...friendsPage, title: '' }} />
+      {/* Opened from the last row of the profile, with the system bar, its title and its back
+          button, like the pages of the Proches tab (deviation 52). */}
+      <Stack.Screen name="settings" options={{ ...friendsPage, title: tSettings('title') }} />
       {/* The reader: the system navigation bar floats over the page (the reader hides and shows
           it), with the system's back button, a chevron alone (toolbars.md › Navigation). */}
       <Stack.Screen

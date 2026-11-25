@@ -5,6 +5,7 @@ import type { StatsPeriod } from '@/domain/stats';
 import {
   AppText,
   BarChart,
+  ButtonRow,
   ChoiceRow,
   ContentRow,
   Icon,
@@ -42,7 +43,8 @@ import type { ProfileStatsActions, ProfileStatsModel } from './use-profile-stats
 
 const EMPTY_SYMBOL: IconSymbol = { ios: 'chart.bar', android: 'bar_chart' };
 const FAILED_SYMBOL: IconSymbol = { ios: 'exclamationmark.circle', android: 'error' };
-const KHATMA_IN_PROGRESS_SYMBOL: IconSymbol = { ios: 'book', android: 'menu_book' };
+// The garden still growing, and the gardens completed (D23: one khatma, one garden).
+const KHATMA_IN_PROGRESS_SYMBOL: IconSymbol = { ios: 'leaf', android: 'eco' };
 const KHATMA_COMPLETE_SYMBOL: IconSymbol = { ios: 'checkmark.seal', android: 'verified' };
 
 /** In a month of days, the days that carry a label: a week apart, from the first. */
@@ -51,6 +53,13 @@ const MONTH_TICK_EVERY_DAYS = 7;
 export interface StatsSectionsProps {
   model: ProfileStatsModel;
   actions: ProfileStatsActions;
+  /** The next step of a blank profile: opens the reader. */
+  onRead: () => void;
+  /**
+   * The person's garden is shown right above: a blank profile then needs no symbol of its own,
+   * the bare garden already says it.
+   */
+  hasGardenAbove: boolean;
 }
 
 /**
@@ -60,8 +69,9 @@ export interface StatsSectionsProps {
  * list (lists-and-tables.md), in the order of importance (layout.md › Visual hierarchy). Place
  * it in a `GroupedList`.
  */
-export function StatsSections({ model, actions }: StatsSectionsProps) {
+export function StatsSections({ model, actions, onRead, hasGardenAbove }: StatsSectionsProps) {
   const { t } = useTranslation('profile');
+  const { t: tHome } = useTranslation('home');
   if (model.status === 'loading') {
     return (
       <ListSection isBare>
@@ -85,13 +95,21 @@ export function StatsSections({ model, actions }: StatsSectionsProps) {
   }
   const { stats, period, metric } = model;
   if (!stats.hasAnything) {
+    // A blank screen gives its next step, with a button to take it (writing.md › Provide clear
+    // next steps on any blank screens). Same action as on the home screen, so the same name
+    // (brand-spec, section 3, Voix): it opens the reader where the person resumes.
     return (
-      <StatsMessage
-        symbol={EMPTY_SYMBOL}
-        title={t('empty.title')}
-        description={t('empty.description')}
-        testID="profile-stats-empty"
-      />
+      <>
+        <StatsMessage
+          symbol={hasGardenAbove ? undefined : EMPTY_SYMBOL}
+          title={t('empty.title')}
+          description={t('empty.description')}
+          testID="profile-stats-empty"
+        />
+        <ListSection>
+          <ButtonRow label={tHome('actions.read')} onPress={onRead} testID="profile-read" />
+        </ListSection>
+      </>
     );
   }
   return (
@@ -124,7 +142,8 @@ function StatsMessage({
   description,
   testID,
 }: {
-  symbol: IconSymbol;
+  /** Left out where a picture right above already plays its part. */
+  symbol?: IconSymbol;
   title: string;
   description: string;
   testID: string;
@@ -133,7 +152,9 @@ function StatsMessage({
     <ListSection isBare>
       <ContentRow>
         <View style={styles.message} testID={testID}>
-          <Icon symbol={symbol} textStyle="largeTitle" color="secondaryLabel" />
+          {symbol === undefined ? null : (
+            <Icon symbol={symbol} textStyle="largeTitle" color="secondaryLabel" />
+          )}
           <AppText variant="headline" align="center">
             {title}
           </AppText>
@@ -196,8 +217,9 @@ function tickLabel(chart: StatsChart, bar: ChartBar, index: number, language: st
 }
 
 /**
- * The daily evolution, right under the headline figure: a sentence says what matters before the
- * chart shows it (charting-data.md › Aid comprehension by adding descriptive text), one bar
+ * The daily evolution, right under the headline figure: a title and, as its subtitle, the
+ * sentence that says what matters before the chart shows it, as Weather does (charts.md ›
+ * Descriptive content; charting-data.md › Aid comprehension by adding descriptive text), one bar
  * chart, and under it the menu that picks the figure it follows (the system's pop-up button,
  * pop-up-buttons.md). Under the chart, so that the radio list Android draws for it never pushes
  * the chart away from the headline.
@@ -241,12 +263,17 @@ function ChartSections({
         });
   return (
     <>
-      <ListSection isBare title={t(chart.unit === 'month' ? 'chart.titleMonth' : 'chart.titleDay')}>
+      <ListSection isBare>
         <ContentRow>
           <View style={styles.chart}>
-            <AppText variant="footnote" color="secondaryLabel" testID="profile-chart-summary">
-              {summary}
-            </AppText>
+            <View style={styles.chartTitle} testID="profile-chart-title">
+              <AppText variant="headline" accessibilityRole="header">
+                {t(chart.unit === 'month' ? 'chart.titleMonth' : 'chart.titleDay')}
+              </AppText>
+              <AppText variant="subhead" color="secondaryLabel" testID="profile-chart-summary">
+                {summary}
+              </AppText>
+            </View>
             <BarChart
               bars={bars}
               formatValue={(axisValue) =>
@@ -297,27 +324,34 @@ function FiguresSection({ stats }: { stats: ProfileStats }) {
         value={number(stats.counts.pages)}
         testID="profile-pages"
       />
+      {/* "h" and "min" are spoken in words (voiceover.md › Descriptions). */}
       <ListRow
         label={t('figures.readingTime')}
         value={formatDuration(stats.time.reader, t)}
+        valueAccessibilityLabel={formatDuration(stats.time.reader, t, true)}
         testID="profile-reading-time"
       />
       <ListRow
         label={t('figures.appTime')}
         value={formatDuration(stats.time.app, t)}
+        valueAccessibilityLabel={formatDuration(stats.time.app, t, true)}
         testID="profile-app-time"
       />
     </ListSection>
   );
 }
 
-/** Each khatma, the one in progress first, with all its figures; the estimate keeps its source. */
+/**
+ * Each khatma told as the garden it grows (D23: each khatma completed opens the next level and
+ * its garden), the one in progress first, with all its figures. The source of the estimate is
+ * said once, under the headline figure: not again here.
+ */
 function KhatmasSection({ khatmas }: { khatmas: readonly KhatmaSummary[] }) {
   const { t, i18n } = useTranslation('profile');
   if (khatmas.length === 0) return null;
   const number = (value: number) => formatNumber(value, i18n.language);
   return (
-    <ListSection title={t('khatmas.title')} footer={t('hasanat.shortNote')}>
+    <ListSection title={t('khatmas.title')}>
       {khatmas.map((khatma) => (
         <LabelRow
           key={khatma.khatm}
@@ -330,13 +364,14 @@ function KhatmasSection({ khatmas }: { khatmas: readonly KhatmaSummary[] }) {
               : t('khatmas.inProgress', { number: khatma.khatm })
           }
           detail={t('khatmas.detail', {
+            number: khatma.khatm,
             pages: number(khatma.counts.pages),
             verses: number(khatma.counts.verses),
             words: number(khatma.counts.words),
             hasanat: number(khatma.counts.hasanatEstimate),
           })}
           symbol={khatma.isComplete ? KHATMA_COMPLETE_SYMBOL : KHATMA_IN_PROGRESS_SYMBOL}
-          tone={khatma.isComplete ? 'secondaryLabel' : 'accent'}
+          tone={khatma.isComplete ? 'secondaryLabel' : 'growth'}
           testID={`profile-khatma-${khatma.khatm}`}
         />
       ))}
@@ -348,5 +383,6 @@ const styles = StyleSheet.create({
   centered: { alignItems: 'center', paddingVertical: spacing.lg },
   message: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl },
   headline: { gap: spacing.sm, paddingVertical: spacing.sm },
-  chart: { gap: spacing.xs, paddingTop: spacing.sm },
+  chart: { gap: spacing.sm, paddingTop: spacing.sm },
+  chartTitle: { gap: spacing.xs },
 });

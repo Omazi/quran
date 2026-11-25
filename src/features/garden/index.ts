@@ -5,7 +5,13 @@
  */
 
 export { previewGardenState, type GardenPreview } from './garden-preview';
-export { GARDEN_PICTURE_ASPECT_RATIO, HIZB_TONE, WATER_SYMBOLS, WATER_TONES } from './config';
+export {
+  GARDEN_PICTURE_ASPECT_RATIO,
+  GARDEN_STEP_COUNT,
+  HIZB_TONE,
+  WATER_SYMBOLS,
+  WATER_TONES,
+} from './config';
 export {
   GardenElementsSection,
   GardenStateSection,
