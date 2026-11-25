@@ -9,11 +9,14 @@ import { PAGE_COUNT, VERSE_COUNT, type QuranScript, type VerseRef } from '@/doma
 
 import { READER_CONFIG } from '../config';
 import { readingPlace, type SegmentExtent } from '../reading-place';
+import { pageWordCounts } from '../page-words';
 import { pageSection, pageSections } from '../reading-sections';
 import {
   createReadingTracker,
   observeReading,
+  progressOf,
   type ReadingObservation,
+  type ReadingRules,
   type ReadingTracker,
   type SectionExtent,
 } from '../scroll-reading';
@@ -198,8 +201,35 @@ describe('the place in the bar while scrolling', () => {
   });
 });
 
-describe('a page counts once its section was seen long enough (the 30-second rule, D8, D41)', () => {
+describe('the time a page asks grows with its words (owner, 25 November 2026)', () => {
+  let words: readonly number[];
+  beforeAll(async () => {
+    words = pageWordCounts(await textsOf('uthmani'));
+  });
+
+  it('counts the words of each page in the Uthmani text: 77430 in all, 129 for the median page', () => {
+    expect(words).toHaveLength(PAGE_COUNT);
+    expect(words.reduce((total, count) => total + count, 0)).toBe(77430);
+    const sorted = [...words].sort((first, second) => first - second);
+    expect(sorted[Math.floor(PAGE_COUNT / 2)]).toBe(129);
+    expect(words[0]).toBe(29);
+  });
+
+  it('asks about 25 seconds of the median page, the minimum of the shortest, at most about 32', () => {
+    const { secondsPerWord, minimumSeconds } = READER_CONFIG.readingTime;
+    expect(129 * secondsPerWord).toBeCloseTo(25.8);
+    expect(Math.max(minimumSeconds, (words[0] ?? 0) * secondsPerWord)).toBe(minimumSeconds);
+    expect(Math.max(...words) * secondsPerWord).toBeLessThanOrEqual(33);
+  });
+});
+
+describe('a page counts once its section was seen long enough (D8, D41)', () => {
   const HEIGHT = 600;
+  /** In these tests every page asks 30 seconds; the time per word is tested above. */
+  const RULES: ReadingRules = {
+    requiredSecondsOf: () => 30,
+    flingScreensPerSecond: READER_CONFIG.flingScreensPerSecond,
+  };
   /** Three pages of 900 points, one under the other. */
   const extents: SectionExtent[] = [
     { page: 10, top: 0, bottom: 900 },
@@ -221,7 +251,7 @@ describe('a page counts once its section was seen long enough (the 30-second rul
       extents,
       isForeground,
     };
-    const result = observeReading(tracker, observation);
+    const result = observeReading(tracker, observation, RULES);
     tracker = result.tracker;
     counted.push(...result.counted);
   }
@@ -233,10 +263,6 @@ describe('a page counts once its section was seen long enough (the 30-second rul
       at(fromSeconds + step, fromTop + ((toTop - fromTop) * step) / steps);
     }
   }
-
-  it('the minimum is 30 seconds, to be confirmed by the owner', () => {
-    expect(READER_CONFIG.minimumSecondsOnPage).toBe(30);
-  });
 
   it('a page read from its top to its bottom for 40 seconds counts, once', () => {
     readDown(0, 40, 0, 300);
@@ -291,6 +317,34 @@ describe('a page counts once its section was seen long enough (the 30-second rul
     readDown(40, 200, 300, 0);
     readDown(200, 260, 0, 300);
     expect(counted).toEqual([10]);
+  });
+
+  it('adds up the time of a page across stays: away and back, and across reading sessions', () => {
+    readDown(0, 20, 0, 300);
+    // Away to page 12 for a while, slowly enough to be reading: page 10 gets nothing there.
+    readDown(20, 40, 300, 1800);
+    readDown(40, 100, 1800, 1800);
+    expect(counted).toEqual([]);
+    // The reader closes; a new session starts from what was kept, the time away never counts.
+    tracker = createReadingTracker(tracker.pages);
+    at(5000, 0);
+    at(5011, 0);
+    expect(progressOf(tracker, 10).creditedMs).toBeGreaterThanOrEqual(30 * SECOND);
+    expect(counted).toEqual([10]);
+  });
+
+  it('asks each page its own time', () => {
+    const byPage: ReadingRules = { ...RULES, requiredSecondsOf: (page) => (page === 10 ? 8 : 60) };
+    const observation = (seconds: number): ReadingObservation => ({
+      now: seconds * SECOND,
+      viewport: { top: 0, height: HEIGHT },
+      extents: [{ page: 10, top: 0, bottom: 500 }],
+      isForeground: true,
+    });
+    let state = observeReading(createReadingTracker(), observation(0), byPage).tracker;
+    const result = observeReading(state, observation(8), byPage);
+    state = result.tracker;
+    expect(result.counted).toEqual([10]);
   });
 
   it('refuses a clock that goes back', () => {

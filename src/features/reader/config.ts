@@ -4,11 +4,21 @@
  */
 export const READER_CONFIG = Object.freeze({
   /**
-   * A page counts once its section was on screen this long in all, app in the foreground, its
-   * first and last lines seen (spec 3, D41; `scroll-reading.ts`). Starting value given by the spec:
-   * **to be confirmed by the owner**.
+   * The time a page asks before it counts (spec 3; owner's decision of 25 November 2026): this
+   * many seconds per word of that page of the mushaf, never less than the minimum, so that the
+   * short pages count too (`requiredReadingSeconds` in the khatm module). The words of a page are
+   * those of its verses in the Uthmani text: 29 on page 1, 129 for the median page (about 26
+   * seconds), 161 at most (about 32 seconds). The time adds up across stays until it is reached.
    */
-  minimumSecondsOnPage: 30,
+  readingTime: { secondsPerWord: 0.2, minimumSeconds: 8 },
+
+  /**
+   * The water line that shows a page being counted, under the title (spec 3): its width, its
+   * thickness, how long it takes to follow a new value, and, with Reduce Motion, the number of
+   * still steps it moves by. A thin line, the width of the pill's drop and a few words: discreet,
+   * never over the text. Judgment.
+   */
+  progressLine: { width: 72, thickness: 3, followMs: 900, reducedMotionSteps: 3 },
 
   /**
    * Past this speed, in screens per second, the text is flung, not read: no time counts and no

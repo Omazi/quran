@@ -2,7 +2,12 @@ import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import {
   AppText,
@@ -23,7 +28,7 @@ import type { ReaderScript } from '@/store';
 import { READER_CONFIG } from './config';
 import { ReaderSegmented, type ReaderChoiceOption } from './contents-parts';
 import { surahDisplayName } from './surah-name';
-import type { ReaderModel } from './use-reader';
+import type { PageCountProgress, ReaderModel } from './use-reader';
 
 const BACK_SYMBOL: IconSymbol = { ios: 'chevron.backward', android: 'arrow_back_ios_new' };
 const BOOKMARK_SYMBOL: IconSymbol = { ios: 'bookmark', android: 'bookmark_border' };
@@ -345,6 +350,68 @@ export function FeedbackPill({ text }: { text: string }) {
   );
 }
 
+/**
+ * The water line under the title (spec 3; owner's decision of 25 November 2026): it shows,
+ * discreetly, that the page being read is being counted. A thin line of water fills as the page
+ * gathers its time; when the time is reached, a small drop settles at its end: "this page will
+ * count". It is not there for a page already read in the khatma. It sits in the row of the
+ * watered pill, which keeps its room, so it never moves the text, and gives way to the pill when
+ * a page counts. With Reduce Motion it moves by three still steps (accessibility.md › Cognitive;
+ * motion.md › Best practices: make motion optional). VoiceOver does not hear it: the pill says
+ * when a page counts, once (feedback.md › Make sure all feedback is accessible, without chatter).
+ */
+export function PageProgressLine({ progress }: { progress: PageCountProgress }) {
+  const palette = useReaderPalette();
+  const isMotionReduced = useReducedMotion();
+  const { width, thickness, followMs, reducedMotionSteps } = READER_CONFIG.progressLine;
+  const target =
+    progress.kind === 'ready'
+      ? 1
+      : progress.kind === 'filling'
+        ? isMotionReduced
+          ? Math.floor(progress.share * reducedMotionSteps) / reducedMotionSteps
+          : progress.share
+        : 0;
+  const fill = useSharedValue(target);
+  useEffect(() => {
+    fill.value = isMotionReduced ? target : withTiming(target, { duration: followMs });
+  }, [fill, followMs, isMotionReduced, target]);
+  const fillStyle = useAnimatedStyle(() => ({ width: width * fill.value }));
+  if (progress.kind === 'hidden') return null;
+  return (
+    <View
+      style={styles.progress}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      pointerEvents="none"
+      testID="reader-page-progress"
+    >
+      <View
+        style={[
+          styles.progressTrack,
+          { width, height: thickness, borderRadius: thickness, backgroundColor: palette.ringTrack },
+        ]}
+      >
+        <Animated.View
+          testID="reader-page-progress-fill"
+          style={[
+            { height: thickness, borderRadius: thickness, backgroundColor: palette.ring },
+            isMotionReduced ? { width: width * target } : fillStyle,
+          ]}
+        />
+      </View>
+      {progress.kind === 'ready' ? (
+        <Icon
+          symbol={WATER_SYMBOL}
+          textStyle="footnote"
+          color="accent"
+          testID="reader-page-progress-drop"
+        />
+      ) : null}
+    </View>
+  );
+}
+
 const shadow = {
   shadowOpacity,
   shadowRadius,
@@ -383,6 +450,10 @@ const styles = StyleSheet.create({
     ...shadow,
   },
   pillText: { flexShrink: 1 },
+  progress: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  // Filled from the start of the reading direction: right to left in Arabic, with the row
+  // (right-to-left.md › Flip controls that show progress from one value to another).
+  progressTrack: { overflow: 'hidden', flexDirection: 'row' },
   bottomBar: {
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'transparent',

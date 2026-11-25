@@ -80,7 +80,8 @@ modèles 3D ; **leur provenance et leur style restent à décider avec le propri
 
 Aucun serveur : le plan des rappels est calculé sur le téléphone à partir de l'état du
 jardin, puis programmé localement. L'autorisation est demandée à la fin du premier
-lancement, après explication.
+lancement, après explication. Programmation, déclencheurs et toucher d'une notification :
+[specs/reminders.md](specs/reminders.md), « Programmation ».
 
 ## D14 — Les skills d'abord
 
@@ -436,6 +437,8 @@ l'eau. Le mot fait pousser le jardin. Détail, couleurs, couches, pistes écart�
   l'`accent`, `#0E6B78`. La version 5 et sa scène 3D restent dans l'historique git (commit
   `c3e0467`).
 - **Écran de lancement** : inchangé, une couleur unie, sans logo (`launching.md › Launch screens`).
+  Depuis le 25 novembre 2026 (demande du propriétaire, écart 115) : la couleur unie reste l'écran natif,
+  puis la marque s'anime par-dessus (`src/features/launch`) avant de se fondre dans le premier écran.
 - **Licences** : Gulzar, SIL Open Font License 1.1, qui permet tout usage, commercial compris ; la
   police n'est ni dans le dépôt ni dans l'appli, seuls les contours du mot y sont. Avis complet :
   `tools/app-icon/NOTICE.txt`. Outils non livrés : uharfbuzz (Apache-2.0), fontTools (MIT),
@@ -478,11 +481,18 @@ maquette `mushaf.png`. Détail : `specs/reader.md`, sections 2, 3 et 9.
   mushaf ; une page commence toujours par un nouveau verset dans l'édition de l'appli (vérifié
   pour les 604 pages), donc une section contient exactement les versets de sa page. Khatma,
   jardin, hizb et statistiques (D37) comptent les mêmes pages.
-- **Compter une page** : sa section a été à l'écran 30 secondes en tout (temps partagé entre les
-  sections visibles selon leur place), sa première et sa dernière ligne ont été vues, et rien ne
-  compte pendant qu'on lance le texte (plus de 1,5 écran par seconde). Une fois par séance ; la
-  khatma décide du reste (D8). La pastille vient quand le temps est atteint, sans attendre de
+- **Compter une page** : sa section a été à l'écran le temps que la page demande, en tout (temps
+  partagé entre les sections visibles selon leur place), sa première et sa dernière ligne ont été
+  vues, et rien ne compte pendant qu'on lance le texte (plus de 1,5 écran par seconde). Une seule
+  fois ; la khatma décide du reste (D8). La pastille vient quand le temps est atteint, sans attendre de
   quitter la page. Seuils : jugement, **à confirmer par le propriétaire** sur un iPhone.
+- **Suite du 25 novembre 2026 (propriétaire)** : le temps demandé suit la page, 0,2 s par mot
+  de la page du mushaf, 8 s au moins (`requiredReadingSeconds`, module khatma ; page médiane
+  ≈ 26 s) ; il **s'additionne** d'un passage à l'autre, en quittant le lecteur et en revenant
+  (gardé en mémoire tant que l'appli tourne, pas sur l'appareil) ; une **ligne d'eau** discrète
+  sous le titre montre qu'une page est en train de compter, puis une goutte « cette page
+  comptera » ; l'écran **reste allumé** dans le lecteur (`expo-keep-awake`, MIT, version
+  choisie par `npx expo install`), rendu à la veille en arrière-plan et en quittant le lecteur.
 - **Écriture uthmani** : texte et police du Complexe, version 0.18 (D19, D21), inchangés.
 - **Écriture simple** : la colonne `aya_text_emlaey` du **même fichier** du Complexe
   (`hafsData_v18.json`, déjà dans `tools/quran-data/sources`, même empreinte), copiée sans aucun

@@ -15,7 +15,7 @@ import {
 } from '@/ui';
 
 import { READER_CONFIG } from './config';
-import { FeedbackPill, ReaderBottomBar, ReaderHeader } from './reader-bar';
+import { FeedbackPill, PageProgressLine, ReaderBottomBar, ReaderHeader } from './reader-bar';
 import { ReaderScroll } from './reader-scroll';
 import type { ReadingFeedback } from './reading-feedback';
 import type { ReaderActions, ReaderModel } from './use-reader';
@@ -100,7 +100,11 @@ export function ReaderScreen({
         onToggleBookmark={actions.toggleBookmark}
       />
       <View style={styles.pillRow} testID="reader-pill-row">
-        {feedbackText === null ? null : <FeedbackPill key={feedbackText} text={feedbackText} />}
+        {feedbackText === null ? (
+          <PageProgressLine progress={model.pageProgress} />
+        ) : (
+          <FeedbackPill key={feedbackText} text={feedbackText} />
+        )}
       </View>
       <View style={[styles.text, { backgroundColor: colors.paper }]} testID="reader-text">
         {texts.status === 'error' ? (

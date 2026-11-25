@@ -57,6 +57,13 @@ Licence:  the package code: MIT, "Copyright (c) 2020 Expo" (node_modules/@expo-g
           The OFL allows bundling the font in an app, commercial or not; it asks that the
           copyright and licence go with the font, and that the font is not sold on its own.
 
+expo-keep-awake 58.0.4 (dependency; version chosen by `npx expo install` for SDK 58)
+---------------
+Use:      keeps the screen awake while the reader is open (src/features/reader/use-keep-reader-awake.ts,
+          D41); released in the background and when the reader closes.
+Licence:  MIT. "Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"
+File:     node_modules/expo-keep-awake/LICENSE
+
 The MIT licence asks that its copyright and permission notice be included in all copies or
 substantial portions of the software. The app does not show third-party notices yet (an
 "Acknowledgements" page in the profile, or the system Settings bundle): to be decided by the

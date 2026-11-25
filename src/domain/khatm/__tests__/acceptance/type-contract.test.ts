@@ -95,6 +95,8 @@ describe('API attendue — the names the specification lists are exported', () =
         'getWateredDays',
         'isPageRead',
         'recordPageRead',
+        // The time a page asks in the reader (docs/specs/khatm.md, rule 11; D41).
+        'requiredReadingSeconds',
       ].sort(),
     );
   });

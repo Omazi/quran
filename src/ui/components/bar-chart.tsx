@@ -23,6 +23,11 @@ export interface BarChartProps {
   readonly bars: readonly BarChartBar[];
   /** Writes a value of the vertical axis ("200", "30 min"). */
   readonly formatValue: (value: number) => string;
+  /**
+   * `water` (default): the accent. `growth`: the green of the mockups' actions and leaves
+   * (`actionTint`), for a figure that is not water, such as what has been read.
+   */
+  readonly tone?: 'water' | 'growth';
   readonly testID?: string;
 }
 
@@ -61,8 +66,9 @@ const GRID_FRACTIONS = [0, 0.5, 1] as const;
  * (charts.md › Enhancing the accessibility of a chart). The caller writes the summary above it.
  * Nothing moves: there is nothing to switch off for Reduce Motion.
  */
-export function BarChart({ bars, formatValue, testID }: BarChartProps) {
+export function BarChart({ bars, formatValue, tone = 'water', testID }: BarChartProps) {
   const colors = useColors();
+  const barColor = tone === 'growth' ? colors.actionTint : colors.accent;
   for (const bar of bars) {
     if (!Number.isFinite(bar.value) || bar.value < 0) {
       throw new RangeError(`Invalid bar value for ${bar.key}: ${bar.value}`);
@@ -106,7 +112,7 @@ export function BarChart({ bars, formatValue, testID }: BarChartProps) {
                       styles.bar,
                       {
                         height: (bar.value / top) * chart.plotHeight,
-                        backgroundColor: colors.accent,
+                        backgroundColor: barColor,
                       },
                     ]}
                   />

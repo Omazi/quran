@@ -25,12 +25,24 @@ import {
   styleOf,
 } from '@/ui/test-support/environment';
 
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+
+import { requiredReadingSeconds } from '@/domain/khatm';
+
 import { READER_CONFIG } from '../config';
+import { pageWordCounts } from '../page-words';
+import { forgetReadingProgress } from '../reading-memory';
+import { READER_KEEP_AWAKE_TAG } from '../use-keep-reader-awake';
 import { ReaderNotFound, ReaderScreen } from '../reader-screen';
 import { SIMPLE_SCRIPT_FONT_FAMILY } from '../script-fonts';
 import { useReader, type ReaderActions, type ReaderModel } from '../use-reader';
 import type { QuranFontStatus } from '../use-quran-font';
 import { useScriptTexts } from '../use-script-texts';
+
+jest.mock('expo-keep-awake', () => ({
+  activateKeepAwakeAsync: jest.fn(() => Promise.resolve()),
+  deactivateKeepAwake: jest.fn(() => Promise.resolve()),
+}));
 
 const WIDTH = 390;
 /** The height of the scroll on screen, in points. */
@@ -103,6 +115,17 @@ async function scrollTo(top: number) {
   });
 }
 
+/** The app goes to the background or comes back: every listener of the screen hears it. */
+async function appBecomes(state: 'active' | 'background') {
+  const handlers = jest
+    .mocked(AppState.addEventListener)
+    .mock.calls.filter(([event]) => event === 'change')
+    .map(([, handler]) => handler as (next: string) => void);
+  await act(async () => {
+    for (const handler of handlers) handler(state);
+  });
+}
+
 async function wait(seconds: number) {
   now += seconds * SECOND;
 }
@@ -124,8 +147,28 @@ async function showWholePage(page: number) {
   await scrollTo(0);
 }
 
+/** Words of each page, from the repository, for the time each page asks. */
+let words: readonly number[] = [];
+beforeAll(async () => {
+  const bySurah = new Map<number, readonly string[]>();
+  for (const { surah } of quranStructure.surahs) {
+    bySurah.set(
+      surah,
+      (await quranRepository.getSurahVerses(surah)).map((verse) => verse.text),
+    );
+  }
+  words = pageWordCounts(({ surah, verse }) => bySurah.get(surah)?.[verse - 1] ?? '');
+});
+
+/** The seconds a page asks before it counts (spec 3). */
+function secondsAsked(page: number): number {
+  return requiredReadingSeconds(words[page - 1] ?? 1, READER_CONFIG.readingTime);
+}
+
 beforeEach(async () => {
   now = 0;
+  forgetReadingProgress();
+  jest.mocked(AppState.addEventListener).mockClear();
   // React Native's Jest mock makes the state a function; on a device it is a string.
   Object.defineProperty(AppState, 'currentState', { value: 'active', configurable: true });
   setDeviceConditions();
@@ -219,7 +262,7 @@ describe('a page counts once its section was seen long enough (spec 3, D8, D41)'
     const store = createTestAppStore();
     await openReader(store, 10);
     await showWholePage(10);
-    await wait(READER_CONFIG.minimumSecondsOnPage);
+    await wait(secondsAsked(10));
     await scrollTo(1);
     expect(store.getState().journal).toEqual([{ khatm: 1, page: 10, date: TODAY }]);
     expect(screen.getByTestId('reader-feedback')).toHaveTextContent(
@@ -231,7 +274,7 @@ describe('a page counts once its section was seen long enough (spec 3, D8, D41)'
     const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility');
     await openReader(createTestAppStore(), 10);
     await showWholePage(10);
-    await wait(READER_CONFIG.minimumSecondsOnPage);
+    await wait(secondsAsked(10));
     await scrollTo(1);
     expect(announce).toHaveBeenCalledWith(expect.stringMatching(/^\+1 page, tes canaux avancent$/));
   });
@@ -267,18 +310,52 @@ describe('a page counts once its section was seen long enough (spec 3, D8, D41)'
     const store = createTestAppStore();
     await openReader(store, 10);
     await showWholePage(10);
-    const onChange = jest
-      .mocked(AppState.addEventListener)
-      .mock.calls.filter(([event]) => event === 'change')
-      .map(([, handler]) => handler)
-      .at(-1)!;
-    await wait(10);
-    await act(async () => onChange('background'));
+    const half = secondsAsked(10) / 2 - 1;
+    await wait(half);
+    await appBecomes('background');
     await wait(600);
-    await act(async () => onChange('active'));
-    await wait(10);
+    await appBecomes('active');
+    await wait(half);
     await scrollTo(1);
     expect(pagesOf(store)).toEqual([]);
+  });
+
+  it('records a page whose time is reached when the app goes to the background', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 10);
+    await showWholePage(10);
+    await wait(secondsAsked(10));
+    // iOS may end the app in the background without warning: no later look would record it.
+    await appBecomes('background');
+    expect(pagesOf(store)).toEqual([10]);
+    await appBecomes('active');
+    await wait(secondsAsked(10));
+    await scrollTo(1);
+    expect(pagesOf(store)).toEqual([10]);
+  });
+
+  it('adds up the time of a page across stays: leaving the reader and coming back', async () => {
+    const store = createTestAppStore();
+    const half = secondsAsked(10) / 2 + 1;
+    const first = await openReader(store, 10);
+    await showWholePage(10);
+    await wait(half);
+    await scrollTo(1);
+    await first.unmount();
+    expect(pagesOf(store)).toEqual([]);
+    // Away from the reader for an hour: that time never counts.
+    await wait(3600);
+    await openReader(store, 10);
+    await showWholePage(10);
+    await wait(half);
+    await scrollTo(1);
+    expect(pagesOf(store)).toEqual([10]);
+  });
+
+  it('asks a short page less time than a long one, never less than the minimum', () => {
+    const { minimumSeconds } = READER_CONFIG.readingTime;
+    expect(secondsAsked(1)).toBe(minimumSeconds);
+    expect(secondsAsked(10)).toBeGreaterThan(secondsAsked(604));
   });
 
   it('a page already read in the khatma changes nothing, and says nothing', async () => {
@@ -296,7 +373,7 @@ describe('a page counts once its section was seen long enough (spec 3, D8, D41)'
     const store = createTestAppStore();
     const view = await openReader(store, 604);
     await showWholePage(604);
-    await wait(READER_CONFIG.minimumSecondsOnPage);
+    await wait(secondsAsked(604));
     await view.unmount();
     expect(pagesOf(store)).toEqual([604]);
   });
@@ -307,7 +384,7 @@ describe('a page counts once its section was seen long enough (spec 3, D8, D41)'
     const store = createTestAppStore({ journal: readPages(firstPages) });
     await openReader(store, lastPage);
     await showWholePage(lastPage);
-    await wait(READER_CONFIG.minimumSecondsOnPage);
+    await wait(secondsAsked(lastPage));
     await scrollTo(1);
     expect(screen.getByTestId('reader-feedback')).toHaveTextContent(
       /^Hizb terminé\. Nouveau dans ton jardin : \S/,
@@ -459,7 +536,7 @@ describe('the watered pill, the moment of the reader (spec 3)', () => {
     setDeviceConditions({ os: 'android' });
     await openReader(createTestAppStore(), 10);
     await showWholePage(10);
-    await wait(READER_CONFIG.minimumSecondsOnPage);
+    await wait(secondsAsked(10));
     await scrollTo(1);
     const row = screen.getByTestId('reader-pill-row');
     const pill = within(row).getByTestId('reader-feedback');
@@ -482,7 +559,7 @@ describe('the watered pill, the moment of the reader (spec 3)', () => {
     jest.useFakeTimers();
     try {
       await showWholePage(10);
-      await wait(READER_CONFIG.minimumSecondsOnPage);
+      await wait(secondsAsked(10));
       await scrollTo(1);
       expect(screen.getByTestId('reader-feedback')).toBeOnTheScreen();
       await act(async () => {
@@ -504,12 +581,110 @@ describe('the watered pill, the moment of the reader (spec 3)', () => {
     await openReader(createTestAppStore(), 10);
     await changeReducedMotion(true);
     await showWholePage(10);
-    await wait(READER_CONFIG.minimumSecondsOnPage);
+    await wait(secondsAsked(10));
     await scrollTo(1);
     await waitFor(() =>
       expect(styleOf(screen.getByTestId('reader-feedback-motion')).transform).toBeUndefined(),
     );
     expect(styleOf(screen.getByTestId('reader-feedback-motion')).opacity ?? 1).toBe(1);
+  });
+});
+
+describe('the water line: this page is being counted (owner, 25 November 2026)', () => {
+  const fillWidth = () =>
+    Number(
+      styleOf(screen.getByTestId('reader-page-progress-fill', { includeHiddenElements: true }))
+        .width,
+    );
+
+  it('fills while the page gathers its time, then a drop says the page will count', async () => {
+    await openReader(createTestAppStore(), 10);
+    await layOutPage(10, 0, 3000);
+    await scrollTo(0);
+    const line = () => screen.getByTestId('reader-page-progress', { includeHiddenElements: true });
+    expect(line()).toBeTruthy();
+    await wait(secondsAsked(10) / 2);
+    await scrollTo(1);
+    // The fill follows with the system's timing (the steps are checked with Reduce Motion below).
+    expect(
+      screen.queryByTestId('reader-page-progress-drop', { includeHiddenElements: true }),
+    ).toBeNull();
+    await wait(secondsAsked(10));
+    await scrollTo(2);
+    // Its time is reached, its end not yet seen: the drop has settled; nothing is recorded yet.
+    expect(
+      screen.getByTestId('reader-page-progress-drop', { includeHiddenElements: true }),
+    ).toBeTruthy();
+  });
+
+  it('says nothing to VoiceOver and covers no text', async () => {
+    await openReader(createTestAppStore(), 10);
+    await showWholePage(10);
+    const line = screen.getByTestId('reader-page-progress', { includeHiddenElements: true });
+    expect(line.props.accessibilityElementsHidden).toBe(true);
+    expect(
+      within(screen.getByTestId('reader-pill-row')).getByTestId('reader-page-progress', {
+        includeHiddenElements: true,
+      }),
+    ).toBeTruthy();
+    expect(
+      within(screen.getByTestId('reader-text')).queryByTestId('reader-page-progress'),
+    ).toBeNull();
+  });
+
+  it('is not there for a page already read in the khatma', async () => {
+    await openReader(createTestAppStore({ journal: readPages([10]) }), 10);
+    await showWholePage(10);
+    await wait(5);
+    await scrollTo(1);
+    expect(
+      screen.queryByTestId('reader-page-progress', { includeHiddenElements: true }),
+    ).toBeNull();
+  });
+
+  it('gives way to the pill when the page counts', async () => {
+    await openReader(createTestAppStore(), 10);
+    await showWholePage(10);
+    await wait(secondsAsked(10));
+    await scrollTo(1);
+    expect(screen.getByTestId('reader-feedback')).toBeOnTheScreen();
+    expect(
+      screen.queryByTestId('reader-page-progress', { includeHiddenElements: true }),
+    ).toBeNull();
+  });
+
+  it('moves by three still steps with Reduce Motion', async () => {
+    jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
+    await openReader(createTestAppStore(), 10);
+    await changeReducedMotion(true);
+    await layOutPage(10, 0, 3000);
+    await scrollTo(0);
+    const { width, reducedMotionSteps } = READER_CONFIG.progressLine;
+    await wait(secondsAsked(10) * 0.5);
+    await scrollTo(1);
+    // Half the time: the first of three steps, without animation.
+    await waitFor(() => expect(fillWidth()).toBeCloseTo(width / reducedMotionSteps));
+  });
+});
+
+describe('the screen stays awake while reading (owner, 25 November 2026)', () => {
+  it('holds the screen awake while the reader is open, and lets it go on leaving', async () => {
+    jest.mocked(activateKeepAwakeAsync).mockClear();
+    jest.mocked(deactivateKeepAwake).mockClear();
+    const view = await openReader(createTestAppStore(), 10);
+    await waitFor(() => expect(activateKeepAwakeAsync).toHaveBeenCalledWith(READER_KEEP_AWAKE_TAG));
+    await view.unmount();
+    await waitFor(() => expect(deactivateKeepAwake).toHaveBeenCalledWith(READER_KEEP_AWAKE_TAG));
+  });
+
+  it('lets it go in the background, and holds it again on coming back', async () => {
+    await openReader(createTestAppStore(), 10);
+    jest.mocked(activateKeepAwakeAsync).mockClear();
+    jest.mocked(deactivateKeepAwake).mockClear();
+    await appBecomes('background');
+    await waitFor(() => expect(deactivateKeepAwake).toHaveBeenCalledTimes(1));
+    await appBecomes('active');
+    await waitFor(() => expect(activateKeepAwakeAsync).toHaveBeenCalledTimes(1));
   });
 });
 
@@ -532,6 +707,7 @@ describe('what the pill names (owner, 25 November 2026)', () => {
       barsVisible: true,
       isBookmarked: false,
       feedback: { kind: 'page-counted', growingKind },
+      pageProgress: { kind: 'hidden' },
       script: 'uthmani',
       textSizeStep: 1,
       textScale: 1,

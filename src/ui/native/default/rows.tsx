@@ -51,7 +51,7 @@ export function SwitchRow({ label, value, onChange, disabled = false, testID }: 
             importantForAccessibility="no-hide-descendants"
             disabled={disabled}
             onValueChange={onChange}
-            trackColor={{ true: colors.accent, false: colors.fill }}
+            trackColor={{ true: colors.actionTint, false: colors.fill }}
             value={value}
           />
         }
@@ -139,7 +139,7 @@ function StepButton({ symbol, disabled, onPress, testID }: StepButtonProps) {
         disabled && styles.disabled,
       ]}
     >
-      <Icon symbol={symbol} color="accent" />
+      <Icon symbol={symbol} color="actionTint" />
     </Pressable>
   );
 }
@@ -211,7 +211,7 @@ export function TimePickerRow({ label, value, onChange, testID }: TimePickerRowP
         testID={testID}
         style={({ pressed }) => pressed && styles.pressed}
       >
-        <RowLayout label={label} trailing={<AppText color="accent">{formattedTime}</AppText>} />
+        <RowLayout label={label} trailing={<AppText color="actionTint">{formattedTime}</AppText>} />
       </Pressable>
       {isPickerOpen ? (
         <DateTimePicker

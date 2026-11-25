@@ -87,26 +87,44 @@ donne un état d'erreur clair, jamais un texte partiel.
 
 ## 3. Compter une page lue
 
-- Une page compte, une fois par séance de lecture, quand sa section :
-  1. est restée à l'écran au moins `minimumSecondsOnPage` secondes en tout, appli au premier
-     plan. Le temps entre deux observations est partagé entre les sections visibles selon la
-     place que chacune occupe : deux pages à l'écran ne se lisent pas deux fois plus vite ;
-  2. a eu sa première et sa dernière ligne à l'écran : ses versets ont été vus, pas seulement
-     son haut ;
-  3. et rien ne compte pendant qu'on lance le texte plus vite qu'on ne lit
-     (`flingScreensPerSecond`, 1,5 écran par seconde) : feuilleter ne fait rien pousser.
-     Valeur de départ : **30 secondes**, dans la configuration. **À confirmer par le propriétaire**,
-     comme le seuil de vitesse (jugement, à vérifier sur un iPhone).
-- La règle est observée à chaque défilement et chaque seconde (`trackingTickSeconds`) : une page
-  lue sans faire défiler compte quand son temps est atteint, et la pastille le dit tout de suite
-  (avant D41 : en tournant la page). Quitter le lecteur compte le temps jusque-là.
-- L'enregistrement passe par le magasin (`recordPageRead`), à la date locale. Relire une page
-  déjà lue dans la khatma en cours ne change rien : c'est le domaine qui le décide (D8), l'écran
-  ne refait pas ce calcul.
+Décisions du propriétaire du 25 novembre 2026 (D41 et sa suite).
+
+- **Le temps demandé suit la page** : 0,2 seconde par mot de cette page du mushaf (ses versets
+  dans le texte uthmani), jamais moins de 8 secondes (`READER_CONFIG.readingTime`, règle
+  `requiredReadingSeconds` du module khatma). Page médiane (129 mots) : environ 26 secondes ;
+  la plus longue (161 mots) : environ 32 ; pages 1, 2 et 604 : le minimum ou à peine plus.
+- Une page compte quand sa section :
+  1. a été à l'écran, appli au premier plan, le temps qu'elle demande, **en tout**. Le temps
+     **s'additionne d'un passage à l'autre** : défiler plus loin puis revenir, quitter le
+     lecteur puis revenir. Le temps entre deux passages ne compte jamais. Entre deux
+     observations, le temps est partagé entre les sections visibles selon la place que chacune
+     occupe : deux pages à l'écran ne se lisent pas deux fois plus vite ;
+  2. a eu sa première et sa dernière ligne à l'écran : ses versets ont été vus ;
+  3. et rien ne compte pendant qu'on lance le texte (`flingScreensPerSecond`, 1,5 écran par
+     seconde) : seul compte le temps où la section est visible et le défilement lent ou arrêté.
+- Le temps d'une page qui n'a pas encore compté est gardé **tant que l'appli tourne**
+  (`reading-memory.ts`), pas sur l'appareil : redémarrer l'appli le remet à zéro.
+- La règle est observée à chaque défilement et chaque seconde : une page lue sans défiler compte
+  quand son temps est atteint, et la pastille le dit tout de suite. Une page dont le temps est
+  atteint compte aussi quand l'appli passe en arrière-plan (iOS peut la fermer sans prévenir) et
+  quand on quitte le lecteur.
+- **Une seule fois** : une page qui a compté n'est plus enregistrée dans la séance, et relire une
+  page déjà lue dans la khatma en cours ne change rien : c'est le domaine qui le décide (D8).
+- **La ligne d'eau** : sous le titre, dans la rangée de la pastille, une fine ligne d'eau se
+  remplit pendant que la page en lecture accumule son temps ; quand le temps est atteint, une
+  petite goutte se pose au bout : « cette page comptera » (il reste à voir sa dernière ligne).
+  Absente pour une page déjà lue dans la khatma. Elle laisse la place à la pastille quand la page
+  compte. Avec « réduire les animations », elle avance par trois paliers fixes. Elle ne déplace
+  jamais le texte et VoiceOver ne l'entend pas : la pastille annonce, une fois, qu'une page a
+  compté.
 - Retour à la personne : la pastille d'eau sous le titre, qui nomme ce qui pousse
   (`getGardenFeed`, `GardenState.nextElement`), ou le nouvel élément quand un hizb se termine.
   Texte selon `writing.md`. Pas de son. Avec « réduire les animations », elle apparaît sans
   mouvement. Elle ne recouvre jamais le texte (écarts 64, 66, 84).
+- **L'écran reste allumé** tant que le lecteur est ouvert et l'appli au premier plan
+  (`expo-keep-awake`, licence MIT) ; il est rendu à la veille du système en arrière-plan et en
+  quittant le lecteur.
+- Seuils (temps par mot, minimum, vitesse) : **à confirmer par le propriétaire** sur un iPhone.
 - La lecture suivie à la voix comptera autrement ; cette règle ne vaut que pour la lecture des
   yeux.
 
@@ -139,12 +157,19 @@ Cibles de 44 points, 12 points entre les deux boutons de taille.
   sa page ; le texte de chaque verset est celui du dépôt, dans les deux écritures, pour les 604
   pages ; cartouche et basmala aux bons endroits ; ligne de lecture ; règle des 30 secondes avec
   horloge simulée (page lue, page jamais vue jusqu'au bout, page trop brève, pages lancées,
-  temps partagé, arrière-plan, une fois par séance, horloge qui recule).
+  temps partagé, arrière-plan, une fois par séance, temps additionné d'un passage et d'une
+  séance à l'autre, temps propre à chaque page, horloge qui recule) ; mots de chaque page ;
+  règle du temps par mot (module khatma).
 - Écran (`reader-screen.test.tsx`), à travers le vrai magasin : liste verticale virtualisée qui
   s'ouvre sur la page demandée et grandit vers le haut ; texte exact (pages 1, 293, 604 en
-  uthmani, 293 en simple) ; page comptée, lancée, jamais vue, en arrière-plan, déjà lue, en
-  quittant, fin de hizb ; barre qui suit la lecture ; marque-page ; choix d'écriture mémorisé ;
+  uthmani, 293 en simple) ; page comptée, lancée, jamais vue, en arrière-plan (sans compter,
+  et comptée en partant), déjà lue, en quittant, temps additionné en quittant puis revenant, fin
+  de hizb ; ligne d'eau (remplissage, goutte, absente pour une page lue, paliers avec « réduire
+  les animations ») ; écran gardé allumé ; barre qui suit la lecture ; marque-page ; choix d'écriture mémorisé ;
   taille du texte ; pastille ; états.
+- Parcours complet (`reading-progress-routes.test.tsx`) : le premier hizb lu dans le lecteur,
+  page après page pendant le temps que chacune demande, se voit sur l'accueil et le profil, et
+  après un redémarrage ; des pages défilées trop vite ne comptent pas.
 - Données : `npm run data:verify` (le texte simple est la colonne de l'éditeur, caractère pour
   caractère) ; empreinte du texte simple vérifiée par les tests.
 - `npm run check` ; `npx expo export --platform ios`.

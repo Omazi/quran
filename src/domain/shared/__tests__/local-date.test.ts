@@ -43,4 +43,26 @@ describe('local-date', () => {
     expect(localDateInTimeZone(lateEveningInToronto, 'America/Toronto')).toBe('2026-11-23');
     expect(localDateInTimeZone(lateEveningInToronto, 'Asia/Riyadh')).toBe('2026-11-24');
   });
+
+  // A JavaScript engine may give "3" for a month asked as "2-digit": the day must not depend on it.
+  it('pads the parts itself, whatever the engine writes', () => {
+    const RealFormat = Intl.DateTimeFormat;
+    const unpadded = [
+      { type: 'year', value: '2026' },
+      { type: 'literal', value: '-' },
+      { type: 'month', value: '3' },
+      { type: 'literal', value: '-' },
+      { type: 'day', value: '5' },
+    ] as Intl.DateTimeFormatPart[];
+    const spy = jest
+      .spyOn(Intl, 'DateTimeFormat')
+      .mockImplementation((...args: ConstructorParameters<typeof RealFormat>) =>
+        Object.assign(new RealFormat(...args), { formatToParts: () => unpadded }),
+      );
+    try {
+      expect(localDateInTimeZone(new Date('2026-03-05T12:00:00Z'), 'UTC')).toBe('2026-03-05');
+    } finally {
+      spy.mockRestore();
+    }
+  });
 });

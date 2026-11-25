@@ -284,6 +284,36 @@ describe('iOS GroupedList', () => {
     ]);
   });
 
+  it('in the garden appearance, keeps the system form over the warm canvas, its rows on white cards', async () => {
+    setDeviceConditions();
+    await render(
+      <GroupedList appearance="garden" testID="list">
+        <ListSection title="Rappels">
+          <ListRow label="Vendredi : sourate Al-Kahf" />
+        </ListSection>
+      </GroupedList>,
+    );
+    const form = screen.getByTestId('list');
+    expect(modifierOf(form, 'scrollContentBackground')).toMatchObject({ visible: 'hidden' });
+    expect(modifierOf(firstChild(form), 'listRowBackground')).toMatchObject({
+      color: iosPaletteColor('surface'),
+    });
+  });
+
+  it('leaves the system backgrounds alone by default', async () => {
+    setDeviceConditions();
+    await render(
+      <GroupedList testID="list">
+        <ListSection title="Rappels">
+          <ListRow label="Vendredi : sourate Al-Kahf" />
+        </ListSection>
+      </GroupedList>,
+    );
+    const form = screen.getByTestId('list');
+    expect(modifierOf(form, 'scrollContentBackground')).toBeUndefined();
+    expect(modifierOf(firstChild(form), 'listRowBackground')).toBeUndefined();
+  });
+
   it('shows a value at the trailing side of a row with the system labelled content', async () => {
     setDeviceConditions();
     await render(

@@ -63,6 +63,14 @@ export function initI18n(language: AppLanguage): typeof i18n {
   return i18n;
 }
 
+/**
+ * A translation function fixed on a language and a namespace, for text built outside a screen
+ * (the notifications). The language must be one the app supports; keys follow the French ones.
+ */
+export function getTranslator(language: AppLanguage, namespace: (typeof NAMESPACES)[number]) {
+  return i18n.getFixedT(language, namespace);
+}
+
 /** The language the interface is shown in right now. */
 export function getDisplayedLanguage(): AppLanguage {
   const language = i18n.language;

@@ -17,6 +17,8 @@ export type ProfileStatsModel =
       readonly period: StatsPeriod;
       readonly metric: StatsMetric;
       readonly today: LocalDate;
+      /** The pace of the estimated end of the khatma in progress, said beside it. */
+      readonly dailyGoalPages: number;
       readonly stats: ProfileStats;
     };
 
@@ -48,6 +50,7 @@ export function useProfileStats({ clock, loadTable }: ProfileStatsDependencies =
   const tableState = usePageStatsTable(loadTable);
   const storedJournal = useAppStore((state) => state.journal);
   const storedTime = useAppStore((state) => state.timeSpent);
+  const dailyGoalPages = useAppStore((state) => state.settings.dailyGoalPages);
   const { journal, timeSpent } = usePreviewedStatsSource({
     journal: storedJournal,
     timeSpent: storedTime,
@@ -65,14 +68,15 @@ export function useProfileStats({ clock, loadTable }: ProfileStatsDependencies =
         period,
         metric,
         today,
+        dailyGoalPages,
       });
-      return { status: 'ready', period, metric, today, stats };
+      return { status: 'ready', period, metric, today, dailyGoalPages, stats };
     } catch (error) {
       // A damaged journal: an explanation on screen, never made-up numbers.
       console.error('The statistics could not be computed.', error);
       return { status: 'failed' };
     }
-  }, [tableState, journal, timeSpent, period, metric, today]);
+  }, [tableState, journal, timeSpent, period, metric, today, dailyGoalPages]);
 
   const actions = useMemo(() => ({ selectPeriod: setPeriod, selectMetric: setMetric }), []);
   return { model, actions };

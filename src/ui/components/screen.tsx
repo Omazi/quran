@@ -8,10 +8,12 @@ import { useColors, useReaderPalette } from '../use-colors';
 /**
  * `background` for an ordinary screen, `groupedBackground` when the screen shows a grouped list
  * (color.md › Mobile), `paper` for the mushaf page only, `readerCanvas` for the warm ground of the
- * validated mockups around the page and in the Quran tab (tokens `readerPalette`, deviation 80).
+ * validated mockups around the page and in the Quran tab (tokens `readerPalette`, deviation 80),
+ * `canvas` for the warm ground of the home screen's palette (`gardenPalette`) under a list of the
+ * garden appearance (the settings).
  */
 export type ScreenBackground =
-  Extract<ColorRole, 'background' | 'groupedBackground' | 'paper'> | 'readerCanvas';
+  Extract<ColorRole, 'background' | 'groupedBackground' | 'paper' | 'canvas'> | 'readerCanvas';
 
 export interface ScreenProps {
   children: ReactNode;

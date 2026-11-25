@@ -1,11 +1,14 @@
 /**
- * The 30-second rule of the reader (docs/specs/reader.md, section 3), for a continuous scroll
+ * The reading rule of the reader (docs/specs/reader.md, section 3), for a continuous scroll
  * (D41). Pure functions of what the screen observes: nothing here reads a clock or the screen, so
  * tests choose both.
  *
- * A page of the mushaf counts once, in a reading session, when its section:
+ * A page of the mushaf counts once when its section:
  *
- * 1. was on screen, app in the foreground, for `minimumSecondsOnPage` seconds in all. The time
+ * 1. was on screen, app in the foreground, for the time the page asks in all
+ *    (`requiredSecondsOf`: it grows with the words of the page, owner's decision of 25 November
+ *    2026). The time adds up across stays: scrolling back and forth, leaving the reader and
+ *    coming back (the tracker starts from the progress kept by `reading-memory.ts`). The time
  *    between two observations goes to the sections that were on screen, shared by the room each
  *    took: half a screen of a page gets half the time. Two pages on screen are not read twice as
  *    fast;
@@ -18,7 +21,6 @@
  * changes nothing in the journal.
  */
 
-import { READER_CONFIG } from './config';
 import type { Viewport } from './reading-place';
 
 const MILLISECONDS_PER_SECOND = 1000;
@@ -39,7 +41,8 @@ export interface ReadingObservation {
   readonly isForeground: boolean;
 }
 
-interface PageProgress {
+/** What is known of one page: its time so far, its edges seen, whether it counted. */
+export interface PageProgress {
   readonly creditedMs: number;
   readonly sawTop: boolean;
   readonly sawBottom: boolean;
@@ -53,14 +56,10 @@ export interface ReadingTracker {
 }
 
 export interface ReadingRules {
-  readonly minimumSeconds: number;
+  /** Seconds the page asks before it counts; `Infinity` while that is not known yet. */
+  readonly requiredSecondsOf: (page: number) => number;
   readonly flingScreensPerSecond: number;
 }
-
-const DEFAULT_RULES: ReadingRules = {
-  minimumSeconds: READER_CONFIG.minimumSecondsOnPage,
-  flingScreensPerSecond: READER_CONFIG.flingScreensPerSecond,
-};
 
 const NOTHING_YET: PageProgress = {
   creditedMs: 0,
@@ -69,8 +68,20 @@ const NOTHING_YET: PageProgress = {
   counted: false,
 };
 
-export function createReadingTracker(): ReadingTracker {
-  return { last: null, pages: new Map() };
+/**
+ * A new reading session. It starts from the progress kept from earlier sessions, so that the time
+ * of a page adds up across stays; the time between two sessions never counts (no last
+ * observation).
+ */
+export function createReadingTracker(
+  pages: ReadonlyMap<number, PageProgress> = new Map(),
+): ReadingTracker {
+  return { last: null, pages: new Map(pages) };
+}
+
+/** What is known of a page so far. */
+export function progressOf(tracker: ReadingTracker, page: number): PageProgress {
+  return tracker.pages.get(page) ?? NOTHING_YET;
 }
 
 function visibleHeight(extent: SectionExtent, viewport: Viewport): number {
@@ -90,7 +101,7 @@ function isEdgeVisible(edge: number, viewport: Viewport): boolean {
 export function observeReading(
   tracker: ReadingTracker,
   observation: ReadingObservation,
-  rules: ReadingRules = DEFAULT_RULES,
+  rules: ReadingRules,
 ): { tracker: ReadingTracker; counted: readonly number[] } {
   const { last } = tracker;
   if (!Number.isFinite(observation.now) || (last !== null && observation.now < last.now)) {
@@ -139,10 +150,9 @@ export function observeReading(
   }
 
   const counted: number[] = [];
-  const minimumMs = rules.minimumSeconds * MILLISECONDS_PER_SECOND;
   for (const [page, progress] of pages) {
     if (progress.counted || !progress.sawTop || !progress.sawBottom) continue;
-    if (progress.creditedMs < minimumMs) continue;
+    if (progress.creditedMs < rules.requiredSecondsOf(page) * MILLISECONDS_PER_SECOND) continue;
     pages.set(page, { ...progress, counted: true });
     counted.push(page);
   }

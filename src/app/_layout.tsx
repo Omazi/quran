@@ -2,11 +2,13 @@ import { useFonts } from 'expo-font';
 import { getLocales } from 'expo-localization';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { createDeviceProgressBackup, deviceStorage } from '@/data/storage';
+import { LaunchOverlay, useLaunch } from '@/features/launch';
 import { useForegroundTimeRecording } from '@/features/profile';
+import { useNotificationTaps, useReminderSync } from '@/features/reminders';
 import {
   deviceWritingDirection,
   useAppStartup,
@@ -15,8 +17,12 @@ import {
 import { AppStoreProvider } from '@/store';
 import { appFonts, useColors } from '@/ui';
 
-// The launch screen stays until the first screen is ready to replace it (launching.md).
+// The native launch screen (a flat water colour) stays until the launch overlay has taken its
+// place; the overlay then animates the mark and fades into the first screen (deviation 115).
 void SplashScreen.preventAutoHideAsync();
+
+const hideSplash = () => SplashScreen.hide();
+const readReducedMotion = () => AccessibilityInfo.isReduceMotionEnabled();
 
 const STARTUP: StartupDependencies = {
   storage: deviceStorage,
@@ -28,9 +34,10 @@ const STARTUP: StartupDependencies = {
 
 /**
  * Root of the app. It starts everything the first screen needs (the Quran fonts, the saved
- * settings, the language and the writing direction), counts the time spent in the app, then
- * hands over to the routes: `index`
- * sends a first launch to the introduction and everyone else to the tabs.
+ * settings, the language and the writing direction), counts the time spent in the app, keeps the
+ * reminders scheduled, then hands over to the routes: `index`
+ * sends a first launch to the introduction and everyone else to the tabs. The launch overlay
+ * covers it from the first frame and fades out once the first screen is ready.
  */
 export default function RootLayout() {
   // The interface uses the system fonts: a Quran font that fails to load must not block the app.
@@ -38,36 +45,49 @@ export default function RootLayout() {
   const startedApp = useAppStartup(STARTUP);
   const isReady = startedApp !== null && (areFontsLoaded || fontError !== null);
 
-  useEffect(() => {
-    if (isReady) SplashScreen.hide();
-  }, [isReady]);
+  const launch = useLaunch({ isReady, hideSplash, readReducedMotion });
 
-  if (!isReady) return null;
   return (
-    <AppStoreProvider store={startedApp.store}>
-      <RootStack />
-    </AppStoreProvider>
+    <View style={styles.root}>
+      {isReady ? (
+        <AppStoreProvider store={startedApp.store}>
+          <RootStack />
+        </AppStoreProvider>
+      ) : null}
+      {launch.isShown ? (
+        <LaunchOverlay phase={launch.phase} motion={launch.motion} onLayout={launch.onLayout} />
+      ) : null}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});
 
 function RootStack() {
   // The time spent in the app and in the reader, for the statistics (D37).
   useForegroundTimeRecording();
+  // The reminders of the settings, scheduled as local notifications, and where a tap on one leads
+  // (D13, docs/specs/reminders.md).
+  useReminderSync();
+  useNotificationTaps();
   const { t } = useTranslation('onboarding');
   const { t: tSettings } = useTranslation('settings');
   const colors = useColors();
   // The settings page of the profile opens over the tabs, as the reader does, with the system bar,
   // its title and its back button, a chevron alone (toolbars.md › Navigation; deviation 52). The bar
-  // takes the system's grouped background and label colours, which follow the dark appearance:
-  // without them the navigation library paints its own light theme.
+  // takes the warm canvas and the title colour of the validated mockups, which follow the dark
+  // appearance, so it runs into the page under it (deviation 101); without them the navigation
+  // library paints its own light theme.
   const pushedPage = {
     headerShown: true,
     headerTintColor: colors.actionTint,
     headerBackButtonDisplayMode: 'minimal',
-    headerStyle: { backgroundColor: colors.groupedBackground },
-    headerTitleStyle: { color: colors.label },
+    headerStyle: { backgroundColor: colors.canvas },
+    headerTitleStyle: { color: colors.heading },
     headerShadowVisible: false,
-    contentStyle: { backgroundColor: colors.groupedBackground },
+    contentStyle: { backgroundColor: colors.canvas },
   } as const;
   return (
     <Stack screenOptions={{ headerShown: false }}>
