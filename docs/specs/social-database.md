@@ -318,6 +318,20 @@ Tout ce qui suit est **à confirmer sur les pages de la section 1** : l'auteur n
 9. `supabase test db` (tests pgTAP) n'est pas utilisé : les tests de ce lot sont en JavaScript
    (section 8). Les passer sur le vrai projet ne se fait pas par cette commande.
 
+### Limiter la création de comptes (décision du propriétaire, 25 novembre 2026)
+
+Pour qu'on ne puisse pas créer des comptes en masse et relever les noms par la recherche :
+quelqu'un qui crée beaucoup de comptes est bloqué et ne peut plus en créer. À régler le jour
+de la création du projet, et **à vérifier dans la documentation de Supabase en vigueur**
+(rien de ceci n'a pu être lu d'ici) :
+
+- les limites de débit de l'authentification (inscriptions et envois d'e-mails par adresse
+  IP et par heure), au plus bas raisonnable ;
+- une vérification anti-robot (captcha) à l'inscription, si Supabase la propose pour les
+  méthodes retenues ;
+- côté base : compter les profils créés par appareil ou par jour n'est pas fiable (l'appli
+  peut mentir) ; la limite doit rester côté serveur d'authentification.
+
 ## 7. Ce qui reste à décider
 
 ### 7.1 La sauvegarde du journal
