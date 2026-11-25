@@ -13,6 +13,13 @@ export { getWritingDirection, type WritingDirection } from './direction';
 export { appFonts } from './fonts';
 export * from './native';
 export {
+  BarChart,
+  niceAxisTop,
+  type BarChartBar,
+  type BarChartProps,
+} from './components/bar-chart';
+export {
+  chart,
   fontFamily,
   layout,
   radius,

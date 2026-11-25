@@ -3,6 +3,7 @@ import arGarden from './locales/ar/garden.json';
 import arHome from './locales/ar/home.json';
 import arListening from './locales/ar/listening.json';
 import arOnboarding from './locales/ar/onboarding.json';
+import arProfile from './locales/ar/profile.json';
 import arReader from './locales/ar/reader.json';
 import arSettings from './locales/ar/settings.json';
 import enCommon from './locales/en/common.json';
@@ -10,6 +11,7 @@ import enGarden from './locales/en/garden.json';
 import enHome from './locales/en/home.json';
 import enListening from './locales/en/listening.json';
 import enOnboarding from './locales/en/onboarding.json';
+import enProfile from './locales/en/profile.json';
 import enReader from './locales/en/reader.json';
 import enSettings from './locales/en/settings.json';
 import frCommon from './locales/fr/common.json';
@@ -17,6 +19,7 @@ import frGarden from './locales/fr/garden.json';
 import frHome from './locales/fr/home.json';
 import frListening from './locales/fr/listening.json';
 import frOnboarding from './locales/fr/onboarding.json';
+import frProfile from './locales/fr/profile.json';
 import frReader from './locales/fr/reader.json';
 import frSettings from './locales/fr/settings.json';
 
@@ -37,6 +40,7 @@ export const NAMESPACES = [
   'reader',
   'listening',
   'settings',
+  'profile',
 ] as const;
 
 export const resources = {
@@ -46,6 +50,7 @@ export const resources = {
     home: frHome,
     garden: frGarden,
     reader: frReader,
+    profile: frProfile,
     listening: frListening,
     settings: frSettings,
   },
@@ -55,6 +60,7 @@ export const resources = {
     home: enHome,
     garden: enGarden,
     reader: enReader,
+    profile: enProfile,
     listening: enListening,
     settings: enSettings,
   },
@@ -64,6 +70,7 @@ export const resources = {
     home: arHome,
     garden: arGarden,
     reader: arReader,
+    profile: arProfile,
     listening: arListening,
     settings: arSettings,
   },

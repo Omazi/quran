@@ -6,7 +6,7 @@ import { useAppStore } from '@/store';
 import { getWritingDirection, useColors } from '@/ui';
 
 /**
- * The three sections of the app in the system tab bar: one word and one filled symbol each,
+ * The sections of the app in the system tab bar: one word and one filled symbol each,
  * always visible (tab-bars.md › Best practices). The selected tab takes the accent, the colour
  * of water, which differs from the green of the garden behind the bar
  * (color.md › Liquid Glass color).
@@ -15,9 +15,9 @@ export default function TabsLayout() {
   const { t } = useTranslation('common');
   const colors = useColors();
   const hasFinishedIntroduction = useAppStore((state) => state.settings.onboardingCompleted);
-  // Stored data that could not be read back is explained in the settings: the badge leads there
+  // Stored data that could not be read back is explained in the profile: the badge leads there
   // (tab-bars.md › Best practices: a badge for critical information).
-  const hasNoticeInSettings = useAppStore((state) => state.dataResetNotice !== null);
+  const hasNoticeInProfile = useAppStore((state) => state.dataResetNotice !== null);
 
   // A link that opens the app on a tab must not skip the introduction.
   if (!hasFinishedIntroduction) return <Redirect href="/onboarding" />;
@@ -36,12 +36,13 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Icon sf="book.fill" md="menu_book" />
         <NativeTabs.Trigger.Label>{t('tabs.quran')}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="settings">
-        <NativeTabs.Trigger.Icon sf="gearshape.fill" md="settings" />
-        <NativeTabs.Trigger.Label>{t('tabs.settings')}</NativeTabs.Trigger.Label>
+      {/* The profile: the reading statistics, then the settings. */}
+      <NativeTabs.Trigger name="profile">
+        <NativeTabs.Trigger.Icon sf="person.crop.circle.fill" md="account_circle" />
+        <NativeTabs.Trigger.Label>{t('tabs.profile')}</NativeTabs.Trigger.Label>
         {/* Left out rather than `hidden`: a badge that has a text is shown whatever `hidden` says
             (expo-router, NativeTabTrigger › appendBadgeOptions). */}
-        {hasNoticeInSettings ? (
+        {hasNoticeInProfile ? (
           <NativeTabs.Trigger.Badge>{t('tabs.attentionBadge')}</NativeTabs.Trigger.Badge>
         ) : null}
       </NativeTabs.Trigger>

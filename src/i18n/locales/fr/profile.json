@@ -1,0 +1,76 @@
+{
+  "title": "Profil",
+  "periods": {
+    "label": "Période",
+    "today": "Aujourd’hui",
+    "week": "Semaine",
+    "month": "Mois",
+    "all-time": "Tout"
+  },
+  "hasanat": {
+    "caption": {
+      "today": "Hasanat aujourd’hui",
+      "week": "Hasanat cette semaine",
+      "month": "Hasanat ce mois-ci",
+      "all-time": "Hasanat depuis le début"
+    },
+    "value": "≈ {{value}}",
+    "valueSpoken": "Environ {{value}} hasanat, une estimation",
+    "note": "Estimation : dix hasanat par lettre lue, d’après le hadith rapporté par Ibn Mas‘ûd (Sunan at-Tirmidhî n° 2910). Allah seul connaît la récompense.",
+    "shortNote": "Hasanat : une estimation (Tirmidhî n° 2910). Allah seul connaît la récompense."
+  },
+  "figures": {
+    "versesRead": "Versets lus",
+    "wordsRead": "Mots lus",
+    "pagesRead": "Pages lues",
+    "readingTime": "Temps de lecture",
+    "appTime": "Temps dans l’appli"
+  },
+  "chart": {
+    "titleDay": "Chaque jour",
+    "titleMonth": "Chaque mois",
+    "metricLabel": "Afficher",
+    "metrics": {
+      "hasanat": "Hasanat",
+      "verses": "Versets",
+      "words": "Mots",
+      "pages": "Pages",
+      "readingTime": "Temps de lecture"
+    },
+    "bestDay": "Meilleur jour : {{date}}, {{value}}",
+    "bestMonth": "Meilleur mois : {{date}}, {{value}}",
+    "nothingYet": "Pas encore de lecture sur cette période",
+    "bar": "{{date}}, {{metric}} : {{value}}"
+  },
+  "khatmas": {
+    "title": "Par khatma",
+    "inProgress": "Khatma {{number}} · en cours",
+    "complete": "Khatma {{number}} · terminée le {{date}}",
+    "detail": "{{pages}} pages · {{verses}} versets · {{words}} mots · ≈ {{hasanat}} hasanat"
+  },
+  "empty": {
+    "title": "Ta première page t’attend",
+    "description": "Chaque page lue ici compte : versets, mots, hasanat et temps de lecture, jour après jour."
+  },
+  "loading": "Calcul de tes statistiques",
+  "failed": {
+    "title": "Statistiques indisponibles",
+    "description": "Tes lectures restent enregistrées. Les chiffres reviendront au prochain lancement."
+  },
+  "duration": {
+    "hours_one": "{{count}} h",
+    "hours_other": "{{count}} h",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "join": "{{hours}} {{minutes}}",
+    "lessThanMinute": "< 1 min"
+  },
+  "durationSpoken": {
+    "hours_one": "{{count}} heure",
+    "hours_other": "{{count}} heures",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "join": "{{hours}} {{minutes}}",
+    "lessThanMinute": "moins d’une minute"
+  }
+}

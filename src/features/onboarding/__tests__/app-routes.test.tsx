@@ -235,7 +235,7 @@ describe('first launch', () => {
   });
 
   it('does not let a link into the tabs skip the introduction', async () => {
-    const app = await openApp('/settings');
+    const app = await openApp('/profile');
     await waitFor(() => expect(app.getPathname()).toBe('/onboarding'));
   });
 
@@ -254,14 +254,14 @@ describe('first launch', () => {
 describe('returning person', () => {
   beforeEach(() => store({ onboardingCompleted: true }));
 
-  it('opens on the tabs: Jardin, Coran, Réglages, one word and one filled symbol each', async () => {
+  it('opens on the tabs: Jardin, Coran, Profil, one word and one filled symbol each', async () => {
     const app = await openApp();
     await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
 
     expect(tabs().map(({ props }) => [props.title, props.icon])).toEqual([
       ['Jardin', { sf: 'leaf.fill' }],
       ['Coran', { sf: 'book.fill' }],
-      ['Réglages', { sf: 'gearshape.fill' }],
+      ['Profil', { sf: 'person.crop.circle.fill' }],
     ]);
     // The selected tab takes the accent, and the bar the direction React Native runs in.
     expect(tabsHost()).toHaveProp('tabBarTintColor', iosAppColor('accent'));
@@ -295,8 +295,8 @@ describe('returning person', () => {
   it('finds the settings they made, and can change them', async () => {
     await store({ onboardingCompleted: true, dailyGoalPages: 12 });
     setPermission(PermissionStatus.GRANTED);
-    const app = await openApp('/settings');
-    await waitFor(() => expect(app.getPathname()).toBe('/settings'));
+    const app = await openApp('/profile');
+    await waitFor(() => expect(app.getPathname()).toBe('/profile'));
     expect(screen.getByRole('adjustable', { name: 'Pages par jour' })).toHaveAccessibilityValue({
       text: '12',
     });
@@ -308,9 +308,9 @@ describe('returning person', () => {
   it('keeps the language they chose, whatever the language of the device', async () => {
     await store({ onboardingCompleted: true, language: 'en' });
     setDeviceLanguage('fr');
-    await openApp('/settings');
-    expect(await screen.findByRole('header', { name: 'Settings' })).toBeOnTheScreen();
-    expect(tabs().map(({ props }) => props.title)).toEqual(['Garden', 'Quran', 'Settings']);
+    await openApp('/profile');
+    expect(await screen.findByRole('header', { name: 'Profile' })).toBeOnTheScreen();
+    expect(tabs().map(({ props }) => props.title)).toEqual(['Garden', 'Quran', 'Profile']);
   });
 
   it('gets a mirrored tab bar and Arabic names when the app runs in Arabic', async () => {
@@ -318,14 +318,14 @@ describe('returning person', () => {
     setDeviceConditions({ rightToLeft: true });
     const app = await openApp();
     await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
-    expect(tabs().map(({ props }) => props.title)).toEqual(['الحديقة', 'القرآن', 'الإعدادات']);
+    expect(tabs().map(({ props }) => props.title)).toEqual(['الحديقة', 'القرآن', 'الملف الشخصي']);
     expect(tabsHost()).toHaveProp('layoutDirection', 'rtl');
     expect(reloadAppAsync).not.toHaveBeenCalled();
   });
 
-  it('can see the introduction again from the settings, with a back button, and finish it', async () => {
+  it('can see the introduction again from the profile, with a back button, and finish it', async () => {
     setPermission(PermissionStatus.GRANTED);
-    const app = await openApp('/settings');
+    const app = await openApp('/profile');
     await fireEvent.press(await screen.findByRole('button', { name: 'Revoir la présentation' }));
     await waitFor(() => expect(app.getPathname()).toBe('/onboarding'));
     await layOutIntroduction();
@@ -341,9 +341,9 @@ describe('returning person', () => {
     // Opened again, the flow simply ends: "Terminé", and the system is asked nothing.
     await swipeToPage(LAST_PAGE);
     await fireEvent.press(await screen.findByRole('button', { name: 'Terminé' }));
-    await waitFor(() => expect(app.getPathname()).toBe('/settings'));
+    await waitFor(() => expect(app.getPathname()).toBe('/profile'));
     expect(requestPermissionsAsync).not.toHaveBeenCalled();
-    expect(screen.getByRole('header', { name: 'Réglages' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Profil' })).toBeOnTheScreen();
   });
 });
 
@@ -363,13 +363,13 @@ describe('stored data that could not be read back', () => {
     expect(tabs().map(({ props }) => props.badgeValue)).toEqual([undefined, undefined, undefined]);
   });
 
-  it('marks the settings tab, says there what happened, and forgets it once read', async () => {
+  it('marks the profile tab, says there what happened, and forgets it once read', async () => {
     const raw = await storeDamagedJournal();
     setPermission(PermissionStatus.GRANTED);
-    const app = await openApp('/settings');
-    await waitFor(() => expect(app.getPathname()).toBe('/settings'));
+    const app = await openApp('/profile');
+    await waitFor(() => expect(app.getPathname()).toBe('/profile'));
 
-    // No alert at launch: a badge leads to the explanation, written in the settings.
+    // No alert at launch: a badge leads to the explanation, written in the profile.
     expect(tabs().map(({ props }) => props.badgeValue)).toEqual([undefined, undefined, '!']);
     expect(screen.getByRole('header', { name: 'À savoir' })).toBeOnTheScreen();
     expect(
@@ -396,8 +396,8 @@ describe('stored data that could not be read back', () => {
     await store({ onboardingCompleted: true });
     await AsyncStorage.setItem(RESET_NOTICE_KEY, 'settings');
     setPermission(PermissionStatus.GRANTED);
-    const app = await openApp('/settings');
-    await waitFor(() => expect(app.getPathname()).toBe('/settings'));
+    const app = await openApp('/profile');
+    await waitFor(() => expect(app.getPathname()).toBe('/profile'));
     expect(tabs().map(({ props }) => props.badgeValue)).toEqual([undefined, undefined, '!']);
     expect(screen.getByText(/L’appli n’a pas pu relire tes réglages\./)).toBeOnTheScreen();
   });

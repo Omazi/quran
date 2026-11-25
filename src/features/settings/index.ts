@@ -23,7 +23,13 @@ export {
   type UseRemindersResult,
 } from './reminders';
 export { RemindersSection, type RemindersSectionProps } from './reminders-section';
-export { SettingsScreen, type SettingsScreenProps } from './settings-screen';
+export {
+  DataResetNoticeSection,
+  SettingsScreen,
+  SettingsSections,
+  type SettingsScreenProps,
+  type SettingsSectionsProps,
+} from './settings-screen';
 export {
   startApp,
   useAppStartup,

@@ -1,0 +1,92 @@
+{
+  "title": "الملف الشخصي",
+  "periods": {
+    "label": "الفترة",
+    "today": "اليوم",
+    "week": "الأسبوع",
+    "month": "الشهر",
+    "all-time": "الكل"
+  },
+  "hasanat": {
+    "caption": {
+      "today": "الحسنات اليوم",
+      "week": "الحسنات هذا الأسبوع",
+      "month": "الحسنات هذا الشهر",
+      "all-time": "الحسنات منذ البداية"
+    },
+    "value": "≈ {{value}}",
+    "valueSpoken": "نحو {{value}} حسنة، على وجه التقدير",
+    "note": "تقدير: عشر حسنات لكل حرف مقروء، بحسب الحديث الذي رواه ابن مسعود (سنن الترمذي، رقم 2910). ولا يعلم الأجر إلا الله.",
+    "shortNote": "الحسنات: تقدير (الترمذي، رقم 2910). ولا يعلم الأجر إلا الله."
+  },
+  "figures": {
+    "versesRead": "الآيات المقروءة",
+    "wordsRead": "الكلمات المقروءة",
+    "pagesRead": "الصفحات المقروءة",
+    "readingTime": "وقت القراءة",
+    "appTime": "الوقت في التطبيق"
+  },
+  "chart": {
+    "titleDay": "كل يوم",
+    "titleMonth": "كل شهر",
+    "metricLabel": "عرض",
+    "metrics": {
+      "hasanat": "الحسنات",
+      "verses": "الآيات",
+      "words": "الكلمات",
+      "pages": "الصفحات",
+      "readingTime": "وقت القراءة"
+    },
+    "bestDay": "أفضل يوم: {{date}}، {{value}}",
+    "bestMonth": "أفضل شهر: {{date}}، {{value}}",
+    "nothingYet": "لا قراءة في هذه الفترة بعد",
+    "bar": "{{date}}، {{metric}}: {{value}}"
+  },
+  "khatmas": {
+    "title": "حسب الختمة",
+    "inProgress": "الختمة {{number}} · جارية",
+    "complete": "الختمة {{number}} · اكتملت في {{date}}",
+    "detail": "الصفحات {{pages}} · الآيات {{verses}} · الكلمات {{words}} · الحسنات ≈ {{hasanat}}"
+  },
+  "empty": {
+    "title": "صفحتك الأولى في انتظارك",
+    "description": "كل صفحة تقرؤها هنا تُحتسب: الآيات والكلمات والحسنات ووقت القراءة، يومًا بعد يوم."
+  },
+  "loading": "جارٍ حساب إحصاءاتك",
+  "failed": {
+    "title": "الإحصاءات غير متاحة",
+    "description": "قراءتك محفوظة. ستعود الأرقام عند التشغيل القادم."
+  },
+  "duration": {
+    "hours_zero": "{{count}} س",
+    "hours_one": "{{count}} س",
+    "hours_two": "{{count}} س",
+    "hours_few": "{{count}} س",
+    "hours_many": "{{count}} س",
+    "hours_other": "{{count}} س",
+    "minutes_zero": "{{count}} د",
+    "minutes_one": "{{count}} د",
+    "minutes_two": "{{count}} د",
+    "minutes_few": "{{count}} د",
+    "minutes_many": "{{count}} د",
+    "minutes_other": "{{count}} د",
+    "join": "{{hours}} {{minutes}}",
+    "lessThanMinute": "أقل من دقيقة"
+  },
+  "durationSpoken": {
+    "hours_zero": "{{count}} ساعة",
+    "hours_one": "ساعة واحدة",
+    "hours_two": "ساعتان",
+    "hours_few": "{{count}} ساعات",
+    "hours_many": "{{count}} ساعة",
+    "hours_other": "{{count}} ساعة",
+    "minutes_zero": "{{count}} دقيقة",
+    "minutes_one": "دقيقة واحدة",
+    "minutes_two": "دقيقتان",
+    "minutes_few": "{{count}} دقائق",
+    "minutes_many": "{{count}} دقيقة",
+    "minutes_other": "{{count}} دقيقة",
+    "join": "{{hours}} و{{minutes}}",
+    "lessThanMinute": "أقل من دقيقة"
+  }
+}

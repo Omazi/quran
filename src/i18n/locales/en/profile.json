@@ -1,0 +1,76 @@
+{
+  "title": "Profile",
+  "periods": {
+    "label": "Period",
+    "today": "Today",
+    "week": "Week",
+    "month": "Month",
+    "all-time": "All Time"
+  },
+  "hasanat": {
+    "caption": {
+      "today": "Hasanat today",
+      "week": "Hasanat this week",
+      "month": "Hasanat this month",
+      "all-time": "Hasanat since you started"
+    },
+    "value": "≈ {{value}}",
+    "valueSpoken": "About {{value}} hasanat, an estimate",
+    "note": "An estimate: ten hasanat for each letter read, after the hadith reported by Ibn Mas‘ud (Sunan al-Tirmidhi no. 2910). Only Allah knows the reward.",
+    "shortNote": "Hasanat: an estimate (al-Tirmidhi no. 2910). Only Allah knows the reward."
+  },
+  "figures": {
+    "versesRead": "Verses Read",
+    "wordsRead": "Words Read",
+    "pagesRead": "Pages Read",
+    "readingTime": "Reading Time",
+    "appTime": "Time in the App"
+  },
+  "chart": {
+    "titleDay": "Each Day",
+    "titleMonth": "Each Month",
+    "metricLabel": "Show",
+    "metrics": {
+      "hasanat": "Hasanat",
+      "verses": "Verses",
+      "words": "Words",
+      "pages": "Pages",
+      "readingTime": "Reading Time"
+    },
+    "bestDay": "Best day: {{date}}, {{value}}",
+    "bestMonth": "Best month: {{date}}, {{value}}",
+    "nothingYet": "No reading in this period yet",
+    "bar": "{{date}}, {{metric}}: {{value}}"
+  },
+  "khatmas": {
+    "title": "By Khatma",
+    "inProgress": "Khatma {{number}} · in progress",
+    "complete": "Khatma {{number}} · finished on {{date}}",
+    "detail": "{{pages}} pages · {{verses}} verses · {{words}} words · ≈ {{hasanat}} hasanat"
+  },
+  "empty": {
+    "title": "Your First Page Is Waiting",
+    "description": "Every page you read here counts: verses, words, hasanat and reading time, day after day."
+  },
+  "loading": "Working out your statistics",
+  "failed": {
+    "title": "Statistics Unavailable",
+    "description": "Your reading is still saved. The figures will be back at the next launch."
+  },
+  "duration": {
+    "hours_one": "{{count}} h",
+    "hours_other": "{{count}} h",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "join": "{{hours}} {{minutes}}",
+    "lessThanMinute": "< 1 min"
+  },
+  "durationSpoken": {
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "join": "{{hours}} {{minutes}}",
+    "lessThanMinute": "less than a minute"
+  }
+}
