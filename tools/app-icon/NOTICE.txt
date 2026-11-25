@@ -22,6 +22,25 @@ coloured as water). The font file itself is not in the repository and does not s
             allows any use of the font, commercial included; a logo or picture made with it is
             not itself under the OFL. The licence is kept here as a courtesy and a record.
 
+Variant: the Arabic final kaf (not in the app; waiting for the owner's choice, D38)
+-----------------------------------------------------------------------------------
+word-arabic.svg holds the same Gulzar outlines, unchanged, plus one more shape: the small mark the
+Arabic kaf (ك) carries inside, which Gulzar's Persian-style final kaf (ک) does not have. The mark
+is the glyph SharetKafNS of the typeface Noto Nastaliq Urdu (variable, at its Bold weight, 700),
+outlined by fontTools, scaled by 0.81 and placed inside Gulzar's kaf; its shape is the
+typeface's own, not redrawn (make_icon.py, KAF_MARK). make_icon.py --kaf arabic uses it.
+
+  Font:     NotoNastaliqUrdu[wght].ttf, version 3.009, SHA-256
+            98a4787f34eb6fde57fb9a1121a8f216301196ab0da98ea110cad581be8abbcd
+  From:     github.com/google/fonts, branch main, ofl/notonastaliqurdu/ (downloaded 25 November
+            2026)
+  Project:  https://github.com/notofonts/nastaliq
+  Licence:  SIL Open Font License 1.1, no Reserved Font Name (ofl/notonastaliqurdu/OFL.txt; its
+            licence text is word for word the one below). Copyright line:
+
+  Copyright 2022 The Noto Project Authors (https://github.com/notofonts/nastaliq)
+
+
 The leaf and the background
 ---------------------------
 The leaf (two arcs and a slit) and every colour are set in make_icon.py. They belong to the

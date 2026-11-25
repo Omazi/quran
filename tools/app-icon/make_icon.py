@@ -10,9 +10,18 @@ usage:
       Writes the icon files from tools/app-icon/word.svg. Needs Python 3 with Pillow and numpy,
       and rsvg-convert (librsvg) to turn the vector layers into PNG. Same bytes on every run on
       the same machine.
+  python3 -I tools/app-icon/make_icon.py --kaf arabic --field deep --out DIR [--previews DIR]
+      Variants waiting for the owner's choice (D38). --kaf arabic: the final kaf with the Arabic
+      kaf's small inner mark (ك), outlines from tools/app-icon/word-arabic.svg; --field deep: the
+      deep water background in the default appearance too, the dark one a step deeper. A variant
+      writes its files under DIR (same tree: DIR/assets/...), never over the committed assets;
+      to adopt one, change KAF or FIELD_STYLE below.
   python3 -I tools/app-icon/make_icon.py --outline PATH/TO/Gulzar-Regular.ttf
       Shapes the word again with HarfBuzz and rewrites tools/app-icon/word.svg (the outlines,
       in font units). Needs uharfbuzz and fontTools. Only needed to change the word or the font.
+  python3 -I tools/app-icon/make_icon.py --outline Gulzar-Regular.ttf --kaf arabic \
+          --mark-font "NotoNastaliqUrdu[wght].ttf"
+      The same, plus the Arabic kaf's mark (KAF_MARK), into tools/app-icon/word-arabic.svg.
 
 Writes:
   assets/expo.icon/                       Icon Composer bundle: background gradient (light and
@@ -35,6 +44,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 WORD_SVG = os.path.join(HERE, "word.svg")
+WORD_SVG_ARABIC = os.path.join(HERE, "word-arabic.svg")
 S = 1024
 TEXT = "جنتك"
 
@@ -42,6 +52,10 @@ TEXT = "جنتك"
 # a little lighter at the top; at night (dark appearance), the same water, darker.
 FIELD = ("#13808C", "#0A515B")
 FIELD_DARK = ("#0B3C44", "#05222A")
+# Variant "deep" (the owner liked the dark one, 25 November 2026): that deep water in the default
+# appearance as well; at night a step deeper, the same hue, so the two appearances stay distinct.
+FIELDS = {"water": (FIELD, FIELD_DARK), "deep": (FIELD_DARK, ("#072C33", "#02151A"))}
+FIELD_STYLE = "water"  # the committed icon
 # Foreground colours, the same in every appearance (only the background darkens).
 WORD = "#F6FBF9"  # the letters: near white, cool (not paper, not cream)
 WATER = "#8FE0EA"  # the dots: water, the accent's high-contrast value in dark mode
@@ -61,6 +75,18 @@ FILL = 0.78
 # sits low and right of it; this moves the mark about half way towards its centre of mass.
 OPTICAL_SHIFT = (-0.025, -0.03)  # shares of the canvas
 
+# The final kaf. Gulzar, an Urdu typeface, writes it the Persian way (ک), without the small mark
+# the Arabic kaf (ك) carries inside. Variant "arabic": Gulzar's letters unchanged, plus that mark,
+# the sharta of Nastaliq, taken from Noto Nastaliq Urdu (OFL), whose own shaping adds it to the
+# final kaf when the text is Arabic. Its weight is the font's Bold (700), scaled by 0.81, the
+# ratio of the two kafs' stems (52 / 64 units), so it is drawn with Gulzar's pen width; its
+# centre, in Gulzar's kaf (font units, y up), keeps Noto's own place in the bowl (42 % across,
+# its foot a quarter of the way up), moved 17 units right to sit in the middle of Gulzar's open
+# bowl, whose left serif is shorter. It is part of the letter, not a dot: it takes the word's
+# colour, not the water's.
+KAF = "persian"  # the committed icon
+KAF_MARK = {"glyph": "SharetKafNS", "wght": 700, "scale": 0.81, "centre": (395, 455)}
+
 LAYERS = ("word", "water", "leaf")  # bottom first
 TINTED_OPACITY = {"water": 0.7}  # tinted and clear: the drops a step lighter than word and leaf
 MONO_WEIGHT = {"word": 1.0, "water": 0.6, "leaf": 1.0}  # Android themed icon, one colour
@@ -69,9 +95,11 @@ MONO_WEIGHT = {"word": 1.0, "water": 0.6, "leaf": 1.0}  # Android themed icon, o
 # ----------------------------------------------------------------------------- outlines (font)
 
 
-def outline(font_path):
+def outline(font_path, mark_font=None):
     """Shape TEXT with HarfBuzz, outline every glyph, and write word.svg in font units, y down.
-    Marks (GDEF class 3: the dots) go to the "water" path, everything else to "word"."""
+    Marks (GDEF class 3: the dots) go to the "water" path, everything else to "word". With
+    mark_font, also the Arabic kaf's mark (KAF_MARK) as a third path, "kafmark", into
+    word-arabic.svg."""
     import uharfbuzz as hb
     from fontTools.pens.basePen import BasePen
     from fontTools.pens.transformPen import TransformPen
@@ -108,28 +136,54 @@ def outline(font_path):
     glyph_set, order = tt.getGlyphSet(), tt.getGlyphOrder()
     classes = tt["GDEF"].table.GlyphClassDef.classDefs
     paths = {"word": PathPen(glyph_set), "water": PathPen(glyph_set)}
+    kaf_glyph = order[buf.glyph_infos[0].codepoint]  # visual order: the final kaf comes first
     x = 0
     for info, pos in zip(buf.glyph_infos, buf.glyph_positions):
         name = order[info.codepoint]
         pen = paths["water" if classes.get(name) == 3 else "word"]
         glyph_set[name].draw(TransformPen(pen, (1, 0, 0, -1, x + pos.x_offset, -pos.y_offset)))
         x += pos.x_advance
-    with open(font_path, "rb") as f:
-        digest = hashlib.sha256(f.read()).hexdigest()
+    target, extra = WORD_SVG, ""
+    if mark_font:
+        from fontTools.pens.boundsPen import BoundsPen
+
+        mt = TTFont(mark_font)
+        mark_set = mt.getGlyphSet(location={"wght": KAF_MARK["wght"]})
+        glyph = mark_set[KAF_MARK["glyph"]]
+        bounds = BoundsPen(mark_set)
+        glyph.draw(bounds)
+        mx = (bounds.bounds[0] + bounds.bounds[2]) / 2
+        my = (bounds.bounds[1] + bounds.bounds[3]) / 2
+        k, (cx, cy) = KAF_MARK["scale"], KAF_MARK["centre"]
+        paths["kafmark"] = PathPen(mark_set)
+        glyph.draw(TransformPen(paths["kafmark"], (k, 0, 0, -k, cx - k * mx, k * my - cy)))
+        target = WORD_SVG_ARABIC
+        extra = (
+            "\n     Kaf mark: %s of %s, %s, wght %s, scale %s, centred at %s in the kaf %s (y up),\n"
+            "     SHA-256 %s, SIL Open Font License 1.1."
+            % (KAF_MARK["glyph"], mt["name"].getDebugName(4), mt["name"].getDebugName(5), KAF_MARK["wght"],
+               k, "%s,%s" % (cx, cy), kaf_glyph, _sha256(mark_font))
+        )
     family = tt["name"].getDebugName(4)
     version = tt["name"].getDebugName(5)
-    with open(WORD_SVG, "w", encoding="utf-8") as f:
+    with open(target, "w", encoding="utf-8") as f:
         f.write(
             "<!-- %s: the word %s shaped by HarfBuzz %s, outlined by fontTools, in font units\n"
-            "     (y down, %d units per em). Font: %s, %s, SHA-256 %s, SIL Open Font License 1.1.\n"
+            "     (y down, %d units per em). Font: %s, %s, SHA-256 %s, SIL Open Font License 1.1.%s\n"
             "     Written by tools/app-icon/make_icon.py --outline; do not edit by hand. -->\n"
-            % (os.path.basename(WORD_SVG), TEXT, hb.version_string(), tt["head"].unitsPerEm, family, version, digest)
+            % (os.path.basename(target), TEXT, hb.version_string(), tt["head"].unitsPerEm, family, version,
+               _sha256(font_path), extra)
         )
         f.write('<svg xmlns="http://www.w3.org/2000/svg">\n')
         for key, pen in paths.items():
             f.write('<path id="%s" d="%s"/>\n' % (key, " ".join(pen.d)))
         f.write("</svg>\n")
-    print("outlines written:", WORD_SVG)
+    print("outlines written:", target)
+
+
+def _sha256(path):
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
 
 
 def _pt(p):
@@ -144,10 +198,14 @@ def _num(v):
 # ----------------------------------------------------------------------------- geometry
 
 
-def read_word():
-    with open(WORD_SVG, encoding="utf-8") as f:
+def read_word(kaf):
+    """The word's outlines; the Arabic kaf's mark, if any, belongs to the word (same colour)."""
+    with open(WORD_SVG_ARABIC if kaf == "arabic" else WORD_SVG, encoding="utf-8") as f:
         text = f.read()
-    return {m.group(1): m.group(2) for m in re.finditer(r'<path id="(\w+)" d="([^"]*)"', text)}
+    paths = {m.group(1): m.group(2) for m in re.finditer(r'<path id="(\w+)" d="([^"]*)"', text)}
+    if "kafmark" in paths:
+        paths["word"] += " " + paths.pop("kafmark")
+    return paths
 
 
 def leaf_path(base, angle, length, half_width, bend, vein):
@@ -206,8 +264,8 @@ def layer_svg(d, colour):
 COLOURS = {"word": WORD, "water": WATER, "leaf": LEAF}
 
 
-def layers():
-    word = read_word()
+def layers(kaf):
+    word = read_word(kaf)
     shapes = placed({"word": word["word"], "water": word["water"], "leaf": leaf_path(**LEAF_SHAPE)})
     return {name: layer_svg(shapes[name], COLOURS[name]) for name in LAYERS}
 
@@ -306,7 +364,7 @@ def ic_gradient(colours):
     }
 
 
-def manifest():
+def manifest(field, field_dark):
     """icon.json. Background: Icon Composer's gradient fill, light and dark (app-icons.md › Layer
     design). Three groups, top first: the leaf, the water, the word, each one vector layer.
     The drops are a little translucent (water); the word and the leaf are not."""
@@ -326,8 +384,8 @@ def manifest():
     return {
         "color-space-for-untagged-svg-colors": "srgb",
         "fill-specializations": [
-            {"value": ic_gradient(FIELD)},
-            {"appearance": "dark", "value": ic_gradient(FIELD_DARK)},
+            {"value": ic_gradient(field)},
+            {"appearance": "dark", "value": ic_gradient(field_dark)},
         ],
         "groups": [group("leaf", 0), group("water", 0.3), group("word", 0)],
         "supported-platforms": {"squares": "shared"},
@@ -337,14 +395,14 @@ def manifest():
 # ----------------------------------------------------------------------------- previews
 
 
-def previews(out, rasters, svgs):
+def previews(out, rasters, svgs, field, field_dark):
     """What a reviewer needs to judge the icon: sizes, Home Screens, appearance approximations,
     Android masks. The tinted and clear versions are approximations of what iOS computes."""
     import numpy as np
     from PIL import Image, ImageDraw
 
     os.makedirs(out, exist_ok=True)
-    light, dark = composite(rasters, FIELD), composite(rasters, FIELD_DARK)
+    light, dark = composite(rasters, field), composite(rasters, field_dark)
 
     def rounded(im, size):
         t = im.resize((size, size), Image.LANCZOS).convert("RGBA")
@@ -418,7 +476,7 @@ def previews(out, rasters, svgs):
     }
     k = android_scale(rasters)
     fg = scaled(foreground(rasters), k)
-    files["android-round.png"] = android(fg, gradient(FIELD))
+    files["android-round.png"] = android(fg, gradient(field))
     mono = scaled(monochrome(rasters), k)
     tint = Image.new("RGBA", (S, S), (210, 232, 214, 255))
     tint.putalpha(mono.getchannel("A"))
@@ -449,51 +507,68 @@ def android_scale(rasters):
 # ----------------------------------------------------------------------------- main
 
 
-def save(im, *path):
-    im.save(os.path.join(ROOT, *path), optimize=True)
+def arg(name, default=None):
+    return sys.argv[sys.argv.index(name) + 1] if name in sys.argv else default
 
 
 def main():
+    kaf, field_style = arg("--kaf", KAF), arg("--field", FIELD_STYLE)
+    if kaf not in ("persian", "arabic") or field_style not in FIELDS:
+        sys.exit("--kaf persian|arabic, --field %s" % "|".join(FIELDS))
     if "--outline" in sys.argv:
-        outline(sys.argv[sys.argv.index("--outline") + 1])
+        mark_font = arg("--mark-font")
+        if (kaf == "arabic") != bool(mark_font):
+            sys.exit("--kaf arabic and --mark-font go together")
+        outline(arg("--outline"), mark_font)
         return
-    svgs = layers()
+    root = arg("--out")
+    if root is None:
+        if (kaf, field_style) != (KAF, FIELD_STYLE):
+            sys.exit("a variant writes under --out DIR, not over the committed assets")
+        root = ROOT
+    field, field_dark = FIELDS[field_style]
+
+    def save(im, *path):
+        os.makedirs(os.path.join(root, *path[:-1]), exist_ok=True)
+        im.save(os.path.join(root, *path), optimize=True)
+
+    svgs = layers(kaf)
     rasters = {name: raster(svg) for name, svg in svgs.items()}
 
-    bundle = os.path.join(ROOT, "assets", "expo.icon")
+    bundle = os.path.join(root, "assets", "expo.icon")
     shutil.rmtree(os.path.join(bundle, "Assets"), ignore_errors=True)
     os.makedirs(os.path.join(bundle, "Assets"))
     for name in LAYERS:
         with open(os.path.join(bundle, "Assets", f"{name}.svg"), "w", encoding="utf-8") as f:
             f.write(svgs[name])
     with open(os.path.join(bundle, "icon.json"), "w", encoding="utf-8") as f:
-        json.dump(manifest(), f, indent=2, ensure_ascii=False)
+        json.dump(manifest(field, field_dark), f, indent=2, ensure_ascii=False)
         f.write("\n")
 
     # Every platform but iOS 26: one flat square, opaque; the system rounds it.
-    save(composite(rasters, FIELD).convert("RGB"), "assets", "images", "icon.png")
+    save(composite(rasters, field).convert("RGB"), "assets", "images", "icon.png")
 
     # Android adaptive icon: the mark inside the safe circle, the gradient behind.
     k = android_scale(rasters)
     save(scaled(foreground(rasters), k), "assets", "images", "android-icon-foreground.png")
-    save(gradient(FIELD), "assets", "images", "android-icon-background.png")
+    save(gradient(field), "assets", "images", "android-icon-background.png")
     save(scaled(monochrome(rasters), k), "assets", "images", "android-icon-monochrome.png")
 
     # Web: the tile with its own corners (a browser tab does not round it).
     from PIL import Image
 
-    tile = composite(rasters, FIELD).resize((192, 192), Image.LANCZOS)
+    tile = composite(rasters, field).resize((192, 192), Image.LANCZOS)
     tile.putalpha(squircle(192))
     save(tile.resize((48, 48), Image.LANCZOS), "assets", "images", "favicon.png")
 
     # Splash picture, kept for whoever needs it; app.json shows no picture on the launch screen
     # on purpose (launching.md › Launch screens).
-    splash = composite(rasters, FIELD).resize((512, 512), Image.LANCZOS)
+    splash = composite(rasters, field).resize((512, 512), Image.LANCZOS)
     splash.putalpha(squircle(512))
     save(splash, "assets", "images", "splash-icon.png")
 
     if "--previews" in sys.argv:
-        previews(sys.argv[sys.argv.index("--previews") + 1], rasters, svgs)
+        previews(arg("--previews"), rasters, svgs, field, field_dark)
     print("icon written")
 
 
