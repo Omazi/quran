@@ -198,6 +198,36 @@ export interface DetailRowProps {
   testID?: string;
 }
 
+/**
+ * What a text field asks for: it chooses the keyboard, the capitalisation and the suggestions
+ * (text-fields.md › Best practices: show the appropriate keyboard type).
+ * `search`: a search field, with the search symbol and a clear button (search-fields.md).
+ */
+export type TextFieldKind = 'text' | 'name' | 'email' | 'emailCode' | 'inviteCode' | 'search';
+
+/**
+ * A text field as a row of a `GroupedList`, for a small amount of text: a name, an address, a
+ * code, a search (text-fields.md › Best practices).
+ */
+export interface TextFieldRowProps {
+  /** Names the field for screen readers; it is also the placeholder when none is given. */
+  label: string;
+  /** A hint shown while the field is empty (text-fields.md › Best practices). */
+  placeholder?: string;
+  /** The text in the field. Setting it to '' from outside empties the field. */
+  value: string;
+  onChange: (text: string) => void;
+  /** Defaults to `text`. */
+  kind?: TextFieldKind;
+  /** Most characters accepted; the field stops there. */
+  maxLength?: number;
+  /** Called by the return key of the keyboard. */
+  onSubmit?: () => void;
+  /** Names the clear button of a `search` field for screen readers ("Effacer"). */
+  clearLabel?: string;
+  testID?: string;
+}
+
 /** A time of day on a 24-hour clock, in the device's time zone. */
 export interface TimeOfDay {
   /** 0 to 23. */
@@ -323,6 +353,7 @@ export interface NativeControls {
   TimePickerRow: (props: TimePickerRowProps) => ReactElement;
   SegmentedChoice: <Value extends string>(props: SegmentedChoiceProps<Value>) => ReactElement;
   DetailRow: (props: DetailRowProps) => ReactElement;
+  TextFieldRow: (props: TextFieldRowProps) => ReactElement;
   ProgressIndicator: (props: ProgressIndicatorProps) => ReactElement;
   Gauge: (props: GaugeProps) => ReactElement;
   ContentUnavailable: (props: ContentUnavailableProps) => ReactElement;

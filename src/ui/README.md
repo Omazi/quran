@@ -57,28 +57,29 @@ Chaque contrôle a les mêmes props partout (`native/types.ts`) et deux réalisa
 affiche le composant du système (SwiftUI, par Expo UI) ; `default/` sert Android, le web et
 les tests, selon les usages de Material, sans imiter iOS.
 
-| Contrôle                      | Sur iOS                                                                   | Règle suivie                                                                              |
-| ----------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `Button` `primary`            | style proéminent du système                                               | `buttons.md › Style` : un par écran, deux au plus                                         |
-| `Button` `secondary`, `plain` | styles bordé et sans bordure, 44 points au moins dans les deux sens       | `buttons.md › Style`, `› Best practices`                                                  |
-| `Button` `role="destructive"` | rôle destructif du système, en rouge ; refusé sur `primary`               | `buttons.md › Role`                                                                       |
-| `GroupedList`, `ListSection`  | `Form` et `Section`, avec titre et note de bas de section                 | `lists-and-tables.md › Style`                                                             |
-| `ListRow`                     | ligne de texte ; avec `onPress`, indicateur de navigation                 | `lists-and-tables.md › Mobile (iOS, iPadOS, visionOS)`                                    |
-| `LabelRow`                    | `Label` : un symbole puis des mots, une seconde ligne au besoin           | `lists-and-tables.md › Style`, `labels.md › Best practices`                               |
-| `ButtonRow`                   | le `Button` comme ligne : la ligne entière, à la largeur de la ligne      | `buttons.md › Style`, `› Best practices`                                                  |
-| `ContentRow`                  | contenu React Native dans une ligne nue, à la hauteur du contenu          | aucune (voir l'écart 15)                                                                  |
-| `SwitchRow`                   | `Toggle` dans une ligne, gardé dans le vert du système                    | `toggles.md › Mobile (iOS, iPadOS)`                                                       |
-| `StepperRow`                  | `Stepper` à côté de sa valeur écrite (`valueLabel`)                       | `steppers.md › Best practices`                                                            |
-| `ChoiceRow`                   | `Picker` en menu : le bouton à choix du système                           | `pop-up-buttons.md › Best practices`                                                      |
-| `TimePickerRow`               | `DatePicker` compact, heures et minutes                                   | `pickers.md › Mobile (iOS, iPadOS)`                                                       |
-| `SegmentedChoice`             | `Picker` segmenté, libellé gardé pour VoiceOver ; seul ou dans une liste  | `segmented-controls.md › Best practices`, `› Content`, `› Mobile`                         |
-| `DetailRow`                   | bouton : libellé, ligne de détail, valeur, `chevron.forward`              | `lists-and-tables.md › Mobile`, `labels.md › Best practices` (voir l'écart 1)             |
-| `ProgressIndicator`           | `ProgressView` : barre si `value`, indicateur d'activité sinon            | `progress-indicators.md › Best practices`                                                 |
-| `Gauge`                       | `Gauge` linéaire de capacité, libellés de valeur et de bornes, `tone`     | `gauges.md › Anatomy`, `› Best practices`, `color.md › Best practices`                    |
-| `ContentUnavailable`          | `ContentUnavailableView` (iOS 17) ; réalisation par défaut sur iOS 16     | SwiftUI Pro, `design.md › Standard system styling`                                        |
-| `Icon`                        | SF Symbol dessiné par SwiftUI dans le style et la graisse du texte voisin | `sf-symbols.md › Weights and scales`, `typography.md › Supporting Dynamic Type`           |
-| `Pager`                       | `TabView` paginé de SwiftUI, avec l'indicateur de pages du système        | `page-controls.md › Best practices`, `› Customizing indicators`, `› Mobile`               |
-| `PageIndicator`               | n'est pas utilisé : `Pager` montre celui du système                       | hors iOS : `page-controls.md › Best practices`, `› Mobile`, `accessibility.md › Mobility` |
+| Contrôle                      | Sur iOS                                                                                                                 | Règle suivie                                                                              |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `Button` `primary`            | style proéminent du système                                                                                             | `buttons.md › Style` : un par écran, deux au plus                                         |
+| `Button` `secondary`, `plain` | styles bordé et sans bordure, 44 points au moins dans les deux sens                                                     | `buttons.md › Style`, `› Best practices`                                                  |
+| `Button` `role="destructive"` | rôle destructif du système, en rouge ; refusé sur `primary`                                                             | `buttons.md › Role`                                                                       |
+| `GroupedList`, `ListSection`  | `Form` et `Section`, avec titre et note de bas de section                                                               | `lists-and-tables.md › Style`                                                             |
+| `ListRow`                     | ligne de texte ; avec `onPress`, indicateur de navigation                                                               | `lists-and-tables.md › Mobile (iOS, iPadOS, visionOS)`                                    |
+| `LabelRow`                    | `Label` : un symbole puis des mots, une seconde ligne au besoin                                                         | `lists-and-tables.md › Style`, `labels.md › Best practices`                               |
+| `ButtonRow`                   | le `Button` comme ligne : la ligne entière, à la largeur de la ligne                                                    | `buttons.md › Style`, `› Best practices`                                                  |
+| `ContentRow`                  | contenu React Native dans une ligne nue, à la hauteur du contenu                                                        | aucune (voir l'écart 15)                                                                  |
+| `SwitchRow`                   | `Toggle` dans une ligne, gardé dans le vert du système                                                                  | `toggles.md › Mobile (iOS, iPadOS)`                                                       |
+| `StepperRow`                  | `Stepper` à côté de sa valeur écrite (`valueLabel`)                                                                     | `steppers.md › Best practices`                                                            |
+| `ChoiceRow`                   | `Picker` en menu : le bouton à choix du système                                                                         | `pop-up-buttons.md › Best practices`                                                      |
+| `TimePickerRow`               | `DatePicker` compact, heures et minutes                                                                                 | `pickers.md › Mobile (iOS, iPadOS)`                                                       |
+| `SegmentedChoice`             | `Picker` segmenté, libellé gardé pour VoiceOver ; seul ou dans une liste                                                | `segmented-controls.md › Best practices`, `› Content`, `› Mobile`                         |
+| `DetailRow`                   | bouton : libellé, ligne de détail, valeur, `chevron.forward`                                                            | `lists-and-tables.md › Mobile`, `labels.md › Best practices` (voir l'écart 1)             |
+| `TextFieldRow`                | `TextField` dans une ligne : clavier, majuscules et suggestions selon `kind` ; `search` ajoute la loupe et l'effacement | `text-fields.md › Best practices`, `› Mobile`, `search-fields.md` (voir l'écart 35)       |
+| `ProgressIndicator`           | `ProgressView` : barre si `value`, indicateur d'activité sinon                                                          | `progress-indicators.md › Best practices`                                                 |
+| `Gauge`                       | `Gauge` linéaire de capacité, libellés de valeur et de bornes, `tone`                                                   | `gauges.md › Anatomy`, `› Best practices`, `color.md › Best practices`                    |
+| `ContentUnavailable`          | `ContentUnavailableView` (iOS 17) ; réalisation par défaut sur iOS 16                                                   | SwiftUI Pro, `design.md › Standard system styling`                                        |
+| `Icon`                        | SF Symbol dessiné par SwiftUI dans le style et la graisse du texte voisin                                               | `sf-symbols.md › Weights and scales`, `typography.md › Supporting Dynamic Type`           |
+| `Pager`                       | `TabView` paginé de SwiftUI, avec l'indicateur de pages du système                                                      | `page-controls.md › Best practices`, `› Customizing indicators`, `› Mobile`               |
+| `PageIndicator`               | n'est pas utilisé : `Pager` montre celui du système                                                                     | hors iOS : `page-controls.md › Best practices`, `› Mobile`, `accessibility.md › Mobility` |
 
 À savoir :
 
@@ -129,6 +130,14 @@ les tests, selon les usages de Material, sans imiter iOS.
   flotte (`liquid-glass.md › Where the material belongs`).
 - Une valeur invalide (progression hors de 0 à 1, bornes inversées, heure ou page impossible,
   bouton principal destructif) lève une erreur : rien n'est corrigé en silence.
+
+### Confirmer une action
+
+`confirmAction({ title, message, confirmLabel, cancelLabel, isDestructive, onConfirm })` : sur iOS
+la feuille d'actions du système (le choix destructif en premier et en rouge, « Annuler » en bas :
+`action-sheets.md › Best practices`, `alerts.md › Mobile`) ; sur Android la boîte de dialogue de
+la plateforme ; sur le web la confirmation du navigateur. Aucun libellé à elle : l'appelant les
+traduit. Un hook la reçoit en dépendance, pour que les tests répondent à sa place.
 
 ## Tests
 

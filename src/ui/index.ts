@@ -5,6 +5,11 @@
  */
 
 export { AppText, type AppTextProps, type TextAlignment } from './components/app-text';
+export {
+  confirmAction,
+  type ConfirmAction,
+  type ConfirmActionOptions,
+} from './components/confirm-action';
 export { Placeholder, type PlaceholderProps } from './components/placeholder';
 export { Screen, type ScreenBackground, type ScreenProps } from './components/screen';
 export { useReducedMotion } from './device-settings';

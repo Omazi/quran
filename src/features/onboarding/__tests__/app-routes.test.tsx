@@ -220,7 +220,7 @@ describe('first launch', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Continuer' }));
     await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
     expect(requestPermissionsAsync).toHaveBeenCalledTimes(1);
-    expect(tabs()).toHaveLength(3);
+    expect(tabs()).toHaveLength(4);
     expect((await storedSettings()).onboardingCompleted).toBe(true);
   });
 
@@ -254,13 +254,14 @@ describe('first launch', () => {
 describe('returning person', () => {
   beforeEach(() => store({ onboardingCompleted: true }));
 
-  it('opens on the tabs: Jardin, Coran, Réglages, one word and one filled symbol each', async () => {
+  it('opens on the tabs: Jardin, Coran, Proches, Réglages, one word and one filled symbol each', async () => {
     const app = await openApp();
     await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
 
     expect(tabs().map(({ props }) => [props.title, props.icon])).toEqual([
       ['Jardin', { sf: 'leaf.fill' }],
       ['Coran', { sf: 'book.fill' }],
+      ['Proches', { sf: 'person.2.fill' }],
       ['Réglages', { sf: 'gearshape.fill' }],
     ]);
     // The selected tab takes the accent, and the bar the direction React Native runs in.
@@ -310,7 +311,12 @@ describe('returning person', () => {
     setDeviceLanguage('fr');
     await openApp('/settings');
     expect(await screen.findByRole('header', { name: 'Settings' })).toBeOnTheScreen();
-    expect(tabs().map(({ props }) => props.title)).toEqual(['Garden', 'Quran', 'Settings']);
+    expect(tabs().map(({ props }) => props.title)).toEqual([
+      'Garden',
+      'Quran',
+      'Friends',
+      'Settings',
+    ]);
   });
 
   it('gets a mirrored tab bar and Arabic names when the app runs in Arabic', async () => {
@@ -318,9 +324,24 @@ describe('returning person', () => {
     setDeviceConditions({ rightToLeft: true });
     const app = await openApp();
     await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
-    expect(tabs().map(({ props }) => props.title)).toEqual(['الحديقة', 'القرآن', 'الإعدادات']);
+    expect(tabs().map(({ props }) => props.title)).toEqual([
+      'الحديقة',
+      'القرآن',
+      'الأحبّة',
+      'الإعدادات',
+    ]);
     expect(tabsHost()).toHaveProp('layoutDirection', 'rtl');
     expect(reloadAppAsync).not.toHaveBeenCalled();
+  });
+
+  it('finds the Proches tab: sign-in first, then the friends, and their pages over the tabs', async () => {
+    const app = await openApp('/friends');
+    expect(await screen.findByRole('header', { name: 'Proches' })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Continuer avec Apple' }));
+    expect(await screen.findByTestId('friends-list')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Ajouter un proche' }));
+    await waitFor(() => expect(app.getPathname()).toBe('/friends/add'));
+    expect(await screen.findByLabelText('Nom à chercher')).toBeOnTheScreen();
   });
 
   it('can see the introduction again from the settings, with a back button, and finish it', async () => {
@@ -360,7 +381,12 @@ describe('stored data that could not be read back', () => {
     await store({ onboardingCompleted: true });
     const app = await openApp();
     await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
-    expect(tabs().map(({ props }) => props.badgeValue)).toEqual([undefined, undefined, undefined]);
+    expect(tabs().map(({ props }) => props.badgeValue)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    ]);
   });
 
   it('marks the settings tab, says there what happened, and forgets it once read', async () => {
@@ -370,7 +396,12 @@ describe('stored data that could not be read back', () => {
     await waitFor(() => expect(app.getPathname()).toBe('/settings'));
 
     // No alert at launch: a badge leads to the explanation, written in the settings.
-    expect(tabs().map(({ props }) => props.badgeValue)).toEqual([undefined, undefined, '!']);
+    expect(tabs().map(({ props }) => props.badgeValue)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      '!',
+    ]);
     expect(screen.getByRole('header', { name: 'À savoir' })).toBeOnTheScreen();
     expect(
       screen.getByText(/L’appli n’a pas pu relire ton journal de lecture\./),
@@ -382,6 +413,7 @@ describe('stored data that could not be read back', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'D’accord' }));
     await waitFor(() =>
       expect(tabs().map(({ props }) => props.badgeValue)).toEqual([
+        undefined,
         undefined,
         undefined,
         undefined,
@@ -398,7 +430,12 @@ describe('stored data that could not be read back', () => {
     setPermission(PermissionStatus.GRANTED);
     const app = await openApp('/settings');
     await waitFor(() => expect(app.getPathname()).toBe('/settings'));
-    expect(tabs().map(({ props }) => props.badgeValue)).toEqual([undefined, undefined, '!']);
+    expect(tabs().map(({ props }) => props.badgeValue)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      '!',
+    ]);
     expect(screen.getByText(/L’appli n’a pas pu relire tes réglages\./)).toBeOnTheScreen();
   });
 });
@@ -416,7 +453,7 @@ describe('links', () => {
     await fireEvent.press(await screen.findByRole('button', { name: 'Terminé' }));
     await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
     expect(app.getPathname()).toBe('/');
-    expect(tabs()).toHaveLength(3);
+    expect(tabs()).toHaveLength(4);
     expect(requestPermissionsAsync).not.toHaveBeenCalled();
   });
 

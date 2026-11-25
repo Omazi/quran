@@ -5,7 +5,7 @@
  */
 
 export { previewGardenState, type GardenPreview } from './garden-preview';
-export { WATER_SYMBOLS } from './config';
+export { GARDEN_PICTURE_ASPECT_RATIO, HIZB_TONE, WATER_SYMBOLS, WATER_TONES } from './config';
 export {
   GardenElementsSection,
   GardenStateSection,

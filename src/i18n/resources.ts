@@ -1,4 +1,5 @@
 import arCommon from './locales/ar/common.json';
+import arFriends from './locales/ar/friends.json';
 import arGarden from './locales/ar/garden.json';
 import arHome from './locales/ar/home.json';
 import arListening from './locales/ar/listening.json';
@@ -6,6 +7,7 @@ import arOnboarding from './locales/ar/onboarding.json';
 import arReader from './locales/ar/reader.json';
 import arSettings from './locales/ar/settings.json';
 import enCommon from './locales/en/common.json';
+import enFriends from './locales/en/friends.json';
 import enGarden from './locales/en/garden.json';
 import enHome from './locales/en/home.json';
 import enListening from './locales/en/listening.json';
@@ -13,6 +15,7 @@ import enOnboarding from './locales/en/onboarding.json';
 import enReader from './locales/en/reader.json';
 import enSettings from './locales/en/settings.json';
 import frCommon from './locales/fr/common.json';
+import frFriends from './locales/fr/friends.json';
 import frGarden from './locales/fr/garden.json';
 import frHome from './locales/fr/home.json';
 import frListening from './locales/fr/listening.json';
@@ -37,6 +40,7 @@ export const NAMESPACES = [
   'reader',
   'listening',
   'settings',
+  'friends',
 ] as const;
 
 export const resources = {
@@ -48,6 +52,7 @@ export const resources = {
     reader: frReader,
     listening: frListening,
     settings: frSettings,
+    friends: frFriends,
   },
   en: {
     common: enCommon,
@@ -57,6 +62,7 @@ export const resources = {
     reader: enReader,
     listening: enListening,
     settings: enSettings,
+    friends: enFriends,
   },
   ar: {
     common: arCommon,
@@ -66,5 +72,6 @@ export const resources = {
     reader: arReader,
     listening: arListening,
     settings: arSettings,
+    friends: arFriends,
   },
 } as const;
