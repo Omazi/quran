@@ -69,7 +69,8 @@ export interface ListSectionProps {
   title?: string;
   /**
    * Arabic text of the Quran shown at the trailing end of the header, in the Quran font and in
-   * ink, such as the opening words of a juz. Only with a `title`.
+   * ink, such as the opening words of a juz. Only with a `title`, which then takes the system's
+   * increased header prominence, so that it is not the smallest text of the group.
    */
   titleQuran?: string;
   /** Explanation shown under the section. */

@@ -25,7 +25,14 @@ import {
   parsePageParam,
   previousPage,
 } from '../page-order';
-import { computeOpeningPageMetrics, computePageMetrics, fitLine } from '../page-layout';
+import {
+  PAGE_TOP_INSET_MAX,
+  computeOpeningPageMetrics,
+  computePageMetrics,
+  fitLine,
+  pageFrameHeight,
+  pageTopInset,
+} from '../page-layout';
 import { readingFeedback } from '../reading-feedback';
 import { finishVisit, pauseVisit, resumeVisit, startVisit, type PageVisit } from '../reading-timer';
 import { resolveResumePage } from '../resume-page';
@@ -390,6 +397,33 @@ describe('the size of the page text (spec 2)', () => {
       10,
     );
     expect(metrics.tightestGap).toBeLessThan(metrics.wordGap);
+  });
+});
+
+describe('where the page starts under the bar (spec 2)', () => {
+  // The room under the bar of an iPhone 15 (852 points, bars and safe areas taken out), of an
+  // iPhone SE (667), and of the web at 393 by 852 (Material's 64-point bar, no safe areas).
+  const IPHONE = { width: 393, height: 715 };
+  const SMALL_IPHONE = { width: 375, height: 603 };
+  const WEB = { width: 393, height: 788 };
+
+  it('starts right under the bar: half the room left, never more than a small gap', () => {
+    for (const area of [IPHONE, SMALL_IPHONE, WEB]) {
+      const metrics = computePageMetrics(area);
+      const left = area.height - pageFrameHeight(metrics);
+      expect(left).toBeGreaterThanOrEqual(0);
+      expect(pageTopInset(area, metrics)).toBeCloseTo(Math.min(left / 2, PAGE_TOP_INSET_MAX), 10);
+    }
+    // On the web the room is 76 points taller than the frame: the frame no longer floats 38
+    // points under the bar, the rest of the room goes under the page.
+    const web = computePageMetrics(WEB);
+    expect(WEB.height - pageFrameHeight(web)).toBeGreaterThan(2 * PAGE_TOP_INSET_MAX);
+    expect(pageTopInset(WEB, web)).toBe(PAGE_TOP_INSET_MAX);
+  });
+
+  it('is never negative', () => {
+    const metrics = computePageMetrics(IPHONE);
+    expect(pageTopInset({ width: 393, height: pageFrameHeight(metrics) - 10 }, metrics)).toBe(0);
   });
 });
 

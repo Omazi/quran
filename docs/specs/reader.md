@@ -75,7 +75,9 @@ données sont incohérentes donne un état d'erreur clair, jamais un texte parti
 - Retour à la personne : un message bref quand une page vient de compter, et un message qui
   nomme le nouvel élément du jardin quand un hizb se termine (`getGardenFeed`). Texte selon
   `writing.md`. Pas de son. Avec « réduire les animations », le message apparaît sans
-  mouvement.
+  mouvement. Le message est une pastille d'eau (accent, goutte) qui prend la place du titre de
+  la barre quelques secondes, ou celle de la barre masquée ; il ne recouvre jamais la page
+  (registre, écarts 64 et 66).
 - La lecture suivie à la voix (lot 2) comptera autrement ; cette règle ne vaut que pour la
   lecture des yeux.
 

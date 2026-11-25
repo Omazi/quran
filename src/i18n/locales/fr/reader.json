@@ -5,6 +5,13 @@
       "action": "Reprendre",
       "detail": "{{surah}} · Page {{page}}"
     },
+    "today": {
+      "label": "Aujourd’hui",
+      "value_one": "{{count}} page sur {{goal}}",
+      "value_other": "{{count}} pages sur {{goal}}",
+      "valueReached_one": "{{count}} page sur {{goal}}, objectif atteint",
+      "valueReached_other": "{{count}} pages sur {{goal}}, objectif atteint"
+    },
     "view": {
       "label": "Afficher",
       "surahs": "Sourates",
@@ -15,6 +22,7 @@
       "placeholder": "Sourate ou numéro de page",
       "clear": "Effacer la recherche",
       "empty": "Aucune sourate pour « {{query}} »",
+      "emptyHint": "Essaie un autre nom, comme {{example}}, ou un numéro de page de 1 à {{last}}.",
       "page": "Page {{page}}",
       "pageDetail": "{{surah}} · Juz {{juz}}"
     },

@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { quranRepository, quranStructure } from '@/data/quran';
+import { getTodayProgress, type TodayProgress } from '@/domain/khatm';
 import type { QuranRepository } from '@/domain/quran';
+import { useToday } from '@/features/home';
+import { useAppStore } from '@/store';
 
 import {
   buildJuzEntries,
@@ -21,6 +24,8 @@ export type ContentsView = 'surahs' | 'juz';
 export interface ContentsModel {
   /** The page to resume and the surah of its first verse. */
   readonly resume: { readonly page: number; readonly surah: number };
+  /** Today's new pages toward the daily goal: the water given today, shown under "Reprendre". */
+  readonly today: TodayProgress;
   readonly view: ContentsView;
   /** What is typed in the search field: a surah's name or number, or a page's number. */
   readonly query: string;
@@ -58,6 +63,7 @@ export function useContentsModel(
   actions: ContentsActions;
 } {
   const resumePage = useResumePage();
+  const today = useTodayProgress();
   const [view, setShownView] = useState<ContentsView>('surahs');
   const [query, setQuery] = useState('');
   surahEntries ??= buildSurahEntries(quranStructure);
@@ -71,6 +77,7 @@ export function useContentsModel(
   return {
     model: {
       resume: { page: resumePage, surah: quranStructure.firstVerseOfPage(resumePage).surah },
+      today,
       view,
       query,
       goTo:
@@ -87,6 +94,17 @@ export function useContentsModel(
     },
     actions: { openPage: open, setView, setQuery },
   };
+}
+
+/** Today's progress toward the daily goal, from the khatm module (the count is its answer). */
+function useTodayProgress(): TodayProgress {
+  const journal = useAppStore((state) => state.journal);
+  const dailyGoalPages = useAppStore((state) => state.settings.dailyGoalPages);
+  const today = useToday();
+  return useMemo(
+    () => getTodayProgress(journal, today, dailyGoalPages),
+    [journal, today, dailyGoalPages],
+  );
 }
 
 /**

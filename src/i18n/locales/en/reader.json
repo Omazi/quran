@@ -5,6 +5,13 @@
       "action": "Continue",
       "detail": "{{surah}} · Page {{page}}"
     },
+    "today": {
+      "label": "Today",
+      "value_one": "{{count}} page of {{goal}}",
+      "value_other": "{{count}} pages of {{goal}}",
+      "valueReached_one": "{{count}} page of {{goal}}, goal reached",
+      "valueReached_other": "{{count}} pages of {{goal}}, goal reached"
+    },
     "view": {
       "label": "Show",
       "surahs": "Surahs",
@@ -15,6 +22,7 @@
       "placeholder": "Surah or page number",
       "clear": "Clear Search",
       "empty": "No surah for “{{query}}”",
+      "emptyHint": "Try another name, like {{example}}, or a page number from 1 to {{last}}.",
       "page": "Page {{page}}",
       "pageDetail": "{{surah}} · Juz {{juz}}"
     },

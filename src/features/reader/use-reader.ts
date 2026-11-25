@@ -8,6 +8,7 @@ import { deviceLocalDate, type Clock, type HomeSettings } from '@/features/home'
 import { useReaderPresence } from '@/features/profile';
 import { useAppStore } from '@/store';
 
+import { READER_CONFIG } from './config';
 import { readingFeedback, type ReadingFeedback } from './reading-feedback';
 import { finishVisit, pauseVisit, resumeVisit, startVisit, type PageVisit } from './reading-timer';
 import { useScreenReader } from './use-screen-reader';
@@ -40,6 +41,8 @@ export interface ReaderActions {
   /** A tap on the page: hides or shows the bars. */
   readonly toggleBars: () => void;
 }
+
+const SECOND_MS = 1000;
 
 const systemMonotonicClock: MonotonicClock = () => performance.now();
 const systemClock: Clock = () => new Date();
@@ -153,6 +156,13 @@ export function useReader(
       visit.current = null;
     };
   }, [endVisit]);
+
+  // The watered pill is brief (spec 3, deviation 64): the title of the page comes back.
+  useEffect(() => {
+    if (feedback === null) return;
+    const timer = setTimeout(() => setFeedback(null), READER_CONFIG.feedbackSeconds * SECOND_MS);
+    return () => clearTimeout(timer);
+  }, [feedback]);
 
   const toggleBars = useCallback(() => setBarsShown((shown) => !shown), []);
 

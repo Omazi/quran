@@ -10,6 +10,7 @@ import {
   type LayoutChangeEvent,
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { quranStructure } from '@/data/quran';
 import { getDisplayedLanguage } from '@/i18n';
@@ -67,11 +68,11 @@ export interface ReaderScreenProps {
  * with a tap; going-full-screen.md › Best practices). The room of the bar stays empty when it is
  * hidden, so the text never moves; the framed page is centred in the room under it.
  *
- * A pill over the band of the bar says when the page just left was counted (spec 3): status
- * feedback in the interface, near what it is about, not an alert (feedback.md › Best practices).
- * It takes no room of its own, so the page does not move when it comes and goes. It stays until
- * the next page, never dismissed by a timer (accessibility.md › Cognitive), and it does not move:
- * nothing here is animated, so Reduce Motion has nothing to remove.
+ * When the page just left was counted (spec 3), the watered pill takes the place of the title in
+ * the bar for a few seconds: status feedback in the interface, near what it is about, not an alert
+ * (feedback.md › Consider integrating status feedback into your interface, as Mail does in its
+ * toolbar). While the bars are hidden it shows in their empty room, at the same place. It is never
+ * laid over the page, so it covers no line on any screen, and the page does not move for it.
  */
 export function ReaderScreen({
   model,
@@ -88,6 +89,12 @@ export function ReaderScreen({
   const pager = useRef<BookPagerHandle>(null);
   const zoom = useZoomState();
   const { changePage, toggleBars } = actions;
+  const feedbackText = useFeedbackText(model.feedback);
+
+  // Heard once, wherever the pill shows (feedback.md › Make sure all feedback is accessible).
+  useEffect(() => {
+    if (feedbackText !== null) AccessibilityInfo.announceForAccessibility(feedbackText);
+  }, [feedbackText]);
 
   const onAreaLayout = useCallback((event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -172,7 +179,9 @@ export function ReaderScreen({
 
   return (
     <Screen background="paper" testID="reader">
-      <View style={styles.barRoom} />
+      <View style={[styles.barRoom, titleAlignment]} testID="reader-bar-room">
+        {model.barsVisible || feedbackText === null ? null : <FeedbackPill text={feedbackText} />}
+      </View>
       <View style={styles.pages}>
         <GestureHandlerRootView style={styles.pages} onLayout={onAreaLayout} testID="reader-pages">
           {
@@ -191,62 +200,98 @@ export function ReaderScreen({
             )
           }
         </GestureHandlerRootView>
-        <FeedbackPill feedback={model.feedback} />
       </View>
     </Screen>
   );
 }
 
-/**
- * What the page just left gave: one short pill, laid over the band of the navigation bar, with
- * the water symbol (charter: the accent is water, "arrosé"). It is the accent filled with its own
- * label colour, the prominent style of the charter, so it reads on the paper in both appearances.
- * Nothing is drawn when there is nothing to say, so it reserves no room. VoiceOver hears it too.
- */
-function FeedbackPill({ feedback }: { feedback: ReadingFeedback | null }) {
+/** What the page just left gave, in words, or null when there is nothing to say. */
+function useFeedbackText(feedback: ReadingFeedback | null): string | null {
   const { t } = useTranslation(['reader', 'garden']);
+  if (feedback === null) return null;
+  return feedback.kind === 'page-counted'
+    ? t('reader:feedback.pageCounted')
+    : t('reader:feedback.hizbCompleted', { element: t(`garden:kinds.${feedback.elementKind}`) });
+}
+
+/**
+ * The bar's title and the pill share the platform's alignment of a bar title: centred on iOS,
+ * at the start on Android and the web (toolbars.md › Titles; React Navigation's own default), so
+ * that every line of the block lines up with the others (layout.md › Visual hierarchy: align
+ * elements to make them easier to scan).
+ */
+const titleAlignment = Platform.OS === 'ios' ? { alignItems: 'center' as const } : null;
+const titleTextAlignment = Platform.OS === 'ios' ? 'center' : 'start';
+
+/**
+ * The watered pill, the one designed moment of the reader: the accent, which is water (charter),
+ * filled with its own label colour, with the water drop of SF Symbols in the weight of its text
+ * (sf-symbols.md › Weights and scales). It comes in with the system's snappy spring, a short scale
+ * and fade tied to the page that counted (motion.md › Aim for brevity and precision in feedback
+ * animations); with Reduce Motion it is simply there (spec 3; accessibility.md › Cognitive). It
+ * holds two lines at most, the height of the bar.
+ */
+function FeedbackPill({ text }: { text: string }) {
   const colors = useColors();
-  const text =
-    feedback === null
-      ? null
-      : feedback.kind === 'page-counted'
-        ? t('reader:feedback.pageCounted')
-        : t('reader:feedback.hizbCompleted', {
-            element: t(`garden:kinds.${feedback.elementKind}`),
-          });
-
+  const isMotionReduced = useReducedMotion();
+  const { durationMs, dampingRatio, fromScale } = READER_CONFIG.feedbackEntrance;
+  const entrance = useSharedValue(isMotionReduced ? 1 : 0);
   useEffect(() => {
-    if (text !== null) AccessibilityInfo.announceForAccessibility(text);
-  }, [text]);
-
-  if (text === null) return null;
+    if (isMotionReduced) return;
+    entrance.value = withSpring(1, { duration: durationMs, dampingRatio });
+  }, [dampingRatio, durationMs, entrance, isMotionReduced]);
+  const entranceStyle = useAnimatedStyle(() => ({
+    opacity: Math.min(1, entrance.value),
+    transform: [{ scale: fromScale + (1 - fromScale) * entrance.value }],
+  }));
   return (
-    <View style={styles.feedbackBand} pointerEvents="none">
+    <Animated.View
+      style={isMotionReduced ? undefined : entranceStyle}
+      pointerEvents="none"
+      testID="reader-feedback-motion"
+    >
       <View
         style={[styles.feedback, { backgroundColor: colors.accent }]}
         accessible
+        accessibilityLiveRegion="polite"
         testID="reader-feedback"
       >
-        <Icon symbol={WATER_SYMBOL} textStyle="footnote" color="onAccent" />
-        <AppText variant="footnote" color="onAccent" align="center" style={styles.feedbackText}>
+        <Icon
+          symbol={WATER_SYMBOL}
+          textStyle="footnote"
+          color="onAccent"
+          testID="reader-feedback-drop"
+        />
+        <AppText variant="footnote" color="onAccent" numberOfLines={2} style={styles.feedbackText}>
           {text}
         </AppText>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
-/** The two lines of the navigation bar: the surah of the page, then where the page is. */
+/**
+ * The title of the navigation bar: the surah of the page, then where the page is; or, for a few
+ * seconds after a page counted, the watered pill in their place.
+ */
 function ReaderTitle({ model }: { model: ReaderModel }) {
   const { t } = useTranslation('reader');
+  const feedbackText = useFeedbackText(model.feedback);
+  if (feedbackText !== null) {
+    return (
+      <View style={[styles.title, titleAlignment]}>
+        <FeedbackPill key={feedbackText} text={feedbackText} />
+      </View>
+    );
+  }
   return (
-    <View style={styles.title} accessible accessibilityRole="header">
-      <AppText variant="headline" color="ink" align="center" numberOfLines={1}>
+    <View style={[styles.title, titleAlignment]} accessible accessibilityRole="header">
+      <AppText variant="headline" color="ink" align={titleTextAlignment} numberOfLines={1}>
         {surahDisplayName(model.surah)}
       </AppText>
       {/* Secondary ink, not the system's secondary label: the bar floats over the paper, on which
           the system grey reaches only 3.35:1 (accessibility.md › Vision). */}
-      <AppText variant="footnote" color="inkSecondary" align="center" numberOfLines={1}>
+      <AppText variant="footnote" color="inkSecondary" align={titleTextAlignment} numberOfLines={1}>
         {t('page.subtitle', { juz: model.juz, hizb: model.hizb, page: model.page })}
       </AppText>
     </View>
@@ -317,15 +362,10 @@ export function ReaderNotFound({ openContents }: { openContents: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  barRoom: { height: Platform.select(READER_CONFIG.navigationBarHeight) },
-  // At the top of the room under the bar (the page area, which the safe area has already moved
-  // down), in the whitespace the page leaves above its frame; it covers no text.
-  feedbackBand: {
-    position: 'absolute',
-    top: spacing.xs,
-    start: 0,
-    end: 0,
-    alignItems: 'center',
+  // The room of the bar, kept when the bar is hidden; the pill then sits in it, where the title was.
+  barRoom: {
+    height: Platform.select(READER_CONFIG.navigationBarHeight),
+    justifyContent: 'center',
     paddingHorizontal: layout.screenMargin,
   },
   feedback: {
@@ -339,6 +379,6 @@ const styles = StyleSheet.create({
   },
   feedbackText: { flexShrink: 1 },
   pages: { flex: 1 },
-  title: { alignItems: 'center' },
+  title: { justifyContent: 'center' },
   action: { paddingHorizontal: layout.screenMargin, paddingVertical: spacing.md },
 });

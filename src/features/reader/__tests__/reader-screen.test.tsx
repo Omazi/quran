@@ -4,8 +4,8 @@
  * after a page, the bars, the lines that do not fit, and the states.
  */
 
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import { AccessibilityInfo, AppState } from 'react-native';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
+import { AccessibilityInfo, AppState, View } from 'react-native';
 import { State } from 'react-native-gesture-handler';
 import { fireGestureHandler, getByGestureTestId } from 'react-native-gesture-handler/jest-utils';
 
@@ -18,6 +18,8 @@ import { AppStoreProvider, type AppStore } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
 import { fontFamily, layout } from '@/ui';
 import {
+  changeReducedMotion,
+  iosAppColor,
   renderOnIOS,
   resetDeviceConditions,
   setDeviceConditions,
@@ -26,7 +28,7 @@ import {
 
 import { READER_CONFIG } from '../config';
 import { pagerIndexOfPage } from '../page-order';
-import { ReaderNotFound, ReaderScreen } from '../reader-screen';
+import { ReaderNotFound, ReaderScreen, useReaderHeaderOptions } from '../reader-screen';
 import { useReader } from '../use-reader';
 import type { QuranFontStatus } from '../use-quran-font';
 
@@ -41,14 +43,24 @@ const TODAY = deviceLocalDate(clock());
 
 function Reader({ page, fontStatus = 'ready' }: { page: number; fontStatus?: QuranFontStatus }) {
   const { model, actions } = useReader(page, { monotonicClock, clock });
+  const header = useReaderHeaderOptions(model);
+  const title = header.headerTitle;
   return (
-    <ReaderScreen
-      model={model}
-      actions={actions}
-      fontStatus={fontStatus}
-      initialPage={page}
-      openContents={openContents}
-    />
+    <>
+      {/* The navigation bar, as the stack draws it: its title while it is shown. */}
+      <View testID="reader-header">
+        {header.headerShown === false || typeof title !== 'function'
+          ? null
+          : title({ children: '' })}
+      </View>
+      <ReaderScreen
+        model={model}
+        actions={actions}
+        fontStatus={fontStatus}
+        initialPage={page}
+        openContents={openContents}
+      />
+    </>
   );
 }
 
@@ -224,6 +236,69 @@ describe('the 30-second rule, through the store', () => {
     expect(screen.getByTestId('reader-feedback')).toHaveTextContent(
       /^Hizb terminé\. Nouveau dans ton jardin : \S/,
     );
+  });
+});
+
+describe('the watered pill, the moment of the reader (spec 3)', () => {
+  it('takes the place of the title in the bar, with the water drop, never over the page', async () => {
+    await openReader(createTestAppStore(), 10);
+    const header = screen.getByTestId('reader-header');
+    expect(within(header).getByText('Al-Baqarah')).toBeOnTheScreen();
+    await wait(READER_CONFIG.minimumSecondsOnPage);
+    await swipeTo(11);
+    const pill = within(header).getByTestId('reader-feedback');
+    expect(pill).toHaveTextContent('Page lue, ton jardin est arrosé');
+    expect(within(header).queryByText('Al-Baqarah')).toBeNull();
+    // The drop decorates words that say the same: VoiceOver hears the words only.
+    expect(
+      within(pill).getByTestId('reader-feedback-drop', { includeHiddenElements: true }),
+    ).toBeTruthy();
+    expect(styleOf(pill)).toMatchObject({ backgroundColor: iosAppColor('accent') });
+    // Nothing is laid over the page, so the first line is never covered, whatever the screen.
+    expect(within(screen.getByTestId('reader-pages')).queryByTestId('reader-feedback')).toBeNull();
+  });
+
+  it('shows in the empty room of the bar while the bars are hidden', async () => {
+    await openReader(createTestAppStore(), 20);
+    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
+    await act(() => fireGestureHandler(getByGestureTestId('reader-page-20-tap')));
+    await wait(READER_CONFIG.minimumSecondsOnPage);
+    await swipeTo(21);
+    expect(within(screen.getByTestId('reader-header')).queryByTestId('reader-feedback')).toBeNull();
+    expect(
+      within(screen.getByTestId('reader-bar-room')).getByTestId('reader-feedback'),
+    ).toHaveTextContent('Page lue, ton jardin est arrosé');
+  });
+
+  it('is brief: the title comes back after a few seconds', async () => {
+    jest.useFakeTimers();
+    try {
+      await openReader(createTestAppStore(), 10);
+      await wait(READER_CONFIG.minimumSecondsOnPage);
+      await swipeTo(11);
+      expect(screen.getByTestId('reader-feedback')).toBeOnTheScreen();
+      await act(async () => {
+        jest.advanceTimersByTime(READER_CONFIG.feedbackSeconds * SECOND - 1);
+      });
+      expect(screen.getByTestId('reader-feedback')).toBeOnTheScreen();
+      await act(async () => {
+        jest.advanceTimersByTime(1);
+      });
+      expect(screen.queryByTestId('reader-feedback')).toBeNull();
+      expect(within(screen.getByTestId('reader-header')).getByText('Al-Baqarah')).toBeOnTheScreen();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('appears without movement with Reduce Motion', async () => {
+    await openReader(createTestAppStore(), 10);
+    await changeReducedMotion(true);
+    await wait(READER_CONFIG.minimumSecondsOnPage);
+    await swipeTo(11);
+    const style = styleOf(screen.getByTestId('reader-feedback-motion'));
+    expect(style.transform).toBeUndefined();
+    expect(style.opacity ?? 1).toBe(1);
   });
 });
 
