@@ -120,7 +120,7 @@ animations » (`motion.md › Best practices`). Rien d'autre que les animations 
 ### Icônes et images
 
 SF Symbols, de la graisse du texte voisin (`sf-symbols.md › Weights and scales`). Pas d'emoji, pas
-d'illustration dessinée en code. Le jardin est la seule image : des rendus de modèles 3D (D35). L'icône de l'appli en est un aussi (plus bas, « Icône »). Image manquante = emplacement
+d'illustration dessinée en code. Le jardin est la seule image : des rendus de modèles 3D (D35). L'icône de l'appli est aussi un rendu 3D (plus bas, « Icône »). Image manquante = emplacement
 neutre et nommé.
 
 ### Voix
@@ -133,57 +133,54 @@ titres, comme le système.
 ### Icône
 
 Décision D38. Sources : `app-icons.md` (Apple Design), skill Frontend design (une seule idée
-forte), deux revues de design du 25 novembre 2026, et le choix du propriétaire pour le jardin en
+forte), trois revues de design du 25 novembre 2026, et le choix du propriétaire pour le jardin en
 images 3D (D35). Fichiers produits par `tools/app-icon/make_icon.py` (scène :
 `tools/app-icon/scene.html`).
 
-**L'idée.** Un jeune arbre fruitier du jardin au bord d'un petit bassin d'eau claire, sur une
-pelouse ronde, vu de trois quarts : lire arrose le jardin. C'est un rendu 3D, comme le jardin de
-l'appli (D35) : l'arbre est un modèle de Quaternius (Platformer Game Kit, CC0), une couronne ronde
-et généreuse avec des fruits rouges, sur un tronc court ; la pelouse et le bassin sont des formes
-simples ; toutes les couleurs sont unies (aucune texture de photo). Lumière chaude venue d'en haut
-à gauche. Plus d'étoile : la rosace reste à l'écran d'écoute.
+**L'idée.** Un jeune arbre fruitier enraciné au bord d'un petit ruisseau qui descend vers nous sur
+une pelouse douce : lire arrose le jardin, et le jardin « sous lequel coulent les ruisseaux » répond
+au nom (écho à faire confirmer par une personne qualifiée, comme le nom, D31). C'est un rendu 3D,
+comme le jardin de l'appli (D35), mais tout est construit dans la scène : une calotte de sphère pour
+la pelouse, un ruban pour le ruisseau, un tronc et une couronne de cinq masses en facettes à deux
+tons (clair et ombre). Aucun modèle, aucune texture, aucune île ni socle.
 
-**Couleurs, par rôle.** Mesurées sur le rendu (luminance médiane, formule WCAG).
+**Couleurs, par rôle.**
 
-| Rôle              | Où                   | Valeur                                                                                                          |
-| ----------------- | -------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Eau (`accent`)    | Fond, de haut en bas | `#CDF3F7` → `#5CC8D6` (`accent` sombre) ; apparence sombre `#0E6B78` (`accent`) → `#06333A`                     |
-| Eau vive          | Le bassin            | `#8FE6F1`, légèrement lumineux, bord `#2C9DAE`                                                                  |
-| Jardin (`growth`) | Feuillage, pelouse   | feuillage `#5DBF5A`, fruits `#C93A48`, pelouse `#A4D86E` bordée de `#6FA94A` ; tronc `#6E4630`, terre `#5E4029` |
+| Rôle              | Où                   | Valeur                                                                                      |
+| ----------------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| Ciel et eau       | Fond, de haut en bas | `#D6ECE2` → `#7DC0C5` ; apparence sombre `#0E5A63` → `#062E33`                              |
+| Eau (`accent`)    | Le ruisseau          | milieu `#2C8FA2`, rives `#86D3DB`, un reflet `#E8FAFB` ; pas plus clair que l'arbre éclairé |
+| Jardin (`growth`) | Pelouse, couronne    | pelouse `#6DBA4E`, feuillage `#7CC95A` (deux tons), tronc `#6E4630`                         |
+| Fruits            | Cinq fruits          | corail `#FF8A70`, de la luminance des feuilles                                              |
 
-Contrastes : l'arbre contre le haut du fond 3,2:1 ; le bassin contre la pelouse 1,7:1, tenu par son
-bord sombre ; le bord de la pelouse et la terre (luminance 0,04) contre le bas du fond (0,48),
-plus de 6:1. Ni or ni papier.
+Lumière : une lumière chaude et nette venue d'en haut à gauche (`#FFE6C2`), un ciel froid en
+complément. Ni or ni papier.
 
 **Couches** (`assets/expo.icon`, format Icon Composer, `app-icons.md › Layer design`) : le fond
 est le dégradé d'Icon Composer lui-même (clair et sombre). Trois groupes, du dessus vers le dessous :
-l'arbre (`tree.png`), le bassin (`water.png`, translucidité 0,2), la pelouse (`ground.png`). Des
-PNG à transparence, parce que c'est un rendu (`app-icons.md › Layer design` : PNG pour les images
-matricielles). Chaque couche est entière sous celles du dessus, et coupée seulement par ce qui se
-tient devant elle. En teinté et en transparent, l'ordre de clarté est gardé par l'opacité :
-arbre, bassin (80 %), pelouse (45 %).
+l'arbre (`tree.png`), le ruisseau (`water.png`, translucidité 0,2), la pelouse (`ground.png`). Des PNG
+à transparence, parce que c'est un rendu (`app-icons.md › Layer design`). Chaque couche est entière
+sous celles du dessus, et coupée seulement par ce qui se tient devant elle. En teinté et en
+transparent, l'ordre de clarté est gardé par l'opacité : arbre, ruisseau (80 %), pelouse (45 %).
 
-**Composition.** Le sujet couvre 80 % de la hauteur et 72 % de la largeur ; l'arbre seul, 56 % de
-la hauteur. L'arbre se tient au bord gauche de la pelouse, à côté du bassin, sa couronne penchée
-au-dehors : centré sur la pelouse ovale, sa silhouette d'une seule teinte (teinté, transparent,
-Android monochrome) se lisait comme un verre à pied. À 29 pixels, on voit un arbre et de l'eau ; les
-fruits se voient à partir de 120 pixels.
+**Composition** (`app-icons.md › Icon shape` : contenu centré). L'arbre est centré à 2 % près
+(un peu à gauche), 53 % de la largeur, 56 % de la hauteur ; la pelouse et le ruisseau sortent par le
+bas. À 29 pixels : un arbre et un ruban d'eau. Les fruits se voient à partir de 60 pixels ; ils
+ont la luminance des feuilles pour ne pas faire de taches dans les versions d'une seule teinte (en
+rouge, la couronne y devenait un champignon tacheté). Sur Android, l'arbre tient dans le cercle de
+sécurité ; la pelouse passe sous le masque.
 
 **Écran de lancement** : une couleur unie, sans logo (`launching.md › Launch screens`) ;
 `splash-icon.png` existe mais n'est pas affiché.
 
 **Écarté, et pourquoi** (rendus : voir D38) :
 
-- Le plan du jardin vu d'en haut (première version) : une fleur à quatre pétales autour de
-  l'étoile générique des applis musulmanes.
-- La parcelle vue de trois quarts, en vectoriel (deuxième version) : une puce électronique ou une
-  tuile de jeu, très sombre, petite dans le carré ; un trou sur l'écran d'accueil.
-- Le même arbre et le même bassin en vectoriel plat : une illustration de banque d'images.
-- Les arbres de Kenney (troisième version, `tree_default`) : un cône mince sur un bâton, un air de
-  jeu ; centrés au-dessus du bassin, le verre à pied en silhouette. Les arbres du pack « mixed »
-  du jardin (Quaternius stylisés) : des feuilles en texture, exclues ici. Les autres arbres
-  fruitiers de Quaternius (pommier, oranger du Crops Pack) : couronne clairsemée, tronc long.
+- Le plan du jardin vu d'en haut (version 1) : une fleur autour de l'étoile générique.
+- La parcelle vue de trois quarts, en vectoriel (version 2) : une puce électronique, très sombre.
+- L'arbre sur une île flottante avec un bassin rond (versions 3 et 4, modèles Kenney puis
+  Quaternius) : une icône de jeu mobile ou d'appli de concentration ; le socle ovale donnait un verre
+  à pied en silhouette ; des fruits sombres faisaient des bouches.
+- Le même sujet en vectoriel plat : une illustration de banque d'images.
 - Plus tôt : une goutte qui devient feuille, la rosace seule, la calligraphie de جنتك (texte
   déconseillé par `app-icons.md › Design`).
 

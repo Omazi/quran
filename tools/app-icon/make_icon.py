@@ -1,14 +1,14 @@
 """Renders the app icon of Jannatuk and writes every file the app needs from it.
 
-The icon is a young fruit tree of the app's garden standing by a small pool of bright water, on a
-round lawn: reading waters the garden (docs/design/brand-spec.md, "Icône"; docs/DECISIONS.md,
-D38). It is a 3D render, like the garden itself (D35): the tree is a Quaternius model (Platformer
-Game Kit, CC0), the lawn and the pool are plain geometry, every colour is flat and set here.
+The icon is a young fruit tree rooted at the edge of a small stream that runs down a soft lawn
+towards the viewer: reading waters the garden, "gardens beneath which rivers flow"
+(docs/design/brand-spec.md, "Icône"; docs/DECISIONS.md, D38). It is a 3D render, like the garden
+itself (D35); every shape is built in the scene, every colour is flat and set here.
 
 usage: python3 -I tools/app-icon/make_icon.py [--previews DIR]
 
 Needs Python 3 with Pillow, numpy and Playwright (headless Chromium), and the garden render tool
-(three.js and the CC0 model packs), by default in /home/claude/gen/garden3d (set GARDEN3D to move
+(its three.js), by default in /home/claude/gen/garden3d (set GARDEN3D to move
 it). The scene is tools/app-icon/scene.html. The output is the same, byte for byte, from one run
 to the next on the same machine (software WebGL). Nothing here ships in the app. Writes:
   assets/expo.icon/                       Icon Composer bundle (iOS 26 layered icon)
@@ -37,29 +37,36 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 GARDEN3D = os.environ.get("GARDEN3D", "/home/claude/gen/garden3d")
 S = 1024
 
-# Background: Icon Composer's own gradient, light water to the app's water (`accent` dark value).
-FIELD = ("#CDF3F7", "#5CC8D6")
-FIELD_DARK = ("#0E6B78", "#06333A")  # `accent` at the top, night water below (dark appearance)
+# Background: Icon Composer's own gradient, a pale warm sky down to a soft water teal.
+FIELD = ("#D6ECE2", "#7DC0C5")
+FIELD_DARK = ("#0E5A63", "#062E33")  # the same, at night (dark appearance)
 
 SCENE = {
-    # The lawn: a disc with a rounded edge; a darker rim and the earth band part it from the
-    # background (lawn and background bottom have nearly the same luminance).
-    "radius": 1.25, "height": 0.16, "round": 0.1, "segs": 96,
-    "lawn": "#A4D86E", "lawnRim": "#6FA94A", "earth": "#5E4029",
-    "pool": 0.62, "poolAt": [0.45, 0.3], "rim": 0.05, "stone": "#2C9DAE",  # the pool and its edge
-    "water": "#8FE6F1", "waterGlow": 0.55,
-    # A fruit tree (Quaternius, Platformer Game Kit, CC0), its colours set here. It stands at the
-    # lawn's left edge, beside the pool, its crown leaning out: centred over the oval lawn, a
-    # tree's one-tone silhouette (tinted, clear, Android themed) reads as a goblet.
-    "tree": "quaternius-showcase/public/glb/platformer_game_pack/Tree_Fruit.glb",
-    "treeColours": {"Green": "#5DBF5A", "Wood": "#6E4630", "Red": "#C93A48"},
-    "treeHeight": 2.25, "treeYaw": 0.3, "treeAt": [-0.8, 0.12],
-    # One warm key light from the upper left, a sky fill.
-    "sky": "#EAFBFF", "bounce": "#7FA36F", "fill": 1.45, "key": 1.7, "sun": [-3, 6, 4],
-    "sunColour": "#FFF1DC", "shadow": 0.28,
+    # The lawn: the crown of a large sphere, running off the bottom edge.
+    "moundRadius": 6.0, "moundTop": 0.0, "lawn": "#6DBA4E",
+    # The stream: from behind the tree, past its foot, down towards the viewer (x, z on the lawn).
+    "stream": [[0.9, -3.2], [0.45, -1.2], [0.3, 0.1], [-0.05, 1.3], [0.35, 2.5], [0.05, 4.2], [0.3, 6.0]],
+    "streamWidth": [0.16, 0.62], "streamLift": 0.012,
+    "waterDeep": "#2C8FA2", "waterBank": "#86D3DB", "waterShine": "#E8FAFB",
+    "highlight": [0.5, 0.66, -0.55, 0.05],
+    # The tree: a short sturdy trunk, a crown of five low-poly masses, two shades.
+    "treeAt": [-0.12, 0.0], "trunk": [0.09, 0.14, 0.62],
+    "crown": [[0.0, 0.42, 0.0, 0.56, 0], [-0.44, 0.2, 0.05, 0.42, 0], [0.44, 0.24, -0.05, 0.44, 0],
+              [0.04, 0.82, -0.1, 0.42, 0], [0.08, 0.14, 0.34, 0.36, 0]],
+    "crownDetail": 1, "leaf": "#7CC95A", "leafDeep": "#4E9E46", "bark": "#6E4630",
+    "toonSteps": [150, 255],
+    # Five fruits, round and coral: they give the tree its kind at 60 points and up, vanish at 29
+    # without a smudge, and have about the leaves' luminance, so the one-tone versions (tinted,
+    # clear) show no dark spots (a red read as a spotted mushroom there).
+    "fruit": [[-0.25, 0.48, 0.5], [0.24, 0.66, 0.42], [0.44, 0.28, 0.32], [-0.48, 0.14, 0.34], [0.02, 0.2, 0.64]],
+    "fruitRadius": 0.09, "fruitColour": "#FF8A70",
+    # Light: a clear warm key from the upper left, a cool sky fill.
+    "sky": "#CFE6FF", "bounce": "#8DB36A", "fill": 1.1, "key": 2.0, "sun": [-4, 6, 5],
+    "sunColour": "#FFE6C2", "shadow": 0.35,
 }
-VIEW = {"fov": 24, "az": 30, "el": 26, "target": [0, 0.9, 0], "dist": 8.0, "offset": [0, 0]}
-FILL = 0.80  # the subject covers this share of the canvas, in its larger dimension
+VIEW = {"fov": 26, "az": 0, "el": 12, "target": [0, 0.8, 0], "dist": 7.0, "offset": [0, 0]}
+CROWN_WIDTH = 0.53  # the tree's width, as a share of the canvas
+TREE_CENTRE = (0.48, 0.42)  # where the tree's box sits (x, y), as shares of the canvas
 
 # Layers, bottom first: (name, parts drawn, parts that may hide them). A lower layer is whole
 # under the ones above it; a layer is cut only by what stands in front of it.
@@ -78,11 +85,10 @@ class _Quiet(http.server.SimpleHTTPRequestHandler):
 
 @contextlib.contextmanager
 def site():
-    """A throwaway web root: the scene, three.js and the models (links, nothing copied)."""
+    """A throwaway web root: the scene and three.js (a link, nothing copied)."""
     with tempfile.TemporaryDirectory() as root:
         shutil.copy(os.path.join(HERE, "scene.html"), os.path.join(root, "index.html"))
         os.symlink(os.path.join(GARDEN3D, "tool", "node_modules", "three"), os.path.join(root, "three"))
-        os.symlink(os.path.join(GARDEN3D, "packs"), os.path.join(root, "packs"))
         handler = functools.partial(_Quiet, directory=root)
         httpd = socketserver.ThreadingTCPServer(("127.0.0.1", 0), handler)
         httpd.daemon_threads = True
@@ -120,16 +126,17 @@ def shot(page, view, size, only=None, below=None):
 
 
 def frame(page):
-    """Move the camera so the subject covers FILL of the canvas, centred."""
+    """Move the camera so the tree is CROWN_WIDTH wide and its box centred at TREE_CENTRE; the
+    lawn then runs off the bottom edge."""
     view = dict(VIEW)
-    for _ in range(3):
-        a = np.asarray(shot(page, view, 512))[:, :, 3] > 10
+    for _ in range(4):
+        a = np.asarray(shot(page, view, 512, ["tree"], []))[:, :, 3] > 10
         ys, xs = np.nonzero(a)
         x0, x1, y0, y1 = xs.min() / 512, xs.max() / 512, ys.min() / 512, ys.max() / 512
-        extent = max(x1 - x0, y1 - y0)
-        k = FILL / extent
-        view["dist"] *= extent / FILL
-        view["offset"] = [view["offset"][0] + ((x0 + x1) / 2 - 0.5) * k, view["offset"][1] + ((y0 + y1) / 2 - 0.5) * k]
+        k = CROWN_WIDTH / (x1 - x0)
+        view["dist"] /= k
+        view["offset"] = [view["offset"][0] + ((x0 + x1) / 2 - TREE_CENTRE[0]) * k,
+                          view["offset"][1] + ((y0 + y1) / 2 - TREE_CENTRE[1]) * k]
     return view
 
 
@@ -189,16 +196,18 @@ def manifest():
     }
 
 
-def fit(im, radius):
-    """Scale a transparent picture about the centre so its farthest opaque pixel is `radius` away."""
-    a = np.asarray(im)[:, :, 3] > 8
-    ys, xs = np.nonzero(a)
-    reach = np.sqrt((xs + 0.5 - im.width / 2) ** 2 + (ys + 0.5 - im.height / 2) ** 2).max()
-    k = radius / reach
+def scaled(im, k):
+    """`im` scaled by `k` about the centre, on a transparent square of the same size."""
     small = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
     out = Image.new("RGBA", im.size, (0, 0, 0, 0))
     out.alpha_composite(small, ((im.width - small.width) // 2, (im.height - small.height) // 2))
     return out
+
+
+def reach(im):
+    """Distance from the centre to the farthest opaque pixel of `im`."""
+    ys, xs = np.nonzero(np.asarray(im)[:, :, 3] > 8)
+    return np.sqrt((xs + 0.5 - im.width / 2) ** 2 + (ys + 0.5 - im.height / 2) ** 2).max()
 
 
 def squircle(size, n=5.0, ss=4):
@@ -248,12 +257,12 @@ def main():
     # Every platform but iOS 26: one flat square, opaque, the system rounds it.
     save(flat(full, FIELD).convert("RGB"), "assets", "images", "icon.png")
 
-    # Android adaptive icon (108 dp canvas): the picture stays inside the 66 dp circle every
-    # launcher mask keeps.
-    safe = S * 33 / 108
-    save(fit(full, safe * 0.94), "assets", "images", "android-icon-foreground.png")
+    # Android adaptive icon (108 dp canvas): the tree stays inside the 66 dp circle every launcher
+    # mask keeps; the lawn and the stream run on under the mask, as they run off the iOS icon.
+    k = min(1.0, S * 33 / 108 * 0.95 / reach(layers["tree"]))
+    save(scaled(full, k), "assets", "images", "android-icon-foreground.png")
     save(gradient(FIELD), "assets", "images", "android-icon-background.png")
-    save(fit(monochrome(layers), safe * 0.94), "assets", "images", "android-icon-monochrome.png")
+    save(scaled(monochrome(layers), k), "assets", "images", "android-icon-monochrome.png")
 
     # Web: the tile with its own corners (a browser tab does not round it).
     tile = flat(full, FIELD, 192)

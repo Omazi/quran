@@ -6,26 +6,10 @@ assets/images/, icon.png, android-icon-foreground.png, android-icon-background.p
 android-icon-monochrome.png, favicon.png, splash-icon.png (decision D38).
 
 They are renders, made on 25 November 2026 by tools/app-icon/make_icon.py from the scene
-tools/app-icon/scene.html. They are pictures: no 3D file is in the app.
-
-The tree
-  Quaternius (quaternius.com), Platformer Game Kit, model Tree_Fruit.glb
-  (SHA-256 805fd79f8e50ae40b9a9faf7449c4f1fdb93ee29b1d78d4ceb130360adb5034c).
-  Licence: CC0 1.0, as given for this kit by the mirror's LICENSES.md ("Platformer Game Kit |
-  CC0-1.0 | https://quaternius.com/packs/ultimateplatformer.html", checked by the mirror's author
-  against quaternius.com on 2026-10-10). The mirror's MIT licence covers its own code only.
-  File used: the third-party GitHub mirror trebeljahr/quaternius-showcase, commit
-  0128ca510d653bb04d6d1e4885bd8890b5050b4f. Its colours were replaced by flat ones in the scene.
-
-Not from a pack
-  The lawn, its earth band, the pool and its edge are plain geometry made by the scene; the
-  colours and the light are the scene's. They belong to the project.
+tools/app-icon/scene.html. Every shape in them is built by that scene (a sphere cap for the lawn,
+a ribbon for the stream, a cylinder and a few icosahedra for the tree, small spheres for the
+fruit); every colour and the light are set there. No 3D model, texture, font or other third-party
+material is in them. They belong to the project.
 
 Tools used to make them, not shipped in the app: three.js 0.187.0 (MIT), run in headless
 Chromium through Playwright (Apache-2.0), Python with Pillow (MIT-CMU) and numpy (BSD-3-Clause).
-
-To do before a store release (as decision D35 asks for the garden pictures)
-  Download the Platformer Game Kit again from quaternius.com, keep the proof of its licence, and
-  render the icon again from that file.
-
-CC0 asks for no credit; this notice is kept for provenance, not because it is required.
