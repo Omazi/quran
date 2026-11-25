@@ -411,42 +411,44 @@ et la formulation de l'écran. Tant que ce n'est pas validé, l'écran garde le 
 _Changerait si_ la personne qualifiée retient une autre règle : seul `letters.ts` change, avec
 ses tests ; les totaux de contrôle sont alors à relire.
 
-## D38 — L'icône de l'appli : la parcelle du jardin, un parterre encore à pousser
+## D38 — L'icône de l'appli : un jeune arbre du jardin au bord de l'eau, en rendu 3D
 
 Proposée le 25 novembre 2026 (développeur d'interface), à la demande du propriétaire, qui veut
-une icône ; jusque-là l'appli portait celle d'Expo. Refaite le même jour après une revue de design
-indépendante (philosophie 5, lisibilité 7, finition 6, fonction 8, originalité 4 : la version vue
-d'en haut se lisait comme une fleur à quatre pétales autour de l'étoile générique). **Le choix
+une icône ; jusque-là l'appli portait celle d'Expo. Troisième version du jour. Les deux premières,
+dessinées en vectoriel, ont été écartées : le plan vu d'en haut se lisait comme une fleur autour de
+l'étoile générique (revue de design : philosophie 5, originalité 4) ; la parcelle vue de trois
+quarts, comme une puce électronique très sombre (coordination). Le propriétaire a choisi un jardin
+rendu à partir de modèles 3D plutôt que dessiné en code (D35) : l'icône suit ce choix. **Le choix
 final revient au propriétaire.**
 
-Ce que montre l'icône : le jardin de l'appli vu de trois quarts, comme l'appli le montre ; une
-parcelle surélevée, trois parterres verts et un quatrième, devant, pas encore poussé ; au centre
-un bassin d'eau claire d'où partent quatre canaux courts ; dans le bassin, l'étoile de la rosace
-d'écoute, en détail. Lire arrose le jardin, qui pousse hizb après hizb. Détail, couleurs, couches,
+Ce que montre l'icône : un jeune arbre du jardin à côté d'un petit bassin d'eau claire, sur une
+pelouse ronde, vus de trois quarts, sur un fond d'eau clair. Détail, couleurs, couches,
 contrastes et pistes écartées : `design/brand-spec.md`, « Icône ».
 
-- **Fichiers** : `assets/expo.icon` (format Icon Composer, quatre groupes séparés pour les
-  apparences par défaut, sombre, teintée et transparente ; déjà désigné par `ios.icon`),
-  `assets/images/icon.png` (1024, opaque, coins carrés), les trois couches Android, `favicon.png`,
-  `splash-icon.png`. Tous sortent de `tools/app-icon/make_icon.py`, qui les refait octet pour octet.
+- **Fichiers** : `assets/expo.icon` (format Icon Composer : fond en dégradé clair et sombre, trois
+  couches PNG, arbre, bassin, pelouse ; déjà désigné par `ios.icon`), `assets/images/icon.png`
+  (1024, opaque, coins carrés), les trois couches Android, `favicon.png`, `splash-icon.png`. Tous
+  sortent de `tools/app-icon/make_icon.py` et de la scène `tools/app-icon/scene.html`, rendues avec
+  l'outil du jardin (three.js dans un navigateur sans écran), à l'identique d'une fois sur l'autre
+  sur la même machine.
 - **Écran de lancement** : inchangé, une couleur unie (blanc, noir en sombre), celle du fond du
   premier écran ; pas de logo (`launching.md › Launch screens`).
-- **Licences** : tout est dessiné par le projet (formes géométriques ; l'étoile reprend la
-  géométrie de `src/features/listening/rosette`). Aucune police, aucune image, aucun modèle de
-  tiers dans les fichiers livrés. Les rendus 3D d'exploration (modèles CC0, D35) ne sont pas livrés.
+- **Licences** : l'arbre est le modèle `tree_default` du Nature Kit de Kenney, CC0 (fichier de
+  licence du kit, miroir GitHub, comme pour D35) ; la pelouse et le bassin sont des formes
+  géométriques du projet ; three.js (MIT) a servi au rendu et n'est pas dans l'appli. Comme pour
+  D35 : retélécharger le kit chez Kenney avant une publication sur l'App Store
+  (`tools/app-icon/NOTICE.txt`).
 - **Vérifié** : rendus à 1024, 180, 120, 60 et 29 pixels sur fond clair et sombre, version
-  sombre, écrans d'accueil, masques Android (rond, carré arrondi, monochrome) ; contrastes
-  calculés ; `icon.json` valide selon un schéma non officiel du format ; `npx expo config` et
+  sombre, écrans d'accueil, masques Android (rond, carré arrondi, monochrome), aperçus teintés ;
+  contrastes mesurés sur le rendu ; deux exécutions de l'outil donnent les mêmes fichiers ;
+  `icon.json` valide selon un schéma non officiel du format ; `npx expo config` et
   `npx expo prebuild` lisent et copient l'icône.
-- **Pas vérifié** : le rendu réel du verre d'iOS 26 (reflets, translucidité, versions teintée et
-  transparente calculées par le système) ; il faut Icon Composer ou un iPhone, et personne n'a de
-  Mac (D24). Les aperçus teintés sont une approximation. À regarder sur la prochaine version
-  TestFlight.
-- **Risques connus** : un dessin fait en code, alors que les jardins dessinés en code ont été
-  refusés (D12) : ici c'est une marque géométrique, comme Apple le demande pour une icône (écart 51
-  de `design/SKILLS.md`). La vue de trois quarts rappelle une tuile de jeu de construction. À
-  29 pixels, la parcelle est petite : il reste un losange vert et un point clair. L'emploi de la
-  marque du hizb est à faire confirmer par une personne qualifiée, comme le nom (D31).
+- **Pas vérifié** : le rendu réel du verre d'iOS 26 sur des couches PNG ombrées (reflets,
+  versions teintée et transparente calculées par le système) ; il faut Icon Composer ou un iPhone,
+  et personne n'a de Mac (D24). À regarder sur la prochaine version TestFlight.
+- **Risques connus** : l'arbre sur une île en low poly est un motif courant (jeux, applis de
+  concentration) ; l'éclairage est dans l'image, alors qu'Apple préfère laisser le système le faire
+  (écart 51 de `design/SKILLS.md`) ; la pelouse et le bas du fond ont presque la même luminance.
 
-_Changerait si_ le propriétaire préfère une autre piste, ou si le rendu sur iPhone déçoit : seules
-les valeurs de `Design` dans `make_icon.py` bougent, et on relance l'outil.
+_Changerait si_ le propriétaire préfère une autre piste, ou si le rendu sur iPhone déçoit : les
+réglages de la scène sont en tête de `make_icon.py`, et on relance l'outil.

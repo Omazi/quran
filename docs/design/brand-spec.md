@@ -120,7 +120,7 @@ animations » (`motion.md › Best practices`). Rien d'autre que les animations 
 ### Icônes et images
 
 SF Symbols, de la graisse du texte voisin (`sf-symbols.md › Weights and scales`). Pas d'emoji, pas
-d'illustration dessinée en code. Le jardin est la seule image : des rendus de modèles 3D (D35). L'icône de l'appli, hors de l'interface, a sa règle (plus bas, « Icône »). Image manquante = emplacement
+d'illustration dessinée en code. Le jardin est la seule image : des rendus de modèles 3D (D35). L'icône de l'appli en est un aussi (plus bas, « Icône »). Image manquante = emplacement
 neutre et nommé.
 
 ### Voix
@@ -133,62 +133,55 @@ titres, comme le système.
 ### Icône
 
 Décision D38. Sources : `app-icons.md` (Apple Design), skill Frontend design (une seule idée
-forte, pas de défaut du genre), revue de design indépendante du 25 novembre 2026 (la première
-version, vue d'en haut, se lisait comme une fleur à quatre pétales autour de l'étoile générique
-des applis musulmanes). Fichiers produits par `tools/app-icon/make_icon.py`.
+forte), deux revues de design du 25 novembre 2026, et le choix du propriétaire pour le jardin en
+images 3D (D35). Fichiers produits par `tools/app-icon/make_icon.py` (scène :
+`tools/app-icon/scene.html`).
 
-**L'idée.** Le jardin de l'appli, tel que l'appli le montre : une parcelle surélevée vue de
-trois quarts (même angle que les images du jardin, 38°), quatre parterres, un bassin d'où partent
-quatre canaux d'eau claire, et un parterre de devant **pas encore poussé** (pâle), parce que le
-jardin pousse hizb après hizb. L'eau est l'élément vif : lire, c'est arroser. Le bassin porte
-l'étoile à huit branches de la rosace d'écoute, en détail, pas en emblème.
+**L'idée.** Un jeune arbre du jardin au bord d'un petit bassin d'eau claire, sur une pelouse
+ronde, vu de trois quarts : lire arrose le jardin. C'est un rendu 3D, comme le jardin de l'appli
+(D35) : l'arbre est un modèle du Nature Kit de Kenney (CC0), la pelouse et le bassin sont des
+formes simples, toutes les couleurs sont unies (aucune texture de photo). Plus d'étoile : la
+rosace reste à l'écran d'écoute.
 
-**Couleurs, par rôle.** Le contraste (formule WCAG) est mesuré entre éléments voisins.
+**Couleurs, par rôle.** Mesurées sur le rendu (luminance médiane, formule WCAG).
 
-| Rôle                | Où                      | Valeur                                               | Contraste                                                                     |
-| ------------------- | ----------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Eau profonde        | Fond, de haut en bas    | `#073338` → `#042125` ; sombre `#03191C` → `#010B0D` | —                                                                             |
-| Eau vive (`accent`) | Bassin et canaux        | `#8FE0EA` (`accentStrong` sombre)                    | 6,6:1 sur le pavement                                                         |
-| Jardin (`growth`)   | Parterres, presque unis | `#417E2B` → `#45822D`, vers le jaune-vert            | 3,1 à 3,3:1 contre l'eau ; 2,0 à 2,1:1 contre le pavement, aidé par la teinte |
-| Pavement            | Dessus de la parcelle   | `#0F4A4E`                                            | 1,4:1 sur le fond ; le flanc `#021416` dessine le bloc                        |
-| Source              | L'étoile                | `#EFFCFD`, la forme la plus claire                   | 1,4:1 sur l'eau : un détail                                                   |
+| Rôle              | Où                   | Valeur                                                                                      |
+| ----------------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| Eau (`accent`)    | Fond, de haut en bas | `#CDF3F7` → `#5CC8D6` (`accent` sombre) ; apparence sombre `#0E6B78` (`accent`) → `#06333A` |
+| Eau vive          | Le bassin            | `#8FE6F1`, légèrement lumineux, bord `#2C9DAE`                                              |
+| Jardin (`growth`) | Feuillage, pelouse   | feuillage `#6ACB66`, pelouse `#A4D86E` ; tronc `#7A4A30`, terre `#7B5638`                   |
 
-L'eau vive est le seul jeton de la section 3 repris tel quel. Le vert des parterres est plus
-sombre et plus jaune que `growth` : avec une eau à `#8FE0EA`, un vert ne tient 3:1 des deux côtés
-qu'autour d'une luminance de 0,18, et le fond doit rester sous 0,03. Ni or ni papier : ils
-restent au mushaf.
+Contrastes : l'arbre contre le haut du fond 3,2:1 ; le bassin contre la pelouse 1,7:1, tenu par
+son bord sombre ; la pelouse contre le bas du fond, à peu près 1:1 en luminance, tenue par la teinte
+et par la bande de terre. Ni or ni papier.
 
 **Couches** (`assets/expo.icon`, format Icon Composer, `app-icons.md › Layer design`) : le fond
-est le dégradé d'Icon Composer lui-même (clair et sombre), pas une image. Quatre groupes de verre,
-du dessus vers le dessous : la source (`spring.svg`), l'eau (`water.svg`, le bassin déborde de
-8 points sur le bord intérieur des parterres), les parterres (`beds.svg`, translucidité 0,12),
-la parcelle (`plot.svg`). Tout en vectoriel, bords nets, aucun effet dessiné
-(`app-icons.md › Visual effects`) : le flanc de la parcelle est une forme, pas une ombre. En
-teinté et en transparent, les opacités gardent l'ordre de clarté : source, eau (85 %), parterres
-(65 %), parcelle (30 %) ; le parterre pas encore poussé y reste pâle, parce que c'est une
-opacité, pas une couleur (`app-icons.md › Appearances`). Les autres fichiers (`icon.png`,
-couches Android, favicon) sont aplatis à partir des mêmes formes. L'écran de lancement reste une
-couleur unie, sans logo (`launching.md › Launch screens`) ; `splash-icon.png` existe mais n'est
-pas affiché.
+est le dégradé d'Icon Composer lui-même (clair et sombre). Trois groupes, du dessus vers le dessous :
+l'arbre (`tree.png`), le bassin (`water.png`, translucidité 0,2), la pelouse (`ground.png`). Des
+PNG à transparence, parce que c'est un rendu (`app-icons.md › Layer design` : PNG pour les images
+matricielles). Chaque couche est entière sous celles du dessus, et coupée seulement par ce qui se
+tient devant elle. En teinté et en transparent, l'ordre de clarté est gardé par l'opacité :
+arbre, bassin (80 %), pelouse (45 %).
 
-**Proportions.** La parcelle couvre 82 % de la largeur ; parterres aux coins arrondis de 11 % de
-leur côté ; 64 points de pavement entre deux parterres à l'écran. Vérifié sur des rendus à 180,
-120, 60 et 29 pixels : à 29 pixels, il reste une parcelle verte et le point clair du bassin.
+**Composition.** Le sujet couvre 80 % de la hauteur et 75 % de la largeur. L'arbre est à gauche
+du bassin, pas au-dessus : centré sur la pelouse ovale, sa silhouette d'une seule teinte (teinté,
+transparent, Android monochrome) se lisait comme un verre à pied. À 29 pixels, on voit un petit
+arbre et de l'eau.
+
+**Écran de lancement** : une couleur unie, sans logo (`launching.md › Launch screens`) ;
+`splash-icon.png` existe mais n'est pas affiché.
 
 **Écarté, et pourquoi** (rendus : voir D38) :
 
-- Le plan vu d'en haut (première version) : quatre pétales autour d'une étoile, lu comme une fleur
-  ou un médaillon ; tout plan à quatre axes vu d'en haut se lit comme un ornement.
-- Des canaux fins et effilés : des rayons de soleil ou une rose des vents ; des canaux longs : une
-  grande croix en X.
-- Le parterre jeune « rempli depuis le bassin » : le front de pousse dessinait un croissant ; plus
-  clair : se lit « sélectionné » ; plus petit : moins clair que le parterre vide.
-- Chaque parterre surélevé à part : les canaux flottaient sur les flancs ; un grand bassin : une
-  araignée.
-- Plus tôt : un arbre ou le plan rendus avec les modèles 3D (détail de photo, illisible à 29 px,
-  pas de couches nettes) ; une goutte qui devient feuille (une poire, le logo écologique courant) ;
-  la rosace seule (la marque de beaucoup d'applis musulmanes) ; la calligraphie de جنتك (pas de
-  police arabe libre sur la machine, et `app-icons.md › Design` déconseille le texte).
+- Le plan du jardin vu d'en haut (première version) : une fleur à quatre pétales autour de
+  l'étoile générique des applis musulmanes.
+- La parcelle vue de trois quarts, en vectoriel (deuxième version) : une puce électronique ou une
+  tuile de jeu, très sombre, petite dans le carré ; un trou sur l'écran d'accueil.
+- Le même arbre et le même bassin en vectoriel plat : une illustration de banque d'images.
+- Un chêne (`tree_oak`) centré au-dessus du bassin : le verre à pied en silhouette ; un arbre en
+  blocs (`tree_detailed`) : trop proche de Minecraft ; un arbre gras (`tree_fat`) : un œuf.
+- Plus tôt : une goutte qui devient feuille, la rosace seule, la calligraphie de جنتك (texte
+  déconseillé par `app-icons.md › Design`).
 
 ## 4. Ce qui manque encore
 

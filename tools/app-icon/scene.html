@@ -1,0 +1,144 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- The app icon's scene (decision D38), rendered by tools/app-icon/make_icon.py in a headless
+     browser. three.js (MIT) and the Kenney Nature Kit models (CC0) are served from the garden
+     render tool, outside this repository; nothing here ships in the app. -->
+<style>html,body{margin:0;background:transparent}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/three/build/three.module.js","three/addons/":"/three/examples/jsm/"}}</script>
+</head>
+<body>
+<script type="module">
+// R1: one young tree beside a small bright pool, on a round lawn. Kenney Nature Kit models (CC0),
+// colours replaced by flat ones by material name. Everything else is plain geometry.
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const loader = new GLTFLoader();
+const cache = {};
+async function model(name) {
+  if (!cache[name]) cache[name] = await loader.loadAsync(`/models/${name}.glb`);
+  return cache[name].scene.clone(true);
+}
+
+function mat(hex, opts = {}) {
+  return new THREE.MeshLambertMaterial({ color: new THREE.Color(hex), flatShading: true, ...opts });
+}
+
+function recolour(obj, colours) {
+  obj.traverse((n) => {
+    if (n.isMesh) {
+      const name = n.material.name;
+      n.material = mat(colours[name] ?? '#ff00ff');
+      n.castShadow = true;
+      n.receiveShadow = true;
+    }
+  });
+  return obj;
+}
+
+function sized(obj, height) {
+  const box = new THREE.Box3().setFromObject(obj);
+  const h = box.max.y - box.min.y;
+  obj.scale.multiplyScalar(height / h);
+  const b2 = new THREE.Box3().setFromObject(obj);
+  obj.position.y -= b2.min.y;
+  return obj;
+}
+
+// A disc with a rounded edge (lathe profile): lawn on top, earth on the side.
+function mound(radius, height, round, segs) {
+  const pts = [new THREE.Vector2(0, height)];
+  const n = 8;
+  for (let i = 0; i <= n; i++) {
+    const a = (Math.PI / 2) * (i / n);
+    pts.push(new THREE.Vector2(radius - round + Math.sin(a) * round, height - round + Math.cos(a) * round));
+  }
+  pts.push(new THREE.Vector2(radius, 0.0));
+  pts.push(new THREE.Vector2(0, 0));
+  return new THREE.LatheGeometry(pts, segs);
+}
+
+window.build = async function (o) {
+  const scene = new THREE.Scene();
+  const parts = {};
+  // lawn
+  const lawnTop = new THREE.Mesh(new THREE.CylinderGeometry(o.radius - o.round + 0.001, o.radius - o.round + 0.001, 0.002, o.segs), mat(o.lawn));
+  const body = new THREE.Mesh(mound(o.radius, o.height, o.round, o.segs), mat(o.earth));
+  // colour the rounded rim like the lawn, the side like earth: split by vertex height
+  const g = body.geometry.toNonIndexed(); body.geometry = g;
+  const col = [], pos = g.attributes.position, lawnC = new THREE.Color(o.lawn), earthC = new THREE.Color(o.earth);
+  for (let i = 0; i < pos.count; i += 3) {
+    const y = (pos.getY(i) + pos.getY(i + 1) + pos.getY(i + 2)) / 3;
+    const c = y > o.height - o.round * 0.55 ? lawnC : earthC;
+    for (let k = 0; k < 3; k++) col.push(c.r, c.g, c.b);
+  }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  body.material = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true });
+  lawnTop.position.y = o.height; body.receiveShadow = true; body.castShadow = true; lawnTop.receiveShadow = true;
+  parts.ground = new THREE.Group(); parts.ground.add(body, lawnTop);
+  // pool: a shallow round basin set into the lawn, a stone rim, water slightly glowing
+  parts.water = new THREE.Group();
+  // the pond's edge: a slightly larger, darker disc just under the water (no stone rim)
+  const rim = new THREE.Mesh(new THREE.CircleGeometry(o.pool + o.rim, 48), mat(o.stone));
+  rim.rotation.x = -Math.PI / 2; rim.position.set(o.poolAt[0], o.height + 0.006, o.poolAt[1]); rim.receiveShadow = true;
+  const water = new THREE.Mesh(new THREE.CircleGeometry(o.pool, 48), mat(o.water, { emissive: new THREE.Color(o.water), emissiveIntensity: o.waterGlow }));
+  water.rotation.x = -Math.PI / 2; water.position.set(o.poolAt[0], o.height + 0.012, o.poolAt[1]); water.receiveShadow = true;
+  parts.water.add(rim, water);
+  if (o.lily) {
+    const lily = recolour(await model('lily_small'), { leafsGreen: o.leaf, leafsDark: o.leafDark });
+    sized(lily, 0.04); lily.scale.multiplyScalar(1); lily.position.set(o.poolAt[0] + o.pool * 0.35, o.height + 0.015, o.poolAt[1] + o.pool * 0.15);
+    parts.water.add(lily);
+  }
+  // tree
+  const tree = recolour(await model(o.tree), { leafsGreen: o.leaf, woodBark: o.bark, leafsDark: o.leafDark });
+  sized(tree, o.treeHeight); tree.rotation.y = o.treeYaw;
+  tree.position.set(o.treeAt[0], o.height, o.treeAt[1]);
+  parts.tree = tree;
+  for (const k of Object.keys(parts)) scene.add(parts[k]);
+  // light: one soft key light, a sky fill
+  scene.add(new THREE.HemisphereLight(new THREE.Color(o.sky), new THREE.Color(o.bounce), o.fill));
+  const sun = new THREE.DirectionalLight(0xffffff, o.key);
+  sun.position.set(...o.sun); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 6; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.02;
+  const s = 3; Object.assign(sun.shadow.camera, { left: -s, right: s, top: s, bottom: -s, near: 0.1, far: 30 });
+  sun.shadow.intensity = o.shadow;
+  scene.add(sun);
+  window.state = { scene, parts };
+  return true;
+};
+
+window.shot = function (o, only, below) {
+  const { scene, parts } = window.state;
+  const W = o.size;
+  if (!window.r) {
+    window.r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: true });
+    window.r.shadowMap.enabled = true; window.r.shadowMap.type = THREE.PCFSoftShadowMap;
+    window.r.setClearColor(0x000000, 0); document.body.appendChild(window.r.domElement);
+  }
+  const r = window.r; r.setPixelRatio(1); r.setSize(W, W, false);
+  // `only`: the parts drawn in colour. `below`: parts drawn as depth only (they hide what is
+  // behind them). Every other part is invisible to the camera but still casts its shadow.
+  const saved = [];
+  for (const [k, g] of Object.entries(parts)) g.traverse((n) => {
+    if (!n.isMesh) return;
+    saved.push([n, n.material.colorWrite, n.material.depthWrite]);
+    const drawn = !only || only.includes(k), occluder = below && below.includes(k);
+    n.material.colorWrite = drawn;
+    n.material.depthWrite = drawn || occluder;
+  });
+  const cam = new THREE.PerspectiveCamera(o.fov, 1, 0.1, 100);
+  const az = THREE.MathUtils.degToRad(o.az), el = THREE.MathUtils.degToRad(o.el);
+  const t = new THREE.Vector3(...o.target);
+  cam.position.set(t.x + Math.sin(az) * Math.cos(el) * o.dist, t.y + Math.sin(el) * o.dist, t.z + Math.cos(az) * Math.cos(el) * o.dist);
+  cam.lookAt(t);
+  cam.setViewOffset(W, W, o.offset[0] * W, o.offset[1] * W, W, W);
+  r.render(scene, cam);
+  for (const [n, cw, dw] of saved) { n.material.colorWrite = cw; n.material.depthWrite = dw; }
+  return r.domElement.toDataURL('image/png');
+};
+window.ready = true;
+</script>
+</body>
+</html>
