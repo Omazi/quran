@@ -8,10 +8,11 @@
 import { PAGE_COUNT } from '@/domain/quran';
 import type { ReadingEntry, ReadingJournal } from '@/domain/khatm';
 import { addDays, daysBetween, parseLocalDate, type LocalDate } from '@/domain/shared/local-date';
+import type { SecondsByDay } from '@/domain/stats';
 
-import { STORED_DATA_VERSION, STORED_DATE_RANGE } from './config';
+import { EMPTY_TIME_SPENT, MAX_TIME_DAYS, STORED_DATA_VERSION, STORED_DATE_RANGE } from './config';
 import { readStoredDocument } from './stored-data';
-import type { AppData } from './types';
+import type { AppData, AppDataToWrite } from './types';
 
 /**
  * A place that keeps one text for the person, outside the app's storage. Declared here,
@@ -52,13 +53,15 @@ const FIRST_PAGE = 1;
 type FullKhatma = readonly (readonly [number, string])[];
 /** A finished khatma reduced to what its badge shows: `[first day, last day]`. */
 type ReducedKhatma = readonly [number, number];
+/** One day of time: `[day, app seconds, reader seconds]`. */
+type WrittenDayOfTime = readonly [number, number, number];
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /** Whether there is anything a copy could bring back. A first launch in progress has nothing. */
-export function hasProgress({ settings, journal }: AppData): boolean {
+export function hasProgress({ settings, journal }: Pick<AppData, 'settings' | 'journal'>): boolean {
   return settings.onboardingCompleted || journal.length > 0;
 }
 
@@ -121,19 +124,28 @@ function writeReducedKhatma(entries: readonly ReadingEntry[]): ReducedKhatma {
   return [first, last];
 }
 
+/** The time counters, day by day in the order of the days, in the compact form of a copy. */
+function writeTimeSpent(timeSpent: SecondsByDay): WrittenDayOfTime[] {
+  return Object.entries(timeSpent)
+    .map(([date, { app, reader }]) => [toDayNumber(parseLocalDate(date)), app, reader] as const)
+    .sort(([a], [b]) => a - b);
+}
+
 /**
- * The progress as the text of a copy, in a compact form: days as numbers, pages as ranges.
+ * The progress as the text of a copy, in a compact form: days as numbers, pages as ranges. The
+ * time counters follow the settings, and are always written whole.
  *
  * When that text would pass `BACKUP_SIZE_LIMIT`, finished khatmas are reduced to the two dates of
  * their badge, the oldest first and only as many as needed. The khatma in progress and the last
  * finished one always stay whole: they are what the garden and the streak show. Null when even
  * that does not fit: no copy is then written.
  */
-export function writeBackupDocument(data: AppData): string | null {
+export function writeBackupDocument(data: AppDataToWrite): string | null {
   const khatmas = groupByKhatma(data.journal);
   const written: string[] = khatmas.map((entries) => JSON.stringify(writeFullKhatma(entries)));
+  const time = JSON.stringify(writeTimeSpent(data.timeSpent ?? EMPTY_TIME_SPENT));
   const assemble = () =>
-    `{"f":${BACKUP_FORMAT},"v":${STORED_DATA_VERSION},"s":${JSON.stringify(data.settings)},"k":[${written.join(',')}]}`;
+    `{"f":${BACKUP_FORMAT},"v":${STORED_DATA_VERSION},"s":${JSON.stringify(data.settings)},"t":${time},"k":[${written.join(',')}]}`;
 
   // The khatma in progress is the last one; every khatma before it is finished.
   const lastFinished = khatmas.length - 2;
@@ -208,6 +220,25 @@ function readKhatma(value: unknown, khatm: number): ReadingEntry[] | null {
 }
 
 /**
+ * The time counters of a copy, as the record the stored document holds, or null when they are not
+ * written as expected. Every day is checked again by the stored document's own rules afterwards.
+ */
+function readTimeSpent(value: unknown): Record<string, unknown> | null {
+  if (!Array.isArray(value) || value.length > MAX_TIME_DAYS) return null;
+  const days: Record<string, unknown> = {};
+  for (const written of value) {
+    if (!Array.isArray(written) || written.length !== 3) return null;
+    const [day, app, reader]: readonly unknown[] = written;
+    if (!isDayNumber(day)) return null;
+    const date = addDays(FIRST_DAY, day);
+    // A day written twice is not something the app writes: the copy is damaged.
+    if (date in days) return null;
+    days[date] = { app, reader };
+  }
+  return days;
+}
+
+/**
  * Reads the text of a copy. A copy is trusted no more than the app's own storage: its form, its
  * size, then every setting and the whole journal are checked the same way. It is taken whole or
  * not at all: null for a copy that is damaged, of an unknown form, or only partly sound.
@@ -222,7 +253,7 @@ export function readBackupDocument(raw: string | null): AppData | null {
     return null;
   }
   if (!isRecord(parsed)) return null;
-  const { f: format, v: version, s: settings, k: khatmas } = parsed;
+  const { f: format, v: version, s: settings, k: khatmas, t: time } = parsed;
   if (format !== BACKUP_FORMAT || !Array.isArray(khatmas)) return null;
   if (khatmas.length > BACKUP_MAX_KHATMAS) return null;
 
@@ -232,7 +263,14 @@ export function readBackupDocument(raw: string | null): AppData | null {
     if (entries === null) return null;
     for (const entry of entries) journal.push(entry);
   }
-  const reading = readStoredDocument({ version, settings, journal });
-  if (reading.settings === null || reading.journal === null) return null;
-  return { settings: reading.settings, journal: reading.journal };
+  // A copy of an older version has no time: its upgrade supplies an empty one (and ignores `t`).
+  const reading = readStoredDocument({
+    version,
+    settings,
+    journal,
+    timeSpent: time === undefined ? undefined : readTimeSpent(time),
+  });
+  const { timeSpent } = reading;
+  if (reading.settings === null || reading.journal === null || timeSpent === null) return null;
+  return { settings: reading.settings, journal: reading.journal, timeSpent };
 }

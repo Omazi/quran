@@ -1,4 +1,6 @@
 import type { PageRead, Pause, ReadingJournal } from '@/domain/khatm';
+import type { LocalDate } from '@/domain/shared/local-date';
+import type { SecondsByDay } from '@/domain/stats';
 import type { QuietHours, ReminderSettings, TimeOfDay } from '@/domain/reminders';
 import type { AppLanguage } from '@/i18n';
 
@@ -35,6 +37,27 @@ export interface AppData {
   readonly settings: AppSettings;
   /** The reading journal, built by the khatm module only. */
   readonly journal: ReadingJournal;
+  /**
+   * Seconds the app was in the foreground, by local day: all of it, and inside the reader (D37).
+   * A day without time has no key. Counted by the app, never derived: the journal holds no time.
+   */
+  readonly timeSpent: SecondsByDay;
+}
+
+/**
+ * What can be written to the device or to the copy of the progress: `AppData`, where a missing
+ * `timeSpent` stands for "no time counted yet" (data from before the time counters existed).
+ */
+export type AppDataToWrite = Omit<AppData, 'timeSpent'> & Partial<Pick<AppData, 'timeSpent'>>;
+
+/** Foreground time to add to a day, in whole seconds. The reader is part of the app. */
+export interface ForegroundTime {
+  /** The local day the time was spent. */
+  readonly date: LocalDate;
+  /** Seconds in the foreground, in the whole app: a whole number from 0. */
+  readonly appSeconds: number;
+  /** Of those, seconds in the reader: a whole number from 0 to `appSeconds`. */
+  readonly readerSeconds: number;
 }
 
 /**
@@ -71,4 +94,12 @@ export interface AppState extends AppData {
    * `STORED_DATE_RANGE`, for an end before the start, and beyond `MAX_PAUSES` pauses.
    */
   addPause: (pause: Pause) => void;
+  /**
+   * Adds foreground time to a day (D37). Every call writes the document and the copy of the
+   * progress: the caller adds in batches (every minute, when the app goes to the background), not
+   * every second. Throws a `RangeError` for a day outside `STORED_DATE_RANGE`, for seconds that
+   * are not whole numbers from 0, for reader seconds above the app seconds, and when the day
+   * would pass 25 hours. Adding nothing changes nothing.
+   */
+  addForegroundTime: (time: ForegroundTime) => void;
 }

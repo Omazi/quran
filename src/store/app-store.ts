@@ -1,13 +1,17 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
 
 import { EMPTY_JOURNAL, recordPageRead } from '@/domain/khatm';
+import type { LocalDate } from '@/domain/shared/local-date';
+import { MAX_SECONDS_PER_DAY, type SecondsByDay } from '@/domain/stats';
 import { isSupportedLanguage } from '@/i18n';
 
 import {
   DAILY_GOAL_RANGE,
   DEFAULT_DAILY_GOAL_PAGES,
   DEFAULT_REMINDERS,
+  EMPTY_TIME_SPENT,
   MAX_PAUSES,
+  MAX_TIME_DAYS,
   REJECTED_DATA_KEY,
   RESET_NOTICE_KEY,
   STORED_DATA_KEY,
@@ -37,6 +41,7 @@ import type {
   AppSettings,
   AppState,
   DataResetNotice,
+  ForegroundTime,
   ReminderSettings,
   ReminderTime,
 } from './types';
@@ -142,6 +147,40 @@ function isSameReminders(a: ReminderSettings, b: ReminderSettings): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
+/** Whole seconds from 0: what a duration measured by the app is made of. */
+function isWholeSeconds(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+/**
+ * The time counters with some foreground time added to a day. The oldest days go when there are
+ * more than `MAX_TIME_DAYS`. Throws a `RangeError` for anything the stored document would refuse.
+ */
+function withForegroundTime(current: SecondsByDay, time: ForegroundTime): SecondsByDay {
+  const { date, appSeconds, readerSeconds } = time;
+  if (!isStorableDate(date)) {
+    throw new RangeError(
+      `Time can only be counted on a day from ${STORED_DATE_RANGE.earliest} to ${STORED_DATE_RANGE.latest}, received "${String(date)}".`,
+    );
+  }
+  if (!isWholeSeconds(appSeconds) || !isWholeSeconds(readerSeconds) || readerSeconds > appSeconds) {
+    throw new RangeError(
+      `Time must be whole seconds, and the reader seconds no more than the app seconds, received ${String(appSeconds)} and ${String(readerSeconds)}.`,
+    );
+  }
+  const before = current[date] ?? { app: 0, reader: 0 };
+  const after = { app: before.app + appSeconds, reader: before.reader + readerSeconds };
+  if (after.app > MAX_SECONDS_PER_DAY) {
+    throw new RangeError(
+      `A day cannot hold more than 25 hours of time, received ${after.app} seconds on ${date}.`,
+    );
+  }
+  // Days are written as YYYY-MM-DD, so sorting the texts sorts the days.
+  const days = Object.entries({ ...current, [date]: after }).sort(([a], [b]) => (a < b ? -1 : 1));
+  // The keys come from storable days: the cast only brings back the branded key type.
+  return Object.fromEntries(days.slice(-MAX_TIME_DAYS)) as Record<LocalDate, typeof after>;
+}
+
 /** What the state holds besides the stored document. */
 export interface StateStoreOptions {
   readonly dataResetNotice?: DataResetNotice | null;
@@ -164,6 +203,7 @@ export function createStateStore(
     return {
       settings: initial.settings,
       journal: initial.journal,
+      timeSpent: initial.timeSpent,
       dataResetNotice,
 
       dismissDataResetNotice: () => {
@@ -222,6 +262,11 @@ export function createStateStore(
           throw new RangeError(`No more than ${MAX_PAUSES} pauses can be kept.`);
         }
         changeSettings({ pauses: [...pauses, pause] });
+      },
+
+      addForegroundTime: (time) => {
+        const timeSpent = withForegroundTime(get().timeSpent, time);
+        if (time.appSeconds > 0) set({ timeSpent });
       },
     };
   });
@@ -289,6 +334,7 @@ export async function loadAppStore({
   const local: AppData = {
     settings: reading.settings ?? createFirstLaunchSettings(drawUserSeed()),
     journal: reading.journal ?? EMPTY_JOURNAL,
+    timeSpent: reading.timeSpent ?? EMPTY_TIME_SPENT,
   };
 
   // A device that could not read its own storage does not know what it holds: it neither adopts
@@ -367,11 +413,16 @@ export async function loadAppStore({
   };
 
   store.subscribe((state, previous) => {
-    if (state.settings !== previous.settings || state.journal !== previous.journal) save(state);
+    const hasChanged =
+      state.settings !== previous.settings ||
+      state.journal !== previous.journal ||
+      state.timeSpent !== previous.timeSpent;
+    if (hasChanged) save(state);
   });
   // A fresh start is written at once, and so are an adopted copy and a document upgraded from
   // an older version.
-  const isStartingFresh = reading.settings === null || reading.journal === null;
+  const isStartingFresh =
+    reading.settings === null || reading.journal === null || reading.timeSpent === null;
   if (restored !== null || isStartingFresh || reading.wasUpgraded) save(store.getState());
   // Otherwise the device is right: its data replaces the copy.
   else backUp(store.getState());
