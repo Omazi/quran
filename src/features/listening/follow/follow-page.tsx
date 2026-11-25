@@ -13,7 +13,7 @@ import {
 } from '@/ui';
 
 import { verseMarkText } from '../passage-words';
-import type { FollowLine } from './use-voice-follow';
+import type { FollowLine } from './follow-lines';
 
 export interface FollowPageProps {
   readonly lines: readonly FollowLine[];

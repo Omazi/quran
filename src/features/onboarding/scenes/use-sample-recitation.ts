@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { quranRepository } from '@/data/quran';
 import type { QuranRepository } from '@/domain/quran';
-import type { FollowLine } from '@/features/listening/follow/use-voice-follow';
+import type { FollowLine } from '@/features/listening/follow/follow-lines';
 import { storyLayout } from '@/ui';
 
 /** The page of the mockup of the voice following (voix.png) and the verse it is recited from. */
