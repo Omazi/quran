@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, StyleSheet, View, AccessibilityInfo } from 'react-native';
 
@@ -6,20 +6,29 @@ import {
   Button,
   ContentUnavailable,
   ProgressIndicator,
+  AppText,
   Screen,
   layout,
   readerShapes,
   spacing,
   useColors,
+  useReducedMotion,
+  useSafeInsets,
   type IconSymbol,
 } from '@/ui';
+import { splitVerseWords, type VerseRef } from '@/domain/quran';
+// Deep import: the listening feature's index imports the reader (its Quran font), so importing
+// that index here would make a cycle. The bar is a leaf component of the listening screens.
+import { FollowBar } from '@/features/listening/follow/follow-bar';
 
 import { READER_CONFIG } from './config';
+import { followStartVerse, verseLook } from './follow-model';
 import { FeedbackPill, PageProgressLine, ReaderBottomBar, ReaderHeader } from './reader-bar';
 import { ReaderScroll } from './reader-scroll';
 import type { ReadingFeedback } from './reading-feedback';
 import type { ReaderActions, ReaderModel } from './use-reader';
 import type { QuranFontStatus } from './use-quran-font';
+import type { RecitationFollow } from './use-recitation-follow';
 import type { ScriptTexts } from './use-script-texts';
 
 const NOT_FOUND_SYMBOL: IconSymbol = { ios: 'book.closed', android: 'book_2' };
@@ -41,8 +50,8 @@ export interface ReaderScreenProps {
   openContents: () => void;
   /** Leaves the reader for where the person came from. */
   close: () => void;
-  /** Opens the listening screen, from the microphone. */
-  openListening: () => void;
+  /** The recitation followed from the microphone (spec 3b). */
+  follow: RecitationFollow;
 }
 
 /**
@@ -67,11 +76,49 @@ export function ReaderScreen({
   initialPage,
   openContents,
   close,
-  openListening,
+  follow,
 }: ReaderScreenProps) {
   const { t } = useTranslation('reader');
   const colors = useColors();
+  const isMotionReduced = useReducedMotion();
+  const insets = useSafeInsets();
   const feedbackText = useFeedbackText(model.feedback);
+  const isFollowing = follow.status === 'starting' || follow.status === 'following';
+  const followMessage =
+    follow.status === 'denied'
+      ? t('follow.denied')
+      : follow.status === 'failed'
+        ? t('follow.failed')
+        : null;
+  const { track, state } = follow;
+  const script = texts.status === 'ready' ? texts.script : model.script;
+  const lookOfVerse = useMemo(
+    () =>
+      track.length === 0
+        ? null
+        : (ref: VerseRef, wordCount: number) => verseLook(track, state, ref, script, wordCount),
+    [script, state, track],
+  );
+  // The word to read again in the script shown: in the simple script, the word at the same place
+  // of the verse when both spellings count its words alike, otherwise the Uthmani word.
+  const rereadWord = useMemo(() => {
+    const reread = state.reread === null ? undefined : track[state.reread];
+    if (reread === undefined || texts.status !== 'ready' || texts.script === 'uthmani') {
+      return follow.rereadWord;
+    }
+    const uthmaniCount = track.filter(
+      (word) => word.surah === reread.surah && word.verse === reread.verse,
+    ).length;
+    const simpleWords = splitVerseWords(texts.textOf(reread));
+    return simpleWords.length === uthmaniCount
+      ? (simpleWords[reread.word] ?? follow.rereadWord)
+      : follow.rereadWord;
+  }, [follow.rereadWord, state.reread, texts, track]);
+  const { page, surah } = model;
+  const startFollowing = useCallback(
+    () => follow.start(followStartVerse(page, surah)),
+    [follow, page, surah],
+  );
 
   // Heard once, wherever the pill shows (feedback.md › Make sure all feedback is accessible).
   useEffect(() => {
@@ -100,10 +147,20 @@ export function ReaderScreen({
         onToggleBookmark={actions.toggleBookmark}
       />
       <View style={styles.pillRow} testID="reader-pill-row">
-        {feedbackText === null ? (
-          <PageProgressLine progress={model.pageProgress} />
-        ) : (
+        {feedbackText !== null ? (
           <FeedbackPill key={feedbackText} text={feedbackText} />
+        ) : followMessage !== null ? (
+          <AppText
+            variant="footnote"
+            color="inkSecondary"
+            align="center"
+            accessibilityLiveRegion="polite"
+            testID="reader-follow-message"
+          >
+            {followMessage}
+          </AppText>
+        ) : (
+          <PageProgressLine progress={model.pageProgress} />
         )}
       </View>
       <View style={[styles.text, { backgroundColor: colors.paper }]} testID="reader-text">
@@ -129,12 +186,16 @@ export function ReaderScreen({
             onObserve={actions.observe}
             onTap={actions.toggleBars}
             accessibilityLabel={t('page.scroll')}
+            lookOfVerse={lookOfVerse}
+            followTarget={follow.target}
+            isMotionReduced={isMotionReduced}
           />
         )}
       </View>
       <ReaderBottomBar
-        isVisible={model.barsVisible}
-        onListen={openListening}
+        // While a voice is followed, the floating bar of voix.png takes its place; its room stays.
+        isVisible={model.barsVisible && !isFollowing}
+        onListen={startFollowing}
         script={model.script}
         onChooseScript={actions.chooseScript}
         canShrinkText={model.canShrinkText}
@@ -146,6 +207,19 @@ export function ReaderScreen({
           count: READER_CONFIG.textSizeScales.length,
         })}
       />
+      {isFollowing ? (
+        <View
+          style={[styles.followBar, { bottom: insets.bottom + spacing.sm }]}
+          testID="reader-follow"
+        >
+          <FollowBar
+            subscribeToLevel={follow.subscribeToLevel}
+            reducedMotion={isMotionReduced}
+            rereadWord={rereadWord}
+            onStop={follow.stop}
+          />
+        </View>
+      ) : null}
     </Screen>
   );
 }
@@ -225,6 +299,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenMargin,
   },
   text: { flex: 1 },
+  // Floating over the bottom of the page, as in voix.png, where the bottom bar keeps its room.
+  followBar: {
+    position: 'absolute',
+    start: layout.screenMargin,
+    end: layout.screenMargin,
+  },
   centred: { flex: 1, justifyContent: 'center', paddingHorizontal: layout.screenMargin },
   action: { paddingHorizontal: layout.screenMargin, paddingVertical: spacing.md },
 });

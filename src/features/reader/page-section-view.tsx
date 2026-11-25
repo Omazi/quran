@@ -10,11 +10,20 @@ import {
 } from 'react-native';
 
 import { quranStructure } from '@/data/quran';
-import type { VerseRef } from '@/domain/quran';
+import { splitVerseWords, WORD_SEPARATOR, type VerseRef } from '@/domain/quran';
 import type { ReaderScript } from '@/store';
-import { AppText, ContentUnavailable, layout, spacing, useColors, type IconSymbol } from '@/ui';
+import {
+  AppText,
+  ContentUnavailable,
+  layout,
+  spacing,
+  useColors,
+  useColorValues,
+  type IconSymbol,
+} from '@/ui';
 
 import { READER_CONFIG } from './config';
+import type { VerseLook, WordLook } from './follow-model';
 import { pageSection } from './reading-sections';
 import { scriptTextStyle } from './script-fonts';
 import { buildSectionBlocks, type SectionBlock, type SectionVerse } from './section-content';
@@ -38,7 +47,17 @@ export interface PageSectionViewProps {
   onTap: () => void;
   /** Where each surah segment of the page lies inside the section, for the bar. */
   onSegmentLayout: (page: number, index: number, surah: number, frame: LayoutRectangle) => void;
+  /** Where the verses of each surah segment lie inside it, for the scroll that follows a voice. */
+  onParagraphLayout: (page: number, index: number, frame: LayoutRectangle) => void;
+  /**
+   * While a recitation is followed (spec 3b): how a verse looks, given its number of words in the
+   * script shown; null when the voice has not reached it. Null when nothing is followed.
+   */
+  lookOfVerse: ((ref: VerseRef, wordCount: number) => VerseLook | null) | null;
 }
+
+/** What a verse of a paragraph needs to draw itself. */
+type LookOfVerse = PageSectionViewProps['lookOfVerse'];
 
 /**
  * One page of the mushaf in the scroll (D41): its verses flowing as one paragraph per surah,
@@ -54,6 +73,8 @@ export const PageSectionView = memo(function PageSectionView({
   textOf,
   onTap,
   onSegmentLayout,
+  onParagraphLayout,
+  lookOfVerse,
 }: PageSectionViewProps) {
   const { t } = useTranslation('reader');
   const blocks = useMemo((): readonly SectionBlock[] | null => {
@@ -114,6 +135,13 @@ export const PageSectionView = memo(function PageSectionView({
               script={script}
               textSize={textSize}
               lineHeight={lineHeight}
+              lookOfVerse={lookOfVerse}
+              onLayout={
+                block.kind === 'verses'
+                  ? (event: LayoutChangeEvent) =>
+                      onParagraphLayout(page, index, event.nativeEvent.layout)
+                  : undefined
+              }
             />
           ))}
         </View>
@@ -128,11 +156,13 @@ interface BlockProps {
   script: ReaderScript;
   textSize: number;
   lineHeight: number;
+  lookOfVerse: LookOfVerse;
+  onLayout?: (event: LayoutChangeEvent) => void;
 }
 
 const base = scriptTextStyle;
 
-function Block({ block, script, textSize, lineHeight }: BlockProps) {
+function Block({ block, script, textSize, lineHeight, lookOfVerse, onLayout }: BlockProps) {
   if (block.kind === 'surah-header') {
     return (
       <View style={styles.header}>
@@ -162,20 +192,62 @@ function Block({ block, script, textSize, lineHeight }: BlockProps) {
         textSize <= base(script).fontSize * READER_CONFIG.justifyUpToScale ? 'justify' : 'auto'
       }
       testID={`verses-${block.surah}-${block.verses[0]?.verse ?? 0}`}
+      onLayout={onLayout}
     >
       {block.verses.map((verse, index) => (
-        <VerseRun key={verse.verse} verse={verse} isLast={index === block.verses.length - 1} />
+        <VerseRun
+          key={verse.verse}
+          verse={verse}
+          isLast={index === block.verses.length - 1}
+          look={lookOfVerse?.(verse, splitVerseWords(verse.text).length) ?? null}
+        />
       ))}
     </ScriptText>
   );
 }
 
-/** A verse inside the paragraph: its text, untouched, then its mark in the ornament colour. */
-function VerseRun({ verse, isLast }: { verse: SectionVerse; isLast: boolean }) {
+/**
+ * A verse inside the paragraph: its text, untouched, then its mark in the ornament colour. While
+ * a voice is followed (voix.png), the word just recited lies on light gold and the word to read
+ * again is red on rose; the words are the verse's own, split at its single spaces and joined by
+ * them again, so the text stays exactly the data's.
+ */
+function VerseRun({
+  verse,
+  isLast,
+  look,
+}: {
+  verse: SectionVerse;
+  isLast: boolean;
+  look: VerseLook | null;
+}) {
   const colors = useColors();
+  const values = useColorValues();
+  const styleOf = (wordLook: WordLook) =>
+    wordLook === 'current'
+      ? { backgroundColor: values.followCurrentBack }
+      : wordLook === 'reread'
+        ? { color: values.followRereadInk, backgroundColor: values.followRereadBack }
+        : undefined;
+  let text: React.ReactNode = verse.text;
+  if (look?.kind === 'verse') {
+    text = <Text style={styleOf(look.look)}>{verse.text}</Text>;
+  } else if (look?.kind === 'words') {
+    text = splitVerseWords(verse.text).map((word, index) => (
+      <Text key={index}>
+        {index === 0 ? null : WORD_SEPARATOR}
+        <Text
+          style={styleOf(look.looks[index] ?? 'upcoming')}
+          testID={`verse-${verse.surah}:${verse.verse}-word-${index}`}
+        >
+          {word}
+        </Text>
+      </Text>
+    ));
+  }
   return (
     <>
-      <Text testID={`verse-${verse.surah}:${verse.verse}`}>{verse.text}</Text>
+      <Text testID={`verse-${verse.surah}:${verse.verse}`}>{text}</Text>
       <Text style={{ color: colors.ornament }}>{`${BEFORE_MARK}${verse.mark}`}</Text>
       {isLast ? null : BETWEEN_VERSES}
     </>
@@ -190,6 +262,7 @@ interface ScriptTextProps {
   align: 'center' | 'justify' | 'auto';
   children: React.ReactNode;
   testID: string;
+  onLayout?: (event: LayoutChangeEvent) => void;
 }
 
 /**
@@ -198,11 +271,19 @@ interface ScriptTextProps {
  * reader's own factor; it reads right to left whatever the interface, and VoiceOver reads it in
  * Arabic.
  */
-function ScriptText({ script, textSize, lineHeight, align, children, testID }: ScriptTextProps) {
+function ScriptText({
+  script,
+  textSize,
+  lineHeight,
+  align,
+  children,
+  testID,
+  onLayout,
+}: ScriptTextProps) {
   const colors = useColors();
   const { fontFamily, ramp } = scriptTextStyle(script);
   return (
-    <View style={styles.rightToLeft}>
+    <View style={styles.rightToLeft} onLayout={onLayout} testID={`${testID}-box`}>
       <Text
         accessibilityLanguage="ar"
         dynamicTypeRamp={ramp}

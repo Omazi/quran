@@ -41,7 +41,8 @@
       "title": "Juz {{juz}}",
       "hizb": "Hizb {{hizb}}",
       "start": "{{surah}}, verset {{verse}} · Page {{page}}"
-    }
+    },
+    "recognize": "Reconnaître un passage"
   },
   "page": {
     "subtitle": "Juz {{juz}}, Hizb {{hizb}} · Page {{page}}",
@@ -64,7 +65,7 @@
   "bar": {
     "back": "Retour",
     "bookmark": "Marque-page",
-    "listen": "Écouter un passage"
+    "listen": "Réciter, suivi par l’appli"
   },
   "script": {
     "label": "Écriture",
@@ -118,5 +119,9 @@
     "title": "Texte indisponible",
     "description": "La police du Coran n’a pas pu être chargée. Ferme l’appli, puis rouvre-la.",
     "action": "Ouvrir le sommaire"
+  },
+  "follow": {
+    "denied": "Le micro n’est pas autorisé. Autorise-le dans les Réglages pour que l’appli suive ta récitation.",
+    "failed": "L’écoute n’a pas pu démarrer. Réessaie dans un instant."
   }
 }

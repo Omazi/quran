@@ -540,6 +540,12 @@ maquette `mushaf.png`. Détail : `specs/reader.md`, sections 2, 3 et 9.
   sous le titre montre qu'une page est en train de compter, puis une goutte « cette page
   comptera » ; l'écran **reste allumé** dans le lecteur (`expo-keep-awake`, MIT, version
   choisie par `npx expo install`), rendu à la veille en arrière-plan et en quittant le lecteur.
+- **Micro vert = suivi de la récitation** (propriétaire, 25 novembre 2026) : dans le lecteur, depuis
+  le verset à la ligne de lecture, avec le vrai moteur (D42) ; mot récité en or, mot à relire en
+  rouge sur rose, défilement qui garde la ligne courante à la ligne de lecture, barre verte de
+  voix.png ; une page suivie en entière par la voix compte comme lue (une fois, règles D8).
+  L'écran d'essai `/voice-follow` est retiré : son adresse ouvre le lecteur en suivi. La
+  reconnaissance de passage s'ouvre depuis l'onglet Coran (bouton à côté du titre).
 - **Écriture uthmani** : texte et police du Complexe, version 0.18 (D19, D21), inchangés.
 - **Écriture simple** : la colonne `aya_text_emlaey` du **même fichier** du Complexe
   (`hafsData_v18.json`, déjà dans `tools/quran-data/sources`, même empreinte), copiée sans aucun

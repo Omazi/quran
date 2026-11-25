@@ -128,6 +128,38 @@ Décisions du propriétaire du 25 novembre 2026 (D41 et sa suite).
 - La lecture suivie à la voix comptera autrement ; cette règle ne vaut que pour la lecture des
   yeux.
 
+## 3b. Suivre sa récitation (micro vert)
+
+Décision du propriétaire du 25 novembre 2026 : le micro vert du lecteur lance le **suivi de la
+récitation** à partir de la position courante (et non plus la reconnaissance de passage, qui
+s'ouvre depuis l'onglet Coran, bouton à côté du titre).
+
+- **Moteur** : celui de l'appli (`@/data/speech`, porte `speech-engine-door`), le moteur simulé
+  dans les versions de développement et de test. Le micro est demandé **au moment où l'on
+  touche** le bouton ; refusé, la rangée de la pastille le dit et rien ne démarre.
+- **Départ** : le premier verset, sur la page en lecture, de la sourate sous la ligne de lecture
+  (la place d'un verset dans un paragraphe ne se mesure pas : le suivi part du début de cette
+  partie de la page).
+- **Règle** : chaque mot entendu est comparé aux **mots uthmani** (`followRecitation`,
+  `isSameWordHeard`), sur une piste de trois pages prolongée en avançant. Le mot qui vient d'être
+  récité est sur fond or clair ; les mots récités restent à l'encre ; un mot sauté ou mal lu est
+  rouge sur rose et la barre flottante dit « Relis ce mot : … ». Le texte reste exactement celui
+  des données : les mots sont ceux du verset, coupés à ses espaces et rejoints par elles.
+- **Écriture simple** : un verset qui a autant de mots dans les deux écritures s'allume mot par
+  mot (même rang) ; un verset dont les deux écritures comptent les mots différemment (61
+  versets) s'allume **en entier**, parce qu'un mot de l'une n'est pas toujours un mot de l'autre.
+- **Défilement** : la ligne du mot courant reste à la ligne de lecture. Sa ligne est estimée par
+  la part des caractères du paragraphe avant le mot (les lignes justifiées en portent à peu près
+  autant). Défilement doux ; avec « réduire les animations », saut d'une ligne à l'autre.
+- **Barre** : la barre verte flottante de voix.png (niveau de la voix, « J'écoute », arrêt)
+  remplace la barre du bas, dont la place reste.
+- **Arrêt** : bouton d'arrêt, passage en arrière-plan (appel, verrouillage), fin du moteur, ou
+  20 secondes sans mot entendu.
+- **Pages comptées par la voix** : une page dont chaque mot a été récité depuis son premier
+  compte comme lue, sans minuterie, **une seule fois**, avec les mêmes règles de khatma (D8) ; la
+  page où le suivi a commencé au milieu ne compte pas par la voix (elle peut compter par le temps).
+- `/voice-follow?page=294&from=18:10` ouvre le lecteur en suivi (`/reader/294?follow=1&from=18:10`).
+
 ## 4. Depuis l'accueil
 
 « Lire et arroser » ouvre le lecteur à la page de reprise.

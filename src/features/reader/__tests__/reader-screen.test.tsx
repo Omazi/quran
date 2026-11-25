@@ -37,6 +37,7 @@ import { READER_KEEP_AWAKE_TAG } from '../use-keep-reader-awake';
 import { ReaderNotFound, ReaderScreen } from '../reader-screen';
 import { SIMPLE_SCRIPT_FONT_FAMILY } from '../script-fonts';
 import { useReader, type ReaderActions, type ReaderModel } from '../use-reader';
+import { useRecitationFollow, type RecitationFollow } from '../use-recitation-follow';
 import type { QuranFontStatus } from '../use-quran-font';
 import { useScriptTexts } from '../use-script-texts';
 
@@ -63,6 +64,11 @@ const TODAY = deviceLocalDate(clock());
 function Reader({ page, fontStatus = 'ready' }: { page: number; fontStatus?: QuranFontStatus }) {
   const { model, actions } = useReader(page, { monotonicClock, clock });
   const texts = useScriptTexts(model.script);
+  const follow = useRecitationFollow({
+    createEngine: startFollowing,
+    uthmaniTextOf: null,
+    onPagesFollowed: actions.countPagesReadAloud,
+  });
   return (
     <ReaderScreen
       model={model}
@@ -72,14 +78,25 @@ function Reader({ page, fontStatus = 'ready' }: { page: number; fontStatus?: Qur
       initialPage={page}
       openContents={openContents}
       close={close}
-      openListening={openListening}
+      follow={follow}
     />
   );
 }
 
 const openContents = jest.fn();
 const close = jest.fn();
-const openListening = jest.fn();
+/** The microphone asks for an engine: here none, the following itself is tested elsewhere. */
+const startFollowing = jest.fn((): null => null);
+const IDLE_FOLLOW: RecitationFollow = {
+  status: 'idle',
+  track: [],
+  state: { next: 0, current: null, reread: null },
+  target: null,
+  rereadWord: null,
+  subscribeToLevel: null,
+  start: jest.fn(),
+  stop: jest.fn(),
+};
 
 async function openReader(store: AppStore, page: number, fontStatus?: QuranFontStatus) {
   const view = await render(
@@ -471,7 +488,7 @@ describe('the bar follows the reading (docs/design/mushaf.png)', () => {
     await fireEvent.press(screen.getByTestId('page-section-20'));
     const header = screen.getByTestId('reader-header', { includeHiddenElements: true });
     expect(within(header).queryByRole('button', { name: 'Retour' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Écouter un passage' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Réciter, suivi par l’appli' })).toBeNull();
     expect(styleOf(header)).toMatchObject({ opacity: 0 });
     expect(styleOf(header).minHeight).toBeGreaterThan(0);
     await fireEvent.press(screen.getByTestId('page-section-20'));
@@ -480,15 +497,15 @@ describe('the bar follows the reading (docs/design/mushaf.png)', () => {
 });
 
 describe('the bottom bar: script, microphone, text size (mockup, D41)', () => {
-  it('opens the listening screen from the big green microphone', async () => {
+  it('starts following the recitation from the big green microphone (owner, 25 November 2026)', async () => {
     setDeviceConditions({ os: 'android' });
-    openListening.mockClear();
     await openReader(createTestAppStore(), 293);
-    const microphone = screen.getByRole('button', { name: 'Écouter un passage' });
+    const microphone = screen.getByRole('button', { name: 'Réciter, suivi par l’appli' });
     expect(styleOf(microphone)).toMatchObject({ backgroundColor: palette.action.light });
     expect(Number(styleOf(microphone).width)).toBeGreaterThanOrEqual(44);
+    // The Uthmani words are not given here: nothing starts (the following has its own tests).
     await fireEvent.press(microphone);
-    expect(openListening).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId('follow-bar')).toBeNull();
   });
 
   it('switches between Uthmani and Simple, remembers the choice, and shows the simple text', async () => {
@@ -713,6 +730,7 @@ describe('what the pill names (owner, 25 November 2026)', () => {
     chooseScript: jest.fn(),
     enlargeText: jest.fn(),
     shrinkText: jest.fn(),
+    countPagesReadAloud: jest.fn(),
   };
 
   function pillFor(growingKind: GardenElementKind | null) {
@@ -741,7 +759,7 @@ describe('what the pill names (owner, 25 November 2026)', () => {
           initialPage={20}
           openContents={openContents}
           close={close}
-          openListening={openListening}
+          follow={IDLE_FOLLOW}
         />
       </AppStoreProvider>,
     );

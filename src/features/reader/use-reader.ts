@@ -92,6 +92,11 @@ export interface ReaderActions {
   readonly chooseScript: (script: ReaderScript) => void;
   readonly enlargeText: () => void;
   readonly shrinkText: () => void;
+  /**
+   * Pages a recitation followed from their first word to their last (spec 3b): they count, once,
+   * without the reading time (the voice is the proof); the khatm module decides as for any page.
+   */
+  readonly countPagesReadAloud: (pages: readonly number[]) => void;
 }
 
 const SECOND_MS = 1000;
@@ -323,6 +328,25 @@ export function useReader(
     [journal, place.page],
   );
 
+  const countPagesReadAloud = useCallback(
+    (pages: readonly number[]) => {
+      let told: ReadingFeedback | null = null;
+      for (const page of pages) {
+        const current = tracker.current;
+        if (current !== null) {
+          const progress = progressOf(current, page);
+          if (progress.counted) continue;
+          const marked = new Map(current.pages).set(page, { ...progress, counted: true });
+          tracker.current = { ...current, pages: marked };
+          keepReadingProgress(marked);
+        }
+        told = recordPage(page) ?? told;
+      }
+      tell(told);
+    },
+    [recordPage, tell],
+  );
+
   const toggleBars = useCallback(() => setBarsShown((shown) => !shown), []);
   const toggleBookmark = useCallback(() => {
     toggleBookmarkInStore(place.page);
@@ -362,6 +386,7 @@ export function useReader(
       chooseScript: setScriptInStore,
       enlargeText,
       shrinkText,
+      countPagesReadAloud,
     },
   };
 }

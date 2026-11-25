@@ -92,6 +92,14 @@ export const READER_CONFIG = Object.freeze({
   surahHeader: { heightInLines: 1.15, nameScale: 1.1, labelScale: 0.62 },
 
   /**
+   * Following a recitation (spec 3b): how many pages of words the voice is followed on at a time,
+   * how close to their end more are added, and how long a silence ends the listening (no word
+   * heard). The scroll keeps the current line at the reading line; with Reduce Motion it jumps a
+   * line at a time instead of gliding. Judgment, to try on an iPhone.
+   */
+  follow: { pagesAhead: 3, extendWithinWords: 60, silenceSeconds: 20 },
+
+  /**
    * The list of pages: how many sections are added above the first one when the reader nears the
    * top (the list opens on the page asked and grows upwards on demand), how many sections it
    * renders first, and how many screens it keeps drawn around the visible one (FlatList

@@ -26,10 +26,11 @@ import { ContentsScreen } from '../contents-screen';
 import { useContentsModel } from '../use-contents-model';
 
 const openPage = jest.fn();
+const openRecognition = jest.fn();
 
 function Contents() {
   const { model, actions } = useContentsModel(openPage);
-  return <ContentsScreen model={model} actions={actions} />;
+  return <ContentsScreen model={model} actions={actions} onRecognize={openRecognition} />;
 }
 
 async function renderContents(store: AppStore = createTestAppStore()) {
@@ -47,6 +48,16 @@ beforeEach(() => {
 afterEach(resetDeviceConditions);
 
 describe('the Quran tab', () => {
+  it('opens the passage recognition from the button next to the title', async () => {
+    await showLanguage('fr');
+    await renderContents();
+    const button = screen.getByTestId('contents-recognize');
+    expect(button.props.accessibilityRole).toBe('button');
+    expect(button.props.accessibilityLabel).toBe('Reconnaître un passage');
+    await fireEvent.press(button);
+    expect(openRecognition).toHaveBeenCalledTimes(1);
+  });
+
   it('opens page 1 for a new person, from the cream resume card of the mockup', async () => {
     setDeviceConditions();
     await showLanguage('fr');

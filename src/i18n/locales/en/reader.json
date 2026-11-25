@@ -41,7 +41,8 @@
       "title": "Juz {{juz}}",
       "hizb": "Hizb {{hizb}}",
       "start": "{{surah}}, verse {{verse}} · Page {{page}}"
-    }
+    },
+    "recognize": "Recognize a Passage"
   },
   "page": {
     "subtitle": "Juz {{juz}}, Hizb {{hizb}} · Page {{page}}",
@@ -64,7 +65,7 @@
   "bar": {
     "back": "Back",
     "bookmark": "Bookmark",
-    "listen": "Listen to a Passage"
+    "listen": "Recite, Followed by the App"
   },
   "script": {
     "label": "Script",
@@ -118,5 +119,9 @@
     "title": "Text Unavailable",
     "description": "The Quran font could not be loaded. Close the app, then open it again.",
     "action": "Open Contents"
+  },
+  "follow": {
+    "denied": "The microphone is not allowed. Allow it in Settings so the app can follow your recitation.",
+    "failed": "Listening could not start. Try again in a moment."
   }
 }
