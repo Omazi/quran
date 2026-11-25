@@ -36,6 +36,7 @@ describe('parseCheckLaunch', () => {
     screenCheckPage: '9',
     screenCheckScript: 'imlaei',
     screenCheckSeed: 'demo',
+    screenCheckAutoSwipe: '1',
   });
 
   it('is off by default: nothing is asked when the flag is off', () => {
@@ -48,7 +49,20 @@ describe('parseCheckLaunch', () => {
       page: 9,
       script: 'imlaei',
       seedsDemo: true,
+      autoSwipe: true,
     });
+  });
+
+  it('swipes by itself only when asked with 1, and never by default', () => {
+    const swipe = (value?: string) =>
+      parseCheckLaunch(reading({ screenCheckGo: 'onboarding', screenCheckAutoSwipe: value }), true)
+        ?.autoSwipe;
+    expect(swipe(undefined)).toBe(false);
+    expect(swipe('0')).toBe(false);
+    expect(swipe('yes')).toBe(false);
+    expect(swipe('1')).toBe(true);
+    expect(parseCheckLaunch(reading({ screenCheckAutoSwipe: '1' }), true)).toBeNull();
+    expect(parseCheckLaunch(asked, false)).toBeNull();
   });
 
   it('asks nothing when no screen, or an unknown one, is named', () => {
@@ -68,7 +82,13 @@ describe('parseCheckLaunch', () => {
         }),
         true,
       ),
-    ).toEqual({ screen: 'garden', page: null, script: null, seedsDemo: false });
+    ).toEqual({
+      screen: 'garden',
+      page: null,
+      script: null,
+      seedsDemo: false,
+      autoSwipe: false,
+    });
   });
 });
 
@@ -78,6 +98,7 @@ describe('checkAddress and isPushedOverTabs', () => {
     page,
     script: null,
     seedsDemo: false,
+    autoSwipe: false,
   });
 
   it('gives an address inside the app for every screen', () => {

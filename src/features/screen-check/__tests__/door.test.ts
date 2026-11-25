@@ -12,7 +12,7 @@ const { resolve } = jest.requireActual<{ resolve: (...segments: string[]) => str
 /** The repository's root: tests run from it. */
 const ROOT = resolve('.');
 
-function loadDoor(flag: string | undefined) {
+function loadDoor(flag: string | undefined, autoSwipe?: string) {
   const before = process.env.EXPO_PUBLIC_SCREEN_CHECK;
   if (flag === undefined) delete process.env.EXPO_PUBLIC_SCREEN_CHECK;
   else process.env.EXPO_PUBLIC_SCREEN_CHECK = flag;
@@ -21,9 +21,20 @@ function loadDoor(flag: string | undefined) {
     jest.isolateModules(() => {
       jest.doMock('react-native', () => ({
         Platform: { OS: 'ios' },
-        Settings: { get: (key: string) => (key === 'screenCheckGo' ? 'garden' : undefined) },
+        Settings: {
+          get: (key: string) =>
+            key === 'screenCheckGo'
+              ? 'onboarding'
+              : key === 'screenCheckAutoSwipe'
+                ? autoSwipe
+                : undefined,
+        },
       }));
       jest.doMock('../launcher', () => ({ ScreenCheckLauncher: () => null }));
+      jest.doMock('../auto-run', () => ({
+        pagerDriver: () => null,
+        ScreenCheckAutoRun: () => null,
+      }));
       door = jest.requireActual('../door');
     });
     return door as typeof import('../door');
@@ -40,15 +51,33 @@ describe.each([undefined, '', '0', 'true', 'yes'])('with EXPO_PUBLIC_SCREEN_CHEC
     expect(door.screenCheckLaunch).toBeNull();
     expect(door.screenCheckPage('3', 16)).toBeNull();
   });
+
+  it('never swipes by itself, even when the launch argument is there', () => {
+    const door = loadDoor(flag, '1');
+    expect(door.screenCheckPagerDriver).toBeNull();
+    expect(door.ScreenCheckAutoRun).toBeNull();
+  });
 });
 
 describe('with EXPO_PUBLIC_SCREEN_CHECK=1', () => {
   it('has the launcher, reads the launch arguments and honours the page parameter', () => {
     const door = loadDoor('1');
     expect(door.ScreenCheckLauncher).not.toBeNull();
-    expect(door.screenCheckLaunch).toMatchObject({ screen: 'garden' });
+    expect(door.screenCheckLaunch).toMatchObject({ screen: 'onboarding' });
     expect(door.screenCheckPage('3', 16)).toBe(3);
     expect(door.screenCheckPage('17', 16)).toBeNull();
+  });
+
+  it('has no automatic swipe unless the launch argument asks for it', () => {
+    const door = loadDoor('1');
+    expect(door.screenCheckPagerDriver).toBeNull();
+    expect(door.ScreenCheckAutoRun).toBeNull();
+  });
+
+  it('has the automatic swipe and its run when the launch asks with -screenCheckAutoSwipe 1', () => {
+    const door = loadDoor('1', '1');
+    expect(door.screenCheckPagerDriver).not.toBeNull();
+    expect(door.ScreenCheckAutoRun).not.toBeNull();
   });
 });
 

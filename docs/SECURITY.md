@@ -55,6 +55,10 @@ Le dépôt est public (D24). Tout ce qui y est poussé, historique compris, est 
   - il traite cet artefact comme une donnée non sûre : seules les images dont le nom est dans `tools/ci/screens.py`
     sont gardées (une liste fixe, lue sur `main`), chacune lue jusqu'au bout pour vérifier que c'est un fichier PNG entier
     (`tools/ci/publish-screens.py`, avec un plafond de taille par image et au total) ; rien de ce qu'il contient n'est exécuté ;
+  - le seul fichier qui n'est pas une image et qui est gardé est le rapport de la chasse au plantage, `crash-report.txt`
+    (nom fixe de `tools/ci/screens.py`) : du texte UTF-8 de 200 Ko au plus, dont la première ligne est `VERDICT: ` suivi
+    d'un mot connu, débarrassé des caractères non imprimables, affiché comme un simple lien (jamais interprété).
+    Les `.ips`, les journaux du simulateur et le reste de `build/crash/` restent dans l'artefact (14 jours) ;
   - le script ne pousse que la branche `ci-screens`, qui ne contient rien d'autre. Son jeton,
     lui, pourrait écrire ailleurs : seule l'écriture du script l'en empêche. Une règle de
     protection de `main` (réglage du propriétaire, plus bas) fermerait cette porte ;

@@ -36,7 +36,36 @@ export interface SwipePagerProps {
   renderPage: (page: number) => ReactNode;
   /** What stays in place over the pages: the page dots, a button. Receives the position too. */
   renderOverlay?: (position: SharedValue<number>) => ReactNode;
+  /**
+   * Called each time a finger comes down on the pages (before it is known to be a swipe), from
+   * the view's own touch event. For the diagnostics' trail of gestures; nothing else.
+   */
+  onTouchStart?: () => void;
+  /**
+   * Something that drives the pager as a finger does (the iOS check's automatic swipe): it is
+   * rendered inside the pager and receives `begin`, `move` and `end`, which are what the pan
+   * gesture itself calls. Not given in any build a person uses.
+   */
+  renderDriver?: (drive: PagerDrive) => ReactNode;
   testID?: string;
+}
+
+/**
+ * The three steps of a drag, as the pan gesture takes them, and what a driver needs to take them
+ * too. `begin`, `move` and `end` are worklets: call them from the UI thread (a worklet or
+ * `runOnUI`), as the gesture does.
+ */
+export interface PagerDrive {
+  /** The finger comes down and the pages are taken (a slide in progress is caught). */
+  begin: () => void;
+  /** The finger has moved sideways by this many points since it came down. */
+  move: (translationX: number) => void;
+  /** The finger leaves, at this speed (points per second); `canceled` for a gesture cut short. */
+  end: (velocityX: number, canceled: boolean) => void;
+  readonly width: number;
+  readonly page: number;
+  readonly pageCount: number;
+  readonly isRightToLeft: boolean;
 }
 
 /**
@@ -64,6 +93,8 @@ export function SwipePager({
   renderBackground,
   renderPage,
   renderOverlay,
+  onTouchStart,
+  renderDriver,
   testID,
 }: SwipePagerProps) {
   if (!Number.isInteger(page) || page < 0 || page >= pageCount) {
@@ -101,48 +132,57 @@ export function SwipePager({
     onPageChange(next);
   };
 
+  // The three steps of a drag. The pan gesture below calls them on the UI thread; so does the
+  // iOS check's driver, which is how it takes the same path as a finger (without the touch).
+  const begin = () => {
+    'worklet';
+    cancelAnimation(position);
+    dragStart.set(position.get());
+  };
+  const move = (translationX: number) => {
+    'worklet';
+    position.set(
+      draggedPosition({
+        anchor: target.get(),
+        start: dragStart.get(),
+        translation: translationX,
+        width,
+        isRightToLeft,
+        pageCount,
+      }),
+    );
+  };
+  const end = (velocityX: number, canceled: boolean) => {
+    'worklet';
+    const next = settledPage({
+      anchor: target.get(),
+      position: position.get(),
+      velocity: canceled ? 0 : velocityX,
+      width,
+      isRightToLeft,
+      pageCount,
+    });
+    const forwardsSpeed = (isRightToLeft ? velocityX : -velocityX) / width;
+    position.set(
+      isMotionReduced
+        ? withTiming(next, { duration: SWIPE_PAGING.reducedSettleMs })
+        : withSpring(next, { ...SWIPE_PAGING.releaseSpring, velocity: forwardsSpeed }),
+    );
+    if (next !== target.get()) {
+      target.set(next);
+      scheduleOnRN(report, next);
+    }
+  };
+
   const gesture = usePanGesture({
     testID: testID === undefined ? undefined : `${testID}-pan`,
     enabled: width > 0 && pageCount > 1,
     maxPointers: 1,
     activeOffsetX: [-SWIPE_PAGING.activationDistance, SWIPE_PAGING.activationDistance],
     failOffsetY: [-SWIPE_PAGING.verticalFailDistance, SWIPE_PAGING.verticalFailDistance],
-    onActivate: () => {
-      cancelAnimation(position);
-      dragStart.set(position.get());
-    },
-    onUpdate: (event) => {
-      position.set(
-        draggedPosition({
-          anchor: target.get(),
-          start: dragStart.get(),
-          translation: event.translationX,
-          width,
-          isRightToLeft,
-          pageCount,
-        }),
-      );
-    },
-    onDeactivate: (event) => {
-      const next = settledPage({
-        anchor: target.get(),
-        position: position.get(),
-        velocity: event.canceled ? 0 : event.velocityX,
-        width,
-        isRightToLeft,
-        pageCount,
-      });
-      const forwardsSpeed = (isRightToLeft ? event.velocityX : -event.velocityX) / width;
-      position.set(
-        isMotionReduced
-          ? withTiming(next, { duration: SWIPE_PAGING.reducedSettleMs })
-          : withSpring(next, { ...SWIPE_PAGING.releaseSpring, velocity: forwardsSpeed }),
-      );
-      if (next !== target.get()) {
-        target.set(next);
-        scheduleOnRN(report, next);
-      }
-    },
+    onActivate: () => begin(),
+    onUpdate: (event) => move(event.translationX),
+    onDeactivate: (event) => end(event.velocityX, event.canceled),
   });
 
   const onLayout = (event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width);
@@ -153,7 +193,13 @@ export function SwipePager({
     <GestureHandlerRootView style={styles.pager} testID={testID}>
       {renderBackground?.(position)}
       <GestureDetector gesture={gesture}>
-        <View style={styles.pages} onLayout={onLayout} testID={testIdOf(testID, 'pages')}>
+        <View
+          style={styles.pages}
+          onLayout={onLayout}
+          // A plain touch event of the JavaScript side: no worklet, nothing for the gesture.
+          onTouchStart={onTouchStart}
+          testID={testIdOf(testID, 'pages')}
+        >
           {width === 0
             ? null
             : mounted.map((index) => (
@@ -171,8 +217,25 @@ export function SwipePager({
         </View>
       </GestureDetector>
       {renderOverlay?.(position)}
+      {renderDriver === undefined ? null : (
+        <DriverSlot
+          render={renderDriver}
+          drive={{ begin, move, end, width, page, pageCount, isRightToLeft }}
+        />
+      )}
     </GestureHandlerRootView>
   );
+}
+
+/** Renders the driver of the pager, if there is one, with the pager's handle. */
+function DriverSlot({
+  render,
+  drive,
+}: {
+  render: (drive: PagerDrive) => ReactNode;
+  drive: PagerDrive;
+}) {
+  return <>{render(drive)}</>;
 }
 
 function testIdOf(testID: string | undefined, part: string): string | undefined {

@@ -8,6 +8,8 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
+import { noteGestureStart } from '@/features/diagnostics';
+import { screenCheckPagerDriver } from '@/features/screen-check';
 import {
   ActionButton,
   AppText,
@@ -87,6 +89,9 @@ export function OnboardingScreen({
         page={pageIndex}
         onPageChange={actions.showPage}
         testID="onboarding-pager"
+        onTouchStart={() => noteGestureStart('onboarding-pager')}
+        // The iOS check's automatic swipe (null in every build a person uses).
+        renderDriver={screenCheckPagerDriver ?? undefined}
         renderBackground={(position) => (
           <>
             <StoryBackdrop pages={pages} position={position} />

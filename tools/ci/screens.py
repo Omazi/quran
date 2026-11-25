@@ -11,6 +11,12 @@ screens are opened by launch arguments that only a build made for the check unde
 
 import sys
 
+# The one text file of the crash hunt that may be published next to the pictures
+# (tools/ci/crash-report.py writes it; publish-screens.py checks it). Its first line is
+# "VERDICT: " and one of these words.
+CRASH_REPORT = "crash-report.txt"
+CRASH_VERDICTS = ("OK", "CRASH", "INCOMPLETE")
+
 # The pages of the first-launch flow (src/features/onboarding/pages.ts). A test of the app
 # (src/features/screen-check/__tests__/door.test.ts) fails when this number is not the app's.
 ONBOARDING_PAGES = 16

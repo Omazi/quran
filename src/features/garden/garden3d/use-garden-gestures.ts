@@ -5,6 +5,8 @@ import {
   useTapGesture,
 } from 'react-native-gesture-handler';
 
+import { noteGestureStart } from '@/features/diagnostics';
+
 import { GARDEN_3D } from './config';
 import type { OrbitController } from './orbit-controller';
 
@@ -29,7 +31,10 @@ export function useGardenGestures(controller: OrbitController, isEnabled: boolea
     maxPointers: 1,
     activeOffsetX: [-GARDEN_3D.dragActivation, GARDEN_3D.dragActivation],
     failOffsetY: [-GARDEN_3D.dragActivation, GARDEN_3D.dragActivation],
-    onBegin: () => controller.touch(),
+    onBegin: () => {
+      noteGestureStart('garden-pan');
+      controller.touch();
+    },
     onActivate: () => controller.dragStart(),
     onUpdate: (event) => controller.dragMove(event.translationX, event.translationY),
     onDeactivate: (event) => controller.dragEnd(event.velocityX, event.canceled),
@@ -39,7 +44,10 @@ export function useGardenGestures(controller: OrbitController, isEnabled: boolea
     testID: `${testID}-pinch`,
     runOnJS: true,
     enabled: isEnabled,
-    onBegin: () => controller.touch(),
+    onBegin: () => {
+      noteGestureStart('garden-pinch');
+      controller.touch();
+    },
     onActivate: (event) => controller.pinchStart({ x: event.focalX, y: event.focalY }),
     onUpdate: (event) => controller.pinchMove(event.scale, { x: event.focalX, y: event.focalY }),
     onDeactivate: () => controller.pinchEnd(),
