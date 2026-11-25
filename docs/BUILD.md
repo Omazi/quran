@@ -15,7 +15,7 @@ La méthode est celle de DishPlay, l'autre appli du propriétaire (`Omazi/dishpl
 | Générer le projet iOS natif          | Vérifié le 24 novembre 2026                                         |
 | Compiler pour iPhone, sans signature | **Réussi** le 24 novembre 2026 sur un Mac de GitHub (19 min)        |
 | Ouvrir l'appli dans le simulateur    | **Réussi** le même jour (44 min) ; images regardées (voir plus bas) |
-| Signer et envoyer sur TestFlight     | **À écrire**, le jour où le propriétaire le demande                 |
+| Signer et envoyer sur TestFlight     | Script écrit (`testflight.yml`), **jamais encore exécuté**          |
 
 Les deux premières lignes ont été vérifiées sous Linux (`npx expo export --platform ios`,
 `npx expo prebuild --platform ios --no-install`). Tout le reste a besoin d'un Mac.
@@ -62,35 +62,12 @@ machine (paiement ou plafond de dépense du compte). Sur un dépôt public, les 
 standard sont gratuites. Si le dépôt redevient privé, chaque compilation sur Mac compte dix
 fois son temps dans le quota du compte : ne plus la lancer à chaque push.
 
-## L'envoi sur TestFlight (plus tard)
+## L'envoi sur TestFlight
 
-Rien n'est encore écrit. Le jour venu, on reprend les scripts de DishPlay
-(`ios/ci/install-signing.py`, `tools/asc_profile.py`, `tools/asc_testflight.py`,
-`ios-testflight.yml`), adaptés à une appli Expo.
-
-Ce qui existe déjà côté Apple et se réutilise, parce que cela vaut pour tout le compte : la
-clé de l'API App Store Connect et le certificat de distribution. Ce qui est propre à cette
-appli : sa fiche dans App Store Connect et son profil de signature.
-
-À faire par le propriétaire, parce que cela passe par ses identifiants :
-
-1. Créer la fiche de l'appli dans App Store Connect (Apps › + › New App), avec l'identifiant
-   `com.omazi.quran`. **Cet identifiant devient définitif à ce moment-là.**
-2. Ranger dans le dépôt `Omazi/quran` (Settings › Secrets and variables › Actions) les mêmes
-   valeurs que dans `dishplay3d`, sous les mêmes noms :
-
-   | Type     | Nom                                                                                         |
-   | -------- | ------------------------------------------------------------------------------------------- |
-   | Variable | `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_ISSUER_ID`                                          |
-   | Secret   | `APP_STORE_CONNECT_API_KEY`, `IOS_DISTRIBUTION_P12_BASE64`, `IOS_DISTRIBUTION_P12_PASSWORD` |
-
-   Les variables se relisent dans les réglages de `dishplay3d`. Les secrets ne se relisent
-   pas : il faut les fichiers d'origine (`AuthKey_….p8`, le `.p12` et son mot de passe). S'ils
-   sont perdus, on crée une deuxième clé chez Apple (l'ancienne continue de servir à DishPlay)
-   et un nouveau certificat.
-
-Ne jamais copier une clé, un certificat ou un mot de passe dans une conversation ni dans le
-dépôt.
+Écrit le 24 novembre 2026, à la demande du propriétaire : voir `docs/TESTFLIGHT.md`. L'envoi
+part du dépôt `dishplay3d`, qui détient déjà la clé Apple (D30), et rien n'a encore tourné sur
+un Mac. Il reste au propriétaire à créer la fiche de l'appli dans App Store Connect : c'est à
+ce moment que l'identifiant `com.omazi.quran` devient définitif.
 
 ## Quoi regarder en premier sur l'iPhone
 
@@ -116,5 +93,5 @@ version publiée se compile sans cette variable et ne contient pas cet aperçu
 ## Ce qui n'est pas encore activé
 
 - La copie de la progression dans iCloud : voir `docs/specs/backup.md`, « Activation ».
-- L'identifiant `com.omazi.quran` et le nom « Quran App » sont provisoires tant que la fiche
-  de l'appli n'est pas créée.
+- L'identifiant `com.omazi.quran` est provisoire tant que la fiche de l'appli n'est pas créée.
+  Le nom « Jannatuk » (D31) reste à faire accepter par Apple à la création de cette fiche.

@@ -1,0 +1,309 @@
+name: TestFlight
+
+# Sends the app to TestFlight. How it works, and what the owner does once: docs/TESTFLIGHT.md.
+#
+# It is started by hand, never by a push or a pull request. Until this repository holds the Apple
+# key itself, it is called from the owner's other repository (Omazi/dishplay3d), whose `testflight`
+# environment already holds that key: GitHub cannot copy a secret from one repository to another.
+# A called workflow receives only the secrets its caller hands over by name: the three below, and
+# nothing else of that repository. The jobs that name the `testflight` environment then read them
+# from it. Started from this repository, the same file reads this repository's own settings.
+#
+# What keeps the key away from code nobody here wrote:
+#   - "Build" compiles the app, with every third-party tool that takes (npm, CocoaPods, Xcode
+#     build phases), and holds NO secret. It leaves an unsigned archive.
+#   - "Sign and send" holds the key and runs nothing but Apple's tools and the scripts of
+#     tools/apple, which use the standard library only. It signs that archive and uploads it.
+#   - Only a commit that is already on the branch `main` of this repository is ever built or run.
+#
+# What it does not protect from: whoever can write to `main` of this repository decides what runs
+# with the key at the next start (docs/SECURITY.md).
+on:
+  workflow_call:
+    inputs:
+      mode:
+        description: 'send = build, sign and upload; prepare = only check the Apple side'
+        type: string
+        default: send
+      ref:
+        description: Commit or branch of Omazi/quran to send (it must be on main)
+        type: string
+        default: main
+    # Not required here: a missing one is reported by the scripts, in words the owner can act on.
+    secrets:
+      APP_STORE_CONNECT_API_KEY:
+        description: The text of the .p8 file of the App Store Connect API key
+        required: false
+      IOS_DISTRIBUTION_P12_BASE64:
+        description: The Apple Distribution certificate and its private key (.p12, base64)
+        required: false
+      IOS_DISTRIBUTION_P12_PASSWORD:
+        description: The password of that .p12
+        required: false
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'send = build, sign and upload; prepare = only check the Apple side'
+        type: choice
+        options: [send, prepare]
+        default: send
+      ref:
+        description: Commit or branch of Omazi/quran to send (it must be on main)
+        type: string
+        default: main
+
+permissions:
+  contents: read
+
+env:
+  APP_REPOSITORY: Omazi/quran
+  BUNDLE_ID: com.omazi.quran
+  APP_ID_NAME: Jannatuk
+  TESTERS: Coran - Tests internes
+
+jobs:
+  prepare:
+    name: Check the Apple side
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: testflight
+    outputs:
+      sha: ${{ steps.pin.outputs.sha }}
+      build: ${{ steps.pin.outputs.build }}
+      app_record: ${{ steps.apple.outputs.app_record }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          repository: ${{ env.APP_REPOSITORY }}
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pin the commit and number the build
+        id: pin
+        run: |
+          set -euo pipefail
+          SHA=$(git rev-parse HEAD)
+          # Only what is already on the branch main: another branch or a pull request never reaches
+          # the key. The full name matters: a tag called "main" would be taken before the branch.
+          git fetch -q origin refs/heads/main
+          if ! git merge-base --is-ancestor "$SHA" FETCH_HEAD; then
+            echo "::error::$SHA is not on main of $APP_REPOSITORY"
+            exit 1
+          fi
+          # Day, then minute of the day: it grows with time, whichever repository starts the run.
+          BUILD="$(date -u +%Y%m%d).$((10#$(date -u +%H) * 60 + 10#$(date -u +%M)))"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+          echo "commit $SHA, build $BUILD"
+      - name: Check the key, the identifier and the app record
+        id: apple
+        env:
+          APPLE_KEY_ID: ${{ vars.APPLE_KEY_ID }}
+          APPLE_ISSUER_ID: ${{ vars.APPLE_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+        run: python3 tools/apple/prepare.py --bundle "$BUNDLE_ID" --name "$APP_ID_NAME"
+
+  build:
+    name: Build (no secret here)
+    needs: prepare
+    if: inputs.mode == 'send' && needs.prepare.outputs.app_record == 'yes'
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      SHA: ${{ needs.prepare.outputs.sha }}
+      BUILD: ${{ needs.prepare.outputs.build }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          repository: ${{ env.APP_REPOSITORY }}
+          ref: ${{ needs.prepare.outputs.sha }}
+          persist-credentials: false
+      # No cache: when this runs from another repository, nothing is left in that repository's cache.
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22
+      - name: Select the newest released Xcode and record versions
+        run: bash tools/ci/select-xcode.sh
+      - run: npm ci
+      - name: Generate the iOS project and install its pods
+        run: npx expo prebuild --platform ios
+      - name: Archive for iPhone (unsigned)
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          WORKSPACE=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WORKSPACE" .xcworkspace)
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" "ios/$SCHEME/Info.plist"
+          xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release \
+            -destination 'generic/platform=iOS' -derivedDataPath build/DerivedData \
+            -archivePath build/App.xcarchive CODE_SIGNING_ALLOWED=NO archive > build/xcodebuild.log 2>&1 \
+            || { grep -E "error:" build/xcodebuild.log | sort -u | cut -c1-400 | head -60; tail -60 build/xcodebuild.log; exit 1; }
+          grep -E "ARCHIVE SUCCEEDED" build/xcodebuild.log
+      - name: Check what the app contains
+        run: |
+          set -euo pipefail
+          APP=$(find build/App.xcarchive/Products/Applications -maxdepth 1 -name "*.app" | head -1)
+          echo "app: $APP ($(du -sh "$APP" | cut -f1))"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")" = "$BUNDLE_ID"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Info.plist")" = "$BUILD"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Info.plist"
+          test -s "$APP/main.jsbundle"
+          find "$APP" -name "KFGQPC-HAFS-Uthmanic-Script-v0.18.ttf" | grep -q .
+          tar -czf build/archive.tar.gz -C build App.xcarchive
+          ls -la build/archive.tar.gz
+      # The archive holds the app as anyone can build it from this public repository: nothing private.
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: unsigned-archive
+          path: build/archive.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
+  send:
+    name: Sign and send (holds the key)
+    needs: [prepare, build]
+    runs-on: macos-26
+    timeout-minutes: 30
+    environment:
+      name: testflight
+    concurrency:
+      group: testflight-send
+      cancel-in-progress: false
+    env:
+      BUILD: ${{ needs.prepare.outputs.build }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          repository: ${{ env.APP_REPOSITORY }}
+          ref: ${{ needs.prepare.outputs.sha }}
+          persist-credentials: false
+      # Xcode only: this job starts neither node, nor npm, nor CocoaPods.
+      - name: Select the newest released Xcode
+        run: bash tools/ci/select-xcode.sh --xcode-only
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: unsigned-archive
+          path: ${{ runner.temp }}/incoming
+      - name: Unpack the archive and check it is the app that was asked for
+        run: |
+          set -euo pipefail
+          mkdir "$RUNNER_TEMP/archive"
+          # bsdtar refuses paths that leave the folder and does not write through links.
+          tar -xzf "$RUNNER_TEMP/incoming/archive.tar.gz" -C "$RUNNER_TEMP/archive"
+          # One app, this identifier, this build number, no other code in it, no link that leaves it.
+          # The script hands ARCHIVE and APP_IN_ARCHIVE to the steps below.
+          python3 tools/apple/check-app.py archive "$RUNNER_TEMP/archive/App.xcarchive" --bundle "$BUNDLE_ID" --build "$BUILD"
+      - name: Install the certificate and the profile for this job
+        env:
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          APPLE_KEY_ID: ${{ vars.APPLE_KEY_ID }}
+          APPLE_ISSUER_ID: ${{ vars.APPLE_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          IOS_DISTRIBUTION_P12_BASE64: ${{ secrets.IOS_DISTRIBUTION_P12_BASE64 }}
+          IOS_DISTRIBUTION_P12_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_P12_PASSWORD }}
+        run: python3 tools/apple/install-signing.py --bundle "$BUNDLE_ID" --name "$APP_ID_NAME"
+      - name: Sign and export with Xcode
+        id: export
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          # The log names the certificate, which carries its holder's name: it is never shown whole,
+          # and the lines that are shown pass through tools/apple/redact.py.
+          xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$APPLE_EXPORT_OPTIONS" > "$RUNNER_TEMP/export.log" 2>&1 \
+            || { grep -iE "error" "$RUNNER_TEMP/export.log" | python3 tools/apple/redact.py | sort -u | cut -c1-300 | head -30; exit 1; }
+          ls "$RUNNER_TEMP/export" | grep -E '\.ipa$'
+      # Xcode can refuse to export an archive that was built unsigned. The same result is then made
+      # with Apple's `codesign`: nested code first, then the app with its entitlements and profile.
+      - name: Sign by hand if Xcode would not export
+        if: steps.export.outcome == 'failure'
+        env:
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          echo "::notice::xcodebuild -exportArchive failed; the app is signed with codesign instead."
+          WORK="$RUNNER_TEMP/byhand"
+          rm -rf "$RUNNER_TEMP/export" && mkdir -p "$WORK/Payload" "$RUNNER_TEMP/export"
+          cp -R "$APP_IN_ARCHIVE" "$WORK/Payload/"
+          APP="$WORK/Payload/$(basename "$APP_IN_ARCHIVE")"
+          cp "$SIGNING_PROFILE" "$APP/embedded.mobileprovision"
+          /usr/libexec/PlistBuddy -c "Add :application-identifier string $APPLE_TEAM_ID.$BUNDLE_ID" \
+            -c "Add :com.apple.developer.team-identifier string $APPLE_TEAM_ID" \
+            -c "Add :get-task-allow bool false" -c "Add :beta-reports-active bool true" "$WORK/entitlements.plist" > /dev/null
+          # codesign can name the certificate's holder in what it says. Nothing it says is shown:
+          # only that it signed, or which known kind of refusal it gave.
+          sign() {
+            if ! codesign --force --sign "$SIGNING_IDENTITY" --keychain "$SIGNING_KEYCHAIN" "$@" > "$WORK/codesign.log" 2>&1; then
+              echo "::error::codesign refused to sign (what it said is not shown: it can name the certificate's holder)."
+              grep -oE "errSec[A-Za-z]+|no identity found|ambiguous|unable to build chain|resource fork|code object is not signed|invalid entitlements" "$WORK/codesign.log" | sort -u || true
+              exit 1
+            fi
+            echo "signed: $(basename "${@: -1}")"
+          }
+          if [ -d "$APP/Frameworks" ]; then
+            find "$APP/Frameworks" -mindepth 1 -maxdepth 1 \( -name "*.framework" -o -name "*.dylib" \) -print0 \
+              | while IFS= read -r -d '' item; do sign "$item"; done
+          fi
+          sign --entitlements "$WORK/entitlements.plist" "$APP"
+          (cd "$WORK" && zip -qry "$RUNNER_TEMP/export/App.ipa" Payload)
+      - name: Check the signed app
+        run: |
+          set -euo pipefail
+          IPA=$(find "$RUNNER_TEMP/export" -maxdepth 1 -name "*.ipa" | head -1)
+          test -s "$IPA"
+          mkdir "$RUNNER_TEMP/check" && unzip -q "$IPA" -d "$RUNNER_TEMP/check"
+          # The same questions as before the signing, asked of what is about to be uploaded.
+          python3 tools/apple/check-app.py signed "$RUNNER_TEMP/check" --bundle "$BUNDLE_ID" --build "$BUILD"
+          APP=$(find "$RUNNER_TEMP/check/Payload" -maxdepth 1 -type d -name "*.app")
+          codesign --verify --deep --strict "$APP" > "$RUNNER_TEMP/verify.log" 2>&1 \
+            || { echo "::error::The signature of the app does not verify."; python3 tools/apple/redact.py < "$RUNNER_TEMP/verify.log" | cut -c1-300 | head -20; exit 1; }
+          test -s "$APP/embedded.mobileprovision"
+          # Signed by the expected team, for the expected identifier, and not for debugging.
+          codesign -d --entitlements - --xml "$APP" 2> /dev/null > "$RUNNER_TEMP/entitlements.plist"
+          /usr/libexec/PlistBuddy -c 'Print :application-identifier' "$RUNNER_TEMP/entitlements.plist" | grep -qx "[A-Z0-9]\{10\}\.$BUNDLE_ID"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :get-task-allow' "$RUNNER_TEMP/entitlements.plist")" = "false"
+          echo "IPA=$IPA" >> "$GITHUB_ENV"
+          echo "signed app: $(du -sh "$IPA" | cut -f1)"
+      - name: Ask Apple to validate, then upload
+        env:
+          APPLE_KEY_ID: ${{ vars.APPLE_KEY_ID }}
+          APPLE_ISSUER_ID: ${{ vars.APPLE_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          export API_PRIVATE_KEYS_DIR="$APPLE_API_KEY_DIR"
+          for action in --validate-app --upload-app; do
+            status=0
+            xcrun altool "$action" -f "$IPA" -t ios --apiKey "$APPLE_KEY_ID" --apiIssuer "$APPLE_ISSUER_ID" > "$RUNNER_TEMP/altool.log" 2>&1 || status=$?
+            python3 tools/apple/redact.py < "$RUNNER_TEMP/altool.log" | cut -c1-600
+            # altool can print ERROR and still end with 0 (an agreement to accept, for instance).
+            if [ "$status" != "0" ] || grep -q "ERROR" "$RUNNER_TEMP/altool.log"; then
+              echo "::error::App Store Connect refused $action (see the lines above)."
+              exit 1
+            fi
+          done
+          echo "Build $BUILD uploaded to App Store Connect." >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove the certificate, the profile and the key from this machine
+        if: always()
+        run: python3 tools/apple/remove-signing.py
+
+  testers:
+    name: Wait for Apple and open the build to the testers
+    needs: [prepare, send]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    environment:
+      name: testflight
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          repository: ${{ env.APP_REPOSITORY }}
+          ref: ${{ needs.prepare.outputs.sha }}
+          persist-credentials: false
+      - name: Tester group, then wait until the build is processed
+        env:
+          APPLE_KEY_ID: ${{ vars.APPLE_KEY_ID }}
+          APPLE_ISSUER_ID: ${{ vars.APPLE_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          BUILD: ${{ needs.prepare.outputs.build }}
+        run: python3 tools/apple/testflight.py --bundle "$BUNDLE_ID" --group "$TESTERS" --build "$BUILD"

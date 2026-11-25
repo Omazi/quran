@@ -3,6 +3,8 @@
 #
 # The newest released Xcode installed on the machine is taken, betas and release candidates left
 # aside. The choice is written to GITHUB_ENV as DEVELOPER_DIR, so every later step uses it.
+#
+#     bash tools/ci/select-xcode.sh [--xcode-only]
 set -euo pipefail
 
 echo "Installed:"
@@ -22,4 +24,7 @@ fi
 echo "Chosen: $XCODE"
 xcodebuild -version
 xcodebuild -showsdks | grep -i iphoneos
-echo "node $(node --version), npm $(npm --version), CocoaPods $(pod --version)"
+# The job that holds the Apple key asks for Xcode only: it starts none of the tools below.
+if [ "${1:-}" != "--xcode-only" ]; then
+  echo "node $(node --version), npm $(npm --version), CocoaPods $(pod --version)"
+fi

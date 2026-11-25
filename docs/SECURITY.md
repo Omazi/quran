@@ -61,6 +61,55 @@ Le dépôt est public (D24). Tout ce qui y est poussé, historique compris, est 
 - Les fichiers venus de tiers (texte et police du Coran) sont republiés tels quels, avec leur
   mention : voir `docs/DATA_SOURCES.md`. Leurs conditions de rediffusion restent à éclaircir.
 
+## Signature et envoi sur TestFlight
+
+Décision du propriétaire (D30) : l'envoi part du dépôt `Omazi/dishplay3d`, qui détient déjà
+la clé Apple. Détail dans `TESTFLIGHT.md`. Ce qui protège cette clé :
+
+- Le script ne se lance qu'à la main. Jamais sur un push, jamais sur une demande de fusion.
+- Le dépôt DishPlay ne confie que trois secrets, nommés un par un (la clé d'accès, le
+  certificat, son mot de passe). Ses autres secrets ne sont pas transmis.
+- Seul un commit déjà présent sur la branche `main` de ce dépôt est compilé, et seuls les
+  scripts de ce commit sont lancés. Le contrôle vise la branche par son nom complet : une
+  étiquette (« tag ») nommée `main` ne passe pas pour elle.
+- Deux tâches séparées. Celle qui compile lance npm, CocoaPods et les étapes de compilation
+  de Xcode, donc du code de tiers : elle ne reçoit aucun secret. Celle qui signe reçoit la
+  clé et ne lance que les outils d'Apple, Python et les scripts de `tools/apple` (plus
+  `tools/ci/select-xcode.sh`, qui n'y appelle que Xcode). Ces scripts n'utilisent que la
+  bibliothèque standard de Python : rien n'est téléchargé à côté de la clé.
+- L'archive qui passe d'une tâche à l'autre est contrôlée avant signature
+  (`tools/apple/check-app.py`, avec ses tests) : une seule appli, qui est un vrai dossier, le
+  bon identifiant, le bon numéro, aucune extension ni autre code rangé dedans, aucun lien
+  qui sort de l'appli. Les mêmes questions sont reposées à l'appli signée, avant l'envoi.
+- Le certificat vit dans un trousseau temporaire, retiré à la fin de la tâche avec le profil
+  et la clé.
+- Les journaux d'un dépôt public sont publics. Les scripts n'y écrivent ni nom, ni adresse,
+  ni clé. Le journal de Xcode, qui nomme le titulaire du certificat, n'est jamais publié en
+  entier ; ce que dit `codesign` n'est pas montré du tout, et les lignes de Xcode et
+  d'`altool` qui sont montrées passent par `tools/apple/redact.py`, qui masque le titulaire
+  d'un certificat, une équipe nommée et les adresses.
+- Aucun certificat n'est créé, modifié ni supprimé. Rien de DishPlay n'est lu ni modifié.
+
+Ce qui reste vrai malgré tout, à savoir avant de s'en servir :
+
+- **Qui peut écrire sur `main` de ce dépôt décide de ce qui tournera avec la clé Apple** au
+  prochain lancement. Le fichier de DishPlay appelle le script de ce dépôt par le nom de sa
+  branche, pas par un commit figé : rien n'est relu du côté de DishPlay. Aujourd'hui, seuls
+  le propriétaire et les sessions de travail qu'il ouvre écrivent ici. Deux réglages du
+  propriétaire fermeraient cette porte : une règle sur `main` et sur les étiquettes de ce
+  dépôt (plus bas), et un accord demandé à chaque usage de l'environnement `testflight` de
+  DishPlay (ce réglage s'appliquerait aussi aux envois de DishPlay).
+- N'importe quel commit déjà passé par `main` peut être envoyé, donc aussi une ancienne
+  version de ces scripts. Aucune version antérieure à cette relecture n'a été poussée.
+- L'identifiant de l'équipe, celui de la clé et celui de son émetteur s'affichent dans le
+  journal public : ce sont des variables, que GitHub ne masque pas. Ce sont des repères, pas
+  des clés ; l'envoi de DishPlay les montre de la même façon.
+- Le masquage des noms couvre les formes connues. Un message d'Apple d'une forme inconnue
+  pourrait en laisser passer un.
+- L'appli signée contient du code de tiers (c'est le cas de toute appli), et la clé de
+  DishPlay sert désormais à deux applis.
+- Rien de tout cela n'a encore tourné sur un Mac (voir `TESTFLIGHT.md`, « Limites connues »).
+
 ## Signaler un problème
 
 Écrire au propriétaire du dépôt, sans ouvrir de ticket public.
@@ -72,7 +121,9 @@ Trois réglages GitHub restent à activer par le propriétaire, maintenant que l
 - Settings › Security : le signalement privé des failles, pour qu'un inconnu ait un moyen de
   prévenir sans rien publier.
 - Settings › Rules › Rulesets : une règle sur `main` qui interdit de forcer un push et de
-  supprimer la branche, pour qu'aucun script ne puisse la réécrire.
+  supprimer la branche, pour qu'aucun script ne puisse la réécrire ; et une règle qui interdit
+  de créer une étiquette nommée `main` (GitHub la prendrait avant la branche pour choisir le
+  script d'envoi).
 
 ## Sauvegarde et restauration de la progression
 

@@ -245,6 +245,36 @@ la voix ; l'intérieur des cases reste net.
   les valeurs prévues par la charte (`#8FE0EA`, `#EBC272`) ; avec « réduire les
   animations », aucun pétale ne grandit, la voix n'agit que sur la lumière des lignes.
 
+## D30 — L'envoi sur TestFlight part du dépôt DishPlay
+
+Décision du propriétaire, 24 novembre 2026. Il veut installer l'appli depuis TestFlight sans
+avoir à retrouver sa clé Apple. Cette clé est déjà enregistrée dans le dépôt
+`Omazi/dishplay3d`, et GitHub ne permet pas de copier un secret d'un dépôt à l'autre. À la
+question « je peux faire partir l'envoi depuis le dépôt DishPlay ? », il a répondu : « Oui,
+si tu me garantis que rien ne va être mélangé, cassé. »
+
+Ce qui lui a été garanti, et qui borne donc ce qu'on a le droit de faire :
+
+- aucun fichier existant de DishPlay n'est modifié ; un seul fichier y est ajouté, qui
+  appelle le script de ce dépôt-ci ;
+- l'appli Coran a son identifiant et sa fiche ; ses versions ne peuvent pas arriver dans
+  celle de DishPlay ;
+- aucun certificat n'est créé ni supprimé ;
+- l'ajout ne déclenche aucun envoi ni aucune vérification de DishPlay (le fichier se pousse
+  avec `[skip ci]` : voir `TESTFLIGHT.md`) ;
+- retirer ce fichier ramène à l'état d'avant.
+
+Ce qui ne lui a pas été garanti : que cela marche du premier coup.
+
+Ce que la relecture de sécurité du 24 novembre 2026 a ajouté, et qu'il doit savoir : le
+fichier de DishPlay suit la branche `main` de ce dépôt-ci. Qui peut écrire sur cette branche
+décide donc de ce qui tournera avec la clé Apple au prochain lancement. Le figer sur un
+commit demanderait de modifier DishPlay à chaque version de l'appli Coran ; ce n'est pas le
+choix retenu. Les réglages qui ferment cette porte sont listés dans `SECURITY.md`.
+
+D24 reste vrai pour le reste (pas de compte Expo, compilation sur les Mac de GitHub). Détail :
+`TESTFLIGHT.md`.
+
 ## D31 — Le nom de l'appli : Jannatuk (جنتك)
 
 Décision du propriétaire, 24 novembre 2026, après une longue recherche (« Utilise le »).

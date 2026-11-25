@@ -62,3 +62,6 @@ GoogleService-Info.plist
 *.apk
 *.aab
 *.ipa
+
+# Python
+__pycache__/
