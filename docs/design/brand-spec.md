@@ -132,50 +132,63 @@ titres, comme le système.
 
 ### Icône
 
-Décision D38. Source : `app-icons.md` (Apple Design), skill Frontend design (une seule idée
-forte, pas de défaut du genre). Fichiers produits par `tools/app-icon/make_icon.py`.
+Décision D38. Sources : `app-icons.md` (Apple Design), skill Frontend design (une seule idée
+forte, pas de défaut du genre), revue de design indépendante du 25 novembre 2026 (la première
+version, vue d'en haut, se lisait comme une fleur à quatre pétales autour de l'étoile générique
+des applis musulmanes). Fichiers produits par `tools/app-icon/make_icon.py`.
 
-**L'idée.** Le plan du jardin de l'appli vu d'en haut, tourné comme l'appli le montre : quatre
-parterres autour du bassin où se croisent les canaux (c'est l'ordre du jardin : les canaux au
-premier hizb, puis les parterres). Le bassin porte l'étoile à huit branches de la rosace d'écoute,
-la marque du hizb dans le mushaf : la source qui arrose le jardin, hizb après hizb. L'eau est le
-fond sur lequel le jardin est posé. (Écho voulu au jardin « sous lequel coulent les rivières » :
-comme tout contenu religieux, à faire confirmer par une personne qualifiée, D31.)
+**L'idée.** Le jardin de l'appli, tel que l'appli le montre : une parcelle surélevée vue de
+trois quarts (même angle que les images du jardin, 38°), quatre parterres, un bassin d'où partent
+quatre canaux d'eau claire, et un parterre de devant **pas encore poussé** (pâle), parce que le
+jardin pousse hizb après hizb. L'eau est l'élément vif : lire, c'est arroser. Le bassin porte
+l'étoile à huit branches de la rosace d'écoute, en détail, pas en emblème.
 
-**Couleurs, par rôle.** Toutes viennent de la section 3, sauf les deux tons du fond.
+**Couleurs, par rôle.** Le contraste (formule WCAG) est mesuré entre éléments voisins.
 
-| Rôle              | Où                   | Valeur                                                                          |
-| ----------------- | -------------------- | ------------------------------------------------------------------------------- |
-| Eau (`accent`)    | Fond, de haut en bas | `#13838F` → `#0A4F59` (`accentStrong`) ; apparence sombre `#0D3A40` → `#04191C` |
-| Jardin (`growth`) | Les quatre parterres | `#63C794` (`growth` sombre) → `#2E9160`                                         |
-| Source            | L'étoile du bassin   | `#8FE0EA` (`accentStrong` sombre) : la forme la plus claire                     |
+| Rôle                | Où                      | Valeur                                               | Contraste                                                                     |
+| ------------------- | ----------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Eau profonde        | Fond, de haut en bas    | `#073338` → `#042125` ; sombre `#03191C` → `#010B0D` | —                                                                             |
+| Eau vive (`accent`) | Bassin et canaux        | `#8FE0EA` (`accentStrong` sombre)                    | 6,6:1 sur le pavement                                                         |
+| Jardin (`growth`)   | Parterres, presque unis | `#417E2B` → `#45822D`, vers le jaune-vert            | 3,1 à 3,3:1 contre l'eau ; 2,0 à 2,1:1 contre le pavement, aidé par la teinte |
+| Pavement            | Dessus de la parcelle   | `#0F4A4E`                                            | 1,4:1 sur le fond ; le flanc `#021416` dessine le bloc                        |
+| Source              | L'étoile                | `#EFFCFD`, la forme la plus claire                   | 1,4:1 sur l'eau : un détail                                                   |
 
-Ni or ni papier : ils restent au mushaf.
+L'eau vive est le seul jeton de la section 3 repris tel quel. Le vert des parterres est plus
+sombre et plus jaune que `growth` : avec une eau à `#8FE0EA`, un vert ne tient 3:1 des deux côtés
+qu'autour d'une luminance de 0,18, et le fond doit rester sous 0,03. Ni or ni papier : ils
+restent au mushaf.
 
 **Couches** (`assets/expo.icon`, format Icon Composer, `app-icons.md › Layer design`) : le fond
-est le dégradé d'Icon Composer lui-même (clair et sombre), pas une image ; au-dessus, deux groupes
-de verre, les parterres (`beds.svg`) puis la source (`spring.svg`), en vectoriel, bords nets,
-aucun effet dessiné (`app-icons.md › Visual effects`). En teinté et en transparent, les parterres
-passent à 70 % d'opacité pour que la source reste la forme la plus claire
-(`app-icons.md › Appearances`). Les autres fichiers (`icon.png`, couches Android, favicon) sont
-aplatis à partir des mêmes formes. L'écran de lancement reste une couleur unie, sans logo
-(`launching.md › Launch screens`) ; `splash-icon.png` existe mais n'est pas affiché.
+est le dégradé d'Icon Composer lui-même (clair et sombre), pas une image. Quatre groupes de verre,
+du dessus vers le dessous : la source (`spring.svg`), l'eau (`water.svg`, le bassin déborde de
+8 points sur le bord intérieur des parterres), les parterres (`beds.svg`, translucidité 0,12),
+la parcelle (`plot.svg`). Tout en vectoriel, bords nets, aucun effet dessiné
+(`app-icons.md › Visual effects`) : le flanc de la parcelle est une forme, pas une ombre. En
+teinté et en transparent, les opacités gardent l'ordre de clarté : source, eau (85 %), parterres
+(65 %), parcelle (30 %) ; le parterre pas encore poussé y reste pâle, parce que c'est une
+opacité, pas une couleur (`app-icons.md › Appearances`). Les autres fichiers (`icon.png`,
+couches Android, favicon) sont aplatis à partir des mêmes formes. L'écran de lancement reste une
+couleur unie, sans logo (`launching.md › Launch screens`) ; `splash-icon.png` existe mais n'est
+pas affiché.
 
-**Lisibilité.** Vérifiée sur des rendus à 180, 120, 60 et 29 pixels : 40 points d'eau à 1024
-séparent l'étoile des parterres, pour que la silhouette tienne en monochrome.
+**Proportions.** La parcelle couvre 82 % de la largeur ; parterres aux coins arrondis de 11 % de
+leur côté ; 64 points de pavement entre deux parterres à l'écran. Vérifié sur des rendus à 180,
+120, 60 et 29 pixels : à 29 pixels, il reste une parcelle verte et le point clair du bassin.
 
-**Écarté, et pourquoi** (rendus dans le dossier de prévisualisation, voir D38) :
+**Écarté, et pourquoi** (rendus : voir D38) :
 
-- Un arbre ou le plan rendus avec les modèles 3D du jardin : détail de photo, textures qui
-  deviennent de la bouillie à 29 px, pas de couches nettes pour le verre (`app-icons.md › Design` :
-  « prefer illustrations to photos », « clearly defined edges »), et le pavement crème du rendu.
-- Une goutte qui devient feuille : ressemble à une poire, et c'est le logo écologique courant.
-- La rosace seule : l'étoile à huit branches est la marque de beaucoup d'applis musulmanes ; seule,
-  elle ne dit rien du jardin ni de l'eau.
-- Le plan droit (canaux en « + ») : se lit comme une croix ou un ruban de cadeau ; plan en gros plan
-  tourné : se lit comme une enveloppe ; parterres en carrés : une grille d'applis.
-- La calligraphie de جنتك : aucune police arabe à licence libre sur la machine, et
-  `app-icons.md › Design` déconseille le texte (le nom est déjà sous l'icône).
+- Le plan vu d'en haut (première version) : quatre pétales autour d'une étoile, lu comme une fleur
+  ou un médaillon ; tout plan à quatre axes vu d'en haut se lit comme un ornement.
+- Des canaux fins et effilés : des rayons de soleil ou une rose des vents ; des canaux longs : une
+  grande croix en X.
+- Le parterre jeune « rempli depuis le bassin » : le front de pousse dessinait un croissant ; plus
+  clair : se lit « sélectionné » ; plus petit : moins clair que le parterre vide.
+- Chaque parterre surélevé à part : les canaux flottaient sur les flancs ; un grand bassin : une
+  araignée.
+- Plus tôt : un arbre ou le plan rendus avec les modèles 3D (détail de photo, illisible à 29 px,
+  pas de couches nettes) ; une goutte qui devient feuille (une poire, le logo écologique courant) ;
+  la rosace seule (la marque de beaucoup d'applis musulmanes) ; la calligraphie de جنتك (pas de
+  police arabe libre sur la machine, et `app-icons.md › Design` déconseille le texte).
 
 ## 4. Ce qui manque encore
 

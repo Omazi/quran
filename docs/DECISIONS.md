@@ -411,38 +411,42 @@ et la formulation de l'écran. Tant que ce n'est pas validé, l'écran garde le 
 _Changerait si_ la personne qualifiée retient une autre règle : seul `letters.ts` change, avec
 ses tests ; les totaux de contrôle sont alors à relire.
 
-## D38 — L'icône de l'appli : le plan du jardin autour de sa source
+## D38 — L'icône de l'appli : la parcelle du jardin, un parterre encore à pousser
 
 Proposée le 25 novembre 2026 (développeur d'interface), à la demande du propriétaire, qui veut
-une icône ; jusque-là l'appli portait celle d'Expo. **Le choix final revient au propriétaire.**
+une icône ; jusque-là l'appli portait celle d'Expo. Refaite le même jour après une revue de design
+indépendante (philosophie 5, lisibilité 7, finition 6, fonction 8, originalité 4 : la version vue
+d'en haut se lisait comme une fleur à quatre pétales autour de l'étoile générique). **Le choix
+final revient au propriétaire.**
 
-Ce que montre l'icône : le jardin de l'appli vu d'en haut, tourné comme l'appli le montre ;
-quatre parterres verts autour d'un bassin rond, posés sur l'eau ; dans le bassin, l'étoile à huit
-branches de la rosace d'écoute (la marque du hizb). Lire, c'est arroser : la source est au cœur,
-le jardin pousse hizb après hizb. Détail, couleurs, couches et pistes écartées :
-`design/brand-spec.md`, « Icône ».
+Ce que montre l'icône : le jardin de l'appli vu de trois quarts, comme l'appli le montre ; une
+parcelle surélevée, trois parterres verts et un quatrième, devant, pas encore poussé ; au centre
+un bassin d'eau claire d'où partent quatre canaux courts ; dans le bassin, l'étoile de la rosace
+d'écoute, en détail. Lire arrose le jardin, qui pousse hizb après hizb. Détail, couleurs, couches,
+contrastes et pistes écartées : `design/brand-spec.md`, « Icône ».
 
-- **Fichiers** : `assets/expo.icon` (format Icon Composer, couches séparées pour les apparences
-  par défaut, sombre, teintée et transparente ; déjà désigné par `ios.icon`), `assets/images/icon.png`
-  (1024, opaque, coins carrés), les trois couches Android, `favicon.png`, `splash-icon.png`. Tous
-  sortent de `tools/app-icon/make_icon.py`, qui les refait à l'identique.
+- **Fichiers** : `assets/expo.icon` (format Icon Composer, quatre groupes séparés pour les
+  apparences par défaut, sombre, teintée et transparente ; déjà désigné par `ios.icon`),
+  `assets/images/icon.png` (1024, opaque, coins carrés), les trois couches Android, `favicon.png`,
+  `splash-icon.png`. Tous sortent de `tools/app-icon/make_icon.py`, qui les refait octet pour octet.
 - **Écran de lancement** : inchangé, une couleur unie (blanc, noir en sombre), celle du fond du
   premier écran ; pas de logo (`launching.md › Launch screens`).
 - **Licences** : tout est dessiné par le projet (formes géométriques ; l'étoile reprend la
   géométrie de `src/features/listening/rosette`). Aucune police, aucune image, aucun modèle de
   tiers dans les fichiers livrés. Les rendus 3D d'exploration (modèles CC0, D35) ne sont pas livrés.
-- **Vérifié** : rendus à 1024, 180, 120, 60 et 29 pixels, sur fond clair et sombre, version
-  sombre, masque rond Android et silhouette monochrome ; `icon.json` valide selon un schéma non
-  officiel du format ; `npx expo config` lit l'icône.
+- **Vérifié** : rendus à 1024, 180, 120, 60 et 29 pixels sur fond clair et sombre, version
+  sombre, écrans d'accueil, masques Android (rond, carré arrondi, monochrome) ; contrastes
+  calculés ; `icon.json` valide selon un schéma non officiel du format ; `npx expo config` et
+  `npx expo prebuild` lisent et copient l'icône.
 - **Pas vérifié** : le rendu réel du verre d'iOS 26 (reflets, translucidité, versions teintée et
   transparente calculées par le système) ; il faut Icon Composer ou un iPhone, et personne n'a de
   Mac (D24). Les aperçus teintés sont une approximation. À regarder sur la prochaine version
-  TestFlight, et dans les captures du simulateur si elles montrent l'écran d'accueil.
+  TestFlight.
 - **Risques connus** : un dessin fait en code, alors que les jardins dessinés en code ont été
-  refusés (D12) : ici ce n'est pas le jardin de l'écran mais une marque géométrique, comme Apple le
-  demande pour une icône (écart 38 de `design/SKILLS.md`). Les quatre parterres peuvent aussi se
-  lire comme une fleur ou un trèfle. L'emploi de la marque du hizb et l'écho au jardin « sous lequel
-  coulent les rivières » sont à faire confirmer par une personne qualifiée, comme le nom (D31).
+  refusés (D12) : ici c'est une marque géométrique, comme Apple le demande pour une icône (écart 51
+  de `design/SKILLS.md`). La vue de trois quarts rappelle une tuile de jeu de construction. À
+  29 pixels, la parcelle est petite : il reste un losange vert et un point clair. L'emploi de la
+  marque du hizb est à faire confirmer par une personne qualifiée, comme le nom (D31).
 
 _Changerait si_ le propriétaire préfère une autre piste, ou si le rendu sur iPhone déçoit : seules
-les constantes de `make_icon.py` bougent, et on relance l'outil.
+les valeurs de `Design` dans `make_icon.py` bougent, et on relance l'outil.

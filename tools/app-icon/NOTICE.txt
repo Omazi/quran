@@ -1,7 +1,7 @@
 App icon: provenance
 ====================
 
-Files: assets/expo.icon/ (icon.json, Assets/beds.svg, Assets/spring.svg) and, in
+Files: assets/expo.icon/ (icon.json and Assets/: plot.svg, beds.svg, water.svg, spring.svg) and, in
 assets/images/, icon.png, android-icon-foreground.png, android-icon-background.png,
 android-icon-monochrome.png, favicon.png, splash-icon.png.
 
