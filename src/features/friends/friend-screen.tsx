@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { HIZB_COUNT } from '@/domain/quran';
-import { GARDEN_PICTURE_ASPECT_RATIO, GardenScene } from '@/features/garden';
+import { GARDEN_PICTURE_ASPECT_RATIO, GardenView3D } from '@/features/garden';
 import {
   ActionButton,
   AppText,
@@ -146,7 +146,8 @@ export function FriendScreen({
                 testID="friend-garden-hidden"
               />
             ) : (
-              <GardenScene state={card.garden} size="band" />
+              // The garden to visit in 3D (visite.png: « Glisse pour tourner, pince pour zoomer »).
+              <GardenView3D state={card.garden} hintPlacement="below" testID="friend-garden-3d" />
             )}
           </View>
           <Card shape="sheet" style={styles.sheet}>

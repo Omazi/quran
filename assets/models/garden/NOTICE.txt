@@ -1,0 +1,54 @@
+Garden model (level 1): provenance and licences
+================================================
+
+What this file is
+-----------------
+assets/models/garden/level-1/garden.glb is the level-1 garden in 3D, shown by the app's
+GardenView3D (decision D40). It is baked by tools/garden-3d from the same models, layout,
+materials and light as the garden pictures (assets/images/garden, decision D35): one binary
+glTF file, 4.9 MB (1.6 MB once compressed in the app package), with:
+
+- the triangles of every piece the pictures show, merged by material or instanced, each tagged
+  with the stages (elements, water, foliage) where it is drawn;
+- the textures of the models, reduced to 256 or 128 pixels, as raw RGBA pixels (no image file);
+- no animation, no camera, no light (the app sets the pictures' light).
+
+Models used (decision D22) - the same files as the pictures
+-----------------------------------------------------------
+Plants (trees, flowers, bushes, grass, rocks)
+  Quaternius, "Ultimate Stylized Nature Pack"
+  Licence: CC0 1.0 (public domain dedication), as read by the project on the author's page,
+  quaternius.com/packs/ultimatestylizednature.html, on 24 November 2026 (decision D35).
+  Files used: the FBX models and PNG textures of a third-party GitHub mirror,
+  walterpalladino/godot-quaternius-ultimate-stylized-nature, commit
+  d36a06461359a8e60039e17b95d50bedc96c1edc. That repository states MIT for its own code only
+  and says nothing about the assets: the licence above is the author's, not the mirror's.
+  Models: NormalTree_1 to _5, PalmTree_1 and _3, PineTree_1 and _2, Flower_1 to _5_Clump,
+  Bush, Bush_Small, Bush_Large, Bush_Flowers, Bush_Small_Flowers, Grass_Large, Grass_Small,
+  Plant_1, Rock_1, Rock_2, Rock_5, and their textures.
+
+Architecture and props (fountain, walls, gates, lanterns, pavilion, rug, cushions, stepping
+stones, lilies, cascade rock)
+  Kenney (www.kenney.nl): Nature Kit, Castle Kit, Furniture Kit, Fantasy Town Kit
+  Licence: CC0 1.0 ("Creative Commons Zero"), as written in the kit's LICENSE.txt.
+  Files used: a third-party GitHub mirror, shorepine/kenney, commit
+  3694c6879e487c108f55677be7dd2ca75b07cc3b. Models: fountain-round-detail, lantern
+  (fantasy-town); wall-narrow, wall-narrow-gate, tower-square-arch,
+  tower-square-top-roof-rounded (castle); rugRectangle, pillow, pillowBlue (furniture);
+  lily_large, lily_small, path_stone, path_stoneCircle, cliff_waterfallTop_stone (nature).
+
+Not from a pack
+---------------
+The earth block, its border, the beds, the paving, the channels, the basin, the water, the
+spring pools, the waterfall's water and pool, the mottled texture of the earth and the lawn,
+and the drought tint are the picture tool's own plain geometry and shader (D35). They belong to
+the project.
+
+To do before a store release (decisions D22, D35, D40)
+-------------------------------------------------------
+Download both packs again from their authors' own pages, keep the proof of their licence, and
+bake this file again from those files (python3 -I tools/garden-3d/bake.py --source <folder>).
+The mirrors above were used because the authors' sites could not be reached from the machine
+that made the file.
+
+CC0 asks for no credit; this notice is kept for provenance, not because it is required.

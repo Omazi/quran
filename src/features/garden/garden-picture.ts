@@ -88,6 +88,23 @@ export function hasStage(stage: GardenStage, images: GardenImageNames): boolean 
 }
 
 /**
+ * The stage that shows a garden: how many elements, which foliage, which water. The pictures and
+ * the 3D garden (D40) show the same stage for the same state.
+ */
+export function gardenStage(
+  state: GardenState,
+  config: GardenConfig = DEFAULT_GARDEN_CONFIG,
+): GardenStage {
+  const count = state.visibleElements.length;
+  return {
+    count,
+    foliage: foliageStageOf(state.droughtDays, config),
+    // The bare earth and the dead earth have no channel: no water picture exists for them.
+    water: count === 0 ? 0 : WATER_LEVEL[state.water],
+  };
+}
+
+/**
  * The picture that shows a garden, or null when the set lacks one the state needs: the scene
  * then shows its neutral placeholder, never a broken image.
  */
@@ -95,13 +112,7 @@ export function gardenPicture(
   state: GardenState,
   { config = DEFAULT_GARDEN_CONFIG, images = SHIPPED_GARDEN_IMAGES }: GardenPictureOptions = {},
 ): GardenPicture | null {
-  const count = state.visibleElements.length;
-  const stage: GardenStage = {
-    count,
-    foliage: foliageStageOf(state.droughtDays, config),
-    // The bare earth and the dead earth have no channel: no water picture exists for them.
-    water: count === 0 ? 0 : WATER_LEVEL[state.water],
-  };
+  const stage = gardenStage(state, config);
   if (!hasStage(stage, images)) return null;
 
   return { stage };

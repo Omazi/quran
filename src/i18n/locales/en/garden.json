@@ -168,5 +168,12 @@
     "roses": "Roses bloom in your garden",
     "waterfall": "A waterfall flows in your garden",
     "full-bloom": "Your garden is in full bloom"
+  },
+  "view3d": {
+    "hint": "Drag to turn, pinch to zoom",
+    "accessibilityHint": "The actions turn the garden.",
+    "turnLeft": "Turn left",
+    "turnRight": "Turn right",
+    "reset": "Back to the starting view"
   }
 }

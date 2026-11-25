@@ -1,0 +1,380 @@
+{
+  "id": "mixed",
+  "title": "Mixed: Quaternius stylized vegetation + Kenney architecture",
+  "configs": {
+    "qs": {
+      "upAxis": "z",
+      "materials": {
+        "BirchTree_Bark": {
+          "map": "/tool/cache/quaternius-stylized/BirchTree_Bark.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/BirchTree_Bark.png"
+        },
+        "BirchTree_Leaves": {
+          "map": "/tool/cache/quaternius-stylized/BirchTree_Leaves.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/BirchTree_Leaves.png",
+          "alphaTest": 0.5,
+          "doubleSided": true
+        },
+        "Bush_Leaves": {
+          "map": "/tool/cache/quaternius-stylized/Bush_Leaves.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/Bush_Leaves.png",
+          "alphaTest": 0.5,
+          "doubleSided": true
+        },
+        "Flowers": {
+          "map": "/tool/cache/quaternius-stylized/Flowers.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/Flowers.png",
+          "alphaTest": 0.5,
+          "doubleSided": true
+        },
+        "Grass": {
+          "map": "/tool/cache/quaternius-stylized/Grass.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/Grass.png",
+          "doubleSided": true
+        },
+        "MapleTree_Bark": {
+          "map": "/tool/cache/quaternius-stylized/MapleTree_Bark.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/MapleTree_Bark.png"
+        },
+        "MapleTree_Leaves": {
+          "map": "/tool/cache/quaternius-stylized/MapleTree_Leaves.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/MapleTree_Leaves.png",
+          "alphaTest": 0.5,
+          "doubleSided": true
+        },
+        "NormalTree_Bark": {
+          "map": "/tool/cache/quaternius-stylized/NormalTree_Bark.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/NormalTree_Bark.png"
+        },
+        "NormalTree_Leaves": {
+          "map": "/tool/cache/quaternius-stylized/NormalTree_Leaves.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/NormalTree_Leaves.png",
+          "alphaTest": 0.5,
+          "doubleSided": true
+        },
+        "PalmTree_Trunk": {
+          "map": "/tool/cache/quaternius-stylized/PalmTree_Trunk.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/PalmTree_Trunk.png"
+        },
+        "PalmTree_Leaves": {
+          "map": "/tool/cache/quaternius-stylized/PalmTree_Leaves.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/PalmTree_Leaves.png",
+          "alphaTest": 0.5,
+          "doubleSided": true
+        },
+        "PineTree_Bark": {
+          "map": "/tool/cache/quaternius-stylized/PineTree_Bark.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/PineTree_Bark.png"
+        },
+        "PineTree_Leaves": {
+          "map": "/tool/cache/quaternius-stylized/PineTree_Leaves.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/PineTree_Leaves.png",
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "color": "#6a8e4b"
+        },
+        "Rock": {
+          "map": "/tool/cache/quaternius-stylized/Rocks.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/Rocks.png"
+        }
+      }
+    },
+    "qs-dark": {
+      "upAxis": "z",
+      "materials": {
+        "BirchTree_Bark": {
+          "map": "/tool/cache/quaternius-stylized/BirchTree_Bark.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/BirchTree_Bark.png"
+        },
+        "BirchTree_Leaves": {
+          "map": "/tool/cache/quaternius-stylized/BirchTree_Leaves.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/BirchTree_Leaves.png",
+          "alphaTest": 0.5,
+          "doubleSided": true
+        },
+        "Bush_Leaves": {
+          "map": "/tool/cache/quaternius-stylized/Bush_Leaves.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/Bush_Leaves.png",
+          "alphaTest": 0.5,
+          "doubleSided": true
+        },
+        "Flowers": {
+          "map": "/tool/cache/quaternius-stylized/Flowers.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/Flowers.png",
+          "alphaTest": 0.5,
+          "doubleSided": true
+        },
+        "Grass": {
+          "map": "/tool/cache/quaternius-stylized/Grass.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/Grass.png",
+          "doubleSided": true
+        },
+        "MapleTree_Bark": {
+          "map": "/tool/cache/quaternius-stylized/MapleTree_Bark.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/MapleTree_Bark.png"
+        },
+        "MapleTree_Leaves": {
+          "map": "/tool/cache/quaternius-stylized/MapleTree_Leaves.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/MapleTree_Leaves.png",
+          "alphaTest": 0.5,
+          "doubleSided": true
+        },
+        "NormalTree_Bark": {
+          "map": "/tool/cache/quaternius-stylized/NormalTree_Bark.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/NormalTree_Bark.png"
+        },
+        "NormalTree_Leaves": {
+          "map": "/tool/cache/quaternius-stylized/NormalTree_Leaves_Dark.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/NormalTree_Leaves_Dark.png",
+          "alphaTest": 0.5,
+          "doubleSided": true
+        },
+        "PalmTree_Trunk": {
+          "map": "/tool/cache/quaternius-stylized/PalmTree_Trunk.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/PalmTree_Trunk.png"
+        },
+        "PalmTree_Leaves": {
+          "map": "/tool/cache/quaternius-stylized/PalmTree_Leaves.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/PalmTree_Leaves.png",
+          "alphaTest": 0.5,
+          "doubleSided": true
+        },
+        "PineTree_Bark": {
+          "map": "/tool/cache/quaternius-stylized/PineTree_Bark.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/PineTree_Bark.png"
+        },
+        "PineTree_Leaves": {
+          "map": "/tool/cache/quaternius-stylized/PineTree_Leaves.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/PineTree_Leaves.png",
+          "alphaTest": 0.5,
+          "doubleSided": true,
+          "color": "#6a8e4b"
+        },
+        "Rock": {
+          "map": "/tool/cache/quaternius-stylized/Rocks.png",
+          "source": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/Textures/Rocks.png"
+        }
+      }
+    }
+  },
+  "roles": {
+    "tree.pomegranate": [
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/NormalTree_5.fbx",
+        "cfg": "qs",
+        "scale": 1.2
+      }
+    ],
+    "tree.date-palm": [
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/PalmTree_1.fbx",
+        "cfg": "qs"
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/PalmTree_3.fbx",
+        "cfg": "qs"
+      }
+    ],
+    "tree.olive": [
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/NormalTree_4.fbx",
+        "cfg": "qs-dark",
+        "scale": 1.2
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/NormalTree_3.fbx",
+        "cfg": "qs-dark",
+        "scale": 1.2
+      }
+    ],
+    "tree.fig": [
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/NormalTree_3.fbx",
+        "cfg": "qs",
+        "scale": 1.2
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/NormalTree_4.fbx",
+        "cfg": "qs",
+        "scale": 1.2
+      }
+    ],
+    "tree.cypress": [
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/PineTree_2.fbx",
+        "cfg": "qs",
+        "scale": 1.1
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/PineTree_1.fbx",
+        "cfg": "qs",
+        "scale": 1.1
+      }
+    ],
+    "tree.orange": [
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/NormalTree_1.fbx",
+        "cfg": "qs",
+        "scale": 1.3
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/NormalTree_2.fbx",
+        "cfg": "qs",
+        "scale": 1.3
+      }
+    ],
+    "flowers": [
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Flower_3_Clump.fbx",
+        "cfg": "qs"
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Flower_4_Clump.fbx",
+        "cfg": "qs"
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Flower_2_Clump.fbx",
+        "cfg": "qs"
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Flower_5_Clump.fbx",
+        "cfg": "qs"
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Flower_1_Clump.fbx",
+        "cfg": "qs"
+      }
+    ],
+    "roses": [
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Bush_Flowers.fbx",
+        "cfg": "qs"
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Bush_Small_Flowers.fbx",
+        "cfg": "qs"
+      }
+    ],
+    "grass": [
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Grass_Large.fbx",
+        "cfg": "qs"
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Grass_Small.fbx",
+        "cfg": "qs"
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Plant_1.fbx",
+        "cfg": "qs"
+      }
+    ],
+    "bush": [
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Bush.fbx",
+        "cfg": "qs"
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Bush_Small.fbx",
+        "cfg": "qs"
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Bush_Large.fbx",
+        "cfg": "qs"
+      }
+    ],
+    "lily": [
+      {
+        "file": "packs/kenney-shorepine/3d/nature/lily_large.glb"
+      },
+      {
+        "file": "packs/kenney-shorepine/3d/nature/lily_small.glb"
+      }
+    ],
+    "rock": [
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Rock_2.fbx",
+        "cfg": "qs",
+        "scale": 0.8
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Rock_1.fbx",
+        "cfg": "qs",
+        "scale": 0.8
+      },
+      {
+        "file": "packs/quaternius-stylized-nature/ultimate-stylized-nature/sources/FBX/Rock_5.fbx",
+        "cfg": "qs",
+        "scale": 0.8
+      }
+    ],
+    "stepping-stones": [
+      {
+        "file": "packs/kenney-shorepine/3d/nature/path_stone.glb"
+      },
+      {
+        "file": "packs/kenney-shorepine/3d/nature/path_stoneCircle.glb"
+      }
+    ],
+    "fountain": [
+      {
+        "file": "packs/kenney-shorepine/3d/fantasy-town/fountain-round-detail.glb"
+      }
+    ],
+    "wall": [
+      {
+        "file": "packs/kenney-shorepine/3d/castle/wall-narrow.glb",
+        "lengthAxis": "z"
+      }
+    ],
+    "gate": [
+      {
+        "file": "packs/kenney-shorepine/3d/castle/wall-narrow-gate.glb",
+        "lengthAxis": "z"
+      }
+    ],
+    "lantern": [
+      {
+        "file": "packs/kenney-shorepine/3d/fantasy-town/lantern.glb"
+      }
+    ],
+    "pavilion": [
+      {
+        "parts": [
+          {
+            "file": "packs/kenney-shorepine/3d/castle/tower-square-arch.glb"
+          },
+          {
+            "file": "packs/kenney-shorepine/3d/castle/tower-square-top-roof-rounded.glb",
+            "pos": [0, 1.0, 0]
+          }
+        ]
+      }
+    ],
+    "carpet": [
+      {
+        "file": "packs/kenney-shorepine/3d/furniture/rugRectangle.glb"
+      }
+    ],
+    "cushion": [
+      {
+        "file": "packs/kenney-shorepine/3d/furniture/pillow.glb"
+      },
+      {
+        "file": "packs/kenney-shorepine/3d/furniture/pillowBlue.glb"
+      }
+    ],
+    "lectern": null,
+    "waterfall": [
+      {
+        "file": "packs/kenney-shorepine/3d/nature/cliff_waterfallTop_stone.glb"
+      }
+    ],
+    "trellis": null,
+    "bird": null,
+    "butterfly": null
+  },
+  "roleNotes": {
+    "*": "Every model keeps the notes of the pack it comes from."
+  }
+}
