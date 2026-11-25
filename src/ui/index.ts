@@ -12,6 +12,7 @@ export {
 } from './components/confirm-action';
 export { Placeholder, type PlaceholderProps } from './components/placeholder';
 export { QrCode, qrCodeModules, type QrCodeProps } from './components/qr-code';
+export { ReaderSearchField, type ReaderSearchFieldProps } from './components/reader-search-field';
 export { QuranText, type QuranTextProps, type QuranTextRun } from './components/quran-text';
 export { Screen, type ScreenBackground, type ScreenProps } from './components/screen';
 export { useHighContrast, useReducedMotion } from './device-settings';
@@ -39,10 +40,13 @@ export {
 } from './components/bar-chart';
 export {
   chart,
+  emphasisWeight,
   fontFamily,
   layout,
   pieceSizes,
+  MINIMUM_FONT_SIZE,
   radius,
+  readerShapes,
   spacing,
   stateOpacity,
   type BackdropName,
@@ -67,3 +71,10 @@ export { IconTile, type IconTileProps, type IconTileTone } from './components/ic
 export { Pill, type PillProps } from './components/pill';
 export { ProgressRing, type ProgressRingProps } from './components/progress-ring';
 export { SectionHeader, type SectionHeaderProps } from './components/section-header';
+export {
+  useColors,
+  useReaderPalette,
+  useReaderPaletteValues,
+  type Colors,
+  type ReaderPalette,
+} from './use-colors';

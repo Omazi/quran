@@ -108,6 +108,13 @@ export const READER_CONFIG = Object.freeze({
    */
   surahNameScale: 1.1,
 
+  /**
+   * The two words at the ends of the cartouche (the verse count and "مكية" or "مدنية"), as a share
+   * of the page's text size, never under the smallest size of the interface: about the size of the
+   * mockup's (docs/design/mushaf.png), small beside the name. Judgment, measured on the mockup.
+   */
+  cartoucheLabelScale: 0.62,
+
   /** The normal space between two words, in ems: the space of the font (450 / 2,048 units). */
   wordGapInEm: 0.22,
 

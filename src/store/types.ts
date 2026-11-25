@@ -32,6 +32,11 @@ export interface AppSettings {
    * The page to resume starts from it (docs/specs/reader.md, section 1).
    */
   readonly lastOpenedPage: number | null;
+  /**
+   * The pages the person bookmarked in the reader, each once, in the order of the mushaf
+   * (pages 1 to 604). Empty until the first bookmark.
+   */
+  readonly bookmarks: readonly number[];
   /** Periods during which the garden is frozen. */
   readonly pauses: readonly Pause[];
   readonly reminders: ReminderSettings;
@@ -90,6 +95,11 @@ export interface AppState extends AppData {
   completeOnboarding: () => void;
   /** Remembers the last page opened in the reader, or forgets it with null. */
   setLastOpenedPage: (page: number | null) => void;
+  /**
+   * Bookmarks a page, or removes its bookmark when it has one. Throws a `RangeError` for anything
+   * but a page from 1 to 604.
+   */
+  toggleBookmark: (page: number) => void;
   /**
    * Adds a page to the journal through the khatm module. A page read again changes nothing.
    * Throws a `RangeError` for a day outside `STORED_DATE_RANGE`: a phone whose clock is that far

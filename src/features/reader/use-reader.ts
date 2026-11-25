@@ -9,6 +9,7 @@ import { useReaderPresence } from '@/features/profile';
 import { useAppStore } from '@/store';
 
 import { READER_CONFIG } from './config';
+import { pageSurah } from './page-surah';
 import { readingFeedback, type ReadingFeedback } from './reading-feedback';
 import { finishVisit, pauseVisit, resumeVisit, startVisit, type PageVisit } from './reading-timer';
 import { useScreenReader } from './use-screen-reader';
@@ -26,11 +27,13 @@ export interface ReaderDependencies {
 /** Where the reader stands: the page shown and what the bars say about it. */
 export interface ReaderModel {
   readonly page: number;
-  /** The surah of the first verse of the page, like its juz and hizb. */
+  /** The surah the page is named after (`pageSurah`), then its juz and hizb. */
   readonly surah: number;
   readonly juz: number;
   readonly hizb: number;
   readonly barsVisible: boolean;
+  /** Whether the page shown has a bookmark. */
+  readonly isBookmarked: boolean;
   /** What to tell the person about the page they just left, or null. */
   readonly feedback: ReadingFeedback | null;
 }
@@ -40,6 +43,8 @@ export interface ReaderActions {
   readonly changePage: (page: number) => void;
   /** A tap on the page: hides or shows the bars. */
   readonly toggleBars: () => void;
+  /** Bookmarks the page shown, or removes its bookmark. */
+  readonly toggleBookmark: () => void;
 }
 
 const SECOND_MS = 1000;
@@ -77,6 +82,8 @@ export function useReader(
   const pauses = useAppStore((state) => state.settings.pauses);
   const lastOpenedPage = useAppStore((state) => state.settings.lastOpenedPage);
   const rememberOpenedPage = useAppStore((state) => state.setLastOpenedPage);
+  const bookmarks = useAppStore((state) => state.settings.bookmarks);
+  const toggleBookmarkInStore = useAppStore((state) => state.toggleBookmark);
 
   // Read when a visit ends, which can be after the last render (when the reader closes).
   const settings: HomeSettings = { dailyGoalPages, userSeed, lastOpenedPage, pauses };
@@ -165,16 +172,21 @@ export function useReader(
   }, [feedback]);
 
   const toggleBars = useCallback(() => setBarsShown((shown) => !shown), []);
+  const toggleBookmark = useCallback(
+    () => toggleBookmarkInStore(page),
+    [page, toggleBookmarkInStore],
+  );
 
   return {
     model: {
       page,
-      surah: quranStructure.firstVerseOfPage(page).surah,
+      surah: pageSurah(quranStructure, page),
       juz: quranStructure.juzOfPage(page),
       hizb: quranStructure.hizbOfPage(page),
       barsVisible: areBarsShown || isScreenReaderRunning,
+      isBookmarked: bookmarks.includes(page),
       feedback,
     },
-    actions: { changePage, toggleBars },
+    actions: { changePage, toggleBars, toggleBookmark },
   };
 }

@@ -16,13 +16,14 @@ import {
   type SurahEntry,
 } from './contents-model';
 import { READER_CONFIG } from './config';
+import { pageSurah } from './page-surah';
 import { useResumePage } from './use-resume-page';
 
 /** The two lists the segmented choice switches between (spec 1). */
 export type ContentsView = 'surahs' | 'juz';
 
 export interface ContentsModel {
-  /** The page to resume and the surah of its first verse. */
+  /** The page to resume and the surah it is named after (`pageSurah`). */
   readonly resume: { readonly page: number; readonly surah: number };
   /** Today's new pages toward the daily goal: the water given today, shown under "Reprendre". */
   readonly today: TodayProgress;
@@ -33,12 +34,25 @@ export interface ContentsModel {
    * The page the search text names, with its surah and juz, or null while it names none (not a
    * number from 1 to 604). It heads the results.
    */
-  readonly goTo: { readonly page: number; readonly surah: number; readonly juz: number } | null;
+  readonly goTo: PagePlace | null;
+  /** The bookmarked pages, in the order of the mushaf, with the surah and juz that name them. */
+  readonly bookmarks: readonly PagePlace[];
   /** The surahs the search keeps, in order: all 114 for an empty search. */
   readonly surahs: readonly SurahEntry[];
   readonly juz: readonly JuzEntry[];
   /** The opening words of each juz, by juz number, once loaded: the header shows them then. */
   readonly juzOpenings: Readonly<Record<number, string>>;
+}
+
+/** A page with what names it: the surah it is named after (`pageSurah`) and its juz. */
+export interface PagePlace {
+  readonly page: number;
+  readonly surah: number;
+  readonly juz: number;
+}
+
+function placeOf(page: number): PagePlace {
+  return { page, surah: pageSurah(quranStructure, page), juz: quranStructure.juzOfPage(page) };
 }
 
 export interface ContentsActions {
@@ -74,20 +88,16 @@ export function useContentsModel(
   const setView = useCallback((next: ContentsView) => setShownView(next), []);
   const goToPage = parseGoToPage(query);
   const juzOpenings = useJuzOpenings(repository);
+  const bookmarkedPages = useAppStore((state) => state.settings.bookmarks);
+  const bookmarks = useMemo(() => bookmarkedPages.map(placeOf), [bookmarkedPages]);
   return {
     model: {
-      resume: { page: resumePage, surah: quranStructure.firstVerseOfPage(resumePage).surah },
+      resume: { page: resumePage, surah: pageSurah(quranStructure, resumePage) },
       today,
       view,
       query,
-      goTo:
-        goToPage === null
-          ? null
-          : {
-              page: goToPage,
-              surah: quranStructure.firstVerseOfPage(goToPage).surah,
-              juz: quranStructure.juzOfPage(goToPage),
-            },
+      goTo: goToPage === null ? null : placeOf(goToPage),
+      bookmarks,
       surahs,
       juz: juzEntries,
       juzOpenings,

@@ -6,6 +6,7 @@
  */
 
 import type { ReactElement, ReactNode } from 'react';
+import type { ColorValue } from 'react-native';
 import type { AndroidSymbol, SFSymbol } from 'expo-symbols';
 
 import type { ColorRole, IconColorRole, TextStyleName } from '../tokens';
@@ -387,6 +388,11 @@ export interface IconProps {
   textStyle?: IconTextStyle;
   /** A foreground role. Defaults to the primary label colour. */
   color?: IconColorRole;
+  /**
+   * A colour of the mockup palette (`useReaderPalette`), for a symbol on one of its surfaces, such
+   * as white on the forest green of the reader's microphone. Takes the place of `color`.
+   */
+  tint?: ColorValue;
   /** What the icon means. Omit it for an icon that only decorates a text that says the same. */
   accessibilityLabel?: string;
   testID?: string;

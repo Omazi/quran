@@ -41,6 +41,7 @@ const SETTINGS: AppSettings = {
   dailyGoalPages: 12,
   onboardingCompleted: true,
   lastOpenedPage: 293,
+  bookmarks: [293],
   userSeed: 987_654,
   pauses: [{ from: parseLocalDate('2026-03-01'), to: parseLocalDate('2026-03-04') }],
   reminders: { ...DEFAULT_REMINDERS, fridayKahfEnabled: true },

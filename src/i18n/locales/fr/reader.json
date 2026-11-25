@@ -2,15 +2,19 @@
   "contents": {
     "title": "Coran",
     "resume": {
-      "action": "Reprendre",
-      "detail": "{{surah}} · Page {{page}}"
+      "detail": "Reprendre page {{page}}",
+      "spoken": "Reprendre {{surah}}, page {{page}}"
     },
     "today": {
-      "label": "Aujourd’hui",
+      "label": "Arrosage du jour",
       "value_one": "{{count}} page sur {{goal}}",
       "value_other": "{{count}} pages sur {{goal}}",
-      "valueReached_one": "{{count}} page sur {{goal}}, objectif atteint",
-      "valueReached_other": "{{count}} pages sur {{goal}}, objectif atteint"
+      "remaining_one": "Encore {{count}} page pour ton objectif",
+      "remaining_other": "Encore {{count}} pages pour ton objectif",
+      "reached": "Objectif du jour atteint"
+    },
+    "bookmarks": {
+      "title": "Marque-pages"
     },
     "view": {
       "label": "Afficher",
@@ -27,12 +31,11 @@
       "pageDetail": "{{surah}} · Juz {{juz}}"
     },
     "surah": {
-      "label": "{{number}}. {{name}}",
       "detail_one": "{{place}} · {{count}} verset · Page {{page}}",
       "detail_other": "{{place}} · {{count}} versets · Page {{page}}",
       "meccan": "Mecquoise",
       "medinan": "Médinoise",
-      "numberOnly": "Sourate {{number}}"
+      "spoken": "{{number}}. {{name}}, {{arabic}}, {{detail}}"
     },
     "juz": {
       "title": "Juz {{juz}}",
@@ -41,8 +44,14 @@
     }
   },
   "page": {
-    "subtitle": "Juz {{juz}} · Hizb {{hizb}} · Page {{page}}",
+    "subtitle": "Juz {{juz}}, Hizb {{hizb}} · Page {{page}}",
     "surahTitle": "سورة {{name}}",
+    "cartouche": {
+      "verses": "آياتها {{count}}",
+      "meccan": "مكية",
+      "medinan": "مدنية",
+      "spoken": "{{title}}، {{place}}، {{verses}}"
+    },
     "loading": "Chargement de la page {{page}}",
     "next": "Page suivante",
     "previous": "Page précédente",
@@ -52,8 +61,42 @@
       "description": "Les données de cette page sont incomplètes : elle n’est pas affichée. Les autres pages restent lisibles."
     }
   },
+  "bar": {
+    "back": "Retour",
+    "bookmark": "Marque-page",
+    "listen": "Écouter un passage"
+  },
   "feedback": {
-    "pageCounted": "Page lue, ton jardin est arrosé",
+    "pageCounted": "+1 page, ton jardin est arrosé",
+    "pageGrows": "+1 page, {{growth}}",
+    "grows": {
+      "pomegranate": "ton grenadier grandit",
+      "date-palm": "ton palmier-dattier grandit",
+      "olive": "ton olivier grandit",
+      "fig": "ton figuier grandit",
+      "cypress": "ton cyprès grandit",
+      "orange": "ton oranger grandit",
+      "channels": "tes canaux avancent",
+      "paving": "ton dallage avance",
+      "bed": "ton parterre se remplit",
+      "stepping-stones": "ton chemin de pierres avance",
+      "flowers": "tes fleurs poussent",
+      "fountain": "ta fontaine prend forme",
+      "springs": "tes sources approchent",
+      "birds": "tes oiseaux approchent",
+      "wall": "ton mur s’élève",
+      "trellis": "ta treille grimpe",
+      "gate": "ta porte prend forme",
+      "lanterns": "tes lanternes approchent",
+      "butterflies": "tes papillons approchent",
+      "pavilion": "ton pavillon s’élève",
+      "carpets": "tes tapis se tissent",
+      "cushions": "tes coussins approchent",
+      "lectern": "ton pupitre prend forme",
+      "roses": "tes roses poussent",
+      "waterfall": "ta cascade prend forme",
+      "full-bloom": "ton jardin approche de sa pleine floraison"
+    },
     "hizbCompleted": "Hizb terminé. Nouveau dans ton jardin : {{element}}"
   },
   "notFound": {

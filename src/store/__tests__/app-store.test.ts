@@ -49,6 +49,7 @@ describe('first launch', () => {
       onboardingCompleted: false,
       userSeed: SEED,
       lastOpenedPage: null,
+      bookmarks: [],
       pauses: [],
       reminders: DEFAULT_REMINDERS,
     });
@@ -118,6 +119,7 @@ describe('changes', () => {
       onboardingCompleted: true,
       userSeed: SEED,
       lastOpenedPage: 293,
+      bookmarks: [],
       pauses: [],
       reminders: { ...DEFAULT_REMINDERS, dailyEnabled: false, dailyTime: { hour: 6, minute: 15 } },
     });
@@ -175,6 +177,28 @@ describe('changes', () => {
     const { store } = await load(createMemoryStorage());
     expect(() => store.getState().setLastOpenedPage(page)).toThrow(RangeError);
     expect(store.getState().settings.lastOpenedPage).toBeNull();
+  });
+
+  it('toggles a bookmark on a page, keeps the pages in order, and saves them', async () => {
+    const storage = createMemoryStorage();
+    const { store } = await load(storage);
+    expect(store.getState().settings.bookmarks).toEqual([]);
+    store.getState().toggleBookmark(293);
+    store.getState().toggleBookmark(18);
+    store.getState().toggleBookmark(604);
+    expect(store.getState().settings.bookmarks).toEqual([18, 293, 604]);
+    await store.whenSaved();
+    expect(stored(storage).settings?.bookmarks).toEqual([18, 293, 604]);
+    store.getState().toggleBookmark(293);
+    expect(store.getState().settings.bookmarks).toEqual([18, 604]);
+    await store.whenSaved();
+    expect((await load(storage)).store.getState().settings.bookmarks).toEqual([18, 604]);
+  });
+
+  it.each([0, 605, 2.5, Number.NaN, -1])('refuses a bookmark on page %p', async (page) => {
+    const { store } = await load(createMemoryStorage());
+    expect(() => store.getState().toggleBookmark(page)).toThrow(RangeError);
+    expect(store.getState().settings.bookmarks).toEqual([]);
   });
 
   it('gives a person with an older document no page opened, and keeps all the rest', async () => {
@@ -351,6 +375,7 @@ describe('document written by version 1 of the app', () => {
     expect(store.getState().settings).toEqual({
       ...settings,
       lastOpenedPage: null,
+      bookmarks: [],
       reminders: { ...DEFAULT_REMINDERS, dailyEnabled: false },
     });
     expect(store.getState().journal).toEqual(journal);
@@ -567,6 +592,7 @@ describe('telling the person, once, that something was lost', () => {
     onboardingCompleted: true,
     userSeed: 1,
     lastOpenedPage: null,
+    bookmarks: [],
     pauses: [],
     reminders: DEFAULT_REMINDERS,
   };

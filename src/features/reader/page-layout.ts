@@ -6,7 +6,7 @@
  */
 
 import { LINES_PER_PAGE } from '@/domain/quran';
-import { layout, spacing } from '@/ui';
+import { readerShapes, spacing } from '@/ui';
 
 import { READER_CONFIG } from './config';
 
@@ -30,18 +30,42 @@ export interface PageMetrics {
   readonly tightestGap: number;
 }
 
+const {
+  frameInset,
+  frameOuterRule,
+  frameRuleGap,
+  frameInnerRule,
+  frameBand,
+  frameBandGap,
+  frameTextInset,
+} = readerShapes;
+
 /**
- * Room the frame of the page takes above and below the lines: the gap between the rule and the
- * text, and the rule itself. The frame sits in the side margins, so it takes no width.
+ * Room the double frame of the mockup (docs/design/mushaf.png) takes on each side of the text
+ * column: its distance to the screen edge, the outer rule, the gap, the inner rule, and the air
+ * before the text.
  */
-export const PAGE_FRAME_ROOM = spacing.sm + layout.outlineWidth;
+export const PAGE_SIDE_ROOM =
+  frameInset + frameOuterRule + frameRuleGap + frameInnerRule + frameTextInset.horizontal;
+
+/**
+ * Room the frame takes above and below the lines: the outer rule, the band of lozenges between
+ * its two gaps, the inner rule, and the air before the text.
+ */
+export const PAGE_FRAME_ROOM =
+  frameOuterRule +
+  frameRuleGap +
+  frameBand +
+  frameBandGap +
+  frameInnerRule +
+  frameTextInset.vertical;
 
 /**
  * The most space left between the bar and the frame of the page: the frame starts right under the
  * bar (layout.md › Visual hierarchy: the content first, at the top), and is centred in the room
  * only while what is left is smaller than twice this. The rest of a tall room goes under the page.
  */
-export const PAGE_TOP_INSET_MAX = spacing.sm;
+export const PAGE_TOP_INSET_MAX = spacing.xs;
 
 /** Height of the frame of a page: its 15 lines and the room of the frame above and below. */
 export function pageFrameHeight(metrics: PageMetrics): number {
@@ -58,7 +82,7 @@ export function pageTopInset(area: PageArea, metrics: PageMetrics): number {
 }
 
 function columnOf({ width, height }: PageArea): { textWidth: number; linesHeight: number } {
-  const textWidth = width - 2 * layout.screenMargin;
+  const textWidth = width - 2 * PAGE_SIDE_ROOM;
   const linesHeight = height - 2 * PAGE_FRAME_ROOM;
   if (!(textWidth > 0) || !(linesHeight > 0)) {
     throw new RangeError(`No room for a page: ${width} by ${height} points.`);

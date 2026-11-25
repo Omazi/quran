@@ -16,12 +16,14 @@ import {
   highContrastAppColors,
   highContrastGardenPalette,
   iosSystemColorNames,
+  readerPalette,
   type AppColorRole,
   type BackdropName,
   type ColorPair,
   type ColorRole,
   type GardenPaletteRole,
   type GradientStop,
+  type ReaderPaletteRole,
 } from './tokens';
 
 /** One colour per role of the charter, ready to be used in a style. */
@@ -140,4 +142,51 @@ export function useBackdropGradient(name: BackdropName): readonly GradientStop[]
 export function useElevation(level: keyof typeof elevation): string {
   const scheme = useColorScheme();
   return elevation[level][scheme === 'dark' ? 'dark' : 'light'];
+}
+
+/** The mockup palette of the reader and the Quran tab, one colour per role. */
+export type ReaderPalette = Readonly<Record<ReaderPaletteRole, ColorValue>>;
+
+let iosReaderPalette: ReaderPalette | undefined;
+const fallbackReaderPalette: Readonly<Record<Appearance, ReaderPalette>> = {
+  light: mapRoles(readerPalette, (pair: ColorPair) => pair.light),
+  dark: mapRoles(readerPalette, (pair: ColorPair) => pair.dark),
+};
+
+/**
+ * The same palette as plain values for the device appearance, for what cannot take a dynamic
+ * colour: the strokes and gradients of react-native-svg.
+ */
+export function useReaderPaletteValues(): Readonly<Record<ReaderPaletteRole, string>> {
+  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
+  return readerPaletteValues[scheme];
+}
+
+const readerPaletteValues = {
+  light: mapPlain('light'),
+  dark: mapPlain('dark'),
+};
+
+function mapPlain(appearance: Appearance): Readonly<Record<ReaderPaletteRole, string>> {
+  const roles = Object.keys(readerPalette) as ReaderPaletteRole[];
+  return Object.fromEntries(roles.map((role) => [role, readerPalette[role][appearance]])) as Record<
+    ReaderPaletteRole,
+    string
+  >;
+}
+
+/**
+ * The surfaces and lines of the validated mockups (tokens `readerPalette`): dynamic colours on
+ * iOS, the value of the device appearance elsewhere, like `useColors`. These are surfaces: a text
+ * takes a role of `useColors` through `AppText`.
+ */
+export function useReaderPalette(): ReaderPalette {
+  const scheme = useColorScheme();
+  if (Platform.OS === 'ios') {
+    iosReaderPalette ??= mapRoles(readerPalette, (pair: ColorPair) =>
+      DynamicColorIOS({ light: pair.light, dark: pair.dark }),
+    );
+    return iosReaderPalette;
+  }
+  return fallbackReaderPalette[scheme === 'dark' ? 'dark' : 'light'];
 }

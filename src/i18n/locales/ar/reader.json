@@ -2,23 +2,27 @@
   "contents": {
     "title": "القرآن",
     "resume": {
-      "action": "متابعة",
-      "detail": "{{surah}} · صفحة {{page}}"
+      "detail": "متابعة من الصفحة {{page}}",
+      "spoken": "متابعة {{surah}}، الصفحة {{page}}"
     },
     "today": {
-      "label": "اليوم",
+      "label": "سقي اليوم",
       "value_zero": "الصفحات: {{count}} من {{goal}}",
       "value_one": "الصفحات: {{count}} من {{goal}}",
       "value_two": "الصفحات: {{count}} من {{goal}}",
       "value_few": "الصفحات: {{count}} من {{goal}}",
       "value_many": "الصفحات: {{count}} من {{goal}}",
       "value_other": "الصفحات: {{count}} من {{goal}}",
-      "valueReached_zero": "الصفحات: {{count}} من {{goal}}، تحقق الهدف",
-      "valueReached_one": "الصفحات: {{count}} من {{goal}}، تحقق الهدف",
-      "valueReached_two": "الصفحات: {{count}} من {{goal}}، تحقق الهدف",
-      "valueReached_few": "الصفحات: {{count}} من {{goal}}، تحقق الهدف",
-      "valueReached_many": "الصفحات: {{count}} من {{goal}}، تحقق الهدف",
-      "valueReached_other": "الصفحات: {{count}} من {{goal}}، تحقق الهدف"
+      "remaining_zero": "بقيت {{count}} صفحة لبلوغ هدفك",
+      "remaining_one": "بقيت صفحة واحدة لبلوغ هدفك",
+      "remaining_two": "بقيت صفحتان لبلوغ هدفك",
+      "remaining_few": "بقيت {{count}} صفحات لبلوغ هدفك",
+      "remaining_many": "بقيت {{count}} صفحة لبلوغ هدفك",
+      "remaining_other": "بقيت {{count}} صفحة لبلوغ هدفك",
+      "reached": "تحقق هدف اليوم"
+    },
+    "bookmarks": {
+      "title": "العلامات المرجعية"
     },
     "view": {
       "label": "عرض",
@@ -35,7 +39,6 @@
       "pageDetail": "{{surah}} · الجزء {{juz}}"
     },
     "surah": {
-      "label": "{{number}}. {{name}}",
       "detail_zero": "{{place}} · {{count}} آية · صفحة {{page}}",
       "detail_one": "{{place}} · آية واحدة · صفحة {{page}}",
       "detail_two": "{{place}} · آيتان · صفحة {{page}}",
@@ -44,7 +47,7 @@
       "detail_other": "{{place}} · {{count}} آية · صفحة {{page}}",
       "meccan": "مكية",
       "medinan": "مدنية",
-      "numberOnly": "السورة {{number}}"
+      "spoken": "{{number}}. {{name}}، {{detail}}"
     },
     "juz": {
       "title": "الجزء {{juz}}",
@@ -53,8 +56,14 @@
     }
   },
   "page": {
-    "subtitle": "الجزء {{juz}} · الحزب {{hizb}} · صفحة {{page}}",
+    "subtitle": "الجزء {{juz}}، الحزب {{hizb}} · صفحة {{page}}",
     "surahTitle": "سورة {{name}}",
+    "cartouche": {
+      "verses": "آياتها {{count}}",
+      "meccan": "مكية",
+      "medinan": "مدنية",
+      "spoken": "{{title}}، {{place}}، {{verses}}"
+    },
     "loading": "جارٍ تحميل الصفحة {{page}}",
     "next": "الصفحة التالية",
     "previous": "الصفحة السابقة",
@@ -64,8 +73,42 @@
       "description": "بيانات هذه الصفحة ناقصة، لذلك لا تُعرض. باقي الصفحات تبقى مقروءة."
     }
   },
+  "bar": {
+    "back": "رجوع",
+    "bookmark": "علامة مرجعية",
+    "listen": "الاستماع إلى مقطع"
+  },
   "feedback": {
-    "pageCounted": "قُرئت الصفحة وسُقيت حديقتك",
+    "pageCounted": "+1 صفحة، سُقيت حديقتك",
+    "pageGrows": "+1 صفحة، {{growth}}",
+    "grows": {
+      "pomegranate": "شجرة الرمان في حديقتك تكبر",
+      "date-palm": "النخلة في حديقتك تكبر",
+      "olive": "شجرة الزيتون في حديقتك تكبر",
+      "fig": "شجرة التين في حديقتك تكبر",
+      "cypress": "شجرة السرو في حديقتك تكبر",
+      "orange": "شجرة البرتقال في حديقتك تكبر",
+      "channels": "القنوات في حديقتك تمتد",
+      "paving": "البلاط في حديقتك يمتد",
+      "bed": "حوض الزرع في حديقتك يمتلئ",
+      "stepping-stones": "الممشى الحجري في حديقتك يمتد",
+      "flowers": "الأزهار في حديقتك تنمو",
+      "fountain": "النافورة في حديقتك تتشكل",
+      "springs": "عيون الماء تقترب من حديقتك",
+      "birds": "الطيور تقترب من حديقتك",
+      "wall": "السور في حديقتك يرتفع",
+      "trellis": "العريشة في حديقتك تتسلق",
+      "gate": "البوابة في حديقتك تتشكل",
+      "lanterns": "الفوانيس تقترب من حديقتك",
+      "butterflies": "الفراشات تقترب من حديقتك",
+      "pavilion": "الجناح في حديقتك يرتفع",
+      "carpets": "السجاد في حديقتك يُنسج",
+      "cushions": "الوسائد تقترب من حديقتك",
+      "lectern": "حامل المصحف في حديقتك يتشكل",
+      "roses": "الورود في حديقتك تنمو",
+      "waterfall": "الشلال في حديقتك يتشكل",
+      "full-bloom": "حديقتك تقترب من الإزهار الكامل"
+    },
     "hizbCompleted": "اكتمل الحزب. جديد في حديقتك: {{element}}"
   },
   "notFound": {

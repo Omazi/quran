@@ -105,6 +105,7 @@ export function createFirstLaunchSettings(userSeed: number): AppSettings {
     onboardingCompleted: false,
     userSeed,
     lastOpenedPage: null,
+    bookmarks: [],
     pauses: [],
     reminders: DEFAULT_REMINDERS,
   };
@@ -249,6 +250,19 @@ export function createStateStore(
           );
         }
         if (get().settings.lastOpenedPage !== page) changeSettings({ lastOpenedPage: page });
+      },
+
+      toggleBookmark: (page) => {
+        if (!isLastOpenedPage(page)) {
+          throw new RangeError(
+            `A bookmark is on a page from 1 to ${PAGE_COUNT}, received ${String(page)}.`,
+          );
+        }
+        const current = get().settings.bookmarks;
+        const bookmarks = current.includes(page)
+          ? current.filter((bookmarked) => bookmarked !== page)
+          : [...current, page].sort((first, second) => first - second);
+        changeSettings({ bookmarks });
       },
 
       recordPageRead: (pageRead) => {

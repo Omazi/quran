@@ -231,6 +231,66 @@ export const elevation = {
 } as const;
 
 /**
+ * The palette of the validated mockups for the reader and the Quran tab (docs/design/mushaf.png
+ * and accueil.png). Owner's rule of 25 November 2026: the validated mockups are the visual
+ * reference, where the charter's "the system draws almost everything" had led the screens away
+ * from them (SKILLS.md, deviation 80). Light values are measured on the PNGs. The mockups have no
+ * dark version: the night is the "dusk" direction the owner chose (25 November 2026), a dusk sky
+ * over warm dark cards, with the values of the Proches tab and the home screen
+ * (src/ui/visit-palette.ts on work/mk-visit, `gardenPalette` on work/mk-home) so that the
+ * screens agree (dark-mode.md › Dark Mode colors: dimmer backgrounds, brighter foregrounds). The
+ * page of the mushaf keeps its own `paper` and `ink`, which this palette never changes.
+ *
+ * Surfaces and lines only. Text keeps the roles of the charter (`ink`, `inkSecondary`, `accent`,
+ * `ornament`), close to the mockups' own text colours and measured for contrast; the
+ * differences are questions for the owner (report of the reader rebuild).
+ *
+ * Prefixed `reader` on purpose: other screens may grow their own mockup tokens in parallel, and
+ * the architect merges them.
+ */
+export const readerPalette = {
+  /** The sky at the top of the Quran tab (accueil.png, y = 0), fading into the ground. */
+  skyTop: { light: '#FBE3C6', dark: '#2A2219' },
+  /** The warm ground of the reader and of the Quran tab (mushaf.png, around the page). */
+  canvas: { light: '#F3EFE4', dark: '#151716' },
+  /** The white of the cards, of the round buttons and of the watered pill. */
+  card: { light: '#FFFFFF', dark: '#222725' },
+  /** The cream card that resumes the reading (accueil.png, "Al-Kahf · Reprendre page 293"). */
+  cardCream: { light: '#FBF7EC', dark: '#272319' },
+  /** Its thin golden edge. */
+  cardCreamEdge: { light: '#EFE4C8', dark: '#3B3425' },
+  /** Hairline between two rows of a card. */
+  divider: { light: '#EFEAE0', dark: '#333836' },
+  /** Track of a segmented choice and of the search field (mushaf.png, "Uthmani | Simple"). */
+  track: { light: '#EBE8E1', dark: '#0F1110' },
+  /** The water ring of the day (accueil.png): its track, then its fill. */
+  ringTrack: { light: '#E3F1F3', dark: '#1D3439' },
+  ring: { light: '#3FA7B5', dark: '#4FB8C6' },
+  /** The double frame of the page: its outer rule, its inner rule, the band between them. */
+  frameOuter: { light: '#E5CEA0', dark: '#7A6234' },
+  frameInner: { light: '#EBDAB5', dark: '#5C4C2E' },
+  frameBand: { light: '#F2EAD6', dark: '#2A251C' },
+  /** The gold of the medallions, the corner points and the cartouche, top to bottom. */
+  gold: { light: '#C7A05A', dark: '#B8934A' },
+  goldLight: { light: '#F1D388', dark: '#D9B86E' },
+  goldDeep: { light: '#9D7526', dark: '#8A6A2E' },
+  /**
+   * The app's action colour, forest green (owner's decision of 25 November 2026): the big
+   * microphone of the reader (mushaf.png). At night the dusk green of the Proches tab and the home
+   * screen (`forest`, `gardenPalette.action`). White on it: 7.85:1 by day, 5.18:1 at night.
+   */
+  action: { light: '#1F5C45', dark: '#2E7A5B' },
+  onAction: { light: '#FFFFFF', dark: '#FFFFFF' },
+  /** The bottom bar under the page (mushaf.png #F9F7EE) and its top hairline. */
+  bar: { light: '#F9F7EE', dark: '#1B1E1D' },
+  barEdge: { light: '#E2DFD8', dark: '#333836' },
+  /** Colour of the soft shadow under the page, the cards and the round buttons. */
+  shadow: { light: '#50391A', dark: '#000000' },
+} as const satisfies Record<string, ColorPair>;
+
+export type ReaderPaletteRole = keyof typeof readerPalette;
+
+/**
  * A QR code: dark modules on a light ground in both appearances. Scanners are made for that
  * contrast (a code drawn light on dark is not read by every camera), so it does not follow the
  * dark appearance, as a code on a Wallet pass does not. SKILLS.md, deviation 56.
@@ -599,6 +659,72 @@ export const layout = {
    */
   sideBySideMaxFontScale: 1.35,
 } as const;
+
+/**
+ * Shapes of the validated mockups for the reader and the Quran tab, measured on
+ * docs/design/mushaf.png and accueil.png (390 points wide). See `readerPalette`.
+ */
+export const readerShapes = {
+  /** The white cards of the Quran tab (accueil.png). */
+  cardRadius: 20,
+  /** A card inside a card: the cream resume card. */
+  innerCardRadius: radius.md,
+  /** Height of the sky at the top of the Quran tab, as in accueil.png behind the title. */
+  skyHeight: 320,
+  /** The round buttons of the reader's bar: 40 points drawn, 44 touched (`layout.touchTarget`). */
+  roundButton: 40,
+  /** The big microphone of the reader's bottom bar (mushaf.png: 56 points). */
+  micButton: 56,
+  /** The reader's bar at the default text size, then the row of the watered pill under it. */
+  barHeight: 48,
+  pillRowHeight: 32,
+  /** The watered pill: its height at the default text size, and its fully rounded ends. */
+  pillHeight: 30,
+  pillRadius: 15,
+  /** Diameter of the water ring of the day, and the width of its stroke. */
+  ringSize: 56,
+  ringStroke: 5,
+  /** The page frame: its distance to the screen edges, then its parts, from the outside in. */
+  frameInset: 14,
+  frameOuterRule: 2,
+  frameRuleGap: 3,
+  frameInnerRule: 2,
+  /** The band of small lozenges above and below the text, between the two rules. */
+  frameBand: 6,
+  frameBandGap: 2,
+  frameMotifWidth: 6,
+  frameMotifHeight: 3,
+  frameMotifGap: 3,
+  /** The gold points at the inner corners of the frame. */
+  frameCornerDot: 4,
+  /** Air between the inner rule and the text. */
+  frameTextInset: { horizontal: 6, vertical: 4 },
+  /** The round medallions at both ends of a surah cartouche: diameter, ring, central point. */
+  medallion: 20,
+  medallionRing: 5,
+  medallionDot: 6,
+  /** The number of a surah or a hizb, in a small cream medallion at the start of its row. */
+  numberBadge: 32,
+  /** The two rules of a cartouche and the gap between them. */
+  cartoucheRule: 2,
+  cartoucheGap: 2,
+  /**
+   * A surah's Arabic name in gold, in Amiri (`fontFamily.quranTitle`): on the resume card, as the
+   * home mockup writes "الكهف", and at the end of a surah row. Sizes at the default text size;
+   * they follow it with the Title 2 ramp.
+   */
+  arabicName: {
+    large: { fontSize: 28, lineHeight: 40 },
+    row: { fontSize: 20, lineHeight: 30 },
+  },
+  /** The soft shadow of the mockups: its opacity, blur radius and drop. */
+  shadowOpacity: 0.1,
+  shadowRadius: 10,
+  shadowOffsetY: 2,
+} as const;
+
+/** Semibold, for a short emphasised phrase inside a text style (the watered pill). */
+export const emphasisWeight: FontWeightToken = '600';
 
 /**
  * States of the default (non-iOS) controls. Material's conventions, outside the design skills:

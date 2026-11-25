@@ -7,12 +7,8 @@
 export { READER_CONFIG } from './config';
 export { ContentsScreen, type ContentsScreenProps } from './contents-screen';
 export { parsePageParam } from './page-order';
-export {
-  ReaderNotFound,
-  ReaderScreen,
-  useReaderHeaderOptions,
-  type ReaderScreenProps,
-} from './reader-screen';
+export { ReaderNotFound, ReaderScreen, type ReaderScreenProps } from './reader-screen';
+export { useReaderNavigation, type ReaderNavigation } from './use-reader-navigation';
 export { resolveResumePage } from './resume-page';
 export { useContentsModel, type ContentsActions, type ContentsModel } from './use-contents-model';
 export { useQuranFont, type QuranFontStatus } from './use-quran-font';

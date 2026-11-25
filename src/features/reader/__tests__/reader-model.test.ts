@@ -26,6 +26,7 @@ import {
   previousPage,
 } from '../page-order';
 import {
+  PAGE_SIDE_ROOM,
   PAGE_TOP_INSET_MAX,
   computeOpeningPageMetrics,
   computePageMetrics,
@@ -33,6 +34,8 @@ import {
   pageFrameHeight,
   pageTopInset,
 } from '../page-layout';
+import { pageSurah } from '../page-surah';
+import { buildHomeModel } from '@/features/home';
 import { readingFeedback } from '../reading-feedback';
 import { finishVisit, pauseVisit, resumeVisit, startVisit, type PageVisit } from '../reading-timer';
 import { resolveResumePage } from '../resume-page';
@@ -195,12 +198,21 @@ describe('the 30-second rule (spec 3), with a fake clock', () => {
 describe('the feedback after a page (spec 3)', () => {
   const settings = { dailyGoalPages: 5, userSeed: 42, lastOpenedPage: null, pauses: [] };
 
-  it('says a new page counted', () => {
+  it('says a new page counted, and names what grows in the hizb in progress', () => {
     const before = readPages([1]);
     const after = readPages([2], before);
-    expect(
-      readingFeedback({ before, after, settings, today: DAY, hizbPageRanges: RANGES }),
-    ).toEqual({ kind: 'page-counted' });
+    const feedback = readingFeedback({
+      before,
+      after,
+      settings,
+      today: DAY,
+      hizbPageRanges: RANGES,
+    });
+    // The element the garden module grows with the pages of the hizb in progress.
+    const growing = buildHomeModel({ journal: after, settings, today: DAY, hizbPageRanges: RANGES })
+      .garden.nextElement?.element.kind;
+    expect(growing).toBeDefined();
+    expect(feedback).toEqual({ kind: 'page-counted', growingKind: growing });
   });
 
   it('names the new element of the garden when the page completes a hizb', () => {
@@ -307,6 +319,24 @@ describe('going to a page by its number (spec 1)', () => {
   });
 });
 
+describe('the surah a page is named after', () => {
+  it('is the surah that begins on the page, as the mockup names page 293 "Al-Kahf"', () => {
+    // Page 293 opens with the last verses of Al-Isra, then Al-Kahf begins.
+    expect(quranStructure.firstVerseOfPage(293).surah).toBe(17);
+    expect(pageSurah(quranStructure, 293)).toBe(18);
+  });
+
+  it('is the surah the page continues when none begins on it', () => {
+    expect(pageSurah(quranStructure, 294)).toBe(18);
+    expect(pageSurah(quranStructure, 3)).toBe(2);
+  });
+
+  it('is the first to begin when several do', () => {
+    expect(pageSurah(quranStructure, 1)).toBe(1);
+    expect(pageSurah(quranStructure, 604)).toBe(quranStructure.firstVerseOfPage(604).surah);
+  });
+});
+
 describe('the size of the page text (spec 2)', () => {
   const IPHONE_X = { width: 375, height: 812 - 44 - 34 - 44 };
 
@@ -329,6 +359,13 @@ describe('the size of the page text (spec 2)', () => {
         metrics.fontSize * READER_CONFIG.minimumLineHeightInEm - 1e-9,
       );
     }
+  });
+
+  it('leaves the room of the double frame of the mockup on each side of the column', () => {
+    // docs/design/mushaf.png, 390 points wide: the text runs from about x = 28 to x = 362.
+    const metrics = computePageMetrics({ width: 390, height: 700 });
+    expect(PAGE_SIDE_ROOM).toBe(27);
+    expect(metrics.textWidth).toBe(390 - 2 * PAGE_SIDE_ROOM);
   });
 
   it('refuses a page with no room', () => {

@@ -1,5 +1,4 @@
-import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
 
 import {
   ReaderNotFound,
@@ -7,9 +6,13 @@ import {
   parsePageParam,
   useQuranFont,
   useReader,
-  useReaderHeaderOptions,
+  useReaderNavigation,
+  type ReaderNavigation,
 } from '@/features/reader';
 import { useAppStore } from '@/store';
+
+/** The reader draws its own bar, the one of the validated mockup (deviation 82). */
+const READER_SCREEN_OPTIONS = { headerShown: false } as const;
 
 /**
  * The reader, `/reader/1` to `/reader/604`. Any other address says the page was not found. It
@@ -17,36 +20,36 @@ import { useAppStore } from '@/store';
  */
 export default function ReaderRoute() {
   const { page } = useLocalSearchParams<{ page: string }>();
-  const router = useRouter();
+  const navigation = useReaderNavigation();
   const hasFinishedIntroduction = useAppStore((state) => state.settings.onboardingCompleted);
-  const openContents = useCallback(() => router.replace('/(tabs)/quran'), [router]);
   const initialPage = parsePageParam(page);
 
   // A link that opens the reader must not skip the introduction.
   if (!hasFinishedIntroduction) return <Redirect href="/onboarding" />;
-  if (initialPage === null) return <ReaderNotFound openContents={openContents} />;
-  return <OpenReader key={initialPage} initialPage={initialPage} openContents={openContents} />;
+  if (initialPage === null) return <ReaderNotFound openContents={navigation.openContents} />;
+  return <OpenReader key={initialPage} initialPage={initialPage} navigation={navigation} />;
 }
 
 function OpenReader({
   initialPage,
-  openContents,
+  navigation,
 }: {
   initialPage: number;
-  openContents: () => void;
+  navigation: ReaderNavigation;
 }) {
   const { model, actions } = useReader(initialPage);
   const fontStatus = useQuranFont();
-  const headerOptions = useReaderHeaderOptions(model);
   return (
     <>
-      <Stack.Screen options={headerOptions} />
+      <Stack.Screen options={READER_SCREEN_OPTIONS} />
       <ReaderScreen
         model={model}
         actions={actions}
         fontStatus={fontStatus}
         initialPage={initialPage}
-        openContents={openContents}
+        openContents={navigation.openContents}
+        close={navigation.close}
+        openListening={navigation.openListening}
       />
     </>
   );

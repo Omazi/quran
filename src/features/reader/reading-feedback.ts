@@ -11,7 +11,14 @@ import type { LocalDate } from '@/domain/shared/local-date';
 import { buildHomeModel, type HomeSettings } from '@/features/home';
 
 export type ReadingFeedback =
-  | { readonly kind: 'page-counted' }
+  | {
+      readonly kind: 'page-counted';
+      /**
+       * The element the pages of the hizb in progress grow (`GardenState.nextElement`), named in
+       * the pill ("ton grenadier grandit"); null when nothing grows any more.
+       */
+      readonly growingKind: GardenElementKind | null;
+    }
   | {
       readonly kind: 'hizb-completed';
       /** The kind of the element that just appeared: the garden's locale files name it. */
@@ -39,10 +46,8 @@ export function readingFeedback({
   const current = getGardenFeed(after, hizbPageRanges);
   const completedHizb =
     current.khatm === previous.khatm && current.hizbCompleted > previous.hizbCompleted;
-  if (!completedHizb) return { kind: 'page-counted' };
-  const element = buildHomeModel({ journal: after, settings, today, hizbPageRanges }).garden
-    .lastUnlocked;
-  return element === null
-    ? { kind: 'page-counted' }
-    : { kind: 'hizb-completed', elementKind: element.kind };
+  const { garden } = buildHomeModel({ journal: after, settings, today, hizbPageRanges });
+  const growingKind = garden.nextElement?.element.kind ?? null;
+  if (!completedHizb || garden.lastUnlocked === null) return { kind: 'page-counted', growingKind };
+  return { kind: 'hizb-completed', elementKind: garden.lastUnlocked.kind };
 }
