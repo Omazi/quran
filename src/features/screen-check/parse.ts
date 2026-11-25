@@ -36,6 +36,11 @@ export interface CheckLaunch {
   readonly script: CheckScript | null;
   /** True: fill the app with the made-up reading history and the demonstration friends first. */
   readonly seedsDemo: boolean;
+  /**
+   * True: the app swipes through the introduction by itself, then opens the demonstration friend's
+   * page and works its garden (auto-run.tsx). Off unless the argument says 1.
+   */
+  readonly autoSwipe: boolean;
 }
 
 /** The names of the launch arguments, `-screenCheckGo garden` and so on. */
@@ -44,6 +49,7 @@ export const CHECK_ARGUMENTS = {
   page: 'screenCheckPage',
   script: 'screenCheckScript',
   seed: 'screenCheckSeed',
+  autoSwipe: 'screenCheckAutoSwipe',
 } as const;
 
 function firstText(raw: unknown): string | null {
@@ -84,6 +90,7 @@ export function parseCheckLaunch(
       ? (script as CheckScript)
       : null,
     seedsDemo: firstText(read(CHECK_ARGUMENTS.seed)) === 'demo',
+    autoSwipe: firstText(read(CHECK_ARGUMENTS.autoSwipe)) === '1',
   };
 }
 

@@ -68,7 +68,7 @@ export {
 export { PageDots, type PageDotsProps } from './components/page-dots';
 export { PAGE_DOTS } from './components/page-dots-shape';
 export { StarPattern, type StarPatternProps } from './components/star-pattern';
-export { SwipePager, type SwipePagerProps } from './components/swipe-pager';
+export { SwipePager, type PagerDrive, type SwipePagerProps } from './components/swipe-pager';
 export { SWIPE_PAGING, crossfade, stageLayerOpacity, swapOpacity } from './components/swipe-paging';
 export {
   ActionButton,

@@ -1,7 +1,11 @@
 import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { DiagnosticBoundary } from '@/features/diagnostics';
 import { useColorValues } from '@/ui';
+
+// The error screen of expo-router for an error of this layout itself (src/features/diagnostics).
+export { ErrorBoundary } from '@/features/diagnostics';
 
 /**
  * The navigation of the Proches tab: its pages are pushed inside the tab, so the tab bar stays on
@@ -27,13 +31,15 @@ export default function FriendsLayout() {
     contentStyle: { backgroundColor: colors.canvas },
   } as const;
   return (
-    <Stack screenOptions={page}>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="[id]" options={{ title: '' }} />
-      <Stack.Screen name="add" options={{ title: t('add.title') }} />
-      <Stack.Screen name="scan" options={{ title: t('scan.title') }} />
-      <Stack.Screen name="new-group" options={{ title: t('newGroup.title') }} />
-      <Stack.Screen name="group/[id]" options={{ title: '' }} />
-    </Stack>
+    <DiagnosticBoundary>
+      <Stack screenOptions={page}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="[id]" options={{ title: '' }} />
+        <Stack.Screen name="add" options={{ title: t('add.title') }} />
+        <Stack.Screen name="scan" options={{ title: t('scan.title') }} />
+        <Stack.Screen name="new-group" options={{ title: t('newGroup.title') }} />
+        <Stack.Screen name="group/[id]" options={{ title: '' }} />
+      </Stack>
+    </DiagnosticBoundary>
   );
 }

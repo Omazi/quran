@@ -69,6 +69,42 @@ arguments et le paramètre sont ignorés. L'écoute s'ouvre sans lancer le micro
 lien. Les pages de l'introduction se photographient avant le remplissage (ensuite l'introduction
 n'est plus qu'une relecture) ; le nombre de pages est dans `tools/ci/screens.py`.
 
+### Diagnostic d'une fermeture (l'appli se ferme seule, sans journal)
+
+Deux signalements du propriétaire, sur iPhone en version TestFlight : l'appli se ferme (1) sur le
+jardin d'un proche après un pincement, « Encourager » et un défilement ; (2) en feuilletant
+l'introduction du premier lancement jusqu'au bout. Aucun journal de plantage n'arrive au projet.
+Trois outils, dans `src/features/diagnostics` :
+
+- **Un écran d'erreur à la place d'une appli fermée** : une erreur d'affichage (JavaScript) ne
+  ferme plus l'appli. Elle montre « Un problème est survenu. » et « Réessayer », avec le message,
+  les premières lignes de la pile et celles des composants, en petit texte sélectionnable, et un
+  bouton « Copier ou envoyer » (la feuille de partage du système, qui propose « Copier »).
+  Un `DiagnosticBoundary` entoure la navigation de la racine, des onglets et des proches (c'est lui
+  qui connaît les composants) ; chaque mise en page exporte aussi l'`ErrorBoundary` d'expo-router.
+- **Un enregistreur d'erreur fatale** : une erreur JavaScript fatale est écrite tout de suite dans
+  un petit fichier (`Documents/last-closure.json`, écriture synchrone, avant que le gestionnaire
+  par défaut ne ferme l'appli) avec le message, la pile, l'écran ouvert, la version, le modèle de
+  téléphone, les dernières erreurs de la console et une piste des 30 derniers écrans et gestes.
+  Au lancement suivant, une feuille « L'app s'est fermée la dernière fois » montre ce qui a été noté,
+  une seule fois ; la ligne « Dernière fermeture inattendue » des réglages (section Diagnostic) la
+  garde jusqu'à « Effacer ». **Si l'appli s'est fermée sans qu'aucune feuille ne vienne, la cause
+  n'est pas du JavaScript : c'est un plantage natif.** Rien n'est envoyé sans la personne.
+- **La chasse au plantage dans le simulateur** (dernière étape de « First screen » dans
+  `ios-check.yml`) : sur une installation neuve, la version de contrôle, lancée avec
+  `-screenCheckGo onboarding -screenCheckAutoSwipe 1`, feuillette toute l'introduction seule
+  (le code du pager que le doigt appelle, ressorts compris, d'abord calmement, puis assez vite pour
+  attraper une page encore en train de glisser), remplit l'appli, ouvre le proche de démonstration,
+  zoome et fait tourner son jardin 3D par son contrôleur, appuie sur « Encourager » et fait défiler
+  la page. Elle ne fait **pas** de toucher : les reconnaisseurs de gestes natifs ne sont pas
+  exercés (le simulateur de GitHub n'a pas d'outil de toucher sans XCUITest ni `idb`). L'appli note
+  son avancement dans `Documents/auto-run-progress.txt` ; la tâche lit ce fichier, l'enregistrement
+  de l'appli, les `.ips` de `~/Library/Logs/DiagnosticReports` et le journal du simulateur, écrit
+  `CRASH`, `OK` ou `INCOMPLETE` dans le résumé de l'étape et met le tout dans l'artefact
+  `ios-first-screen` (`build/crash/`). Le rapport texte `crash-report.txt` (`tools/ci/crash-report.py`)
+  est aussi publié sur la branche `ci-screens`, sous un nom de la liste fixe de `tools/ci/screens.py`.
+  Le code de la chasse n'existe que dans la version de contrôle (`door.ts`).
+
 Un push ne lance les Mac que s'il touche à ce dont l'appli est faite (`src/`, `assets/`,
 `modules/`, `app.json`, les dépendances, le script lui-même). La documentation seule ne
 lance rien : une vérification prend environ 45 minutes de Mac.

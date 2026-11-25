@@ -8,6 +8,13 @@ import { useTranslation } from 'react-i18next';
 import { createDeviceProgressBackup, deviceStorage } from '@/data/storage';
 import { LaunchOverlay, useLaunch } from '@/features/launch';
 import { createSyncClock } from '@/data/sync';
+import {
+  ClosureSheet,
+  DiagnosticBoundary,
+  DiagnosticsProvider,
+  startDiagnostics,
+  useRouteBreadcrumbs,
+} from '@/features/diagnostics';
 import { useForegroundTimeRecording } from '@/features/profile';
 import { useNotificationTaps, useReminderSync } from '@/features/reminders';
 import {
@@ -15,10 +22,19 @@ import {
   useAppStartup,
   type StartupDependencies,
 } from '@/features/settings';
-import { screenCheckLaunch } from '@/features/screen-check';
+import { ScreenCheckAutoRun, screenCheckLaunch } from '@/features/screen-check';
 import { SyncProvider, useAppSync, type AppSyncDependencies } from '@/features/sync';
 import { AppStoreProvider } from '@/store';
 import { appFonts, useColors } from '@/ui';
+
+// The app has been closing by itself on some phones with no log to read: before anything else
+// loads, the diagnostics start (the record of a fatal error, the trail, the error screen's
+// memory). See src/features/diagnostics.
+const diagnostics = startDiagnostics();
+
+// The error screen of expo-router for an error of this layout itself; the errors of the screens
+// below are caught by the `DiagnosticBoundary` around the stack, which also knows the components.
+export { ErrorBoundary } from '@/features/diagnostics';
 
 // The native launch screen (a flat water colour) stays until the launch overlay has taken its
 // place; the overlay then animates the mark and fades into the first screen (deviation 115).
@@ -72,7 +88,13 @@ export default function RootLayout() {
       {isReady ? (
         <AppStoreProvider store={startedApp.store}>
           <SyncProvider source={sync}>
-            <RootStack />
+            <DiagnosticsProvider diagnostics={diagnostics}>
+              <RootStack />
+              {/* The iOS check's automatic swipe and garden run (null in every build a person uses). */}
+              {ScreenCheckAutoRun === null ? null : <ScreenCheckAutoRun />}
+              {/* "L'app s'est fermée la dernière fois", once, when the app saw why. */}
+              {launch.isShown ? null : <ClosureSheet />}
+            </DiagnosticsProvider>
           </SyncProvider>
         </AppStoreProvider>
       ) : null}
@@ -94,6 +116,8 @@ function RootStack() {
   // (D13, docs/specs/reminders.md).
   useReminderSync();
   useNotificationTaps();
+  // Each screen opened goes in the trail kept for the diagnostics.
+  useRouteBreadcrumbs();
   const { t } = useTranslation('onboarding');
   const { t: tSettings } = useTranslation('settings');
   const colors = useColors();
@@ -112,30 +136,32 @@ function RootStack() {
     contentStyle: { backgroundColor: colors.canvas },
   } as const;
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="+not-found" />
-      {/* Opened from the last row of the profile, with the system bar, its title and its back
-          button, (deviation 52). */}
-      <Stack.Screen name="settings" options={{ ...pushedPage, title: tSettings('title') }} />
-      {/* The reader: the system navigation bar floats over the page (the reader hides and shows
-          it), with the system's back button, a chevron alone (toolbars.md › Navigation). */}
-      <Stack.Screen
-        name="reader/[page]"
-        options={{
-          headerShown: true,
-          headerTransparent: true,
-          headerTintColor: colors.actionTint,
-          headerBackButtonDisplayMode: 'minimal',
-        }}
-      />
-      {/* Its header, with the system's back button, is only shown when the introduction is
-          opened again from the settings (see onboarding/index.tsx). */}
-      <Stack.Screen
-        name="onboarding/index"
-        options={{ title: t('replayTitle'), headerTintColor: colors.actionTint }}
-      />
-    </Stack>
+    <DiagnosticBoundary>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="+not-found" />
+        {/* Opened from the last row of the profile, with the system bar, its title and its back
+            button, (deviation 52). */}
+        <Stack.Screen name="settings" options={{ ...pushedPage, title: tSettings('title') }} />
+        {/* The reader: the system navigation bar floats over the page (the reader hides and shows
+            it), with the system's back button, a chevron alone (toolbars.md › Navigation). */}
+        <Stack.Screen
+          name="reader/[page]"
+          options={{
+            headerShown: true,
+            headerTransparent: true,
+            headerTintColor: colors.actionTint,
+            headerBackButtonDisplayMode: 'minimal',
+          }}
+        />
+        {/* Its header, with the system's back button, is only shown when the introduction is
+            opened again from the settings (see onboarding/index.tsx). */}
+        <Stack.Screen
+          name="onboarding/index"
+          options={{ title: t('replayTitle'), headerTintColor: colors.actionTint }}
+        />
+      </Stack>
+    </DiagnosticBoundary>
   );
 }

@@ -9,7 +9,10 @@ name: iOS check
 #  - "First screen" starts the app in the iPhone simulator and keeps a picture of each screen (the
 #    pages of the introduction, the tabs, the reader in both scripts, the listening screen...).
 #    It is reported, never blocking: the pictures are there to be looked at. The workflow
-#    "iOS screens" then puts them on the branch `ci-screens`.
+#    "iOS screens" then puts them on the branch `ci-screens`. It ends with the "crash hunt": on a
+#    fresh install the app swipes through the whole introduction by itself, then works the 3D
+#    garden of a friend's page; if its process dies, the step summary says CRASH and the crash
+#    reports and logs are in the artifact (docs/BUILD.md, "Diagnostic d'une fermeture").
 #
 # There is deliberately no `pull_request` trigger: the repository is public, and a pull request
 # from a stranger must not start Mac jobs here.
@@ -30,6 +33,7 @@ on:
       - 'tools/ci/select-xcode.sh'
       - 'tools/ci/pick-simulator.py'
       - 'tools/ci/screens.py'
+      - 'tools/ci/crash-report.py'
       - '.github/workflows/ios-check.yml'
   workflow_dispatch:
 
@@ -179,6 +183,66 @@ jobs:
             shot "$name" "$look" "$lang" "$locale" "$screen" "$page" "$script" "$seed" "$wait"
           done < build/screens-plan.tsv
           ls -la build/screens | tail -n +2 | wc -l
+      - name: Crash hunt (the app swipes the introduction and works a friend's garden by itself)
+        run: |
+          # The owner's phone closes the app (1) swiping through the first launch, (2) on a friend's
+          # garden after a pinch, "Encourager" and a scroll, with no log to read. This reproduces both
+          # paths in the simulator, with no touch: the check build, asked with -screenCheckAutoSwipe 1,
+          # drives the pager's own gesture code and the garden's controller itself
+          # (src/features/screen-check/auto-run.tsx). Reported, never blocking.
+          APPID=com.omazi.quran
+          APP=$(find build/SimData/Build/Products/Release-iphonesimulator -maxdepth 1 -name "*.app" | head -1)
+          EXE=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Info.plist")
+          mkdir -p build/crash
+          alive() {  # the app's process, as the simulator lists it: a number in the first column
+            # awk reads everything, so no early exit can break a pipe under "pipefail".
+            xcrun simctl spawn "$SIM_UDID" launchctl list 2>/dev/null \
+              | awk -v label="UIKitApplication:$APPID" 'index($0, label) && $1 ~ /^[0-9]+$/ { found = 1 } END { exit !found }'
+          }
+          xcrun simctl terminate "$SIM_UDID" "$APPID" || true
+          # A fresh install: first launch, nothing saved (the introduction comes first), no old record.
+          xcrun simctl uninstall "$SIM_UDID" "$APPID" || true
+          xcrun simctl install "$SIM_UDID" "$APP"
+          xcrun simctl ui "$SIM_UDID" appearance light || true
+          touch build/crash/started
+          xcrun simctl launch "$SIM_UDID" "$APPID" -AppleLanguages "(fr)" -AppleLocale fr_FR \
+            -screenCheckGo onboarding -screenCheckAutoSwipe 1 || true
+          DATA=$(xcrun simctl get_app_container "$SIM_UDID" "$APPID" data 2>/dev/null || true)
+          FINISHED=no
+          # The swipes take about 40 seconds, the friend's page about a minute more, and the first
+          # start of the app can take a while: wait up to 6 minutes, stop as soon as it ends or dies.
+          for i in $(seq 1 72); do
+            sleep 5
+            if [ -n "$DATA" ] && grep -q "auto-run: DONE" "$DATA/Documents/auto-run-progress.txt" 2>/dev/null; then FINISHED=yes; break; fi
+            alive || break
+          done
+          if alive; then ALIVE=1; else ALIVE=0; fi
+          xcrun simctl io "$SIM_UDID" screenshot build/crash/last-screen.png || true
+          [ -n "$DATA" ] && cp "$DATA/Documents/auto-run-progress.txt" build/crash/auto-run-progress.txt 2>/dev/null || true
+          [ -n "$DATA" ] && cp "$DATA/Documents/last-closure.json" build/crash/last-closure.json 2>/dev/null || true
+          sleep 5   # the crash report is written a moment after the process ends
+          for report in "$HOME"/Library/Logs/DiagnosticReports/*.ips; do
+            [ -e "$report" ] || continue
+            if [ "$report" -nt build/crash/started ] && grep -q "$EXE" "$report"; then cp "$report" build/crash/; fi
+          done
+          xcrun simctl spawn "$SIM_UDID" log show --style compact --info --debug --last 15m \
+            --predicate "process == \"$EXE\"" > build/crash/simulator-log.txt 2>&1 || true
+          tail -n 300 "$HOME/Library/Logs/CoreSimulator/$SIM_UDID/system.log" > build/crash/coresimulator-log.txt 2>/dev/null || true
+          VERDICT=$(python3 -I tools/ci/crash-report.py --progress build/crash/auto-run-progress.txt \
+            --closure build/crash/last-closure.json --ips-dir build/crash --log build/crash/simulator-log.txt \
+            --alive "$ALIVE" --out build/crash/crash-report.txt)
+          xcrun simctl terminate "$SIM_UDID" "$APPID" || true
+          {
+            echo "### Crash hunt: $VERDICT"
+            echo
+            echo "The app swiped through the introduction and worked a friend's garden by itself (finished: $FINISHED, process alive at the end: $ALIVE)."
+            echo
+            echo '```'
+            head -n 40 build/crash/crash-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$VERDICT" = "CRASH" ]; then echo "::warning title=CRASH::the app died during the crash hunt, see crash-report.txt in the artifact ios-first-screen"; fi
+          echo "crash hunt: $VERDICT"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
@@ -186,5 +250,9 @@ jobs:
           path: |
             build/screens/*.png
             build/sim-build.log
+            build/crash/*.txt
+            build/crash/*.json
+            build/crash/*.ips
+            build/crash/last-screen.png
           if-no-files-found: warn
           retention-days: 14

@@ -10,8 +10,10 @@
  * asked".
  */
 
-import type { ComponentType } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { Platform, Settings } from 'react-native';
+
+import type { PagerDrive } from '@/ui';
 
 import { parseCheckLaunch, parseCheckPage, type CheckLaunch } from './parse';
 
@@ -24,12 +26,32 @@ const launcher: Launcher | null =
       (require('./launcher') as Launcher)
     : null;
 
+type AutoRun = typeof import('./auto-run');
+
+const autoRun: AutoRun | null =
+  process.env.EXPO_PUBLIC_SCREEN_CHECK === '1'
+    ? // Same rule as above: the bundler can only leave out a conditional `require`.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      (require('./auto-run') as AutoRun)
+    : null;
+
 /** Opens the screen the check asked for; null in every build but the check's. */
 export const ScreenCheckLauncher: ComponentType<{ launch: CheckLaunch }> | null =
   launcher?.ScreenCheckLauncher ?? null;
 
 /** What this launch of the app was asked to show; null unless it is the check's build. */
 export const screenCheckLaunch: CheckLaunch | null = readLaunch();
+
+/**
+ * What swipes the introduction by itself (`-screenCheckAutoSwipe 1`): given to the pager as its
+ * driver. Null in every build but the check's, and in the check's own unless asked.
+ */
+export const screenCheckPagerDriver: ((drive: PagerDrive) => ReactNode) | null =
+  autoRun !== null && screenCheckLaunch?.autoSwipe === true ? autoRun.pagerDriver : null;
+
+/** The whole automatic run (swipe, friend page, garden), mounted once at the root; same rule. */
+export const ScreenCheckAutoRun: ComponentType | null =
+  autoRun !== null && screenCheckLaunch?.autoSwipe === true ? autoRun.ScreenCheckAutoRun : null;
 
 function readLaunch(): CheckLaunch | null {
   if (launcher === null || Platform.OS !== 'ios') return null;

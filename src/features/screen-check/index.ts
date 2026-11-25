@@ -1,1 +1,7 @@
-export { ScreenCheckLauncher, screenCheckLaunch, screenCheckPage } from './door';
+export {
+  ScreenCheckAutoRun,
+  ScreenCheckLauncher,
+  screenCheckLaunch,
+  screenCheckPage,
+  screenCheckPagerDriver,
+} from './door';
