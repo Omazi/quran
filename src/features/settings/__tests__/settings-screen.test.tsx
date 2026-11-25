@@ -42,6 +42,7 @@ const NO_BREAK_SPACE = ' ';
 interface SettingsHarnessProps {
   notifications: NotificationPermissions;
   direction: WritingDirectionPlatform;
+  getDeviceLanguageCodes?: () => readonly (string | null)[];
   openSystemSettings: () => void;
   openIntroduction: () => void;
 }
@@ -55,11 +56,14 @@ function SettingsHarness(dependencies: SettingsHarnessProps) {
 interface RenderSettingsOptions extends RenderWithStoreOptions {
   notifications?: NotificationPermissions;
   rightToLeft?: boolean;
+  /** The languages of the phone, most wanted first. Defaults to French only. */
+  deviceLanguages?: readonly (string | null)[];
 }
 
 async function renderSettings({
   notifications = createInertNotificationPermissions({ status: 'granted' }),
   rightToLeft = false,
+  deviceLanguages = ['fr'],
   ...options
 }: RenderSettingsOptions = {}) {
   const direction = createFixedDirection(rightToLeft);
@@ -69,6 +73,7 @@ async function renderSettings({
     <SettingsHarness
       notifications={notifications}
       direction={direction.platform}
+      getDeviceLanguageCodes={() => deviceLanguages}
       openSystemSettings={openSystemSettings}
       openIntroduction={openIntroduction}
     />,
@@ -94,7 +99,9 @@ describe('settings screen', () => {
 
       expect(screen.getByRole('header', { name: 'Réglages' })).toBeOnTheScreen();
       expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'Langue');
-      expect(screen.getByRole('radio', { name: 'Français' })).toBeChecked();
+      // Nothing chosen in the app: it follows the phone (D32).
+      expect(screen.getByRole('radio', { name: 'Langue du téléphone' })).toBeChecked();
+      expect(screen.getByRole('radio', { name: 'Français' })).not.toBeChecked();
       expect(screen.getByRole('radio', { name: 'English' })).not.toBeChecked();
       expect(screen.getByRole('radio', { name: 'العربية' })).not.toBeChecked();
 
@@ -126,6 +133,7 @@ describe('settings screen', () => {
     await renderSettings({ language: 'ar', rightToLeft: true, settings: { language: 'ar' } });
     expect(screen.getByRole('header', { name: 'الإعدادات' })).toBeOnTheScreen();
     expect(screen.getByRole('radio', { name: 'العربية' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'لغة الهاتف' })).not.toBeChecked();
     expect(screen.getByRole('adjustable', { name: 'الصفحات في اليوم' })).toBeOnTheScreen();
     expect(screen.getByText('5 صفحات في اليوم، أي نصف حزب: ختمة في 121 يومًا.')).toBeOnTheScreen();
     expect(screen.getByRole('switch', { name: 'التذكير اليومي' })).toBeChecked();
@@ -140,6 +148,7 @@ describe('settings screen', () => {
     await renderSettings();
     expect(fixedHeightsAroundText(screen.getByTestId('settings'))).toEqual([]);
     for (const control of [
+      screen.getByRole('radio', { name: 'Langue du téléphone' }),
       screen.getByRole('radio', { name: 'English' }),
       screen.getByRole('switch', { name: 'Rappel du jour' }),
       screen.getByRole('button', { name: 'Heure des rappels' }),
@@ -164,6 +173,92 @@ describe('settings screen', () => {
 });
 
 describe('language setting', () => {
+  const MISSING_NOTE =
+    'L’appli n’est pas encore traduite dans la langue de ton téléphone. Choisis-en une ci-dessus.';
+
+  it('offers the phone’s language first, then the three languages of the app', async () => {
+    await renderSettings();
+    expect(screen.getAllByRole('radio').map((option) => option.props.accessibilityLabel)).toEqual([
+      'Langue du téléphone',
+      'Français',
+      'English',
+      'العربية',
+    ]);
+    // The app has the phone's language: nothing to explain, nothing to restart.
+    expect(screen.queryByText(MISSING_NOTE)).toBeNull();
+    expect(screen.queryByTestId('restart-app')).toBeNull();
+  });
+
+  it('gives the choice back to the phone, whose language shows at once', async () => {
+    const { store, direction } = await renderSettings({
+      language: 'en',
+      settings: { language: 'en' },
+      deviceLanguages: ['fr'],
+    });
+    expect(screen.getByRole('radio', { name: 'English' })).toBeChecked();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Phone Language' }));
+    expect(store.getState().settings.language).toBeNull();
+    expect(screen.getByRole('header', { name: 'Réglages' })).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'Langue du téléphone' })).toBeChecked();
+    expect(direction.recorded()).toBe(false);
+    expect(screen.queryByTestId('restart-app')).toBeNull();
+  });
+
+  it('offers the restart when the phone’s language is written the other way', async () => {
+    // French was chosen on a phone set to Arabic: the app runs left to right.
+    const { store, direction } = await renderSettings({
+      settings: { language: 'fr' },
+      deviceLanguages: ['ar'],
+    });
+    await fireEvent.press(screen.getByRole('radio', { name: 'Langue du téléphone' }));
+
+    expect(store.getState().settings.language).toBeNull();
+    expect(screen.getByRole('header', { name: 'الإعدادات' })).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'لغة الهاتف' })).toBeChecked();
+    expect(
+      screen.getByText('سيتغيّر اتجاه الكتابة عند تشغيل التطبيق في المرة القادمة.'),
+    ).toBeOnTheScreen();
+    expect(direction.recorded()).toBe(true);
+    expect(direction.platform.restart).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole('button', { name: 'إعادة تشغيل التطبيق' }));
+    expect(direction.platform.restart).toHaveBeenCalledTimes(1);
+  });
+
+  it('says under the choice when the app does not have the phone’s language, until another is chosen', async () => {
+    await renderSettings({ deviceLanguages: ['de', 'es'] });
+    // The app shows its fallback language, French, and says why.
+    expect(screen.getByRole('radio', { name: 'Langue du téléphone' })).toBeChecked();
+    expect(screen.getByText(MISSING_NOTE)).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'English' }));
+    expect(screen.queryByText(MISSING_NOTE)).toBeNull();
+    expect(
+      screen.queryByText(
+        'The app is not translated into your phone’s language yet. Choose one above.',
+      ),
+    ).toBeNull();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Phone Language' }));
+    expect(screen.getByText(MISSING_NOTE)).toBeOnTheScreen();
+  });
+
+  it('looks further down the phone’s languages, as the start of the app does', async () => {
+    await renderSettings({ language: 'ar', rightToLeft: true, deviceLanguages: ['de', 'ar'] });
+    expect(screen.getByRole('radio', { name: 'لغة الهاتف' })).toBeChecked();
+    expect(screen.queryByText('لم يُترجَم التطبيق بعد إلى لغة هاتفك. اختر لغة أعلاه.')).toBeNull();
+    expect(screen.queryByTestId('restart-app')).toBeNull();
+  });
+
+  it('says first that a restart is needed when both notes apply', async () => {
+    // The phone's language is missing, and the app still runs right to left.
+    await renderSettings({ rightToLeft: true, deviceLanguages: ['de'] });
+    expect(
+      screen.getByText('Le sens d’écriture changera au prochain démarrage de l’appli.'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(MISSING_NOTE)).toBeNull();
+  });
+
   it('switches to a language written in the same direction at once, with nothing to restart', async () => {
     const { store, direction } = await renderSettings();
     await fireEvent.press(screen.getByRole('radio', { name: 'English' }));

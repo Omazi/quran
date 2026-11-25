@@ -173,7 +173,8 @@ export function createStateStore(
       },
 
       setLanguage: (language) => {
-        if (!isSupportedLanguage(language)) {
+        // Null is a value here: it gives the choice back to the phone (D32).
+        if (language !== null && !isSupportedLanguage(language)) {
           throw new RangeError(`Unsupported language: "${String(language)}".`);
         }
         if (get().settings.language !== language) changeSettings({ language });

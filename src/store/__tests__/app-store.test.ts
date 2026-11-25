@@ -1,4 +1,4 @@
-import { createMemoryStorage } from '@/data/storage';
+import { createMemoryProgressBackup, createMemoryStorage } from '@/data/storage';
 import { gardenVariant } from '@/domain/garden';
 import { EMPTY_JOURNAL, getCurrentKhatm, getReadPages, type Pause } from '@/domain/khatm';
 import { parseLocalDate } from '@/domain/shared/local-date';
@@ -13,6 +13,7 @@ import {
   STORED_DATA_KEY,
   STORED_DATA_VERSION,
 } from '../config';
+import { readBackupDocument } from '../progress-backup';
 import type { KeyValueStorage } from '../storage';
 import type { ReminderTime } from '../types';
 import { readStoredData } from '../stored-data';
@@ -210,6 +211,78 @@ describe('changes', () => {
     expect(() => store.getState().recordPageRead({ page: 605, date: TODAY })).toThrow(RangeError);
     expect(store.getState().settings.language).toBeNull();
     expect(store.getState().journal).toBe(EMPTY_JOURNAL);
+  });
+});
+
+describe('language of the phone (D32)', () => {
+  it('is what a fresh install follows: no language is chosen', async () => {
+    const storage = createMemoryStorage();
+    const { store } = await load(storage);
+    await store.whenSaved();
+    expect(store.getState().settings.language).toBeNull();
+    expect(stored(storage).settings?.language).toBeNull();
+  });
+
+  it('can be chosen again after another language, and a returning person still follows it', async () => {
+    const storage = createMemoryStorage();
+    const { store } = await load(storage);
+    store.getState().setLanguage('ar');
+    store.getState().setLanguage(null);
+    expect(store.getState().settings.language).toBeNull();
+    await store.whenSaved();
+
+    expect(stored(storage).settings?.language).toBeNull();
+    const returning = await load(storage);
+    expect(returning.discarded).toEqual([]);
+    expect(returning.store.getState().settings.language).toBeNull();
+  });
+
+  it('leaves a language chosen before this version where it was', async () => {
+    // What a person who chose English in the app has on their device: the document does not change.
+    const storage = createMemoryStorage();
+    const { store } = await load(storage);
+    store.getState().setLanguage('en');
+    await store.whenSaved();
+
+    const returning = await load(storage);
+    expect(returning.discarded).toEqual([]);
+    expect(returning.store.getState().settings.language).toBe('en');
+  });
+
+  it('writes nothing when it is chosen while already followed', async () => {
+    const storage = createMemoryStorage();
+    const { store } = await load(storage);
+    await store.whenSaved();
+    const setItem = jest.spyOn(storage, 'setItem');
+    store.getState().setLanguage(null);
+    await store.whenSaved();
+    expect(setItem).not.toHaveBeenCalled();
+  });
+
+  it('travels with the copy of the progress, and comes back with it after a reinstallation', async () => {
+    const backup = createMemoryProgressBackup();
+    const storage = createMemoryStorage();
+    const { store } = await loadAppStore({ storage, backup, drawUserSeed: () => SEED });
+    store.getState().completeOnboarding();
+    store.getState().setLanguage('ar');
+    store.getState().setLanguage(null);
+    await store.whenBackedUp();
+    expect(readBackupDocument(backup.peek())?.settings.language).toBeNull();
+
+    // A new phone: nothing on the device, the copy in iCloud.
+    const reinstalled = await loadAppStore({ storage: createMemoryStorage(), backup });
+    expect(reinstalled.restoredFromBackup).toBe(true);
+    expect(reinstalled.store.getState().settings.language).toBeNull();
+  });
+
+  it('is not something an untyped caller can fake: anything but null or a language is refused', async () => {
+    const { store } = await load(createMemoryStorage());
+    store.getState().setLanguage('fr');
+    for (const wrong of [undefined, '', 'device', 'de']) {
+      // An untyped caller could pass anything.
+      expect(() => store.getState().setLanguage(wrong as unknown as null)).toThrow(RangeError);
+    }
+    expect(store.getState().settings.language).toBe('fr');
   });
 });
 
