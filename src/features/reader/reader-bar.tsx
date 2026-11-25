@@ -13,7 +13,7 @@ import {
   readerShapes,
   spacing,
   stateOpacity,
-  useReaderPalette,
+  useColors,
   useReducedMotion,
   type IconSymbol,
 } from '@/ui';
@@ -62,7 +62,7 @@ function RoundButton({
   symbolTestID,
   testID,
 }: RoundButtonProps) {
-  const palette = useReaderPalette();
+  const colors = useColors();
   const isMirrored =
     followsReadingOrder && Platform.OS !== 'ios' && getWritingDirection() === 'rtl';
   return (
@@ -80,7 +80,7 @@ function RoundButton({
       testID={testID}
       style={({ pressed }) => [
         styles.roundButton,
-        { backgroundColor: palette.card, shadowColor: palette.shadow },
+        { backgroundColor: colors.surface, shadowColor: colors.shadow },
         pressed && styles.pressed,
       ]}
     >
@@ -163,7 +163,7 @@ export interface ReaderBottomBarProps {
  */
 export function ReaderBottomBar({ isVisible, onListen }: ReaderBottomBarProps) {
   const { t } = useTranslation('reader');
-  const palette = useReaderPalette();
+  const colors = useColors();
   return (
     <SafeAreaView
       edges={BOTTOM_EDGE}
@@ -174,7 +174,7 @@ export function ReaderBottomBar({ isVisible, onListen }: ReaderBottomBarProps) {
       style={[
         styles.bottomBar,
         isVisible
-          ? { backgroundColor: palette.bar, borderTopColor: palette.barEdge }
+          ? { backgroundColor: colors.bar, borderTopColor: colors.barEdge }
           : styles.hiddenBar,
       ]}
     >
@@ -186,11 +186,11 @@ export function ReaderBottomBar({ isVisible, onListen }: ReaderBottomBarProps) {
           testID="reader-listen"
           style={({ pressed }) => [
             styles.microphone,
-            { backgroundColor: palette.action, shadowColor: palette.action },
+            { backgroundColor: colors.action, shadowColor: colors.action },
             pressed && styles.pressed,
           ]}
         >
-          <Icon symbol={MICROPHONE_SYMBOL} textStyle="title2" tint={palette.onAction} />
+          <Icon symbol={MICROPHONE_SYMBOL} textStyle="title2" color="onAction" />
         </Pressable>
       </View>
     </SafeAreaView>
@@ -206,7 +206,7 @@ export function ReaderBottomBar({ isVisible, onListen }: ReaderBottomBarProps) {
  * with Reduce Motion it is simply there (spec 3; accessibility.md › Cognitive).
  */
 export function FeedbackPill({ text }: { text: string }) {
-  const palette = useReaderPalette();
+  const colors = useColors();
   const isMotionReduced = useReducedMotion();
   const { durationMs, dampingRatio, fromScale } = READER_CONFIG.feedbackEntrance;
   const entrance = useSharedValue(isMotionReduced ? 1 : 0);
@@ -225,7 +225,7 @@ export function FeedbackPill({ text }: { text: string }) {
       testID="reader-feedback-motion"
     >
       <View
-        style={[styles.pill, { backgroundColor: palette.card, shadowColor: palette.shadow }]}
+        style={[styles.pill, { backgroundColor: colors.surface, shadowColor: colors.shadow }]}
         accessible
         accessibilityLiveRegion="polite"
         testID="reader-feedback"

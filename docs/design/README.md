@@ -25,5 +25,5 @@ composition des écrans.
   lot 3 (comptes). Au lot 1, l'appli démarre sans compte.
 - Règle du propriétaire (25 novembre 2026) : ces maquettes sont la référence visuelle. Leurs
   couleurs, la serif Fraunces et leurs mesures sont relevées dans `src/ui/tokens.ts`
-  (`gardenPalette`, `pieceSizes`) ; chaque écart avec la charte ou les règles d’Apple est inscrit
+  (`palette`, `pieceSizes`) ; chaque écart avec la charte ou les règles d’Apple est inscrit
   dans `SKILLS.md` et soumis au propriétaire.

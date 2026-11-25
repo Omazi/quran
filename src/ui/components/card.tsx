@@ -1,7 +1,15 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { layout, radius, spacing, stateOpacity, type GardenPaletteRole } from '../tokens';
+import {
+  layout,
+  pieceSizes,
+  radius,
+  spacing,
+  stateOpacity,
+  type PaletteRole,
+  type SpacingToken,
+} from '../tokens';
 import { useColors, useElevation } from '../use-colors';
 
 /**
@@ -16,6 +24,10 @@ export interface CardProps {
   tone?: CardTone;
   /** Space inside the card. Defaults to `md`. */
   padding?: 'sm' | 'md';
+  /** `sheet`: the larger corners of a card that rises from the bottom of the screen (visite.png). */
+  shape?: 'card' | 'sheet';
+  /** Space between the card's children, stacked. None by default. */
+  contentGap?: SpacingToken;
   /** Makes the whole card one button (a friend's garden). It then needs a label. */
   onPress?: () => void;
   /** What a screen reader says for a card that is a button, or for a card read as one element. */
@@ -25,7 +37,7 @@ export interface CardProps {
   testID?: string;
 }
 
-const SURFACE: Readonly<Record<CardTone, GardenPaletteRole>> = {
+const SURFACE: Readonly<Record<CardTone, PaletteRole>> = {
   raised: 'surface',
   inset: 'surfaceInset',
   thirst: 'thirstSurface',
@@ -41,6 +53,8 @@ export function Card({
   children,
   tone = 'raised',
   padding = 'md',
+  shape = 'card',
+  contentGap,
   onPress,
   accessibilityLabel,
   style,
@@ -52,6 +66,8 @@ export function Card({
     styles.card,
     tone === 'inset' ? styles.inset : null,
     padding === 'sm' ? styles.paddingSmall : styles.paddingMedium,
+    shape === 'sheet' ? styles.sheet : null,
+    contentGap === undefined ? null : { rowGap: spacing[contentGap] },
     { backgroundColor: colors[SURFACE[tone]] },
     tone === 'inset' ? { borderColor: colors.surfaceInsetBorder } : null,
     tone === 'raised' ? { boxShadow: shadow } : null,
@@ -84,6 +100,7 @@ export function Card({
 const styles = StyleSheet.create({
   card: { borderRadius: radius.xl, overflow: 'hidden' },
   inset: { borderRadius: radius.lg, borderWidth: layout.outlineWidth },
+  sheet: { borderRadius: pieceSizes.sheetRadius },
   paddingSmall: { padding: spacing.sm },
   paddingMedium: { padding: spacing.md },
   button: { minHeight: layout.touchTarget },

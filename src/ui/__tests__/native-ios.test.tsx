@@ -43,7 +43,7 @@ import {
 } from '../test-support/environment';
 import { touchTargets } from '../tokens';
 
-const ON_ACTION = { type: 'color', color: iosAppColor('onAccent') };
+const ON_ACTION = { type: 'color', color: iosPaletteColor('onAction') };
 const ACTION_TINT = { type: 'color', color: iosPaletteColor('actionTint') };
 const BOOK: IconSymbol = { ios: 'book.closed', android: 'book_2' };
 const DROP: IconSymbol = { ios: 'drop.fill', android: 'water_drop' };
@@ -150,7 +150,14 @@ describe('iOS Button', () => {
     await render(<Button label="Action" variant={variant} onPress={jest.fn()} testID="button" />);
     const button = screen.getByTestId('button');
     expect(modifierOf(button, 'buttonStyle')).toMatchObject({ style });
-    expect(modifierOf(button, 'tint')).toBeUndefined();
+    // The prominent style is filled with the capsule button's green; the others take the host's.
+    if (variant === 'primary') {
+      expect(modifierOf(button, 'tint')).toMatchObject({
+        tint: { type: 'color', color: iosPaletteColor('action') },
+      });
+    } else {
+      expect(modifierOf(button, 'tint')).toBeUndefined();
+    }
     expect(button.props.role).toBeUndefined();
     expect(hosts()[0]).toHaveProp('seedColor', iosPaletteColor('actionTint'));
     expect(swiftUITexts(button)).toEqual(['Action']);
@@ -876,6 +883,9 @@ describe('iOS ButtonPairRow', () => {
     const decline = screen.getByTestId('decline');
     expect(modifierOf(accept, 'buttonStyle')).toMatchObject({ style: 'borderedProminent' });
     expect(modifierOf(firstChild(accept), 'foregroundStyle')).toMatchObject({ style: ON_ACTION });
+    expect(modifierOf(accept, 'tint')).toMatchObject({
+      tint: { type: 'color', color: iosPaletteColor('action') },
+    });
     // Each states its style: in a list row, buttons without one would press together.
     expect(modifierOf(decline, 'buttonStyle')).toMatchObject({ style: 'borderless' });
     for (const button of [accept, decline]) {

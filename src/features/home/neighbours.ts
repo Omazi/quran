@@ -10,12 +10,14 @@ import { HIZB_COUNT } from '@/domain/quran';
 import type { GardenState } from '@/domain/garden';
 import type { LocalDate } from '@/domain/shared/local-date';
 import type { FriendView, UserId } from '@/domain/social';
-// The Proches tab exports no hook for its store or its pictures: read-only use of three of its
-// files, until it does (reported to the architect with this change). Imported file by file so
-// that the home screen does not load every page of the tab.
-import { gardenStateOf, waterStatusOf } from '@/features/friends/friend-garden';
-import { useSocialStore, useSocialVersion } from '@/features/friends/social-store';
-import { useSession } from '@/features/friends/use-session';
+import {
+  avatarIndexOf,
+  gardenStateOf,
+  useSession,
+  useSocialStore,
+  useSocialVersion,
+  waterStatusOf,
+} from '@/features/friends';
 
 /** The line under a friend's name. */
 export type NeighbourDetail =
@@ -34,7 +36,7 @@ export interface NeighbourGarden {
   readonly userId: UserId;
   readonly name: string;
   readonly initial: string | null;
-  /** The place of the friend in the row: it picks the colour of the avatar. */
+  /** The friend's colour (`avatarIndexOf`): the same as in the Proches tab. */
   readonly colorIndex: number;
   /** Null when the friend hides their garden. */
   readonly garden: GardenState | null;
@@ -102,7 +104,9 @@ export function useNeighbourGardens(today: LocalDate): NeighbourGardens {
     store.client.repository.listFriends().then(
       (friends) => {
         if (isCurrent) {
-          setGardens(friends.map((friend, index) => neighbourGardenOf(friend, index, today)));
+          setGardens(
+            friends.map((friend) => neighbourGardenOf(friend, avatarIndexOf(friend.userId), today)),
+          );
         }
       },
       // Friends that cannot be read are no friends to show: the home screen stays usable.

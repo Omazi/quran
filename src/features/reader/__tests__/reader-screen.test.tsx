@@ -5,6 +5,7 @@
  */
 
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
+import * as Haptics from 'expo-haptics';
 import { AccessibilityInfo, AppState } from 'react-native';
 import { State } from 'react-native-gesture-handler';
 import { fireGestureHandler, getByGestureTestId } from 'react-native-gesture-handler/jest-utils';
@@ -17,7 +18,7 @@ import { deviceLocalDate } from '@/features/home';
 import { AppStoreProvider, type AppStore } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
 import { fontFamily } from '@/ui';
-import { readerPalette } from '@/ui/tokens';
+import { palette } from '@/ui/tokens';
 import {
   changeReducedMotion,
   renderOnIOS,
@@ -34,6 +35,11 @@ import { useReader } from '../use-reader';
 import type { QuranFontStatus } from '../use-quran-font';
 import type { ReaderModel } from '../use-reader';
 import type { GardenElementKind } from '@/domain/garden';
+
+jest.mock('expo-haptics', () => ({
+  ...jest.requireActual('expo-haptics'),
+  impactAsync: jest.fn(() => Promise.resolve()),
+}));
 
 const WIDTH = 390;
 const HEIGHT = 700;
@@ -332,6 +338,17 @@ describe('the bar of the validated mockup (docs/design/mushaf.png)', () => {
     expect(store.getState().settings.bookmarks).toEqual([]);
   });
 
+  it('answers each bookmark toggle with a light tap', async () => {
+    jest.mocked(Haptics.impactAsync).mockClear();
+    const store = createTestAppStore();
+    await openReader(store, 293);
+    await fireEvent.press(screen.getByRole('button', { name: 'Marque-page' }));
+    expect(Haptics.impactAsync).toHaveBeenCalledTimes(1);
+    expect(Haptics.impactAsync).toHaveBeenLastCalledWith(Haptics.ImpactFeedbackStyle.Light);
+    await fireEvent.press(screen.getByRole('button', { name: 'Marque-page' }));
+    expect(Haptics.impactAsync).toHaveBeenCalledTimes(2);
+  });
+
   it('shows a page bookmarked earlier as bookmarked', async () => {
     const store = createTestAppStore({ settings: { bookmarks: [20] } });
     await openReader(store, 20);
@@ -345,7 +362,7 @@ describe('the bar of the validated mockup (docs/design/mushaf.png)', () => {
     openListening.mockClear();
     await openReader(createTestAppStore(), 293);
     const microphone = screen.getByRole('button', { name: 'Écouter un passage' });
-    expect(styleOf(microphone)).toMatchObject({ backgroundColor: readerPalette.action.light });
+    expect(styleOf(microphone)).toMatchObject({ backgroundColor: palette.action.light });
     expect(Number(styleOf(microphone).width)).toBeGreaterThanOrEqual(44);
     await fireEvent.press(microphone);
     expect(openListening).toHaveBeenCalledTimes(1);
@@ -355,10 +372,10 @@ describe('the bar of the validated mockup (docs/design/mushaf.png)', () => {
     setDeviceConditions({ os: 'android' });
     await openReader(createTestAppStore(), 293);
     expect(styleOf(screen.getByTestId('reader'))).toMatchObject({
-      backgroundColor: readerPalette.canvas.light,
+      backgroundColor: palette.pageGround.light,
     });
     const back = screen.getByTestId('reader-back');
-    expect(styleOf(back)).toMatchObject({ backgroundColor: readerPalette.card.light });
+    expect(styleOf(back)).toMatchObject({ backgroundColor: palette.surface.light });
     const drawn = Number(styleOf(back).width);
     const slop = back.props.hitSlop as { top: number; bottom: number };
     expect(drawn + slop.top + slop.bottom).toBeGreaterThanOrEqual(44);
@@ -391,7 +408,7 @@ describe('the watered pill, the moment of the reader (spec 3)', () => {
     expect(
       within(pill).getByTestId('reader-feedback-drop', { includeHiddenElements: true }),
     ).toBeTruthy();
-    expect(styleOf(pill)).toMatchObject({ backgroundColor: readerPalette.card.light });
+    expect(styleOf(pill)).toMatchObject({ backgroundColor: palette.surface.light });
     // Nothing is laid over the page, so the first line is never covered, whatever the screen.
     expect(within(screen.getByTestId('reader-pages')).queryByTestId('reader-feedback')).toBeNull();
   });

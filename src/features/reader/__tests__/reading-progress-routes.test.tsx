@@ -34,13 +34,25 @@ jest.mock('expo-localization', () => ({
     },
   ],
 }));
-jest.mock('expo-notifications', () =>
-  jest
+jest.mock('expo-notifications', () => ({
+  ...jest
     .requireActual<typeof import('@/data/notifications/test-support/quiet-expo-notifications')>(
       '@/data/notifications/test-support/quiet-expo-notifications',
     )
     .loadQuietly(),
-);
+  // The root layout keeps the reminders scheduled and listens to taps: no system behind it here
+  // (the same stubs as app-routes.test.tsx).
+  getPermissionsAsync: jest.fn(async () => ({ status: 'undetermined', granted: false })),
+  getAllScheduledNotificationsAsync: jest.fn(async () => []),
+  scheduleNotificationAsync: jest.fn(async () => 'id'),
+  cancelScheduledNotificationAsync: jest.fn(async () => {}),
+  setNotificationChannelAsync: jest.fn(async () => null),
+  setNotificationCategoryAsync: jest.fn(async () => ({})),
+  setNotificationHandler: jest.fn(),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  getLastNotificationResponseAsync: jest.fn(async () => null),
+  clearLastNotificationResponse: jest.fn(),
+}));
 jest.mock(
   'expo-camera',
   () =>
@@ -205,12 +217,13 @@ describe('pages read in the reader, seen on the tabs', () => {
     // The profile, mounted before the reading, follows the store.
     await act(() => router.navigate('/profile'));
     await waitFor(() => expect(app.getPathname()).toBe('/profile'));
-    expect(await screen.findByTestId('profile-pages')).toHaveTextContent(
+    // The restyled profile (work/mk-profile): the week's figures, the hasanat as the hero figure.
+    expect(await screen.findByTestId('profile-figure-pages')).toHaveTextContent(
       new RegExp(`${pageCount}`),
     );
-    expect(screen.getByTestId('profile-hasanat-value')).toHaveTextContent(/[1-9]/);
+    expect(screen.getByTestId('profile-hero-value')).toHaveTextContent(/[1-9]/);
     // The time is handed over to the store by batches of a minute (D37): some minutes are there.
-    expect(screen.getByTestId('profile-reading-time')).toHaveTextContent(/[1-9] min/);
+    expect(screen.getByTestId('profile-figure-readingTime')).toHaveTextContent(/[1-9] min/);
 
     // Saved on the device (the next test opens the app on what is saved here).
     expect(await storedPages(pageCount)).toEqual(

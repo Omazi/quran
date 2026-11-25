@@ -35,7 +35,7 @@ import {
 import {
   appColors,
   fallbackSystemColors,
-  gardenPalette,
+  palette,
   layout,
   stateOpacity,
   textStyles,
@@ -149,18 +149,16 @@ describe('default controls, together', () => {
   it.each(['light', 'dark'] as const)('take their colours from the %s theme', async (scheme) => {
     setDeviceConditions({ os: 'android', scheme });
     await render(<EveryControl />);
-    expect(styleOf(screen.getByTestId('primary')).backgroundColor).toBe(
-      gardenPalette.actionTint[scheme],
-    );
-    expect(styleOf(screen.getByText('Lire et arroser')).color).toBe(appColors.onAccent[scheme]);
-    expect(styleOf(screen.getByText('Plus tard')).color).toBe(gardenPalette.actionTint[scheme]);
+    expect(styleOf(screen.getByTestId('primary')).backgroundColor).toBe(palette.action[scheme]);
+    expect(styleOf(screen.getByText('Lire et arroser')).color).toBe(palette.onAction[scheme]);
+    expect(styleOf(screen.getByText('Plus tard')).color).toBe(palette.actionTint[scheme]);
     expect(styleOf(screen.getByText('3 pages sur 5')).color).toBe(
       fallbackSystemColors.secondaryLabel[scheme],
     );
     expect(styleOf(screen.getByText('Aujourd’hui')).color).toBe(fallbackSystemColors.label[scheme]);
     // The switch, the stepper and the time take the action green too, as on iOS, where the host
     // tints every control with it (deviation 75): the water's teal keeps the water's meaning only.
-    const action = gardenPalette.actionTint[scheme];
+    const action = palette.actionTint[scheme];
     // React Native hands the track colour to the platform switch under its own name.
     const onTracks = screen.container
       .queryAll(
@@ -242,13 +240,9 @@ describe('default Button', () => {
         <Button label="Simple" variant="plain" onPress={jest.fn()} testID="plain" />
       </>,
     );
-    expect(styleOf(screen.getByTestId('primary')).backgroundColor).toBe(
-      gardenPalette.actionTint.light,
-    );
+    expect(styleOf(screen.getByTestId('primary')).backgroundColor).toBe(palette.actionTint.light);
     expect(styleOf(screen.getByTestId('secondary')).backgroundColor).toBeUndefined();
-    expect(styleOf(screen.getByTestId('secondary')).borderColor).toBe(
-      gardenPalette.actionTint.light,
-    );
+    expect(styleOf(screen.getByTestId('secondary')).borderColor).toBe(palette.actionTint.light);
     expect(styleOf(screen.getByTestId('plain')).backgroundColor).toBeUndefined();
     expect(styleOf(screen.getByTestId('plain')).borderWidth).toBeUndefined();
   });
@@ -805,7 +799,7 @@ describe('default ButtonRow', () => {
       </InList>,
     );
     const button = screen.getByRole('button', { name: 'Lire et arroser' });
-    expect(styleOf(button).backgroundColor).toBe(gardenPalette.actionTint.light);
+    expect(styleOf(button).backgroundColor).toBe(palette.action.light);
     expect(button.parent && styleOf(button.parent)).toEqual({ alignSelf: 'stretch' });
     expect(button.parent?.parent && styleOf(button.parent.parent)).toMatchObject({
       paddingHorizontal: layout.screenMargin,

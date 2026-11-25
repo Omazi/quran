@@ -17,7 +17,7 @@ import {
   styleOf,
   type RenderedElement,
 } from '@/ui/test-support/environment';
-import { appColors, readerPalette } from '@/ui/tokens';
+import { appColors, palette } from '@/ui/tokens';
 
 import { MushafPageView } from '../mushaf-page-view';
 import { verseNumberText } from '../page-content';
@@ -135,8 +135,8 @@ describe('the page shows exactly the text of the repository', () => {
     expect(within(header).getByText('آياتها ١١٠')).toBeOnTheScreen();
     expect(within(header).getAllByTestId('surah-header-18-medallion')).toHaveLength(2);
     expect(styleOf(within(header).getByTestId('surah-header-18-rule'))).toMatchObject({
-      borderTopColor: readerPalette.goldLight.light,
-      borderBottomColor: readerPalette.goldDeep.light,
+      borderTopColor: palette.goldLight.light,
+      borderBottomColor: palette.goldDeep.light,
     });
   });
 
@@ -156,11 +156,11 @@ describe('the page shows exactly the text of the repository', () => {
     await renderPage(293);
     const frame = styleOf(screen.getByTestId('mushaf-page-293-frame'));
     expect(frame).toMatchObject({
-      borderColor: readerPalette.frameOuter.light,
+      borderColor: palette.frameOuter.light,
       backgroundColor: appColors.paper.light,
     });
     expect(styleOf(screen.getByTestId('mushaf-page-293-frame-inner')).borderColor).toBe(
-      readerPalette.frameInner.light,
+      palette.frameInner.light,
     );
     // A band of small lozenges above and below the text, and a gold point in each corner.
     expect(screen.getByTestId('mushaf-page-293-band-top')).toBeOnTheScreen();

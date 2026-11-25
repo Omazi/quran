@@ -1,23 +1,21 @@
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { spacing, type IconSymbol } from '@/ui';
-
-import { avatarRoleOf, initialOf } from './friend-avatar';
-import { FriendCardGrid } from './friend-card-grid';
 import {
-  FriendsAvatar,
-  FriendsButton,
-  FriendsButtonPair,
-  FriendsCard,
-  FriendsPage,
-  FriendsRow,
-  FriendsSectionTitle,
-  FriendsSeparator,
-  FriendsSymbol,
-  FriendsText,
-  type FriendsButtonKind,
-} from './friends-kit';
+  ActionButton,
+  AppText,
+  Avatar,
+  Card,
+  Icon,
+  SectionHeader,
+  spacing,
+  type ActionButtonVariant,
+  type IconSymbol,
+} from '@/ui';
+
+import { avatarIndexOf, initialOf } from './friend-avatar';
+import { FriendCardGrid } from './friend-card-grid';
+import { FriendsButtonPair, FriendsPage, FriendsRow, FriendsSeparator } from './friends-kit';
 import type { FriendsModel } from './friends-model';
 import type { ShownRefusal } from './refusal';
 import type { FriendsListActions } from './use-friends';
@@ -53,81 +51,82 @@ export interface FriendsListScreenProps {
 export function FriendsListScreen({ model, refusal, actions }: FriendsListScreenProps) {
   const { t } = useTranslation('friends');
   const fewRequests = model.requests.length <= MOST_PROMINENT_REQUESTS;
-  const acceptKind: FriendsButtonKind = fewRequests ? 'primary' : 'soft';
-  const declineKind: FriendsButtonKind = fewRequests ? 'soft' : 'outline';
+  const acceptKind: ActionButtonVariant = fewRequests ? 'filled' : 'tonal';
+  const declineKind: ActionButtonVariant = fewRequests ? 'tonal' : 'outline';
   return (
     <FriendsPage testID="friends-list">
       <View style={styles.title}>
-        <FriendsText variant="largeTitle" color="title">
+        <AppText variant="largeTitle" color="heading">
           {t('title')}
-        </FriendsText>
+        </AppText>
         {model.isDemonstration ? (
-          <FriendsText variant="footnote" color="inkSecondary" testID="friends-demo-note">
+          <AppText variant="footnote" color="muted" testID="friends-demo-note">
             {t('demoNote')}
-          </FriendsText>
+          </AppText>
         ) : null}
       </View>
 
       {model.requests.length === 0 ? null : (
         <View style={styles.part}>
-          <FriendsSectionTitle title={t('list.requestsTitle')} />
+          <SectionHeader title={t('list.requestsTitle')} />
           {model.requests.map((request) => (
-            <FriendsCard key={request.userId}>
+            <Card contentGap="md" key={request.userId}>
               <FriendsRow
                 label={request.name}
                 detail={t('list.requestDetail')}
                 leading={
-                  <FriendsAvatar
-                    initial={initialOf(request.name)}
-                    color={avatarRoleOf(request.userId)}
+                  <Avatar
+                    content={{ initial: initialOf(request.name) }}
+                    color={avatarIndexOf(request.userId)}
+                    size="large"
                   />
                 }
                 testID={`request-${request.userId}`}
               />
               <FriendsButtonPair>
-                <FriendsButton
-                  kind={acceptKind}
+                <ActionButton
+                  variant={acceptKind}
                   label={t('list.acceptShort')}
                   accessibilityLabel={t('list.accept', { name: request.name })}
                   onPress={() => actions.accept(request.userId)}
-                  isWide
+                  grows
                   testID={`request-accept-${request.userId}`}
                 />
-                <FriendsButton
-                  kind={declineKind}
+                <ActionButton
+                  variant={declineKind}
                   label={t('list.declineShort')}
                   accessibilityLabel={t('list.decline', { name: request.name })}
                   onPress={() => actions.decline(request.userId)}
-                  isWide
+                  grows
                   testID={`request-decline-${request.userId}`}
                 />
               </FriendsButtonPair>
-            </FriendsCard>
+            </Card>
           ))}
           {refusal === null ? null : (
-            <FriendsText variant="footnote" color="inkSecondary">
+            <AppText variant="footnote" color="muted">
               {t(`refusals.${refusal}`)}
-            </FriendsText>
+            </AppText>
           )}
         </View>
       )}
 
       <View style={styles.part}>
-        <FriendsSectionTitle title={t('list.gardensTitle')} />
+        <SectionHeader title={t('list.gardensTitle')} />
         {model.friends.length === 0 ? (
-          <FriendsCard>
-            <FriendsText variant="headline" testID="friends-empty">
+          <Card contentGap="md">
+            <AppText variant="headline" testID="friends-empty">
               {t('list.noFriends')}
-            </FriendsText>
-            <FriendsText variant="subhead" color="inkSecondary">
+            </AppText>
+            <AppText variant="subhead" color="muted">
               {t('list.noFriendsNote')}
-            </FriendsText>
-          </FriendsCard>
+            </AppText>
+          </Card>
         ) : (
           <FriendCardGrid cards={model.friends} onOpen={actions.openFriend} />
         )}
-        <FriendsButton
-          kind="soft"
+        <ActionButton
+          variant="tonal"
           symbol={ADD_SYMBOL}
           label={t('list.add')}
           onPress={actions.addFriend}
@@ -136,8 +135,8 @@ export function FriendsListScreen({ model, refusal, actions }: FriendsListScreen
       </View>
 
       <View style={styles.part}>
-        <FriendsSectionTitle title={t('list.groupsTitle')} />
-        <FriendsCard style={styles.groups}>
+        <SectionHeader title={t('list.groupsTitle')} />
+        <Card contentGap="md" style={styles.groups}>
           {model.groups.length === 0 ? (
             <FriendsRow label={t('list.noGroups')} testID="groups-empty" />
           ) : (
@@ -146,7 +145,7 @@ export function FriendsListScreen({ model, refusal, actions }: FriendsListScreen
                 <FriendsRow
                   label={group.name}
                   detail={t('list.members', { count: group.memberCount })}
-                  leading={<FriendsSymbol symbol={GROUP_SYMBOL} color="forestText" />}
+                  leading={<Icon symbol={GROUP_SYMBOL} color="actionTint" />}
                   onPress={() => actions.openGroup(group.id)}
                   accessibilityLabel={`${group.name}, ${t('list.members', { count: group.memberCount })}`}
                   testID={`group-${group.id}`}
@@ -157,13 +156,13 @@ export function FriendsListScreen({ model, refusal, actions }: FriendsListScreen
           )}
           <FriendsRow
             label={t('list.createGroup')}
-            labelColor="forestText"
-            leading={<FriendsSymbol symbol={PLUS_SYMBOL} color="forestText" />}
+            labelColor="actionTint"
+            leading={<Icon symbol={PLUS_SYMBOL} color="actionTint" />}
             onPress={actions.createGroup}
             accessibilityLabel={t('list.createGroup')}
             testID="groups-create"
           />
-        </FriendsCard>
+        </Card>
       </View>
     </FriendsPage>
   );

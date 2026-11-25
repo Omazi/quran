@@ -2,15 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { quranStructure } from '@/data/quran';
-import {
-  MINIMUM_FONT_SIZE,
-  fontFamily,
-  layout,
-  radius,
-  readerShapes,
-  useColors,
-  useReaderPalette,
-} from '@/ui';
+import { MINIMUM_FONT_SIZE, fontFamily, layout, radius, readerShapes, useColors } from '@/ui';
 
 import { arabicIndicDigits } from './arabic-digits';
 import { READER_CONFIG } from './config';
@@ -36,7 +28,6 @@ export interface SurahCartoucheProps {
 export function SurahCartouche({ surah, metrics, turnActions }: SurahCartoucheProps) {
   const { t } = useTranslation('reader');
   const colors = useColors();
-  const palette = useReaderPalette();
   const info = quranStructure.surah(surah);
   const height = metrics.lineHeight * READER_CONFIG.surahHeaderHeightRatio;
   const innerHeight = height - 2 * (cartoucheRule + cartoucheGap + layout.outlineWidth);
@@ -60,9 +51,9 @@ export function SurahCartouche({ surah, metrics, turnActions }: SurahCartouchePr
   const medallionView = (
     <View
       testID={`surah-header-${surah}-medallion`}
-      style={[styles.medallion, { borderColor: palette.gold, backgroundColor: colors.paper }]}
+      style={[styles.medallion, { borderColor: colors.gold, backgroundColor: colors.paper }]}
     >
-      <View style={[styles.medallionDot, { backgroundColor: palette.gold }]} />
+      <View style={[styles.medallionDot, { backgroundColor: colors.gold }]} />
     </View>
   );
   return (
@@ -83,14 +74,14 @@ export function SurahCartouche({ surah, metrics, turnActions }: SurahCartouchePr
           style={[
             styles.rule,
             {
-              borderTopColor: palette.goldLight,
-              borderBottomColor: palette.goldDeep,
-              borderStartColor: palette.gold,
-              borderEndColor: palette.gold,
+              borderTopColor: colors.goldLight,
+              borderBottomColor: colors.goldDeep,
+              borderStartColor: colors.gold,
+              borderEndColor: colors.gold,
             },
           ]}
         >
-          <View style={[styles.inner, { borderColor: palette.frameInner }]}>
+          <View style={[styles.inner, { borderColor: colors.frameInner }]}>
             <View style={styles.sideStart}>{label(verses)}</View>
             {/* The name, a little larger than the text of the page, in a line box as tall as the
                 inner rule, so that it is centred whatever the font's ascent and descent. */}

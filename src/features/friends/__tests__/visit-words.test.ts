@@ -4,9 +4,9 @@
  */
 
 import { showLanguage } from '@/features/garden/test-support/screen-conditions';
-import { visitAvatarRoles } from '@/ui';
+import { avatarColorCount } from '@/ui';
 
-import { avatarRoleOf, initialOf } from '../friend-avatar';
+import { avatarIndexOf, initialOf } from '../friend-avatar';
 import { cardDetails, visitSummary } from '../friend-words';
 import type { FriendCard } from '../friends-model';
 
@@ -65,13 +65,14 @@ describe('the line of a garden card', () => {
 
 describe('a friend’s colour and initial', () => {
   it('gives each person always the same colour of the palette', () => {
-    const role = avatarRoleOf('demo-sarah');
-    expect(visitAvatarRoles).toContain(role);
-    expect(avatarRoleOf('demo-sarah')).toBe(role);
+    const index = avatarIndexOf('demo-sarah');
+    expect(index).toBeGreaterThanOrEqual(0);
+    expect(index).toBeLessThan(avatarColorCount);
+    expect(avatarIndexOf('demo-sarah')).toBe(index);
   });
 
   it('gives the three friends of the demonstration three different colours', () => {
-    const roles = new Set(['demo-mustapha', 'demo-sarah', 'demo-taghread'].map(avatarRoleOf));
+    const roles = new Set(['demo-mustapha', 'demo-sarah', 'demo-taghread'].map(avatarIndexOf));
     expect(roles.size).toBe(3);
   });
 
