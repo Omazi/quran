@@ -6,8 +6,10 @@ import { parseLocalDate } from '@/domain/shared/local-date';
 import { createFirstLaunchSettings, loadAppStore } from '../app-store';
 import {
   DEFAULT_DAILY_GOAL_PAGES,
+  DEFAULT_READER_TEXT_SIZE,
   DEFAULT_REMINDERS,
   MAX_PAUSES,
+  READER_TEXT_SIZE_RANGE,
   REJECTED_DATA_KEY,
   RESET_NOTICE_KEY,
   STORED_DATA_KEY,
@@ -50,6 +52,8 @@ describe('first launch', () => {
       userSeed: SEED,
       lastOpenedPage: null,
       bookmarks: [],
+      readerScript: 'uthmani',
+      readerTextSize: DEFAULT_READER_TEXT_SIZE,
       pauses: [],
       reminders: DEFAULT_REMINDERS,
     });
@@ -120,6 +124,8 @@ describe('changes', () => {
       userSeed: SEED,
       lastOpenedPage: 293,
       bookmarks: [],
+      readerScript: 'uthmani',
+      readerTextSize: DEFAULT_READER_TEXT_SIZE,
       pauses: [],
       reminders: { ...DEFAULT_REMINDERS, dailyEnabled: false, dailyTime: { hour: 6, minute: 15 } },
     });
@@ -200,6 +206,41 @@ describe('changes', () => {
     expect(() => store.getState().toggleBookmark(page)).toThrow(RangeError);
     expect(store.getState().settings.bookmarks).toEqual([]);
   });
+
+  it('remembers the script of the reader, and saves it (D41)', async () => {
+    const storage = createMemoryStorage();
+    const { store } = await load(storage);
+    store.getState().setReaderScript('imlaei');
+    expect(store.getState().settings.readerScript).toBe('imlaei');
+    await store.whenSaved();
+    expect((await load(storage)).store.getState().settings.readerScript).toBe('imlaei');
+  });
+
+  it.each(['uthmani-minimal', 'simple', ''])('refuses the script %p', async (script) => {
+    const { store } = await load(createMemoryStorage());
+    // as: simulates an untyped caller.
+    expect(() => store.getState().setReaderScript(script as 'uthmani')).toThrow(RangeError);
+    expect(store.getState().settings.readerScript).toBe('uthmani');
+  });
+
+  it('remembers the text size of the reader within its range, and saves it', async () => {
+    const storage = createMemoryStorage();
+    const { store } = await load(storage);
+    store.getState().setReaderTextSize(READER_TEXT_SIZE_RANGE.max);
+    await store.whenSaved();
+    expect((await load(storage)).store.getState().settings.readerTextSize).toBe(
+      READER_TEXT_SIZE_RANGE.max,
+    );
+  });
+
+  it.each([READER_TEXT_SIZE_RANGE.min - 1, READER_TEXT_SIZE_RANGE.max + 1, 1.5, Number.NaN])(
+    'refuses the text size %p',
+    async (size) => {
+      const { store } = await load(createMemoryStorage());
+      expect(() => store.getState().setReaderTextSize(size)).toThrow(RangeError);
+      expect(store.getState().settings.readerTextSize).toBe(DEFAULT_READER_TEXT_SIZE);
+    },
+  );
 
   it('gives a person with an older document no page opened, and keeps all the rest', async () => {
     const settings = { ...createFirstLaunchSettings(SEED), onboardingCompleted: true };
@@ -376,6 +417,8 @@ describe('document written by version 1 of the app', () => {
       ...settings,
       lastOpenedPage: null,
       bookmarks: [],
+      readerScript: 'uthmani',
+      readerTextSize: DEFAULT_READER_TEXT_SIZE,
       reminders: { ...DEFAULT_REMINDERS, dailyEnabled: false },
     });
     expect(store.getState().journal).toEqual(journal);
@@ -593,6 +636,8 @@ describe('telling the person, once, that something was lost', () => {
     userSeed: 1,
     lastOpenedPage: null,
     bookmarks: [],
+    readerScript: 'uthmani',
+    readerTextSize: DEFAULT_READER_TEXT_SIZE,
     pauses: [],
     reminders: DEFAULT_REMINDERS,
   };

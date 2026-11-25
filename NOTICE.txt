@@ -47,6 +47,16 @@ Licence:  MIT. "Copyright (c) Project Nayuki" and "Copyright (c) 2023 Anthony Fu
 File:     node_modules/uqr/LICENSE
 
 
+@expo-google-fonts/amiri (dependency installed before this file; Amiri Regular used from D41)
+-------------------------
+Use:      Amiri Bold for surah names (since the reader of lot 1); Amiri Regular for the simple
+          (imla'i) script of the reader (D41, src/features/reader/script-fonts.ts).
+Licence:  the package code: MIT, "Copyright (c) 2020 Expo" (node_modules/@expo-google-fonts/amiri/LICENSE);
+          the fonts: SIL Open Font License 1.1, "Copyright 2010-2022 The Amiri Project Authors
+          (https://github.com/aliftype/amiri)" (node_modules/@expo-google-fonts/amiri/LICENSE_FONT).
+          The OFL allows bundling the font in an app, commercial or not; it asks that the
+          copyright and licence go with the font, and that the font is not sold on its own.
+
 The MIT licence asks that its copyright and permission notice be included in all copies or
 substantial portions of the software. The app does not show third-party notices yet (an
 "Acknowledgements" page in the profile, or the system Settings bundle): to be decided by the

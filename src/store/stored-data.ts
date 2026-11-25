@@ -17,12 +17,16 @@ import { isSupportedLanguage } from '@/i18n';
 
 import {
   DAILY_GOAL_RANGE,
+  DEFAULT_READER_SCRIPT,
+  DEFAULT_READER_TEXT_SIZE,
   DEFAULT_REMINDERS,
   EMPTY_TIME_SPENT,
   LAST_HOUR,
   LAST_MINUTE,
   MAX_PAUSES,
   MAX_TIME_DAYS,
+  READER_SCRIPTS,
+  READER_TEXT_SIZE_RANGE,
   STORED_DATA_VERSION,
   STORED_DATE_RANGE,
 } from './config';
@@ -32,6 +36,7 @@ import type {
   QuietHours,
   ReminderSettings,
   ReminderTime,
+  ReaderScript,
 } from './types';
 
 /** A part of the stored document that can be kept or discarded on its own. */
@@ -81,6 +86,16 @@ export function isBookmarkList(value: unknown): value is readonly number[] {
       isWholeNumberWithin(page, 1, PAGE_COUNT) &&
       (index === 0 || page > (value[index - 1] as number)),
   );
+}
+
+/** A script the reader can show (D41). */
+export function isReaderScript(value: unknown): value is ReaderScript {
+  return typeof value === 'string' && (READER_SCRIPTS as readonly string[]).includes(value);
+}
+
+/** A step of the reader's text size control. */
+export function isReaderTextSize(value: unknown): value is number {
+  return isWholeNumberWithin(value, READER_TEXT_SIZE_RANGE.min, READER_TEXT_SIZE_RANGE.max);
 }
 
 /** A seed the garden module accepts: a whole number from 0 to 2^53 - 1. */
@@ -170,8 +185,16 @@ function readPauses(value: unknown): readonly Pause[] | null {
  */
 function readSettings(value: unknown): AppSettings | null {
   if (!isRecord(value)) return null;
-  const { language, dailyGoalPages, onboardingCompleted, userSeed, lastOpenedPage, bookmarks } =
-    value;
+  const {
+    language,
+    dailyGoalPages,
+    onboardingCompleted,
+    userSeed,
+    lastOpenedPage,
+    bookmarks,
+    readerScript,
+    readerTextSize,
+  } = value;
   const reminders = readReminders(value.reminders);
   const pauses = readPauses(value.pauses);
   if (language !== null && (typeof language !== 'string' || !isSupportedLanguage(language))) {
@@ -180,6 +203,7 @@ function readSettings(value: unknown): AppSettings | null {
   if (!isDailyGoalPages(dailyGoalPages) || typeof onboardingCompleted !== 'boolean') return null;
   if (!isUserSeed(userSeed) || reminders === null || pauses === null) return null;
   if (!isLastOpenedPage(lastOpenedPage) || !isBookmarkList(bookmarks)) return null;
+  if (!isReaderScript(readerScript) || !isReaderTextSize(readerTextSize)) return null;
   return {
     language,
     dailyGoalPages,
@@ -187,6 +211,8 @@ function readSettings(value: unknown): AppSettings | null {
     userSeed,
     lastOpenedPage,
     bookmarks: [...bookmarks],
+    readerScript,
+    readerTextSize,
     pauses,
     reminders,
   };
@@ -252,6 +278,8 @@ const VERSION_WITHOUT_TIME_SPENT = 2;
 const VERSION_OF_TWO_SHAPES = 3;
 /** The version that had no bookmarks. */
 const VERSION_WITHOUT_BOOKMARKS = 4;
+/** The version that had no script and no text size for the reader. */
+const VERSION_WITHOUT_READER_CHOICES = 5;
 
 /** Version 1 to 2: the reminders get the Friday time and the quiet hours of the defaults. */
 function upgradeFromVersion1(document: UnknownRecord): UnknownRecord {
@@ -292,11 +320,31 @@ function upgradeFromVersion3(document: UnknownRecord): UnknownRecord {
  */
 function upgradeFromVersion4(document: UnknownRecord): UnknownRecord {
   const { settings } = document;
-  const next: UnknownRecord = { ...document, version: STORED_DATA_VERSION };
+  const next: UnknownRecord = { ...document, version: VERSION_WITHOUT_READER_CHOICES };
   if (isRecord(settings) && settings.bookmarks === undefined) {
     return { ...next, settings: { ...settings, bookmarks: [] } };
   }
   return next;
+}
+
+/**
+ * Version 5 to 6: the reader's script and text size take their first-launch values. A field
+ * already there is left untouched, so that the checks that follow decide about it.
+ */
+function upgradeFromVersion5(document: UnknownRecord): UnknownRecord {
+  const { settings } = document;
+  const next: UnknownRecord = { ...document, version: STORED_DATA_VERSION };
+  if (!isRecord(settings)) return next;
+  return {
+    ...next,
+    settings: {
+      ...settings,
+      readerScript:
+        settings.readerScript === undefined ? DEFAULT_READER_SCRIPT : settings.readerScript,
+      readerTextSize:
+        settings.readerTextSize === undefined ? DEFAULT_READER_TEXT_SIZE : settings.readerTextSize,
+    },
+  };
 }
 
 /**
@@ -311,6 +359,7 @@ function upgradeDocument(document: UnknownRecord): UnknownRecord | null {
   if (current.version === VERSION_WITHOUT_TIME_SPENT) current = upgradeFromVersion2(current);
   if (current.version === VERSION_OF_TWO_SHAPES) current = upgradeFromVersion3(current);
   if (current.version === VERSION_WITHOUT_BOOKMARKS) current = upgradeFromVersion4(current);
+  if (current.version === VERSION_WITHOUT_READER_CHOICES) current = upgradeFromVersion5(current);
   return current.version === STORED_DATA_VERSION ? current : null;
 }
 

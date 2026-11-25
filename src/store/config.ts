@@ -6,10 +6,12 @@ import type { ReminderSettings } from './types';
  * Version of the stored document. Version 1 had no `fridayTime` and no `quietHours` in the
  * reminders; version 2 had no `timeSpent` (the time counters, D37). Version 3 was written by two
  * lines of the app, one with `timeSpent` and one with `settings.lastOpenedPage`; version 4 has both.
- * Version 5 adds `settings.bookmarks`, the pages bookmarked in the reader. Documents of the older versions are upgraded when they are read (stored-data.ts). A document of
- * any other version is discarded.
+ * Version 5 adds `settings.bookmarks`, the pages bookmarked in the reader. Version 6 adds
+ * `settings.readerScript` and `settings.readerTextSize`, the script and the text size chosen in
+ * the reader (D41). Documents of the older versions are upgraded when they are read
+ * (stored-data.ts). A document of any other version is discarded.
  */
-export const STORED_DATA_VERSION = 5;
+export const STORED_DATA_VERSION = 6;
 
 /** The key of the stored document. */
 export const STORED_DATA_KEY = 'app-data';
@@ -45,6 +47,20 @@ export const MAX_PAUSES = 50;
  * this number the oldest days are dropped, so the time of all time slowly forgets its first days.
  */
 export const MAX_TIME_DAYS = 3660;
+
+/** The scripts the reader can show (D41): the mushaf's Uthmani text, or the simple (imla'i) one. */
+export const READER_SCRIPTS = ['uthmani', 'imlaei'] as const;
+
+/** The script of a first launch: the Uthmani text of the mushaf. */
+export const DEFAULT_READER_SCRIPT = 'uthmani';
+
+/**
+ * The steps of the reader's own text size control (D41), on top of the phone's text size: the
+ * reader's configuration says what each step is. The first launch is on the step that leaves the
+ * phone's text size as it is.
+ */
+export const READER_TEXT_SIZE_RANGE = { min: 0, max: 4 } as const;
+export const DEFAULT_READER_TEXT_SIZE = 1;
 
 /** The daily goal the stepper allows (docs/specs/ui-lot1.md, A.3). */
 export const DAILY_GOAL_RANGE = { min: 1, max: 60 } as const;

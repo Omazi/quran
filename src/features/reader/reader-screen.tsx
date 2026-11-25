@@ -1,44 +1,32 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  AccessibilityInfo,
-  Platform,
-  StyleSheet,
-  View,
-  type AccessibilityActionEvent,
-  type LayoutChangeEvent,
-} from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Platform, StyleSheet, View, AccessibilityInfo } from 'react-native';
 
 import {
   Button,
   ContentUnavailable,
+  ProgressIndicator,
   Screen,
   layout,
   readerShapes,
   spacing,
-  useReducedMotion,
+  useColors,
   type IconSymbol,
 } from '@/ui';
 
-import { BookPager, type BookPagerHandle } from './book-pager';
 import { READER_CONFIG } from './config';
-import { MushafPageView, type PageTurnActions } from './mushaf-page-view';
 import { FeedbackPill, ReaderBottomBar, ReaderHeader } from './reader-bar';
-import { computePageMetrics, type PageArea, type PageMetrics } from './page-layout';
-import { nextPage, previousPage } from './page-order';
+import { ReaderScroll } from './reader-scroll';
 import type { ReadingFeedback } from './reading-feedback';
 import type { ReaderActions, ReaderModel } from './use-reader';
 import type { QuranFontStatus } from './use-quran-font';
-import type { PageTurnDirection } from './zoom';
-import { ZoomablePage, useZoomState } from './zoomable-page';
+import type { ScriptTexts } from './use-script-texts';
 
 const NOT_FOUND_SYMBOL: IconSymbol = { ios: 'book.closed', android: 'book_2' };
 const FONT_SYMBOL: IconSymbol = { ios: 'textformat', android: 'text_fields' };
+const ERROR_SYMBOL: IconSymbol = { ios: 'exclamationmark.triangle', android: 'warning' };
 /** The bottom bar runs under the home indicator and keeps it clear itself. */
 const TOP_AND_SIDES = ['top', 'left', 'right'] as const;
-const NEXT_ACTION = 'nextPage';
-const PREVIOUS_ACTION = 'previousPage';
 
 export { surahDisplayName } from './surah-name';
 
@@ -46,7 +34,8 @@ export interface ReaderScreenProps {
   model: ReaderModel;
   actions: ReaderActions;
   fontStatus: QuranFontStatus;
-  /** The page the reader opened on: the pager starts there. */
+  texts: ScriptTexts;
+  /** The page the reader opened on: the scroll starts there. */
   initialPage: number;
   /** Leaves the reader for the table of contents. */
   openContents: () => void;
@@ -57,108 +46,37 @@ export interface ReaderScreenProps {
 }
 
 /**
- * The reader (spec 2), as the validated mockup draws it (docs/design/mushaf.png): on the warm
- * ground, the bar (a round back button, the surah of the page and where it is, a round button to
- * the contents), the row of the watered pill, then one page of the mushaf in its double golden
- * frame. A tap on the page hides the bar and brings it back (toolbars.md › Best practices); the
- * bar keeps its room, so the page never moves.
+ * The reader (spec 2, D41), on the validated mockup (docs/design/mushaf.png) without its book
+ * page: on the warm ground, the bar (a round back button, the surah and place being read, a round
+ * bookmark button), the row of the watered pill, then the Quran as one continuous vertical scroll
+ * on the paper of the page: verses flowing down, a cartouche and the basmala where a surah
+ * begins, a page number where a page of the mushaf ends. At the bottom, the mockup's bar: the
+ * script choice, the microphone and the text size. A tap on the text hides the bars and brings
+ * them back (going-full-screen.md › Prioritize content by temporarily hiding toolbars); they keep
+ * their room, so the text never jumps.
  *
- * When the page just left was counted (spec 3), the watered pill shows in its own row under the
- * title, as in the mockup, for a few seconds: status feedback near what it is about, not an alert
- * (feedback.md › Consider integrating status feedback into your interface). The row is kept when
- * the pill is gone, so it covers no line and the page does not move for it.
+ * When a page counts (spec 3), the watered pill shows in its own row under the title for a few
+ * seconds: status feedback near what it is about, not an alert (feedback.md › Consider
+ * integrating status feedback into your interface).
  */
 export function ReaderScreen({
   model,
   actions,
   fontStatus,
+  texts,
   initialPage,
   openContents,
   close,
   openListening,
 }: ReaderScreenProps) {
   const { t } = useTranslation('reader');
-  const [area, setArea] = useState<PageArea | null>(null);
-  // While a page is enlarged, a swipe moves around it instead of turning it.
-  const [isZoomed, setZoomed] = useState(false);
-  const isMotionReduced = useReducedMotion();
-  const pager = useRef<BookPagerHandle>(null);
-  const zoom = useZoomState();
-  const { changePage, toggleBars } = actions;
+  const colors = useColors();
   const feedbackText = useFeedbackText(model.feedback);
 
   // Heard once, wherever the pill shows (feedback.md › Make sure all feedback is accessible).
   useEffect(() => {
     if (feedbackText !== null) AccessibilityInfo.announceForAccessibility(feedbackText);
   }, [feedbackText]);
-
-  const onAreaLayout = useCallback((event: LayoutChangeEvent) => {
-    const { width, height } = event.nativeEvent.layout;
-    setArea((current) =>
-      current?.width === width && current.height === height ? current : { width, height },
-    );
-  }, []);
-
-  const metrics = useMemo<PageMetrics | null>(
-    () => (area === null || area.width <= 0 || area.height <= 0 ? null : computePageMetrics(area)),
-    [area],
-  );
-
-  const pageRef = useRef(model.page);
-  useEffect(() => {
-    pageRef.current = model.page;
-  }, [model.page]);
-  const turnActions = useMemo<PageTurnActions>(
-    () => ({
-      actions: [
-        { name: NEXT_ACTION, label: t('page.next') },
-        { name: PREVIOUS_ACTION, label: t('page.previous') },
-      ],
-      onAction: (event: AccessibilityActionEvent) => {
-        const current = pageRef.current;
-        const target =
-          event.nativeEvent.actionName === NEXT_ACTION ? nextPage(current) : previousPage(current);
-        if (target === null) return;
-        pager.current?.showPage(target);
-        changePage(target);
-      },
-    }),
-    [changePage, t],
-  );
-
-  // A drag that reaches the edge of the enlarged page turns it, like a swipe at its own size.
-  const turnFromEdge = useCallback(
-    (direction: PageTurnDirection) => {
-      const current = pageRef.current;
-      const target = direction === 'next' ? nextPage(current) : previousPage(current);
-      if (target === null) return;
-      pager.current?.showPage(target);
-      changePage(target);
-    },
-    [changePage],
-  );
-
-  const currentPage = model.page;
-  const renderPage = useCallback(
-    (page: number) =>
-      metrics === null || area === null ? null : (
-        <ZoomablePage
-          zoom={zoom}
-          isCurrent={page === currentPage}
-          side={page > currentPage ? 'next' : 'previous'}
-          onEdgeTurn={turnFromEdge}
-          width={area.width}
-          height={area.height}
-          onTap={toggleBars}
-          onZoomChange={setZoomed}
-          isMotionReduced={isMotionReduced}
-          testID={`reader-page-${page}`}
-        >
-          <MushafPageView page={page} metrics={metrics} area={area} turnActions={turnActions} />
-        </ZoomablePage>
-      ),
-    [area, currentPage, isMotionReduced, metrics, toggleBars, turnActions, turnFromEdge, zoom],
-  );
 
   if (fontStatus === 'failed') {
     return (
@@ -184,26 +102,46 @@ export function ReaderScreen({
       <View style={styles.pillRow} testID="reader-pill-row">
         {feedbackText === null ? null : <FeedbackPill key={feedbackText} text={feedbackText} />}
       </View>
-      <View style={styles.pages}>
-        <GestureHandlerRootView style={styles.pages} onLayout={onAreaLayout} testID="reader-pages">
-          {
-            // No page before the font: the Quran text is never shown in another one (spec).
-            metrics === null || area === null || fontStatus !== 'ready' ? null : (
-              <BookPager
-                ref={pager}
-                initialPage={initialPage}
-                width={area.width}
-                height={area.height}
-                onPageChange={changePage}
-                renderPage={renderPage}
-                scrollEnabled={!isZoomed}
-                accessibilityLabel={t('page.pager')}
-              />
-            )
-          }
-        </GestureHandlerRootView>
+      <View style={[styles.text, { backgroundColor: colors.paper }]} testID="reader-text">
+        {texts.status === 'error' ? (
+          <View style={styles.centred} testID="reader-text-error">
+            <ContentUnavailable
+              title={t('page.error.title')}
+              description={t('page.error.description')}
+              symbol={ERROR_SYMBOL}
+            />
+          </View>
+        ) : // No text before its font: the Quran is never shown in another one (spec).
+        texts.status === 'loading' || fontStatus !== 'ready' ? (
+          <View style={styles.centred}>
+            <ProgressIndicator accessibilityLabel={t('page.loading', { page: model.page })} />
+          </View>
+        ) : (
+          <ReaderScroll
+            initialPage={initialPage}
+            script={texts.script}
+            textScale={model.textScale}
+            textOf={texts.textOf}
+            onObserve={actions.observe}
+            onTap={actions.toggleBars}
+            accessibilityLabel={t('page.scroll')}
+          />
+        )}
       </View>
-      <ReaderBottomBar isVisible={model.barsVisible} onListen={openListening} />
+      <ReaderBottomBar
+        isVisible={model.barsVisible}
+        onListen={openListening}
+        script={model.script}
+        onChooseScript={actions.chooseScript}
+        canShrinkText={model.canShrinkText}
+        canEnlargeText={model.canEnlargeText}
+        onShrinkText={actions.shrinkText}
+        onEnlargeText={actions.enlargeText}
+        textSizeValue={t('textSize.value', {
+          step: model.textSizeStep + 1,
+          count: READER_CONFIG.textSizeScales.length,
+        })}
+      />
     </Screen>
   );
 }
@@ -282,6 +220,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: layout.screenMargin,
   },
-  pages: { flex: 1 },
+  text: { flex: 1 },
+  centred: { flex: 1, justifyContent: 'center', paddingHorizontal: layout.screenMargin },
   action: { paddingHorizontal: layout.screenMargin, paddingVertical: spacing.md },
 });

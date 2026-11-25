@@ -91,8 +91,10 @@ mode enfants.
 
 - **Édition du mushaf** : tranché, édition de 1441 H (D17). Reste à comparer les 25 pages
   qui diffèrent du mushaf classique à un exemplaire imprimé de cette édition.
-- **Écriture simple** : aucune source établie dans le dépôt ; un fichier Tanzil Simple de
-  provenance à confirmer sert seulement aux tests de la reconnaissance.
+- **Écriture simple** : livrée avec D41 (colonne imlâ'î du Complexe, sans voyelles). Reste à
+  décider par le propriétaire : garder ce texte sans voyelles, ou chercher une source voyellée
+  dont la licence passe sa règle. Le fichier Tanzil Simple de provenance inconnue sert toujours
+  seulement aux tests de la reconnaissance.
 - **Licences des textes** : à vérifier à la source avant publication (voir
   `DATA_SOURCES.md`). Un écran de crédits est nécessaire.
 - **Cinq mots collés** dans le texte uthmani (15:7, 27:20, 36:22, 37:164, 41:47) : gardés

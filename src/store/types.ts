@@ -11,6 +11,9 @@ import type { AppLanguage } from '@/i18n';
  */
 export type { QuietHours, ReminderSettings };
 
+/** A script the reader can show: one of `READER_SCRIPTS`. */
+export type ReaderScript = 'uthmani' | 'imlaei';
+
 /** A time of day on a 24-hour clock, in the device's time zone. */
 export type ReminderTime = TimeOfDay;
 
@@ -37,6 +40,10 @@ export interface AppSettings {
    * (pages 1 to 604). Empty until the first bookmark.
    */
   readonly bookmarks: readonly number[];
+  /** The script the reader shows (D41): the Uthmani text of the mushaf, or the simple one. */
+  readonly readerScript: ReaderScript;
+  /** The step of the reader's text size control, within `READER_TEXT_SIZE_RANGE`. */
+  readonly readerTextSize: number;
   /** Periods during which the garden is frozen. */
   readonly pauses: readonly Pause[];
   readonly reminders: ReminderSettings;
@@ -100,6 +107,10 @@ export interface AppState extends AppData {
    * but a page from 1 to 604.
    */
   toggleBookmark: (page: number) => void;
+  /** Remembers the script of the reader. Throws a `RangeError` for any other value. */
+  setReaderScript: (script: ReaderScript) => void;
+  /** Remembers the reader's text size step. Throws a `RangeError` outside its range. */
+  setReaderTextSize: (step: number) => void;
   /**
    * Adds a page to the journal through the khatm module. A page read again changes nothing.
    * Throws a `RangeError` for a day outside `STORED_DATE_RANGE`: a phone whose clock is that far

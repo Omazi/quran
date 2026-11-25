@@ -53,9 +53,9 @@
       "spoken": "{{title}}، {{place}}، {{verses}}"
     },
     "loading": "Chargement de la page {{page}}",
-    "next": "Page suivante",
-    "previous": "Page précédente",
-    "pager": "Pages du mushaf",
+    "scroll": "Texte du Coran",
+    "footer": "{{page}}",
+    "footerSpoken": "Fin de la page {{page}}",
     "error": {
       "title": "Page illisible",
       "description": "Les données de cette page sont incomplètes : elle n’est pas affichée. Les autres pages restent lisibles."
@@ -65,6 +65,16 @@
     "back": "Retour",
     "bookmark": "Marque-page",
     "listen": "Écouter un passage"
+  },
+  "script": {
+    "label": "Écriture",
+    "uthmani": "Uthmani",
+    "imlaei": "Simple"
+  },
+  "textSize": {
+    "smaller": "Texte plus petit",
+    "larger": "Texte plus grand",
+    "value": "Taille {{step}} sur {{count}}"
   },
   "feedback": {
     "pageCounted": "+1 page, ton jardin est arrosé",

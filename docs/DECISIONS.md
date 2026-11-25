@@ -466,3 +466,47 @@ l'eau. Le mot fait pousser le jardin. Détail, couleurs, couches, pistes écart�
 
 _Changerait si_ le propriétaire préfère une autre écriture ou une autre couleur, ou si le rendu sur
 iPhone déçoit : les réglages sont en tête de `make_icon.py`, et on relance l'outil.
+
+## D41 — Lecture en défilement vertical, deux écritures
+
+Décision du propriétaire (25 novembre 2026). Le Coran ne s'affiche plus comme un livre : pas de
+pages qu'on tourne, pas de cadre doré. Le lecteur est **un défilement vertical continu** du
+texte, et il propose **deux écritures**, « Uthmani | Simple », comme la barre du bas de la
+maquette `mushaf.png`. Détail : `specs/reader.md`, sections 2, 3 et 9.
+
+- **Le modèle des 604 pages ne change pas.** Le défilement est fait d'une section par page du
+  mushaf ; une page commence toujours par un nouveau verset dans l'édition de l'appli (vérifié
+  pour les 604 pages), donc une section contient exactement les versets de sa page. Khatma,
+  jardin, hizb et statistiques (D37) comptent les mêmes pages.
+- **Compter une page** : sa section a été à l'écran 30 secondes en tout (temps partagé entre les
+  sections visibles selon leur place), sa première et sa dernière ligne ont été vues, et rien ne
+  compte pendant qu'on lance le texte (plus de 1,5 écran par seconde). Une fois par séance ; la
+  khatma décide du reste (D8). La pastille vient quand le temps est atteint, sans attendre de
+  quitter la page. Seuils : jugement, **à confirmer par le propriétaire** sur un iPhone.
+- **Écriture uthmani** : texte et police du Complexe, version 0.18 (D19, D21), inchangés.
+- **Écriture simple** : la colonne `aya_text_emlaey` du **même fichier** du Complexe
+  (`hafsData_v18.json`, déjà dans `tools/quran-data/sources`, même empreinte), copiée sans aucun
+  changement dans `assets/data/verses/imlaei.json` : 6 236 versets, 77 491 mots, empreinte
+  SHA-256 du texte canonique `177f2aeabdbde65193126fc402af2700cc81df7288eae9869e469a31dc493d6a`,
+  vérifiée par `data:verify` et les tests. Licence : celle des données uthmani du même fichier,
+  déjà acceptée par D19 et D21 (aucune clause de partage à l'identique, d'usage non commercial ni
+  GPL). Police : Amiri Regular, SIL Open Font License 1.1, d'un paquet déjà livré
+  (`@expo-google-fonts/amiri`) ; aucune dépendance nouvelle.
+- **Ce texte n'a pas de voyelles.** Le Complexe le publie « pour la recherche » (notes de version
+  du fichier). Écartées : Tanzil « Simple » (voyellé, CC BY 3.0 en copie conforme, mais la FAQ de
+  tanzil.net le dit « for non-commercial purposes », et le site est inaccessible ici pour relire
+  ses conditions), le fichier `ara-quransimple.json` des jeux d'essai (origine inconnue), les
+  données de quran.com et de Tarteel QUL (conditions non lisibles ici). **Question au
+  propriétaire** : garder l'écriture simple sans voyelles du Complexe, ou attendre une source
+  voyellée dont la licence passe sa règle.
+- **Taille du texte** : elle suit Dynamic Type, multipliée par un réglage du lecteur à cinq crans
+  (écart 110). Le zoom de la page (écart 34) est retiré.
+- **Mémorisé** : l'écriture et la taille (`settings.readerScript`, `settings.readerTextSize`,
+  document de stockage version 6, migration de la version 5) ; la page de reprise reste
+  `lastOpenedPage`, à la page près.
+- **Liste** : `FlatList` de React Native (pas de dépendance nouvelle ; FlashList, licence MIT,
+  demanderait l'accord de l'architecte et n'est pas nécessaire tant qu'un iPhone X défile bien).
+
+_Changerait si_ le propriétaire préfère une écriture simple voyellée (il faut alors une source dont
+la licence passe sa règle), une reprise au verset près, ou si le défilement n'est pas fluide sur un
+iPhone X (FlashList, avec l'accord de l'architecte).

@@ -25,7 +25,7 @@ export interface QuranRepositoryOptions {
   readonly maxCachedPageFiles?: number;
 }
 
-const SCRIPTS: readonly QuranScript[] = ['uthmani', 'uthmani-minimal'];
+const SCRIPTS: readonly QuranScript[] = ['uthmani', 'uthmani-minimal', 'imlaei'];
 
 /** What `Map` and `BoundedCache` have in common: a place to keep loads in progress or done. */
 interface PendingLoads<Key, Value> {
@@ -36,7 +36,7 @@ interface PendingLoads<Key, Value> {
 
 function assertScript(script: QuranScript): void {
   if (!SCRIPTS.includes(script)) {
-    throw new RangeError(`Invalid script: ${String(script)} (expected ${SCRIPTS.join(' or ')})`);
+    throw new RangeError(`Invalid script: ${String(script)} (expected ${SCRIPTS.join(', ')})`);
   }
 }
 
@@ -44,7 +44,7 @@ function assertScript(script: QuranScript): void {
  * `QuranRepository` on the generated JSON files.
  *
  * Files are loaded on first use. Page files go through a bounded cache (the least recently
- * used file is dropped). The two verse files stay loaded once used: each is a single file
+ * used file is dropped). The verse files stay loaded once used: each is a single file
  * by specification, so there is nothing smaller to drop.
  *
  * Known limit: the cache bounds what this repository holds. With the bundled source, the

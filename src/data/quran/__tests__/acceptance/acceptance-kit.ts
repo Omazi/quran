@@ -116,7 +116,7 @@ export function readJsonFile(absolutePath: string): unknown {
 export type RawVerses = Readonly<Record<string, readonly string[]>>;
 
 /** A verses file exactly as it is on disk: `{ "<surah>": ["verse 1", ...] }`. */
-export function readRawVerses(script: 'uthmani' | 'uthmani-minimal'): RawVerses {
+export function readRawVerses(script: 'uthmani' | 'uthmani-minimal' | 'imlaei'): RawVerses {
   const raw = readJsonFile(dataFilePath(`verses/${script}.json`));
   if (!isRecord(raw)) {
     throw new TypeError(`verses/${script}.json is not an object.`);

@@ -31,6 +31,8 @@ const SETTINGS: AppSettings = {
   userSeed: 77,
   lastOpenedPage: null,
   bookmarks: [],
+  readerScript: 'uthmani',
+  readerTextSize: 1,
   pauses: [],
   reminders: DEFAULT_REMINDERS,
 };

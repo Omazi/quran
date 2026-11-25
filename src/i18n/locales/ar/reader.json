@@ -65,9 +65,9 @@
       "spoken": "{{title}}، {{place}}، {{verses}}"
     },
     "loading": "جارٍ تحميل الصفحة {{page}}",
-    "next": "الصفحة التالية",
-    "previous": "الصفحة السابقة",
-    "pager": "صفحات المصحف",
+    "scroll": "نص القرآن",
+    "footer": "{{page}}",
+    "footerSpoken": "نهاية الصفحة {{page}}",
     "error": {
       "title": "تعذّر عرض الصفحة",
       "description": "بيانات هذه الصفحة ناقصة، لذلك لا تُعرض. باقي الصفحات تبقى مقروءة."
@@ -77,6 +77,16 @@
     "back": "رجوع",
     "bookmark": "علامة مرجعية",
     "listen": "الاستماع إلى مقطع"
+  },
+  "script": {
+    "label": "الرسم",
+    "uthmani": "عثماني",
+    "imlaei": "إملائي"
+  },
+  "textSize": {
+    "smaller": "تصغير النص",
+    "larger": "تكبير النص",
+    "value": "الحجم {{step}} من {{count}}"
   },
   "feedback": {
     "pageCounted": "+1 صفحة، سُقيت حديقتك",

@@ -12,14 +12,15 @@ export const LINES_PER_PAGE = 15;
 export const HIZB_PER_JUZ = 2;
 
 /**
- * The two texts shipped with the app:
+ * The three texts shipped with the app:
  * - `uthmani`: fully vowelled Uthmani script, the text of the mushaf pages;
- * - `uthmani-minimal`: the same Uthmani spelling with fewer signs (Tanzil "Uthmani Minimal").
+ * - `uthmani-minimal`: the same Uthmani spelling with fewer signs (Tanzil "Uthmani Minimal");
+ * - `imlaei`: the everyday (imlā'ī, "simple") spelling, without vowel marks, as the King Fahd
+ *   Complex publishes it next to its Uthmani text (docs/DECISIONS.md, D41).
  *
- * Neither is the everyday (imlā'ī, "simple") script: no source for it is in the app yet.
  * Mushaf pages exist in `uthmani` only.
  */
-export type QuranScript = 'uthmani' | 'uthmani-minimal';
+export type QuranScript = 'uthmani' | 'uthmani-minimal' | 'imlaei';
 export const DEFAULT_QURAN_SCRIPT: QuranScript = 'uthmani';
 
 /** A verse reference such as "18:10" (surah 18, verse 10). */

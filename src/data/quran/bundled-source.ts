@@ -12,6 +12,7 @@ import type { QuranDataSource } from './data-files';
 const VERSES_FILES: Readonly<Record<QuranScript, () => unknown>> = {
   uthmani: () => require('../../../assets/data/verses/uthmani.json'),
   'uthmani-minimal': () => require('../../../assets/data/verses/uthmani-minimal.json'),
+  imlaei: () => require('../../../assets/data/verses/imlaei.json'),
 };
 
 /** In page order: file 0 holds pages 1..20, file 1 pages 21..40, and so on up to page 604. */

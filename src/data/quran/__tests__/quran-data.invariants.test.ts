@@ -1,4 +1,5 @@
 import {
+  canonicalQuranText,
   splitVerseWords,
   type MushafLine,
   type MushafPage,
@@ -7,6 +8,7 @@ import {
 } from '@/domain/quran';
 
 import integrity from '../../../../assets/data/integrity.json';
+import { sha256Hex } from './acceptance/acceptance-kit';
 import { quranRepository, quranStructure } from '../index';
 
 /**
@@ -52,6 +54,7 @@ const JOINED_WORDS = [
 const pages: MushafPage[] = [];
 const uthmani: Verse[] = [];
 const uthmaniMinimal: Verse[] = [];
+const imlaei: Verse[] = [];
 /** Every word of the 604 pages, in reading order. */
 const pageWords: MushafWord[] = [];
 let textLines: TextLine[] = [];
@@ -61,6 +64,7 @@ beforeAll(async () => {
   for (let surah = 1; surah <= 114; surah += 1) {
     uthmani.push(...(await quranRepository.getSurahVerses(surah)));
     uthmaniMinimal.push(...(await quranRepository.getSurahVerses(surah, 'uthmani-minimal')));
+    imlaei.push(...(await quranRepository.getSurahVerses(surah, 'imlaei')));
   }
   const allLines = pages.flatMap((page) => page.lines);
   textLines = allLines.filter((line): line is TextLine => line.kind === 'text');
@@ -326,5 +330,41 @@ describe('Uthmani-minimal — the second text', () => {
   it('carries no sajda or quarter sign in its text', () => {
     expect(uthmaniMinimal.some((verse) => verse.text.includes(SAJDA_MARK))).toBe(false);
     expect(uthmaniMinimal.some((verse) => verse.text.includes(QUARTER_MARK))).toBe(false);
+  });
+});
+
+/**
+ * The third text, for the "Simple" script of the reader (D41): the King Fahd Complex's own
+ * imla'i column, unchanged. Its fingerprint is recorded in integrity.json and checked here on the
+ * text as the app reads it, like the Uthmani text's.
+ */
+describe("Imla'i — the simple script", () => {
+  const ARABIC_VOWEL_MARKS = /[\u064B-\u0652\u0670]/u;
+
+  it('has the 6236 verses, with the keys of the Uthmani text', () => {
+    expect(imlaei).toHaveLength(6236);
+    expect(imlaei.map((verse) => verse.key)).toEqual(uthmani.map((verse) => verse.key));
+  });
+
+  it('is the text recorded in integrity.json, character for character', () => {
+    const bySurah: Record<string, string[]> = {};
+    for (const verse of imlaei) (bySurah[String(verse.surah)] ??= []).push(verse.text);
+    const fingerprint = sha256Hex(canonicalQuranText(bySurah));
+    expect(fingerprint).toBe(integrity.canonicalText.imlaeiSha256);
+    expect(fingerprint).toBe('177f2aeabdbde65193126fc402af2700cc81df7288eae9869e469a31dc493d6a');
+  });
+
+  it('has the words recorded in integrity.json, separated by single spaces', () => {
+    const words = imlaei.reduce((total, verse) => total + splitVerseWords(verse.text).length, 0);
+    expect(words).toBe(integrity.counts.imlaeiWords);
+    for (const verse of imlaei) {
+      expect(verse.text).not.toBe('');
+      expect(splitVerseWords(verse.text)).not.toContain('');
+    }
+  });
+
+  it('is the everyday spelling, without vowel marks, as the Complex publishes it', () => {
+    expect(imlaei.find((verse) => verse.key === '1:2')?.text).toBe('الحمد لله رب العالمين');
+    expect(imlaei.some((verse) => ARABIC_VOWEL_MARKS.test(verse.text))).toBe(false);
   });
 });

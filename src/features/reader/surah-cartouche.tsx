@@ -8,49 +8,47 @@ import {
   layout,
   radius,
   readerShapes,
+  spacing,
   useColors,
   useReaderPalette,
 } from '@/ui';
 
 import { arabicIndicDigits } from './arabic-digits';
 import { READER_CONFIG } from './config';
-import type { PageTurnActions } from './mushaf-page-view';
-import type { PageMetrics } from './page-layout';
 
 const { medallion, medallionRing, medallionDot, cartoucheRule, cartoucheGap } = readerShapes;
 
 export interface SurahCartoucheProps {
   surah: number;
-  metrics: PageMetrics;
-  turnActions: PageTurnActions;
+  /** The size of the Quran text around it, in points, before Dynamic Type. */
+  textSize: number;
+  /** The line height of that text: the cartouche is at least `heightInLines` of them tall. */
+  lineHeight: number;
 }
 
 /**
- * The header of a surah, as the validated mockup draws it (docs/design/mushaf.png): a golden
- * cartouche, lighter at the top and deeper at the bottom like the mockup's gilt, a round medallion
- * at each end, and inside, "سورة <name>" in the middle, the number of its verses on the right and
- * whether it is Meccan or Medinan on the left, as the printed mushaf writes them. Everything is
- * read from `QuranStructure`. The page reads right to left whatever the interface (spec 2), so
- * the first item of the row is on the right.
+ * The header of a surah where it begins in the scroll, as the validated mockup draws it
+ * (docs/design/mushaf.png): a golden cartouche, lighter at the top and deeper at the bottom like
+ * the mockup's gilt, a round medallion at each end, and inside, "سورة <name>" in the middle, the
+ * number of its verses on the right and whether it is Meccan or Medinan on the left, as the
+ * printed mushaf writes them. Everything is read from `QuranStructure`. It reads right to left
+ * whatever the interface (right-to-left.md › Align a paragraph based on its language), so the
+ * first item of the row is on the right. Its words follow the person's text size with the text
+ * around them (typography.md › Supporting Dynamic Type): the cartouche grows with them.
  */
-export function SurahCartouche({ surah, metrics, turnActions }: SurahCartoucheProps) {
+export function SurahCartouche({ surah, textSize, lineHeight }: SurahCartoucheProps) {
   const { t } = useTranslation('reader');
   const colors = useColors();
   const palette = useReaderPalette();
   const info = quranStructure.surah(surah);
-  const height = metrics.lineHeight * READER_CONFIG.surahHeaderHeightRatio;
-  const innerHeight = height - 2 * (cartoucheRule + cartoucheGap + layout.outlineWidth);
-  const nameSize = metrics.fontSize * READER_CONFIG.surahNameScale;
-  const labelSize = Math.max(
-    MINIMUM_FONT_SIZE,
-    metrics.fontSize * READER_CONFIG.cartoucheLabelScale,
-  );
+  const { heightInLines, nameScale, labelScale } = READER_CONFIG.surahHeader;
+  const labelSize = Math.max(MINIMUM_FONT_SIZE, textSize * labelScale);
   const title = t('page.surahTitle', { name: info.nameArabic });
   const verses = t('page.cartouche.verses', { count: arabicIndicDigits(info.verseCount) });
   const place = t(`page.cartouche.${info.revelationPlace}`);
   const label = (text: string) => (
     <Text
-      allowFontScaling={false}
+      dynamicTypeRamp="footnote"
       numberOfLines={1}
       style={[styles.label, { fontSize: labelSize, color: colors.inkSecondary }]}
     >
@@ -66,60 +64,52 @@ export function SurahCartouche({ surah, metrics, turnActions }: SurahCartouchePr
     </View>
   );
   return (
-    <View style={[styles.row, { height: metrics.lineHeight }]}>
+    <View
+      accessible
+      accessibilityRole="header"
+      accessibilityLabel={t('page.cartouche.spoken', { title, place, verses })}
+      accessibilityLanguage="ar"
+      testID={`surah-header-${surah}`}
+      style={[styles.cartouche, { minHeight: lineHeight * heightInLines }]}
+    >
+      {medallionView}
       <View
-        accessible
-        accessibilityRole="header"
-        accessibilityLabel={t('page.cartouche.spoken', { title, place, verses })}
-        accessibilityLanguage="ar"
-        accessibilityActions={turnActions.actions}
-        onAccessibilityAction={turnActions.onAction}
-        testID={`surah-header-${surah}`}
-        style={[styles.cartouche, { height }]}
+        testID={`surah-header-${surah}-rule`}
+        style={[
+          styles.rule,
+          {
+            borderTopColor: palette.goldLight,
+            borderBottomColor: palette.goldDeep,
+            borderStartColor: palette.gold,
+            borderEndColor: palette.gold,
+          },
+        ]}
       >
-        {medallionView}
         <View
-          testID={`surah-header-${surah}-rule`}
-          style={[
-            styles.rule,
-            {
-              borderTopColor: palette.goldLight,
-              borderBottomColor: palette.goldDeep,
-              borderStartColor: palette.gold,
-              borderEndColor: palette.gold,
-            },
-          ]}
+          style={[styles.inner, { borderColor: palette.frameInner, backgroundColor: colors.paper }]}
         >
-          <View style={[styles.inner, { borderColor: palette.frameInner }]}>
-            <View style={styles.sideStart}>{label(verses)}</View>
-            {/* The name, a little larger than the text of the page, in a line box as tall as the
-                inner rule, so that it is centred whatever the font's ascent and descent. */}
-            <Text
-              allowFontScaling={false}
-              numberOfLines={1}
-              style={{
-                fontFamily: fontFamily.quranTitle,
-                fontSize: nameSize,
-                lineHeight: innerHeight,
-                textAlignVertical: 'center',
-                includeFontPadding: false,
-                color: colors.ink,
-              }}
-            >
-              {title}
-            </Text>
-            <View style={styles.sideEnd}>{label(place)}</View>
-          </View>
+          <View style={styles.sideStart}>{label(verses)}</View>
+          <Text
+            dynamicTypeRamp="title1"
+            numberOfLines={1}
+            style={[
+              styles.name,
+              { fontSize: textSize * nameScale, lineHeight: lineHeight, color: colors.ink },
+            ]}
+          >
+            {title}
+          </Text>
+          <View style={styles.sideEnd}>{label(place)}</View>
         </View>
-        {medallionView}
       </View>
+      {medallionView}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center' },
-  cartouche: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+  // The header reads right to left in every interface, like the text it opens.
+  cartouche: { flexDirection: 'row', alignItems: 'center', direction: 'rtl' },
   medallion: {
     width: medallion,
     height: medallion,
@@ -140,12 +130,13 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: cartoucheGap * 2,
+    paddingHorizontal: spacing.sm,
     borderWidth: layout.outlineWidth,
     borderRadius: radius.sm - cartoucheGap,
   },
   // The two sides share what the name leaves, so the name stays in the middle.
   sideStart: { flex: 1, alignItems: 'flex-start' },
   sideEnd: { flex: 1, alignItems: 'flex-end' },
+  name: { fontFamily: fontFamily.quranTitle, includeFontPadding: false, textAlign: 'center' },
   label: { fontFamily: fontFamily.quranTitle, includeFontPadding: false },
 });

@@ -4,9 +4,10 @@ import {
   ReaderNotFound,
   ReaderScreen,
   parsePageParam,
-  useQuranFont,
   useReader,
   useReaderNavigation,
+  useScriptFont,
+  useScriptTexts,
   type ReaderNavigation,
 } from '@/features/reader';
 import { useAppStore } from '@/store';
@@ -15,8 +16,9 @@ import { useAppStore } from '@/store';
 const READER_SCREEN_OPTIONS = { headerShown: false } as const;
 
 /**
- * The reader, `/reader/1` to `/reader/604`. Any other address says the page was not found. It
- * only composes: the hooks build the model, the screen shows it.
+ * The reader, `/reader/1` to `/reader/604`: the continuous scroll of the Quran, opened at that
+ * page (D41). Any other address says the page was not found. It only composes: the hooks build
+ * the model and load the text of the script chosen, the screen shows it.
  */
 export default function ReaderRoute() {
   const { page } = useLocalSearchParams<{ page: string }>();
@@ -38,7 +40,8 @@ function OpenReader({
   navigation: ReaderNavigation;
 }) {
   const { model, actions } = useReader(initialPage);
-  const fontStatus = useQuranFont();
+  const fontStatus = useScriptFont(model.script);
+  const texts = useScriptTexts(model.script);
   return (
     <>
       <Stack.Screen options={READER_SCREEN_OPTIONS} />
@@ -46,6 +49,7 @@ function OpenReader({
         model={model}
         actions={actions}
         fontStatus={fontStatus}
+        texts={texts}
         initialPage={initialPage}
         openContents={navigation.openContents}
         close={navigation.close}

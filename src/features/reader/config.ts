@@ -4,11 +4,33 @@
  */
 export const READER_CONFIG = Object.freeze({
   /**
-   * A page counts once the person stayed on it this long, app in the foreground, then turned the
-   * page or left the reader (spec 3). Starting value given by the spec: **to be confirmed by the
-   * owner**.
+   * A page counts once its section was on screen this long in all, app in the foreground, its
+   * first and last lines seen (spec 3, D41; `scroll-reading.ts`). Starting value given by the spec:
+   * **to be confirmed by the owner**.
    */
   minimumSecondsOnPage: 30,
+
+  /**
+   * Past this speed, in screens per second, the text is flung, not read: no time counts and no
+   * edge is "seen" (spec 3, D41). A reader moves the text a few lines at a time, well under one
+   * screen a second; a fling starts at several screens a second. Judgment, no skill sets it: to
+   * check on an iPhone.
+   */
+  flingScreensPerSecond: 1.5,
+
+  /**
+   * How often the reader looks at the screen while nothing moves, in seconds: a page read without
+   * scrolling still counts when its time is up, and the pill says so. Cheap: one pure function.
+   */
+  trackingTickSeconds: 1,
+
+  /**
+   * The reading line, as a share of the visible text from its top: the bar names the surah and
+   * page under it, and the page to resume is that page. A third down is where the eyes rest while
+   * scrolling text; quran.com's reading mode follows the band between its bar and 70 % of the
+   * screen (docs/specs/reader.md, comparison). Judgment.
+   */
+  readingLineRatio: 1 / 3,
 
   /**
    * How long the watered pill stays in the bar after a page counted, before the title of the page
@@ -28,107 +50,57 @@ export const READER_CONFIG = Object.freeze({
   feedbackEntrance: { durationMs: 300, dampingRatio: 0.85, fromScale: 0.9 },
 
   /**
-   * The width of the text column, in ems of the Quran font: the font size is the column width
-   * divided by this number, whatever the person's text size setting (spec 2, deviation 34 of the
-   * register: the page is sized by width and enlarged by zoom).
-   *
-   * Measured, not chosen: every text line of the 604 pages was shaped with HarfBuzz in the
-   * bundled font (KFGQPC HAFS v0.18), word by word, with the verse marks, items separated by the
-   * font's space (0.22 em). Of the 8,820 lines, the median is 16.1 em, 99 % are at most 20.65 em,
-   * the widest 23.1 em (page 507, line 7).
-   *
-   * The architect asked for about 18.5 em, provided no line shrinks by more than about 8 %. Both
-   * cannot hold: at 18.5 em, 173 lines shrink by more than 8 % (30 even with the tightest gap
-   * below), the widest by 15.5 %. At 19.5 em, with the tightest gap, 8,818 lines shrink by 8 % or
-   * less; two do not: page 377 line 8 (8.5 %) and page 507 line 7 (10.9 %). That is the value
-   * kept: the text is 6 % larger than at the former 20.7 em, and zoom does the rest.
+   * The reader's own text size control (D41), on top of the phone's text size, which the Quran
+   * text follows anyway (typography.md › Supporting Dynamic Type). One factor per step of the
+   * store's `READER_TEXT_SIZE_RANGE`; the first launch is on the factor 1. One step smaller for a
+   * reader who wants more text per screen, three larger ones for a reader who wants the marks
+   * bigger without changing every app. Judgment, in the spirit of reading apps' "Aa" control.
    */
-  lineWidthInEm: 19.5,
+  textSizeScales: [0.85, 1, 1.2, 1.4, 1.65],
 
   /**
-   * The share of the column a line must fill, at the page's size and with the font's space
-   * between its items, to be spread word by word. A shorter line (the end of a surah) is centred
-   * with the font's normal space, as the print does, instead of being torn apart. Architect's
-   * decision; HarfBuzz counts 33 such lines outside pages 1 and 2 at 19.5 em.
+   * Verses are justified, like a printed page, up to this text size factor; larger, they are
+   * aligned to the right edge (the start of Arabic): with four or five words a line, justified
+   * Arabic without kashida opens wide holes between words (seen on the web screenshots at the
+   * largest step). Judgment, after typography.md › Ensuring legibility.
    */
-  minimumFillToJustify: 0.6,
+  justifyUpToScale: 1.2,
 
   /**
-   * Pages 1 and 2, printed with few, short, centred lines in a larger size (spec 2). Their widest
-   * line, measured as above, is 15.15 em (page 2, line 4): the size is the column divided by
-   * this, unless the lines would not fit in the height. Their lines are spread over the page up
-   * to this distance, in ems, as the print spreads them.
+   * The size of the simple script against the Uthmani text's: Amiri draws its letters larger than
+   * the King Fahd font at the same size; at this share the two read at the same size by eye
+   * (compared on the web screenshots of Al-Kahf). Judgment.
    */
-  openingPages: { lastPage: 2, lineWidthInEm: 15.2, lineHeightInEm: 3 },
+  simpleScriptScale: 0.93,
 
   /**
-   * Zoom of the page (spec 2, deviation 34): pinch from the page's size up to this factor, never
-   * so far that one word fills the screen (scroll-views.md › Best practices: set appropriate
-   * maximum and minimum scale values). A double tap toggles between the page's size and the
-   * second factor (gestures.md › Standard gestures: double tap zooms in, then out).
+   * The end-of-verse mark of the simple script: the verse number in Arabic-Indic digits between
+   * the ornate parentheses of Unicode (U+FD3F, U+FD3E), first the one that opens on the right.
+   * The simple font has no verse-mark glyph of its own, unlike the King Fahd font.
    */
-  zoom: {
-    maximumScale: 3,
-    doubleTapScale: 2,
-    animationMs: 250,
-    /**
-     * A drag that reaches the edge of an enlarged page turns the page once the finger went this
-     * far beyond it, in points; the page follows the finger by this share only, a small
-     * resistance so that a drag stopping at the edge does not turn it by accident. Judgment,
-     * no skill sets it.
-     */
-    edgeTurnDistance: 72,
-    edgeResistance: 0.4,
-  },
+  simpleVerseMark: { open: '﴿', close: '﴾' },
 
   /**
-   * Distance between two lines, in ems: about the proportion of the printed Medina page (a text
-   * block about 1.6 times as tall as it is wide, in 15 lines). Used when the screen is tall
-   * enough; otherwise the 15 lines share the height.
+   * The surah header in the scroll: its cartouche is this many times the line height of the text
+   * tall, its name this share of the text size, and the two words at its ends this share, never
+   * under the smallest size of the interface. Measured on the mockup's cartouche
+   * (docs/design/mushaf.png: about 36 points for a 22-point text). Judgment.
    */
-  lineHeightInEm: 2.5,
+  surahHeader: { heightInLines: 1.15, nameScale: 1.1, labelScale: 0.62 },
 
   /**
-   * The smallest distance between two lines, in ems: the font's own line height is 1.76 em
-   * (ascent 2,400 and descent 1,200 for 2,048 units); the margin keeps the marks of two lines
-   * apart. A screen too short for this gets a smaller text instead.
+   * The list of pages: how many sections are added above the first one when the reader nears the
+   * top (the list opens on the page asked and grows upwards on demand), how many sections it
+   * renders first, and how many screens it keeps drawn around the visible one (FlatList
+   * `windowSize`: 5 is two screens above and two below). Enough to scroll smoothly without holding
+   * the 604 pages; to measure on an iPhone X.
    */
-  minimumLineHeightInEm: 1.9,
-
-  /**
-   * Height of the surah header's cartouche, as a share of its line: it stays inside its line, as
-   * the printed cartouche does, and leaves air above and below. Judgment, no skill sets it.
-   */
-  surahHeaderHeightRatio: 0.84,
-
-  /**
-   * The surah name in the cartouche, as a share of the page's text size: the design review found
-   * it small in its frame; 10 % larger fills it better and still fits the narrowest names
-   * (checked on the longest, page 293 and 604). Judgment.
-   */
-  surahNameScale: 1.1,
-
-  /**
-   * The two words at the ends of the cartouche (the verse count and "مكية" or "مدنية"), as a share
-   * of the page's text size, never under the smallest size of the interface: about the size of the
-   * mockup's (docs/design/mushaf.png), small beside the name. Judgment, measured on the mockup.
-   */
-  cartoucheLabelScale: 0.62,
-
-  /** The normal space between two words, in ems: the space of the font (450 / 2,048 units). */
-  wordGapInEm: 0.22,
-
-  /**
-   * The tightest space between two words, in ems: half the font's space. Only a line wider than
-   * the column closes its gaps this far, before it is drawn smaller; the print sets its crowded
-   * lines as tight. Chosen with the HarfBuzz measurements above.
-   */
-  tightestWordGapInEm: 0.11,
+  list: { pagesAddedAbove: 10, initialSections: 3, windowSize: 7, nearTopScreens: 1 },
 
   /**
    * Height of the system navigation bar on an iPhone in portrait, which floats over the top of
-   * the page: React Navigation's own table (`getDefaultHeaderHeight`). Elsewhere, Material's top
-   * app bar. Not verified on iOS 26.
+   * an empty reader: React Navigation's own table (`getDefaultHeaderHeight`). Elsewhere,
+   * Material's top app bar. Not verified on iOS 26.
    */
   navigationBarHeight: { ios: 44, default: 64 },
 

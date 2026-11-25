@@ -1,22 +1,21 @@
 /**
- * The reader on screen (docs/specs/reader.md, sections 2, 3 and 5): pages turned in the direction
- * of the book, the 30-second rule driven by a fake clock through the real store, the message
- * after a page, the bars, the lines that do not fit, and the states.
+ * The reader on screen, in continuous vertical scroll (docs/specs/reader.md, sections 2, 3 and 5;
+ * D41): the text of the script chosen, exactly as the repository gives it; the 30-second rule on
+ * page sections, driven by a fake clock and fake measures through the real store; the bar that
+ * follows the reading; the script and text size controls; the pill; the states.
  */
 
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { AccessibilityInfo, AppState } from 'react-native';
-import { State } from 'react-native-gesture-handler';
-import { fireGestureHandler, getByGestureTestId } from 'react-native-gesture-handler/jest-utils';
 
-import { quranStructure } from '@/data/quran';
+import { quranRepository, quranStructure } from '@/data/quran';
+import type { GardenElementKind } from '@/domain/garden';
 import { recordPageRead, EMPTY_JOURNAL, type ReadingJournal } from '@/domain/khatm';
 import { PAGE_COUNT } from '@/domain/quran';
 import { showLanguage } from '@/features/garden/test-support/screen-conditions';
 import { deviceLocalDate } from '@/features/home';
-import { AppStoreProvider, type AppStore } from '@/store';
+import { AppStoreProvider, READER_TEXT_SIZE_RANGE, type AppStore } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
-import { fontFamily } from '@/ui';
 import { readerPalette } from '@/ui/tokens';
 import {
   changeReducedMotion,
@@ -27,15 +26,14 @@ import {
 } from '@/ui/test-support/environment';
 
 import { READER_CONFIG } from '../config';
-import { pagerIndexOfPage } from '../page-order';
-import { PAGE_SIDE_ROOM } from '../page-layout';
 import { ReaderNotFound, ReaderScreen } from '../reader-screen';
-import { useReader } from '../use-reader';
+import { SIMPLE_SCRIPT_FONT_FAMILY } from '../script-fonts';
+import { useReader, type ReaderActions, type ReaderModel } from '../use-reader';
 import type { QuranFontStatus } from '../use-quran-font';
-import type { ReaderModel } from '../use-reader';
-import type { GardenElementKind } from '@/domain/garden';
+import { useScriptTexts } from '../use-script-texts';
 
 const WIDTH = 390;
+/** The height of the scroll on screen, in points. */
 const HEIGHT = 700;
 const SECOND = 1000;
 
@@ -46,11 +44,13 @@ const TODAY = deviceLocalDate(clock());
 
 function Reader({ page, fontStatus = 'ready' }: { page: number; fontStatus?: QuranFontStatus }) {
   const { model, actions } = useReader(page, { monotonicClock, clock });
+  const texts = useScriptTexts(model.script);
   return (
     <ReaderScreen
       model={model}
       actions={actions}
       fontStatus={fontStatus}
+      texts={texts}
       initialPage={page}
       openContents={openContents}
       close={close}
@@ -69,17 +69,37 @@ async function openReader(store: AppStore, page: number, fontStatus?: QuranFontS
       <Reader page={page} fontStatus={fontStatus} />
     </AppStoreProvider>,
   );
-  // The page area gets its size from the layout, which Jest only gives when asked.
-  await fireEvent(screen.getByTestId('reader-pages'), 'layout', {
-    nativeEvent: { layout: { x: 0, y: 0, width: WIDTH, height: HEIGHT } },
-  });
+  if (fontStatus === undefined || fontStatus === 'ready') {
+    await waitFor(() => expect(screen.getByTestId(`page-section-${page}`)).toBeOnTheScreen());
+  }
   return view;
 }
 
-/** A swipe that settles on a page. */
-async function swipeTo(page: number) {
-  await fireEvent(screen.getByTestId('book-pager'), 'momentumScrollEnd', {
-    nativeEvent: { contentOffset: { x: pagerIndexOfPage(page) * WIDTH, y: 0 } },
+/**
+ * Gives a page section its place in the scroll's content, and its surah segments their place in
+ * the section, as the layout would on a phone. Segments default to one filling the section.
+ */
+async function layOutPage(page: number, top: number, height: number, segments = [height]) {
+  await fireEvent(screen.getByTestId(`page-cell-${page}`), 'layout', {
+    nativeEvent: { layout: { x: 0, y: top, width: WIDTH, height } },
+  });
+  let segmentTop = 0;
+  for (const [index, segmentHeight] of segments.entries()) {
+    await fireEvent(screen.getByTestId(`page-${page}-segment-${index}`), 'layout', {
+      nativeEvent: { layout: { x: 0, y: segmentTop, width: WIDTH, height: segmentHeight } },
+    });
+    segmentTop += segmentHeight;
+  }
+}
+
+/** The person scrolls the text to this offset. */
+async function scrollTo(top: number) {
+  await fireEvent.scroll(screen.getByTestId('reader-scroll'), {
+    nativeEvent: {
+      contentOffset: { x: 0, y: top },
+      layoutMeasurement: { width: WIDTH, height: HEIGHT },
+      contentSize: { width: WIDTH, height: 100_000 },
+    },
   });
 }
 
@@ -98,6 +118,12 @@ function pagesOf(store: AppStore): number[] {
   return store.getState().journal.map((entry) => entry.page);
 }
 
+/** Page `page` fits on screen with room to spare: both its edges are seen at once. */
+async function showWholePage(page: number) {
+  await layOutPage(page, 0, HEIGHT - 100);
+  await scrollTo(0);
+}
+
 beforeEach(async () => {
   now = 0;
   // React Native's Jest mock makes the state a function; on a device it is a string.
@@ -108,89 +134,139 @@ beforeEach(async () => {
 
 afterEach(resetDeviceConditions);
 
-describe('turning the pages', () => {
-  it('opens on the page asked, and remembers it as the page to resume', async () => {
+describe('a continuous vertical scroll, not a book (owner, 25 November 2026)', () => {
+  it('opens with the page asked at the top, and remembers it as the page to resume', async () => {
     const store = createTestAppStore();
     await openReader(store, 293);
-    await waitFor(() => expect(screen.getByTestId('mushaf-page-293')).toBeOnTheScreen());
+    const list = screen.getByTestId('reader-scroll');
+    expect(list.props.horizontal).toBeFalsy();
+    expect(list.props.pagingEnabled).toBeFalsy();
+    expect(list.props.data[0].page).toBe(293);
     expect(store.getState().settings.lastOpenedPage).toBe(293);
   });
 
-  it('starts the pager on that page, in the order of the book', async () => {
+  it('is virtualised: it holds the pages from the one asked to the end, and draws a few', async () => {
     await openReader(createTestAppStore(), 293);
-    const pager = screen.getByTestId('book-pager');
-    expect(pager.props.initialScrollIndex).toBe(PAGE_COUNT - 293);
-    expect(pager.props.horizontal).toBe(true);
-    expect(pager.props.pagingEnabled).toBe(true);
-    // Fixed left to right in every language: the next page comes from the left.
-    expect(styleOf(pager).direction).toBe('ltr');
+    const list = screen.getByTestId('reader-scroll');
+    expect(list.props.data).toHaveLength(PAGE_COUNT - 293 + 1);
+    expect(list.props.initialNumToRender).toBe(READER_CONFIG.list.initialSections);
+    expect(list.props.windowSize).toBe(READER_CONFIG.list.windowSize);
+    expect(screen.queryByTestId('page-section-400')).toBeNull();
   });
 
-  it('keeps the order of the book in Arabic too', async () => {
-    setDeviceConditions({ rightToLeft: true });
-    await showLanguage('ar');
-    await openReader(createTestAppStore(), 12);
-    const pager = screen.getByTestId('book-pager');
-    expect(pager.props.initialScrollIndex).toBe(PAGE_COUNT - 12);
-    expect(styleOf(pager).direction).toBe('ltr');
-  });
-
-  it('mounts only the page on screen and its neighbours', async () => {
+  it('adds the pages above when the reader nears the top, and keeps the place on a phone', async () => {
     await openReader(createTestAppStore(), 293);
-    const pager = screen.getByTestId('book-pager');
-    expect(pager.props.windowSize).toBe(3);
-    expect(pager.props.initialNumToRender).toBe(1);
+    const list = screen.getByTestId('reader-scroll');
+    expect(list.props.maintainVisibleContentPosition).toEqual({ minIndexForVisible: 0 });
+    await layOutPage(293, 0, 1200);
+    await scrollTo(10);
+    expect(screen.getByTestId('reader-scroll').props.data[0].page).toBe(
+      293 - READER_CONFIG.list.pagesAddedAbove,
+    );
   });
 
-  it('offers VoiceOver an action for the next and the previous page', async () => {
-    const store = createTestAppStore();
-    await openReader(store, 293);
-    await waitFor(() => expect(screen.getByTestId('mushaf-page-293')).toBeOnTheScreen());
-    const firstLine = screen.container.queryAll(
-      (element) => element.props.accessibilityLanguage === 'ar' && element.props.accessible,
-    )[0]!;
-    expect(firstLine.props.accessibilityActions).toEqual([
-      { name: 'nextPage', label: 'Page suivante' },
-      { name: 'previousPage', label: 'Page précédente' },
-    ]);
-    await act(async () => {
-      firstLine.props.onAccessibilityAction({ nativeEvent: { actionName: 'nextPage' } });
-    });
-    expect(store.getState().settings.lastOpenedPage).toBe(294);
+  it('draws a surah header and the basmala where a surah begins, and the page number where a page ends', async () => {
+    await openReader(createTestAppStore(), 293);
+    const section = screen.getByTestId('page-section-293');
+    expect(within(section).getByTestId('surah-header-18')).toBeOnTheScreen();
+    expect(within(section).getByRole('header', { name: /سورة الكهف/ })).toBeOnTheScreen();
+    const basmala = within(section).getByTestId('basmala');
+    expect(basmala).toHaveTextContent((await quranRepository.getVerse('1:1')).text);
+    expect(within(section).getByTestId('page-footer-293')).toHaveTextContent('293');
   });
 });
 
-describe('the 30-second rule, through the store', () => {
-  it('a page flicked through is not recorded', async () => {
-    const store = createTestAppStore();
-    await openReader(store, 10);
-    await wait(5);
-    await swipeTo(11);
-    expect(pagesOf(store)).toEqual([]);
-    // Nothing to say: nothing is drawn, so the pill reserves no room.
-    expect(screen.queryByTestId('reader-feedback', { includeHiddenElements: true })).toBeNull();
+describe('the text is exactly the source text (exigence absolue)', () => {
+  it.each([1, 293, 604])('Uthmani, page %i: every verse is the repository text', async (page) => {
+    await openReader(createTestAppStore(), page);
+    const first = quranStructure.firstVerseOfPage(page);
+    const last = quranStructure.lastVerseOfPage(page);
+    for (let surah = first.surah; surah <= last.surah; surah += 1) {
+      const verses = await quranRepository.getSurahVerses(surah);
+      for (const verse of verses) {
+        if (quranStructure.pageOfVerse(verse) !== page) continue;
+        expect(screen.getByTestId(`verse-${verse.key}`).props.children).toBe(verse.text);
+      }
+    }
   });
 
-  it('a page read for 30 seconds is recorded on the local day when the page turns', async () => {
+  it('in the King Fahd font, with each verse mark in the ornament colour', async () => {
+    await openReader(createTestAppStore(), 1);
+    const paragraph = screen.getByTestId('verses-1-1');
+    expect(styleOf(paragraph)).toMatchObject({ fontFamily: 'KFGQPCHafsUthmanic' });
+    expect(paragraph.props.accessibilityLanguage).toBe('ar');
+    expect(paragraph.props.dynamicTypeRamp).toBe('title1');
+  });
+
+  it('simple script, page 293: every verse is the imla’i text, in the simple font', async () => {
+    const store = createTestAppStore({ settings: { readerScript: 'imlaei' } });
+    await openReader(store, 293);
+    const verses = await quranRepository.getSurahVerses(18, 'imlaei');
+    for (const verse of verses.slice(0, 4)) {
+      expect(screen.getByTestId(`verse-${verse.key}`).props.children).toBe(verse.text);
+    }
+    expect(styleOf(screen.getByTestId('verses-18-1'))).toMatchObject({
+      fontFamily: SIMPLE_SCRIPT_FONT_FAMILY,
+    });
+    expect(screen.getByTestId('basmala')).toHaveTextContent(
+      (await quranRepository.getVerse('1:1', 'imlaei')).text,
+    );
+  });
+});
+
+describe('a page counts once its section was seen long enough (spec 3, D8, D41)', () => {
+  it('a page seen whole for 30 seconds is recorded on the local day, and the pill says so', async () => {
     const store = createTestAppStore();
     await openReader(store, 10);
+    await showWholePage(10);
     await wait(READER_CONFIG.minimumSecondsOnPage);
-    await swipeTo(11);
+    await scrollTo(1);
     expect(store.getState().journal).toEqual([{ khatm: 1, page: 10, date: TODAY }]);
-    expect(screen.getByText(/^\+1 page, tes canaux avancent$/)).toBeOnTheScreen();
+    expect(screen.getByTestId('reader-feedback')).toHaveTextContent(
+      /^\+1 page, tes canaux avancent$/,
+    );
   });
 
   it('tells VoiceOver too', async () => {
     const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility');
     await openReader(createTestAppStore(), 10);
+    await showWholePage(10);
     await wait(READER_CONFIG.minimumSecondsOnPage);
-    await swipeTo(9);
+    await scrollTo(1);
     expect(announce).toHaveBeenCalledWith(expect.stringMatching(/^\+1 page, tes canaux avancent$/));
+  });
+
+  it('pages flung past are not recorded, and nothing is said', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 10);
+    await layOutPage(10, 0, 900);
+    await layOutPage(11, 900, 900);
+    await layOutPage(12, 1800, 900);
+    await scrollTo(0);
+    await wait(5);
+    // Past the end of page 10, all of page 11 and the top of page 12 in a tenth of a second.
+    now += 100;
+    await scrollTo(2000);
+    await wait(60);
+    await scrollTo(2000);
+    expect(pagesOf(store)).toEqual([]);
+    expect(screen.queryByTestId('reader-feedback', { includeHiddenElements: true })).toBeNull();
+  });
+
+  it('a page whose end never came on screen is not recorded, however long', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 10);
+    await layOutPage(10, 0, 3000);
+    await scrollTo(0);
+    await wait(600);
+    await scrollTo(10);
+    expect(pagesOf(store)).toEqual([]);
   });
 
   it('time in the background does not count', async () => {
     const store = createTestAppStore();
     await openReader(store, 10);
+    await showWholePage(10);
     const onChange = jest
       .mocked(AppState.addEventListener)
       .mock.calls.filter(([event]) => event === 'change')
@@ -201,7 +277,7 @@ describe('the 30-second rule, through the store', () => {
     await wait(600);
     await act(async () => onChange('active'));
     await wait(10);
-    await swipeTo(11);
+    await scrollTo(1);
     expect(pagesOf(store)).toEqual([]);
   });
 
@@ -209,15 +285,17 @@ describe('the 30-second rule, through the store', () => {
     const store = createTestAppStore({ journal: readPages([10]) });
     const journal = store.getState().journal;
     await openReader(store, 10);
+    await showWholePage(10);
     await wait(60);
-    await swipeTo(11);
+    await scrollTo(1);
     expect(store.getState().journal).toBe(journal);
     expect(screen.queryByText(/^\+1 page/)).toBeNull();
   });
 
-  it('leaving the reader records the page on screen', async () => {
+  it('leaving the reader records a page seen long enough', async () => {
     const store = createTestAppStore();
     const view = await openReader(store, 604);
+    await showWholePage(604);
     await wait(READER_CONFIG.minimumSecondsOnPage);
     await view.unmount();
     expect(pagesOf(store)).toEqual([604]);
@@ -228,23 +306,35 @@ describe('the 30-second rule, through the store', () => {
     const firstPages = Array.from({ length: lastPage - 1 }, (_, index) => index + 1);
     const store = createTestAppStore({ journal: readPages(firstPages) });
     await openReader(store, lastPage);
+    await showWholePage(lastPage);
     await wait(READER_CONFIG.minimumSecondsOnPage);
-    await swipeTo(lastPage + 1);
+    await scrollTo(1);
     expect(screen.getByTestId('reader-feedback')).toHaveTextContent(
       /^Hizb terminé\. Nouveau dans ton jardin : \S/,
     );
   });
 });
 
-describe('the bar of the validated mockup (docs/design/mushaf.png)', () => {
-  it('names the surah, then the juz, the hizb and the page, between two round buttons', async () => {
+describe('the bar follows the reading (docs/design/mushaf.png)', () => {
+  it('names the surah under the reading line, then the juz, the hizb and the page', async () => {
     await openReader(createTestAppStore(), 293);
-    const header = screen.getByTestId('reader-header');
-    const title = within(header).getByRole('header');
-    expect(within(title).getByText('Al-Kahf')).toBeOnTheScreen();
-    expect(within(title).getByText('Juz 15, Hizb 30 · Page 293')).toBeOnTheScreen();
-    expect(within(header).getByRole('button', { name: 'Retour' })).toBeOnTheScreen();
-    expect(within(header).getByRole('button', { name: 'Marque-page' })).toBeOnTheScreen();
+    // Page 293: the end of Al-Isra (400 points), then Al-Kahf (800 points).
+    await layOutPage(293, 0, 1200, [400, 800]);
+    await scrollTo(0);
+    const title = () => within(screen.getByTestId('reader-header')).getByRole('header');
+    expect(within(title()).getByText('Al-Isra')).toBeOnTheScreen();
+    expect(within(title()).getByText('Juz 15, Hizb 30 · Page 293')).toBeOnTheScreen();
+    await scrollTo(400);
+    expect(within(title()).getByText('Al-Kahf')).toBeOnTheScreen();
+  });
+
+  it('remembers the page being read as the page to resume', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 293);
+    await layOutPage(293, 0, 1200);
+    await layOutPage(294, 1200, 1200);
+    await scrollTo(1200);
+    expect(store.getState().settings.lastOpenedPage).toBe(294);
   });
 
   it('goes back with the leading button', async () => {
@@ -254,44 +344,22 @@ describe('the bar of the validated mockup (docs/design/mushaf.png)', () => {
     expect(close).toHaveBeenCalledTimes(1);
   });
 
-  it('bookmarks the page with the trailing button, and says so to VoiceOver', async () => {
+  it('bookmarks the page being read, and says so to VoiceOver', async () => {
     const store = createTestAppStore();
     await openReader(store, 293);
-    const bookmark = screen.getByRole('button', { name: 'Marque-page' });
-    expect(bookmark.props.accessibilityState).toMatchObject({ selected: false });
-    await fireEvent.press(bookmark);
+    const bookmark = () => screen.getByRole('button', { name: 'Marque-page' });
+    expect(bookmark().props.accessibilityState).toMatchObject({ selected: false });
+    await fireEvent.press(bookmark());
     expect(store.getState().settings.bookmarks).toEqual([293]);
-    expect(
-      screen.getByRole('button', { name: 'Marque-page' }).props.accessibilityState,
-    ).toMatchObject({ selected: true });
-    // The filled symbol when the page is bookmarked.
+    expect(bookmark().props.accessibilityState).toMatchObject({ selected: true });
     expect(
       screen.getByTestId('reader-bookmark-symbol-filled', { includeHiddenElements: true }),
     ).toBeTruthy();
-    await fireEvent.press(screen.getByRole('button', { name: 'Marque-page' }));
+    await fireEvent.press(bookmark());
     expect(store.getState().settings.bookmarks).toEqual([]);
   });
 
-  it('shows a page bookmarked earlier as bookmarked', async () => {
-    const store = createTestAppStore({ settings: { bookmarks: [20] } });
-    await openReader(store, 20);
-    expect(
-      screen.getByRole('button', { name: 'Marque-page' }).props.accessibilityState,
-    ).toMatchObject({ selected: true });
-  });
-
-  it('opens the listening screen from the big green microphone at the bottom', async () => {
-    setDeviceConditions({ os: 'android' });
-    openListening.mockClear();
-    await openReader(createTestAppStore(), 293);
-    const microphone = screen.getByRole('button', { name: 'Écouter un passage' });
-    expect(styleOf(microphone)).toMatchObject({ backgroundColor: readerPalette.action.light });
-    expect(Number(styleOf(microphone).width)).toBeGreaterThanOrEqual(44);
-    await fireEvent.press(microphone);
-    expect(openListening).toHaveBeenCalledTimes(1);
-  });
-
-  it('draws its round buttons white on the warm ground, 44 points to touch', async () => {
+  it('draws its round buttons white on the warm ground, 44 points to touch, the text on paper', async () => {
     setDeviceConditions({ os: 'android' });
     await openReader(createTestAppStore(), 293);
     expect(styleOf(screen.getByTestId('reader'))).toMatchObject({
@@ -304,61 +372,118 @@ describe('the bar of the validated mockup (docs/design/mushaf.png)', () => {
     expect(drawn + slop.top + slop.bottom).toBeGreaterThanOrEqual(44);
   });
 
-  it('hides its content with a tap on the page and keeps its room, so the page never moves', async () => {
+  it('a tap on the text hides the bars and keeps their room; another shows them again', async () => {
     await openReader(createTestAppStore(), 20);
-    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
-    await act(() => fireGestureHandler(getByGestureTestId('reader-page-20-tap')));
+    await fireEvent.press(screen.getByTestId('page-section-20'));
     const header = screen.getByTestId('reader-header', { includeHiddenElements: true });
     expect(within(header).queryByRole('button', { name: 'Retour' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Écouter un passage' })).toBeNull();
     expect(styleOf(header)).toMatchObject({ opacity: 0 });
     expect(styleOf(header).minHeight).toBeGreaterThan(0);
+    await fireEvent.press(screen.getByTestId('page-section-20'));
+    expect(screen.getByRole('button', { name: 'Retour' })).toBeOnTheScreen();
+  });
+});
+
+describe('the bottom bar: script, microphone, text size (mockup, D41)', () => {
+  it('opens the listening screen from the big green microphone', async () => {
+    setDeviceConditions({ os: 'android' });
+    openListening.mockClear();
+    await openReader(createTestAppStore(), 293);
+    const microphone = screen.getByRole('button', { name: 'Écouter un passage' });
+    expect(styleOf(microphone)).toMatchObject({ backgroundColor: readerPalette.action.light });
+    expect(Number(styleOf(microphone).width)).toBeGreaterThanOrEqual(44);
+    await fireEvent.press(microphone);
+    expect(openListening).toHaveBeenCalledTimes(1);
+  });
+
+  it('switches between Uthmani and Simple, remembers the choice, and shows the simple text', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 293);
+    const group = screen.getByTestId('reader-script');
+    expect(group.props.accessibilityRole).toBe('radiogroup');
+    expect(group.props.accessibilityLabel).toBe('Écriture');
+    const uthmani = within(group).getByRole('radio', { name: 'Uthmani' });
+    expect(uthmani.props.accessibilityState).toMatchObject({ selected: true });
+    await fireEvent.press(within(group).getByRole('radio', { name: 'Simple' }));
+    expect(store.getState().settings.readerScript).toBe('imlaei');
+    const simple = (await quranRepository.getVerse('18:1', 'imlaei')).text;
+    await waitFor(() => expect(screen.getByTestId('verse-18:1').props.children).toBe(simple));
+    await fireEvent.press(screen.getByRole('radio', { name: 'Uthmani' }));
+    expect(store.getState().settings.readerScript).toBe('uthmani');
+  });
+
+  it('names the two scripts in Arabic too', async () => {
+    await showLanguage('ar');
+    await openReader(createTestAppStore(), 293);
+    expect(screen.getByRole('radio', { name: 'عثماني' })).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'إملائي' })).toBeOnTheScreen();
+  });
+
+  it('makes the text larger and smaller within its range, and remembers it', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 1);
+    const size = () => Number(styleOf(screen.getByTestId('verses-1-1')).fontSize);
+    const before = size();
+    await fireEvent.press(screen.getByRole('button', { name: 'Texte plus grand' }));
+    expect(store.getState().settings.readerTextSize).toBe(2);
+    expect(size()).toBeGreaterThan(before);
+    expect(
+      screen.getByRole('button', { name: 'Texte plus grand' }).props.accessibilityValue,
+    ).toEqual({ text: 'Taille 3 sur 5' });
+    await fireEvent.press(screen.getByRole('button', { name: 'Texte plus petit' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Texte plus petit' }));
+    expect(store.getState().settings.readerTextSize).toBe(READER_TEXT_SIZE_RANGE.min);
+    expect(size()).toBeLessThan(before);
+  });
+
+  it('dims the button at the end of the range, and it does nothing', async () => {
+    const store = createTestAppStore({ settings: { readerTextSize: READER_TEXT_SIZE_RANGE.max } });
+    await openReader(store, 1);
+    const larger = screen.getByRole('button', { name: 'Texte plus grand' });
+    expect(larger.props.accessibilityState).toMatchObject({ disabled: true });
+    await fireEvent.press(larger);
+    expect(store.getState().settings.readerTextSize).toBe(READER_TEXT_SIZE_RANGE.max);
+  });
+
+  it('has one factor per step of the store', () => {
+    expect(READER_CONFIG.textSizeScales).toHaveLength(
+      READER_TEXT_SIZE_RANGE.max - READER_TEXT_SIZE_RANGE.min + 1,
+    );
+    expect(READER_CONFIG.textSizeScales[1]).toBe(1);
   });
 });
 
 describe('the watered pill, the moment of the reader (spec 3)', () => {
-  it('shows under the title, with the water drop, white with words of water, never over the page', async () => {
+  it('shows under the title, white with words of water, never over the text', async () => {
     setDeviceConditions({ os: 'android' });
     await openReader(createTestAppStore(), 10);
+    await showWholePage(10);
     await wait(READER_CONFIG.minimumSecondsOnPage);
-    await swipeTo(11);
+    await scrollTo(1);
     const row = screen.getByTestId('reader-pill-row');
     const pill = within(row).getByTestId('reader-feedback');
-    expect(pill).toHaveTextContent(/^\+1 page, tes canaux avancent$/);
-    // The mockup keeps the title above the pill.
     expect(within(screen.getByTestId('reader-header')).getByText('Al-Baqarah')).toBeOnTheScreen();
-    // The drop decorates words that say the same: VoiceOver hears the words only.
     expect(
       within(pill).getByTestId('reader-feedback-drop', { includeHiddenElements: true }),
     ).toBeTruthy();
     expect(styleOf(pill)).toMatchObject({ backgroundColor: readerPalette.card.light });
-    // Nothing is laid over the page, so the first line is never covered, whatever the screen.
-    expect(within(screen.getByTestId('reader-pages')).queryByTestId('reader-feedback')).toBeNull();
+    expect(within(screen.getByTestId('reader-text')).queryByTestId('reader-feedback')).toBeNull();
   });
 
-  it('keeps its row when there is nothing to say, so the page does not move when it comes', async () => {
+  it('keeps its row when there is nothing to say, so the text does not move when it comes', async () => {
     await openReader(createTestAppStore(), 10);
     expect(screen.queryByTestId('reader-feedback')).toBeNull();
     expect(styleOf(screen.getByTestId('reader-pill-row')).minHeight).toBeGreaterThan(0);
   });
 
-  it('shows at the same place while the bars are hidden', async () => {
-    await openReader(createTestAppStore(), 20);
-    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
-    await act(() => fireGestureHandler(getByGestureTestId('reader-page-20-tap')));
-    await wait(READER_CONFIG.minimumSecondsOnPage);
-    await swipeTo(21);
-    expect(
-      within(screen.getByTestId('reader-pill-row')).getByTestId('reader-feedback'),
-    ).toHaveTextContent(/^\+1 page, /);
-  });
-
   it('is brief: it leaves after a few seconds', async () => {
+    await openReader(createTestAppStore(), 10);
     jest.useFakeTimers();
     try {
-      await openReader(createTestAppStore(), 10);
+      await showWholePage(10);
       await wait(READER_CONFIG.minimumSecondsOnPage);
-      await swipeTo(11);
+      await scrollTo(1);
       expect(screen.getByTestId('reader-feedback')).toBeOnTheScreen();
       await act(async () => {
         jest.advanceTimersByTime(READER_CONFIG.feedbackSeconds * SECOND - 1);
@@ -374,17 +499,30 @@ describe('the watered pill, the moment of the reader (spec 3)', () => {
   });
 
   it('appears without movement with Reduce Motion', async () => {
+    // The setting is read when the pill first asks for it, as on a phone where it is already on.
+    jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
     await openReader(createTestAppStore(), 10);
     await changeReducedMotion(true);
+    await showWholePage(10);
     await wait(READER_CONFIG.minimumSecondsOnPage);
-    await swipeTo(11);
-    const style = styleOf(screen.getByTestId('reader-feedback-motion'));
-    expect(style.transform).toBeUndefined();
-    expect(style.opacity ?? 1).toBe(1);
+    await scrollTo(1);
+    await waitFor(() =>
+      expect(styleOf(screen.getByTestId('reader-feedback-motion')).transform).toBeUndefined(),
+    );
+    expect(styleOf(screen.getByTestId('reader-feedback-motion')).opacity ?? 1).toBe(1);
   });
 });
 
 describe('what the pill names (owner, 25 November 2026)', () => {
+  const noActions: ReaderActions = {
+    observe: jest.fn(),
+    toggleBars: jest.fn(),
+    toggleBookmark: jest.fn(),
+    chooseScript: jest.fn(),
+    enlargeText: jest.fn(),
+    shrinkText: jest.fn(),
+  };
+
   function pillFor(growingKind: GardenElementKind | null) {
     const model: ReaderModel = {
       page: 20,
@@ -394,13 +532,19 @@ describe('what the pill names (owner, 25 November 2026)', () => {
       barsVisible: true,
       isBookmarked: false,
       feedback: { kind: 'page-counted', growingKind },
+      script: 'uthmani',
+      textSizeStep: 1,
+      textScale: 1,
+      canEnlargeText: true,
+      canShrinkText: true,
     };
     return render(
       <AppStoreProvider store={createTestAppStore()}>
         <ReaderScreen
           model={model}
-          actions={{ changePage: jest.fn(), toggleBars: jest.fn(), toggleBookmark: jest.fn() }}
+          actions={noActions}
           fontStatus="loading"
+          texts={{ status: 'loading' }}
           initialPage={20}
           openContents={openContents}
           close={close}
@@ -431,184 +575,10 @@ describe('what the pill names (owner, 25 November 2026)', () => {
   });
 });
 
-describe('the zoom of the page (deviation 34)', () => {
-  it('stops turning pages while the page is enlarged, and turns them again at its size', async () => {
-    // With Reduce Motion the double tap jumps to its size: no animation to wait for.
-    setDeviceConditions({ reducedMotion: true });
-    await showLanguage('fr');
-    await openReader(createTestAppStore(), 20);
-    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
-    const pager = () => screen.getByTestId('book-pager');
-    expect(pager().props.scrollEnabled).toBe(true);
-    await act(async () => {
-      fireGestureHandler(getByGestureTestId('reader-page-20-double-tap'), [
-        { x: WIDTH / 2, y: HEIGHT / 2 },
-      ]);
-    });
-    await waitFor(() => expect(pager().props.scrollEnabled).toBe(false));
-    await act(async () => {
-      fireGestureHandler(getByGestureTestId('reader-page-20-double-tap'), [
-        { x: WIDTH / 2, y: HEIGHT / 2 },
-      ]);
-    });
-    await waitFor(() => expect(pager().props.scrollEnabled).toBe(true));
-  });
-});
-
-describe('the enlarged page across turns and edges', () => {
-  async function zoomIn(page: number) {
-    await act(async () => {
-      fireGestureHandler(getByGestureTestId(`reader-page-${page}-double-tap`), [
-        { x: WIDTH / 2, y: HEIGHT / 2 },
-      ]);
-    });
-    await waitFor(() => expect(screen.getByTestId('book-pager').props.scrollEnabled).toBe(false));
-  }
-
-  /** A drag of one finger, `dx` points to the right, from the middle of the page. */
-  async function drag(page: number, dx: number) {
-    await act(async () => {
-      fireGestureHandler(getByGestureTestId(`reader-page-${page}-pan`), [
-        { state: State.BEGAN, x: WIDTH / 2, y: HEIGHT / 2, translationX: 0, translationY: 0 },
-        { state: State.ACTIVE, x: WIDTH / 2, y: HEIGHT / 2, translationX: 0, translationY: 0 },
-        { translationX: dx / 2, translationY: 0 },
-        { translationX: dx, translationY: 0 },
-        { state: State.END, translationX: dx, translationY: 0 },
-      ]);
-    });
-  }
-
-  beforeEach(async () => {
-    setDeviceConditions({ reducedMotion: true });
-    await showLanguage('fr');
-  });
-
-  it('keeps the zoom when the page turns', async () => {
-    await openReader(createTestAppStore(), 20);
-    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
-    await zoomIn(20);
-    await swipeTo(21);
-    // Still enlarged on the next page: the pager stays still.
-    expect(screen.getByTestId('book-pager').props.scrollEnabled).toBe(false);
-  });
-
-  it('turns the page when a drag goes far enough beyond the edge', async () => {
-    const store = createTestAppStore();
-    await openReader(store, 20);
-    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
-    await zoomIn(20);
-    // Far enough to reach the left edge, then past it by more than the distance of a turn.
-    await drag(20, WIDTH + READER_CONFIG.zoom.edgeTurnDistance + 10);
-    // Dragging right past the left edge brings the next page, 21, in from the left.
-    await waitFor(() => expect(store.getState().settings.lastOpenedPage).toBe(21));
-  });
-
-  it('does not turn the page for a short push beyond the edge', async () => {
-    const store = createTestAppStore();
-    await openReader(store, 20);
-    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
-    await zoomIn(20);
-    await drag(20, WIDTH / 2 + READER_CONFIG.zoom.edgeTurnDistance / 2);
-    expect(store.getState().settings.lastOpenedPage).toBe(20);
-  });
-});
-
-describe('the bars', () => {
-  it('a tap on the page hides them, another shows them again', async () => {
-    const seeBars = jest.fn<void, [boolean]>();
-    const barsVisible = () => seeBars.mock.calls.at(-1)?.[0];
-    function Probe() {
-      const { model, actions } = useReader(20, { monotonicClock, clock });
-      seeBars(model.barsVisible);
-      return (
-        <ReaderScreen
-          model={model}
-          actions={actions}
-          fontStatus="ready"
-          initialPage={20}
-          openContents={openContents}
-          close={close}
-          openListening={openListening}
-        />
-      );
-    }
-    await render(
-      <AppStoreProvider store={createTestAppStore()}>
-        <Probe />
-      </AppStoreProvider>,
-    );
-    await fireEvent(screen.getByTestId('reader-pages'), 'layout', {
-      nativeEvent: { layout: { x: 0, y: 0, width: WIDTH, height: HEIGHT } },
-    });
-    await waitFor(() => expect(screen.getByTestId('mushaf-page-20')).toBeOnTheScreen());
-    expect(barsVisible()).toBe(true);
-    await act(() => fireGestureHandler(getByGestureTestId('reader-page-20-tap')));
-    expect(barsVisible()).toBe(false);
-    await act(() => fireGestureHandler(getByGestureTestId('reader-page-20-tap')));
-    expect(barsVisible()).toBe(true);
-  });
-});
-
-describe('a line wider than the column', () => {
-  it('is drawn smaller until it fits, and the others keep the page size', async () => {
-    await openReader(createTestAppStore(), 507);
-    await waitFor(() => expect(screen.getByTestId('mushaf-page-507')).toBeOnTheScreen());
-    const lines = screen.container.queryAll(
-      (element) =>
-        element.props.accessibilityLanguage === 'ar' &&
-        element.props.accessibilityRole !== 'header' &&
-        typeof element.props.accessibilityLabel === 'string',
-    );
-    const wordsOf = (line: (typeof lines)[number]) =>
-      line.queryAll(
-        (element) => element.type === 'Text' && styleOf(element).fontFamily === fontFamily.quran,
-      );
-    const sizeOf = (line: (typeof lines)[number]) => styleOf(wordsOf(line)[0]!).fontSize!;
-    const fullSize = sizeOf(lines[0]!);
-    // The layout gives each word of the first line 40 points: wider than the column in total.
-    const words = wordsOf(lines[0]!);
-    for (const word of words) {
-      await fireEvent(word, 'layout', { nativeEvent: { layout: { width: 40, height: 30 } } });
-    }
-    expect(sizeOf(lines[0]!)).toBeLessThan(fullSize);
-    expect(sizeOf(lines[1]!)).toBe(fullSize);
-  });
-});
-
-describe('a short line', () => {
-  it('is centred with the font space; a line that fills the column is spread', async () => {
-    await openReader(createTestAppStore(), 507);
-    await waitFor(() => expect(screen.getByTestId('mushaf-page-507')).toBeOnTheScreen());
-    const lines = screen.container.queryAll(
-      (element) =>
-        element.props.accessibilityLanguage === 'ar' &&
-        element.props.accessibilityRole !== 'header' &&
-        typeof element.props.accessibilityLabel === 'string',
-    );
-    const wordsOf = (line: (typeof lines)[number]) =>
-      line.queryAll(
-        (element) => element.type === 'Text' && styleOf(element).fontFamily === fontFamily.quran,
-      );
-    const layOut = async (line: (typeof lines)[number], width: number) => {
-      for (const word of wordsOf(line)) {
-        await fireEvent(word, 'layout', { nativeEvent: { layout: { width, height: 30 } } });
-      }
-    };
-    // The first line gets 1 point a word: far under 60 % of the column.
-    await layOut(lines[0]!, 1);
-    expect(styleOf(lines[0]!).justifyContent).toBe('center');
-    // The second gets words that, with the font space, fill about 90 % of it.
-    const count = wordsOf(lines[1]!).length;
-    const column = WIDTH - 2 * PAGE_SIDE_ROOM;
-    await layOut(lines[1]!, (column * 0.9) / count - 4);
-    expect(styleOf(lines[1]!).justifyContent).toBe('space-between');
-  });
-});
-
 describe('the states', () => {
-  it('shows no page before the Quran font is ready', async () => {
+  it('shows no text before the font of the script is ready', async () => {
     await openReader(createTestAppStore(), 12, 'loading');
-    expect(screen.queryByTestId('book-pager')).toBeNull();
+    expect(screen.queryByTestId('reader-scroll')).toBeNull();
   });
 
   it('says the text is unavailable when the font cannot be loaded, and leads to the contents', async () => {

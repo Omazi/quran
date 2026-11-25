@@ -4,14 +4,14 @@ Ce document dit, pour chaque fichier source, d'où il vient et sous quelle licen
 limite de ce qui a pu être établi**. Ce qui n'a pas pu l'être est écrit comme tel : voir
 « Risques ouverts ». Rien ici n'est supposé.
 
-Dernière vérification : 24 novembre 2026. Outil : `tools/quran-data`. Spécification :
+Dernière vérification : 24 novembre 2026 ; écriture simple ajoutée le 25 novembre 2026 (D41). Outil : `tools/quran-data`. Spécification :
 [specs/quran.md](specs/quran.md). Décision sur le texte et la police : D19.
 
 ## Résumé
 
 | Fichier source                            | Sert à                                           | Origine établie                                                                             | Licence annoncée par l'origine                                                                               |
 | ----------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `hafsData_v18.json`                       | Texte uthmani                                    | Données Hafs du complexe du roi Fahd, version 0.18, copie du miroir GitHub `ibnhazm/kfgqpc` | Aucun texte de licence trouvé pour ce fichier                                                                |
+| `hafsData_v18.json`                       | Texte uthmani ; texte simple (colonne imlâ'î)    | Données Hafs du complexe du roi Fahd, version 0.18, copie du miroir GitHub `ibnhazm/kfgqpc` | Aucun texte de licence trouvé pour ce fichier                                                                |
 | Police `KFGQPC HAFS Uthmanic Script` 0.18 | Affichage du texte uthmani                       | Même miroir, même version                                                                   | Licence portée par la police : gratuite, usage, copie et diffusion permis ; vente et modification interdites |
 | `tanzil_simple.json`                      | Second texte, noms des sourates, contrôle croisé | Paquet npm `@muslims-community/quran@1.1.0`, qui reprend un texte de Tanzil                 | Texte : CC BY 3.0 et conditions de Tanzil, d'après le paquet                                                 |
 | `qpages/001.json`…`604.json`              | Mise en page : pages, lignes, place des mots     | Paquet npm `quran-qcf4@1.1.0`                                                               | MIT pour les données, d'après le paquet                                                                      |
@@ -32,8 +32,8 @@ diffère.
 version (0.18). Ne jamais changer l'un sans l'autre : voir « Texte et police ».
 
 **Le fichier `tanzil_simple.json` n'est pas de l'écriture simple.** C'est le texte « Uthmani
-Minimal » de Tanzil. Il est livré sous son vrai nom, `uthmani-minimal`. L'appli n'a pas
-encore de texte en écriture simple (imlâ'î).
+Minimal » de Tanzil. Il est livré sous son vrai nom, `uthmani-minimal`. L'écriture simple
+(imlâ'î) du lecteur vient du fichier du Complexe, colonne `aya_text_emlaey` (section 1, D41).
 
 ## Détail par source
 
@@ -66,6 +66,15 @@ encore de texte en écriture simple (imlâ'î).
      refait ces deux retraits avec un code distinct et compare caractère par caractère ; un
      test remet en place ce qui a été retiré et retrouve `aya_text` à l'identique pour les
      6 236 versets.
+- **Texte simple (D41)** : la colonne `aya_text_emlaey` donne le même verset en écriture
+  courante (imlâ'î), **sans voyelles** ; les notes de l'éditeur la disent faite « for search
+  purpose » et précisent que la version 0.18 en a retiré les kashidas. Elle est copiée **sans
+  aucun changement** dans `assets/data/verses/imlaei.json` : pas de retrait, pas de
+  normalisation. Ses mots sont séparés par une seule espace (contrôlé à la génération) ; 61
+  versets n'ont pas le même nombre de mots que le texte uthmani (orthographes différentes), ce
+  qui ne gêne pas le lecteur, qui affiche le verset entier. `data:verify` compare chaque verset à
+  la colonne, caractère pour caractère. Licence : celle du fichier (ci-dessus), déjà assumée par
+  D19 et D21 pour le texte uthmani. **Non vérifié** : la relecture par une personne compétente.
 - **Autres colonnes** : `sora` et `aya_no` identifient le verset. `page` sert de contrôle :
   elle donne le même premier verset que la mise en page pour les 604 pages. Les noms de
   sourate servent de contrôle. `jozz` n'est pas lue : elle place 3:92 et 9:93 dans le
@@ -350,7 +359,7 @@ le ou les mots correspondants du texte de Tanzil.
 
 `npm run data:build` écrit dans `assets/data` :
 
-- `verses/uthmani.json` et `verses/uthmani-minimal.json`, de la forme
+- `verses/uthmani.json`, `verses/uthmani-minimal.json` et `verses/imlaei.json`, de la forme
   `{ "<sourate>": ["verset 1", ...] }` ;
 - `pages/pages-001-020.json` … `pages-601-604.json` : la mise en page, par tranches de
   20 pages. Chaque ligne est un titre de sourate, une basmala, ou une suite de segments
@@ -364,6 +373,8 @@ Empreintes SHA-256 du texte canonique :
 
 - uthmani : `f0cb43235f1ebb96cc5fa5de33c2043c04c3a68d7a11c63626fa7e4f0f2bb687`
 - uthmani minimal : `432e8775149564af0cf0420b0b427eb90cb25d5d9f2118dc396afd2192814b4b`
+- imlâ'î (écriture simple) : `177f2aeabdbde65193126fc402af2700cc81df7288eae9869e469a31dc493d6a`
+  (77 491 mots)
 
 Le texte uthmani compte 77 430 mots. Il contient, comme sa source, le signe ۞ collé au
 premier mot de 199 versets, le signe ۩ collé au dernier mot de 15 versets, et les signes de
@@ -402,8 +413,11 @@ comparer l'empreinte SHA-256 des fichiers avec `SHA256SUMS`.
    un champ est faux. Sa conformité au texte publié par Tanzil et les conditions
    d'utilisation n'ont pas pu être relues à la source (dont la mention « non-commercial » de
    la FAQ).
-4. **Pas d'écriture simple.** Le second texte est de l'uthmani à signes réduits. Une écriture
-   imlâ'î demande une autre source. Ce texte-ci ne doit pas être présenté comme tel.
+4. **Écriture simple sans voyelles.** Le second texte (Tanzil) est de l'uthmani à signes
+   réduits et n'est pas présenté comme de l'écriture simple. L'écriture simple du lecteur est la
+   colonne imlâ'î du Complexe (D41), qui n'a pas de voyelles. Une écriture simple voyellée
+   demanderait une autre source dont la licence passe la règle du propriétaire : question
+   posée (D41).
 5. **Droits sur la mise en page.** La licence MIT couvre la compilation de l'auteur du
    paquet. La position du Complexe sur la réutilisation de la mise en page n'est pas établie.
 6. **Édition du mushaf.** Édition de 1441 H, choisie par le propriétaire. Sur 25 pages (121 à
@@ -423,8 +437,9 @@ comparer l'empreinte SHA-256 des fichiers avec `SHA256SUMS`.
 
 À afficher dans un écran de crédits, sous réserve des points ci-dessus :
 
-- texte uthmani et police : complexe du roi Fahd pour l'impression du Noble Coran (King
-  Fahd Glorious Quran Printing Complex), Médine ;
+- texte uthmani, texte simple et police : complexe du roi Fahd pour l'impression du Noble Coran
+  (King Fahd Glorious Quran Printing Complex), Médine ;
+- police de l'écriture simple : Amiri, The Amiri Project Authors (SIL Open Font License 1.1) ;
 - second texte : Tanzil Project, avec un lien vers tanzil.net et son avis de copyright ;
 - mise en page : paquet `quran-qcf4` de Mohamad Hajj Rabee (MIT), d'après le mushaf de
   Médine du complexe du roi Fahd ;
