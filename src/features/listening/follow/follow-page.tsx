@@ -7,7 +7,8 @@ import {
   listeningShape,
   spacing,
   useColors,
-  useListeningColors,
+  useColorValues,
+  useHighContrast,
   useUpcomingInk,
 } from '@/ui';
 
@@ -42,13 +43,14 @@ function lookOf(index: number, follow: FollowState, startIndex: number): WordLoo
  */
 export function FollowPage({ lines, follow, startIndex, width, testID }: FollowPageProps) {
   const colors = useColors();
-  const palette = useListeningColors();
+  const palette = useColorValues();
+  const isHighContrast = useHighContrast();
   // The Hafs font's own line height is 1.76 em; 1.9 keeps the marks of two lines apart, as the
   // reader does.
   const fontSize = Math.round(width * listeningShape.followTextOfWidth);
   const lineHeight = Math.round(fontSize * listeningShape.followLineHeightEm);
   const upcomingInk = useUpcomingInk();
-  const upcomingOpacity = palette.isHighContrast ? 1 : listeningOpacity.upcomingMarks;
+  const upcomingOpacity = isHighContrast ? 1 : listeningOpacity.upcomingMarks;
 
   const wordStyle = (look: WordLook) => {
     switch (look) {

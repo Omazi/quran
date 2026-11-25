@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { readerShapes, useColors, useReaderPalette } from '@/ui';
+import { readerShapes, useColors } from '@/ui';
 
 const {
   frameOuterRule,
@@ -45,7 +45,6 @@ export interface MushafFrameProps {
  */
 export function MushafFrame({ width, height, children, testID }: MushafFrameProps) {
   const colors = useColors();
-  const palette = useReaderPalette();
   const bandWidth = width - 2 * (frameOuterRule + frameRuleGap);
   const motifs = motifCount(bandWidth);
   const band = (edge: 'top' | 'bottom') => (
@@ -54,11 +53,11 @@ export function MushafFrame({ width, height, children, testID }: MushafFrameProp
       style={[
         styles.band,
         edge === 'top' ? styles.bandTop : styles.bandBottom,
-        { backgroundColor: palette.frameBand },
+        { backgroundColor: colors.frameBand },
       ]}
     >
       {Array.from({ length: motifs }, (_, index) => (
-        <View key={index} style={[styles.motif, { backgroundColor: palette.frameOuter }]} />
+        <View key={index} style={[styles.motif, { backgroundColor: colors.frameOuter }]} />
       ))}
     </View>
   );
@@ -70,16 +69,16 @@ export function MushafFrame({ width, height, children, testID }: MushafFrameProp
         {
           width,
           height,
-          borderColor: palette.frameOuter,
+          borderColor: colors.frameOuter,
           backgroundColor: colors.paper,
-          shadowColor: palette.shadow,
+          shadowColor: colors.shadow,
         },
       ]}
     >
       {band('top')}
       <View
         testID={`${testID}-frame-inner`}
-        style={[styles.inner, { borderColor: palette.frameInner }]}
+        style={[styles.inner, { borderColor: colors.frameInner }]}
       >
         {children}
       </View>
@@ -88,7 +87,7 @@ export function MushafFrame({ width, height, children, testID }: MushafFrameProp
         <View
           key={corner}
           testID={`${testID}-corner`}
-          style={[styles.corner, cornerPlace[corner], { backgroundColor: palette.gold }]}
+          style={[styles.corner, cornerPlace[corner], { backgroundColor: colors.gold }]}
         />
       ))}
     </View>

@@ -8,7 +8,7 @@ import { assertButtonRole } from '../validation';
 
 /** Material's three emphases: filled, outlined and text buttons. */
 const LABEL_COLOR = {
-  primary: 'onAccent',
+  primary: 'onAction',
   secondary: 'actionTint',
   plain: 'actionTint',
 } as const satisfies Record<ButtonVariant, TextColorRole>;
@@ -47,7 +47,7 @@ export function Button({
         testID={testID}
         style={({ pressed }) => [
           styles.button,
-          variant === 'primary' && { backgroundColor: colors.actionTint },
+          variant === 'primary' && { backgroundColor: colors.action },
           variant === 'secondary' && [styles.outlined, { borderColor: colors[labelColor] }],
           pressed && styles.pressed,
           disabled && styles.disabled,

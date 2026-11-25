@@ -2,20 +2,10 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import type { LeaderboardPeriod } from '@/domain/social';
-import { SegmentedChoice, spacing } from '@/ui';
+import { ActionButton, AppText, Avatar, Card, SegmentedChoice, spacing } from '@/ui';
 
-import { avatarRoleOf, initialOf } from './friend-avatar';
-import {
-  FriendsAvatar,
-  FriendsButton,
-  FriendsCard,
-  FriendsEyebrow,
-  FriendsPage,
-  FriendsRow,
-  FriendsSeparator,
-  FriendsText,
-  FriendsTextField,
-} from './friends-kit';
+import { avatarIndexOf, initialOf } from './friend-avatar';
+import { FriendsPage, FriendsRow, FriendsSeparator, FriendsTextField } from './friends-kit';
 import type { GroupModel } from './friends-model';
 import type { ShownRefusal } from './refusal';
 import type { GroupActions } from './use-friends';
@@ -50,8 +40,10 @@ export function GroupScreen({ model, refusal, actions }: GroupScreenProps) {
         onChange={actions.changePeriod}
         testID="group-period"
       />
-      <FriendsCard style={styles.list}>
-        <FriendsEyebrow>{t('group.leaderboardTitle')}</FriendsEyebrow>
+      <Card contentGap="md" style={styles.list}>
+        <AppText variant="subheadEmphasized" color="actionTint">
+          {t('group.leaderboardTitle')}
+        </AppText>
         {model.leaderboard.map((line, index) => (
           <View key={line.userId}>
             {index === 0 ? null : <FriendsSeparator />}
@@ -62,9 +54,9 @@ export function GroupScreen({ model, refusal, actions }: GroupScreenProps) {
               })}
               value={t('group.pages', { count: line.newPages })}
               leading={
-                <FriendsAvatar
-                  initial={initialOf(line.name)}
-                  color={avatarRoleOf(line.userId)}
+                <Avatar
+                  content={{ initial: initialOf(line.name) }}
+                  color={avatarIndexOf(line.userId)}
                   size="small"
                 />
               }
@@ -73,17 +65,19 @@ export function GroupScreen({ model, refusal, actions }: GroupScreenProps) {
             />
           </View>
         ))}
-        <FriendsText variant="footnote" color="inkSecondary">
+        <AppText variant="footnote" color="muted">
           {model.period === 'week' ? t('group.weekNote') : t('group.monthNote')}
-        </FriendsText>
-      </FriendsCard>
+        </AppText>
+      </Card>
 
-      <FriendsCard style={styles.list}>
-        <FriendsEyebrow>{t('group.addTitle')}</FriendsEyebrow>
+      <Card contentGap="md" style={styles.list}>
+        <AppText variant="subheadEmphasized" color="actionTint">
+          {t('group.addTitle')}
+        </AppText>
         {model.friendsToAdd.length === 0 ? (
-          <FriendsText variant="subhead" color="inkSecondary" testID="group-no-one-to-add">
+          <AppText variant="subhead" color="muted" testID="group-no-one-to-add">
             {t('group.noOneToAdd')}
-          </FriendsText>
+          </AppText>
         ) : (
           model.friendsToAdd.map((friend, index) => (
             <View key={friend.userId}>
@@ -91,15 +85,16 @@ export function GroupScreen({ model, refusal, actions }: GroupScreenProps) {
               <FriendsRow
                 label={friend.name}
                 leading={
-                  <FriendsAvatar
-                    initial={initialOf(friend.name)}
-                    color={avatarRoleOf(friend.userId)}
+                  <Avatar
+                    content={{ initial: initialOf(friend.name) }}
+                    color={avatarIndexOf(friend.userId)}
                     size="small"
                   />
                 }
                 trailing={
-                  <FriendsButton
-                    kind="link"
+                  <ActionButton
+                    variant="plain"
+                    fullWidth={false}
                     label={t('group.addShort')}
                     accessibilityLabel={t('group.add', { name: friend.name })}
                     onPress={() => actions.addMember(friend.userId)}
@@ -111,14 +106,14 @@ export function GroupScreen({ model, refusal, actions }: GroupScreenProps) {
           ))
         )}
         {refusal === null ? null : (
-          <FriendsText variant="footnote" color="inkSecondary">
+          <AppText variant="footnote" color="muted">
             {t(`refusals.${refusal}`)}
-          </FriendsText>
+          </AppText>
         )}
-        <FriendsText variant="footnote" color="inkSecondary">
+        <AppText variant="footnote" color="muted">
           {t('group.addNote')}
-        </FriendsText>
-      </FriendsCard>
+        </AppText>
+      </Card>
     </FriendsPage>
   );
 }
@@ -142,8 +137,10 @@ export function NewGroupScreen({ model, actions }: NewGroupScreenProps) {
   const { t } = useTranslation('friends');
   return (
     <FriendsPage isUnderBar testID="new-group">
-      <FriendsCard>
-        <FriendsEyebrow>{t('newGroup.nameField')}</FriendsEyebrow>
+      <Card contentGap="md">
+        <AppText variant="subheadEmphasized" color="actionTint">
+          {t('newGroup.nameField')}
+        </AppText>
         <FriendsTextField
           label={t('newGroup.nameField')}
           placeholder={t('newGroup.namePlaceholder')}
@@ -154,16 +151,16 @@ export function NewGroupScreen({ model, actions }: NewGroupScreenProps) {
           testID="new-group-name"
         />
         {model.refusal === null ? null : (
-          <FriendsText variant="footnote" color="inkSecondary">
+          <AppText variant="footnote" color="muted">
             {t(`refusals.${model.refusal}`)}
-          </FriendsText>
+          </AppText>
         )}
-        <FriendsText variant="footnote" color="inkSecondary">
+        <AppText variant="footnote" color="muted">
           {t('newGroup.note')}
-        </FriendsText>
-      </FriendsCard>
-      <FriendsButton
-        kind="primary"
+        </AppText>
+      </Card>
+      <ActionButton
+        variant="filled"
         label={t('newGroup.create')}
         onPress={actions.create}
         disabled={model.isBusy || model.name.trim() === ''}

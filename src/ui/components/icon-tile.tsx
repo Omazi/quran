@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Icon } from '../native';
 import type { IconSymbol } from '../native/types';
-import { pieceSizes, radius, type GardenPaletteRole, type IconColorRole } from '../tokens';
+import { pieceSizes, radius, type PaletteRole, type IconColorRole } from '../tokens';
 import { useColors, useElevation } from '../use-colors';
 
 /**
@@ -18,9 +18,7 @@ export interface IconTileProps {
   testID?: string;
 }
 
-const TONES: Readonly<
-  Record<IconTileTone, { background: GardenPaletteRole; symbol: IconColorRole }>
-> = {
+const TONES: Readonly<Record<IconTileTone, { background: PaletteRole; symbol: IconColorRole }>> = {
   water: { background: 'waterTrack', symbol: 'waterFill' },
   thirst: { background: 'surface', symbol: 'thirstIcon' },
   growth: { background: 'actionTonal', symbol: 'actionTint' },

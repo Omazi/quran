@@ -1,23 +1,24 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, useColorScheme, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import type { GardenPhase } from '@/domain/garden';
 import type { UserId } from '@/domain/social';
 import { GARDEN_PICTURE_ASPECT_RATIO, GardenScene } from '@/features/garden';
 import {
+  AppText,
+  Avatar,
+  Card,
+  GradientBackdrop,
   layout,
   Placeholder,
+  radius,
   spacing,
-  stateOpacity,
-  useVisitColors,
-  visitShadow,
-  visitShape,
 } from '@/ui';
 
-import { avatarRoleOf, initialOf } from './friend-avatar';
+import { avatarIndexOf, initialOf } from './friend-avatar';
 import { cardDetails, cardLabel } from './friend-words';
-import { FriendsAvatar, FriendsText } from './friends-kit';
+
 import type { FriendCard } from './friends-model';
 
 /**
@@ -73,33 +74,20 @@ function FriendGardenCard({
   onOpen: (userId: UserId) => void;
 }) {
   const { t } = useTranslation('friends');
-  const colors = useVisitColors();
-  const appearance = useColorScheme() === 'dark' ? 'dark' : 'light';
   const isWell = card.garden === null || WELL.has(card.garden.phase);
-  const [top, bottom] = isWell
-    ? [colors.tileWellTop, colors.tileWellBottom]
-    : [colors.tileThirstyTop, colors.tileThirstyBottom];
   return (
-    <Pressable
-      accessibilityRole="button"
+    <Card
+      tone="raised"
+      padding="sm"
+      contentGap="sm"
       accessibilityLabel={cardLabel(card, t)}
       onPress={() => onOpen(card.userId)}
+      style={{ width }}
       testID={`friend-card-${card.userId}`}
-      style={({ pressed }) => [
-        styles.card,
-        { width, backgroundColor: colors.card, boxShadow: visitShadow.card[appearance] },
-        pressed && styles.pressed,
-      ]}
     >
-      <View
-        style={[
-          styles.tile,
-          {
-            backgroundColor: bottom,
-            backgroundImage: `linear-gradient(180deg, ${top}, ${bottom})`,
-          },
-        ]}
-      >
+      {/* The sky of a garden card on the home screen (neighbour-gardens.tsx): the same gradients. */}
+      <View style={styles.tile}>
+        <GradientBackdrop name={isWell ? 'growing' : 'thirsty'} style={StyleSheet.absoluteFill} />
         {card.garden === null ? (
           <Placeholder name={t('card.hidden')} style={styles.hidden} />
         ) : (
@@ -110,37 +98,30 @@ function FriendGardenCard({
       </View>
       <View style={styles.words}>
         <View style={styles.nameRow}>
-          <FriendsAvatar
-            initial={initialOf(card.name)}
-            color={avatarRoleOf(card.userId)}
+          <Avatar
+            content={{ initial: initialOf(card.name) }}
+            color={avatarIndexOf(card.userId)}
             size="small"
           />
-          <FriendsText variant="headline" style={styles.name}>
+          <AppText variant="headline" style={styles.name}>
             {card.name}
-          </FriendsText>
+          </AppText>
         </View>
-        <FriendsText variant="subhead" color="inkSecondary">
+        <AppText variant="subhead" color="muted">
           {cardDetails(card, t)}
-        </FriendsText>
+        </AppText>
       </View>
-    </Pressable>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: layout.controlGap },
-  card: {
-    minHeight: layout.touchTarget,
-    borderRadius: visitShape.gardenCardRadius,
-    padding: spacing.sm,
-    gap: spacing.sm,
-  },
   // The garden fills its tile and its corners are cut by it, as on the home screen's cards.
-  tile: { borderRadius: visitShape.tileRadius, overflow: 'hidden', paddingTop: spacing.xs },
+  tile: { borderRadius: radius.md, overflow: 'hidden', paddingTop: spacing.xs },
   zoomed: { transform: [{ scale: TILE_ZOOM }] },
   hidden: { aspectRatio: GARDEN_PICTURE_ASPECT_RATIO },
   words: { paddingHorizontal: spacing.xs, paddingBottom: spacing.xs, gap: spacing.xs },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   name: { flexShrink: 1 },
-  pressed: { opacity: stateOpacity.pressed },
 });

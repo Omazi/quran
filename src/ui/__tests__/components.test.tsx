@@ -19,7 +19,7 @@ import {
 } from '../test-support/environment';
 import {
   appColors,
-  gardenPalette,
+  palette,
   appleTextStyles,
   fallbackSystemColors,
   highContrastAppColors,
@@ -214,7 +214,7 @@ describe('useColors', () => {
     const roles = [
       ...Object.keys(iosSystemColorNames),
       ...Object.keys(appColors),
-      ...Object.keys(gardenPalette),
+      ...Object.keys(palette),
     ].sort();
     setDeviceConditions({ os: 'ios' });
     expect(Object.keys((await renderHook(() => useColors())).result.current).sort()).toEqual(roles);

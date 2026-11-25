@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { PAGE_COUNT } from '@/domain/quran';
 import {
   AppText,
+  Card,
   Icon,
   QuranText,
   ReaderSearchField,
@@ -18,7 +19,6 @@ import { READER_CONFIG } from './config';
 import {
   BookmarksCard,
   HizbRow,
-  ReaderCard,
   ReaderSegmented,
   SkyBand,
   SurahRow,
@@ -59,7 +59,7 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
   ];
   const isSearching = model.query.trim() !== '';
   return (
-    <Screen background="readerCanvas" scroll testID="contents">
+    <Screen background="canvas" scroll testID="contents">
       <SkyBand />
       <View style={styles.content} testID="contents-list">
         <AppText variant="largeTitle" color="ink">
@@ -91,7 +91,7 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
               testID="contents-view"
             />
             {model.view === 'surahs' ? (
-              <ReaderCard testID="contents-surahs-card">
+              <Card contentGap="md" testID="contents-surahs-card">
                 <View>
                   {model.surahs.map((entry, index) => (
                     <SurahRow
@@ -102,7 +102,7 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
                     />
                   ))}
                 </View>
-              </ReaderCard>
+              </Card>
             ) : (
               model.juz.map((juz) => (
                 <View key={juz.juz} style={styles.juz}>
@@ -118,7 +118,7 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
                       />
                     )}
                   </View>
-                  <ReaderCard>
+                  <Card contentGap="md">
                     <View>
                       {juz.hizbs.map((hizb, index) => (
                         <HizbRow
@@ -129,7 +129,7 @@ export function ContentsScreen({ model, actions }: ContentsScreenProps) {
                         />
                       ))}
                     </View>
-                  </ReaderCard>
+                  </Card>
                 </View>
               ))
             )}
@@ -163,7 +163,7 @@ function SearchResults({ model, actions }: ContentsScreenProps) {
     );
   }
   return (
-    <ReaderCard testID="contents-results">
+    <Card contentGap="md" testID="contents-results">
       <View>
         {goTo === null ? null : (
           <Pressable
@@ -195,7 +195,7 @@ function SearchResults({ model, actions }: ContentsScreenProps) {
           />
         ))}
       </View>
-    </ReaderCard>
+    </Card>
   );
 }
 

@@ -369,9 +369,13 @@ describe('the list', () => {
     await render(withStore(store, <FriendsHome {...NAVIGATION} />));
     await screen.findByTestId('friends-list');
     expect(fixedHeightsAroundText(screen.container)).toEqual([]);
+    // The initial of an avatar is a shape, hidden from VoiceOver, kept inside its circle (Avatar);
+    // every word that is read grows.
     const limited = screen.container.queryAll(
-      ({ type, props }) =>
-        type === 'Text' && (props.numberOfLines !== undefined || props.allowFontScaling === false),
+      ({ type, props, parent }) =>
+        type === 'Text' &&
+        parent?.props.accessibilityElementsHidden !== true &&
+        (props.numberOfLines !== undefined || props.allowFontScaling === false),
     );
     expect(limited).toHaveLength(0);
   });

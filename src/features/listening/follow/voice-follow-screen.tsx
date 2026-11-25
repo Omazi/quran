@@ -13,7 +13,7 @@ import {
   layout,
   listeningShape,
   spacing,
-  useListeningColors,
+  useColorValues,
   useReducedMotion,
 } from '@/ui';
 
@@ -59,7 +59,7 @@ export function VoiceFollowScreen({
   onClose,
 }: VoiceFollowScreenProps) {
   const { t, i18n } = useTranslation('listening');
-  const colors = useListeningColors();
+  const colors = useColorValues();
   const insets = useSafeAreaInsets();
   const reducedMotion = useReducedMotion();
   const isFontReady = useQuranFont() === 'ready';
@@ -80,18 +80,15 @@ export function VoiceFollowScreen({
   }, [model.rereadWord, t]);
 
   return (
-    <View
-      style={[styles.screen, { backgroundColor: colors.followBackground }]}
-      testID="voice-follow"
-    >
+    <View style={[styles.screen, { backgroundColor: colors.pageGround }]} testID="voice-follow">
       <StatusBar style="auto" />
       <View style={[styles.bar, { paddingTop: insets.top + spacing.xs }]}>
         <RoundButton
           symbol={BACK_SYMBOL}
           accessibilityLabel={t('actions.back')}
           onPress={model.stop}
-          background={colors.followControl}
-          foreground={colors.onFollowControl}
+          background={colors.surface}
+          foreground={colors.heading}
           isDirectional
           isRaised
           testID="follow-back"

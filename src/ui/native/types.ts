@@ -389,8 +389,8 @@ export interface IconProps {
   /** A foreground role. Defaults to the primary label colour. */
   color?: IconColorRole;
   /**
-   * A colour of the mockup palette (`useReaderPalette`), for a symbol on one of its surfaces, such
-   * as white on the forest green of the reader's microphone. Takes the place of `color`.
+   * A colour given as a value, for a symbol drawn on a surface whose colour is not a foreground
+   * role, such as white on a gradient. Takes the place of `color`.
    */
   tint?: ColorValue;
   /** What the icon means. Omit it for an icon that only decorates a text that says the same. */

@@ -23,8 +23,8 @@ import {
 import {
   backdropGradients,
   contrastThresholds,
-  gardenPalette,
-  highContrastGardenPalette,
+  palette,
+  highContrastPalette,
   layout,
 } from '../tokens';
 
@@ -33,7 +33,7 @@ const DROP = { ios: 'drop.fill', android: 'water_drop' } as const;
 afterEach(resetDeviceConditions);
 
 describe('the palette of the validated mockups', () => {
-  type Pair = keyof typeof gardenPalette;
+  type Pair = keyof typeof palette;
   /** Each word colour, on every surface the home screen sets it on. */
   const TEXT_ON: readonly (readonly [Pair, readonly Pair[]])[] = [
     ['heading', ['canvas', 'surface']],
@@ -53,7 +53,7 @@ describe('the palette of the validated mockups', () => {
         .map((surface) => ({
           text,
           surface,
-          ratio: contrastRatio(gardenPalette[text][appearance], gardenPalette[surface][appearance]),
+          ratio: contrastRatio(palette[text][appearance], palette[surface][appearance]),
         }))
         .filter(({ ratio }) => ratio < contrastThresholds.text),
     );
@@ -62,7 +62,7 @@ describe('the palette of the validated mockups', () => {
 
   /** The words set on each gradient: the header everywhere, the water where it can flow. */
   const ON_GRADIENT: Readonly<
-    Record<keyof typeof backdropGradients, readonly (keyof typeof gardenPalette)[]>
+    Record<keyof typeof backdropGradients, readonly (keyof typeof palette)[]>
   > = {
     growing: ['dateLabel', 'heading', 'water', 'drought'],
     thirsty: ['dateLabel', 'heading', 'drought'],
@@ -86,8 +86,7 @@ describe('the palette of the validated mockups', () => {
           .flatMap(([offset, color]) =>
             ON_GRADIENT[name]
               .filter(
-                (text) =>
-                  contrastRatio(gardenPalette[text][appearance], color) < contrastThresholds.text,
+                (text) => contrastRatio(palette[text][appearance], color) < contrastThresholds.text,
               )
               .map((text) => `${text} on ${name} at ${offset}`),
           ),
@@ -97,17 +96,12 @@ describe('the palette of the validated mockups', () => {
   );
 
   it('stands out more with Increase Contrast than without', () => {
-    const roles = Object.keys(
-      highContrastGardenPalette,
-    ) as (keyof typeof highContrastGardenPalette)[];
+    const roles = Object.keys(highContrastPalette) as (keyof typeof highContrastPalette)[];
     for (const role of roles) {
       for (const appearance of ['light', 'dark'] as const) {
-        const surface = role === 'action' ? gardenPalette.onAction : gardenPalette.surface;
-        const standard = contrastRatio(gardenPalette[role][appearance], surface[appearance]);
-        const high = contrastRatio(
-          highContrastGardenPalette[role][appearance],
-          surface[appearance],
-        );
+        const surface = role === 'action' ? palette.onAction : palette.surface;
+        const standard = contrastRatio(palette[role][appearance], surface[appearance]);
+        const high = contrastRatio(highContrastPalette[role][appearance], surface[appearance]);
         expect(high).toBeGreaterThan(standard);
       }
     }
@@ -132,11 +126,9 @@ describe('ActionButton', () => {
         <ActionButton label="Partager" variant="tonal" onPress={jest.fn()} testID="tonal" />
       </>,
     );
-    expect(styleOf(screen.getByTestId('filled')).backgroundColor).toBe(gardenPalette.action.light);
-    expect(styleOf(screen.getByTestId('tonal')).backgroundColor).toBe(
-      gardenPalette.actionTonal.light,
-    );
-    expect(styleOf(screen.getByText('Nouvelle khatma')).color).toBe(gardenPalette.onAction.light);
+    expect(styleOf(screen.getByTestId('filled')).backgroundColor).toBe(palette.action.light);
+    expect(styleOf(screen.getByTestId('tonal')).backgroundColor).toBe(palette.actionTonal.light);
+    expect(styleOf(screen.getByText('Nouvelle khatma')).color).toBe(palette.onAction.light);
   });
 
   it('refuses a button of a symbol alone without a name for VoiceOver', async () => {

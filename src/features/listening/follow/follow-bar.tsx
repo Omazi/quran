@@ -10,7 +10,7 @@ import Animated, {
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import type { Unsubscribe } from '@/domain/listening';
-import { fontFamily, listeningShape, spacing, useListeningColors, type IconSymbol } from '@/ui';
+import { fontFamily, listeningShape, spacing, useColorValues, type IconSymbol } from '@/ui';
 
 import { METER_MOTION } from '../config';
 import { RoundButton } from './round-button';
@@ -40,7 +40,7 @@ export interface FollowBarProps {
  */
 export function FollowBar({ subscribeToLevel, reducedMotion, rereadWord, onStop }: FollowBarProps) {
   const { t } = useTranslation('listening');
-  const colors = useListeningColors();
+  const colors = useColorValues();
   return (
     <View style={[styles.bar, { shadowColor: colors.shadow }]} testID="follow-bar">
       <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>

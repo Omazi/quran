@@ -10,7 +10,8 @@ export interface AvatarProps {
   content: { readonly initial: string } | { readonly symbol: IconSymbol };
   /** `self`: the person using the app, in green. A number: a friend, by their place in a list. */
   color: 'self' | number;
-  size: 'medium' | 'small';
+  /** `large`: a friend's page and a row of people. `medium`: the header. `small`: a garden card. */
+  size: 'large' | 'medium' | 'small';
   testID?: string;
 }
 
@@ -21,19 +22,22 @@ export interface AvatarProps {
  */
 export function Avatar({ content, color, size, testID }: AvatarProps) {
   const colors = useColors();
-  const diameter = size === 'medium' ? pieceSizes.avatarMedium : pieceSizes.avatarSmall;
+  const diameter = DIAMETER[size];
   const background =
     color === 'self'
       ? colors.avatarSelf
       : colors[avatarRoles[color % avatarRoles.length] ?? 'avatarSelf'];
-  const textStyle = size === 'medium' ? textStyles.headline : textStyles.footnote;
+  const textStyle = size === 'small' ? textStyles.footnote : textStyles.headline;
   return (
     <View
       accessible={false}
       importantForAccessibility="no-hide-descendants"
       accessibilityElementsHidden
       testID={testID}
-      style={[styles.avatar, { width: diameter, height: diameter, backgroundColor: background }]}
+      style={[
+        styles.avatar,
+        { minWidth: diameter, minHeight: diameter, backgroundColor: background },
+      ]}
     >
       {'initial' in content ? (
         // The initial stays inside its circle at every text size: it is a shape, not a text to read.
@@ -46,13 +50,19 @@ export function Avatar({ content, color, size, testID }: AvatarProps) {
       ) : (
         <Icon
           symbol={content.symbol}
-          textStyle={size === 'medium' ? 'headline' : 'footnote'}
+          textStyle={size === 'small' ? 'footnote' : 'headline'}
           color="onAction"
         />
       )}
     </View>
   );
 }
+
+const DIAMETER = {
+  large: pieceSizes.avatarLarge,
+  medium: pieceSizes.avatarMedium,
+  small: pieceSizes.avatarSmall,
+} as const satisfies Record<AvatarProps['size'], number>;
 
 const styles = StyleSheet.create({
   avatar: { borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },

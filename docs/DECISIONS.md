@@ -328,6 +328,9 @@ ait passé la revue de design (D28).
 
 ## D35 — Le jardin en images calculées à l'avance, en attendant le moteur 3D
 
+> **Révisé par D39 (25 novembre 2026)** : le jardin sera en vraie 3D, qu'on peut faire tourner
+> (D4) ; ces images ne servent plus qu'aux vignettes et de repli.
+
 Décidé par l'architecte le 24 novembre 2026, pour répondre à la demande du propriétaire
 (« mets le jardin comme il doit ressembler ») sans attendre l'essai du moteur 3D sur
 téléphone (D4), qui n'a pas eu lieu. Le jardin du niveau 1 est rendu hors de l'appli avec
@@ -436,6 +439,7 @@ l'eau. Le mot fait pousser le jardin. Détail, couleurs, couches, pistes écart�
   l'`accent`, `#0E6B78`. La version 5 et sa scène 3D restent dans l'historique git (commit
   `c3e0467`).
 - **Écran de lancement** : inchangé, une couleur unie, sans logo (`launching.md › Launch screens`).
+  **Remplacé par D39** : la marque calligraphique sur l'eau profonde, à la demande du propriétaire.
 - **Licences** : Gulzar, SIL Open Font License 1.1, qui permet tout usage, commercial compris ; la
   police n'est ni dans le dépôt ni dans l'appli, seuls les contours du mot y sont. Avis complet :
   `tools/app-icon/NOTICE.txt`. Outils non livrés : uharfbuzz (Apache-2.0), fontTools (MIT),
@@ -466,3 +470,45 @@ l'eau. Le mot fait pousser le jardin. Détail, couleurs, couches, pistes écart�
 
 _Changerait si_ le propriétaire préfère une autre écriture ou une autre couleur, ou si le rendu sur
 iPhone déçoit : les réglages sont en tête de `make_icon.py`, et on relance l'outil.
+
+## D39 — Les maquettes validées sont la référence visuelle
+
+Décidé par le propriétaire le 25 novembre 2026. Les maquettes validées de `docs/design/`
+(`accueil.png`, `soif.png`, `mort.png`, `nouveau.png`, `khatm.png`, `mushaf.png`, `visite.png`,
+`bienvenue.png`, `voix.png`) font foi pour l'apparence. Les skills de design restent la méthode
+(accessibilité, Dynamic Type, VoiceOver, cibles de 44 points, arabe en miroir, mouvement réduit) ;
+quand une maquette contredit une règle d'Apple ou la charte, la maquette l'emporte, et l'écart est
+inscrit dans `design/SKILLS.md` pour que le propriétaire tranche au cas par cas.
+
+Décisions qui en découlent :
+
+- **Couleur d'action : vert forêt `#1F5C45`** dans toute l'appli (boutons pleins, capsules, micro
+  du lecteur, bouton proéminent du système, onglet choisi, liens). La nuit, un seul vert pour tout
+  bouton plein, `#2E7A5B` avec un libellé blanc (5,18:1) ; les mots et symboles verts la nuit
+  prennent `#7FCCA6`. Le bleu d'eau ne sert plus qu'à ce qui veut dire « eau » (arrosage, anneau,
+  goutte).
+- **Titres en Fraunces** (demi-gras, embarquée, licence OFL, `assets/fonts`), comme sur les
+  maquettes. New York ne reste qu'au titre de l'écran d'écoute.
+- **Nuit « crépuscule »** : un ciel sombre et chaud, des cartes sombres et chaudes ; les maquettes
+  n'ont pas de version sombre, les valeurs sont dérivées et mesurées (4,5:1 pour le texte).
+- **Cartes blanches arrondies avec l'ombre douce des maquettes** (de jour), **boutons en capsule
+  dessinés** : on revient sur les « écarts corrigés » qui les avaient retirés.
+- **Les pièces du système restent là où elles ne changent pas l'apparence** : barre d'onglets,
+  barres de navigation, menus, feuilles d'action, interrupteurs, champs de texte, sélecteurs.
+- **L'écran de reconnaissance de l'écoute garde la rosace validée** (D27, D29) : il n'est pas
+  redessiné.
+- **Un seul système de design** (25 novembre 2026, architecte, en application de cette règle) : une
+  palette unique (`palette` dans `src/ui/tokens.ts`) au lieu de quatre (accueil, lecteur, Proches,
+  suivi de la voix) ; un rôle, une valeur. Les composants partagés de `src/ui` (`Card`,
+  `ActionButton`, `Avatar`, `DottedProgress`, `ProgressRing`, `SectionHeader`) servent à tous les
+  onglets ; l'onglet Proches n'a plus de kit à lui pour ces pièces.
+- **Écran de lancement : la marque calligraphique** (`assets/images/splash-mark.png`, tirée des
+  couches de l'icône) sur l'eau profonde `#0B3C44`, `#072C33` en sombre. Demande du propriétaire,
+  contre `launching.md › Launch screens` (pas de marque sur l'écran de lancement) : écart 98.
+  Remplace la ligne « Écran de lancement » de D38.
+- **Le jardin sera en vraie 3D et pourra tourner** (pincer, glisser), comme décidé au départ (D4).
+  Un autre agent le construit. Les images calculées à l'avance de D35 ne servent plus qu'aux
+  vignettes (cartes des proches, « Jardins voisins ») et de repli quand la 3D n'est pas disponible.
+
+_Changerait si_ le propriétaire valide de nouvelles maquettes, ou tranche autrement un des écarts
+inscrits dans le registre.
