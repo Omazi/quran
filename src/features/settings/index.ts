@@ -31,8 +31,12 @@ export {
   type StartedApp,
   type StartupDependencies,
 } from './startup';
+export { readDeviceLanguageCodes } from './device-languages';
 export {
+  DEVICE_LANGUAGE,
+  LANGUAGE_CHOICES,
   useSettings,
+  type LanguageChoice,
   type LanguageModel,
   type SettingsActions,
   type SettingsDependencies,

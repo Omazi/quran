@@ -49,8 +49,12 @@ export interface AppState extends AppData {
   readonly dataResetNotice: DataResetNotice | null;
   /** The person has read the notice: it is not shown again. */
   dismissDataResetNotice: () => void;
-  /** Records the person's choice of language. Showing it is the caller's job. */
-  setLanguage: (language: AppLanguage) => void;
+  /**
+   * Records the person's choice of language, or null to follow the phone again, which is also what
+   * a fresh install does (D32). Showing it is the caller's job. Throws a `RangeError` for anything
+   * else.
+   */
+  setLanguage: (language: AppLanguage | null) => void;
   /** Throws a `RangeError` outside `DAILY_GOAL_RANGE`. */
   setDailyGoalPages: (pages: number) => void;
   /** Changes some of the reminder settings. Throws a `RangeError` for an impossible time. */

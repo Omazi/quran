@@ -10,10 +10,12 @@
   "language": {
     "label": "Langue",
     "options": {
+      "device": "Langue du téléphone",
       "fr": "Français",
       "en": "English",
       "ar": "العربية"
     },
+    "deviceLanguageMissing": "L’appli n’est pas encore traduite dans la langue de ton téléphone. Choisis-en une ci-dessus.",
     "restartNote": "Le sens d’écriture changera au prochain démarrage de l’appli.",
     "restart": "Redémarrer l’appli"
   },

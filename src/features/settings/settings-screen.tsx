@@ -29,10 +29,17 @@ export interface SettingsScreenProps {
  */
 export function SettingsScreen({ model, actions }: SettingsScreenProps) {
   const { t } = useTranslation('settings');
-  const languageOptions = model.language.options.map((language) => ({
-    value: language,
-    label: t(`language.options.${language}`),
+  const languageOptions = model.language.options.map((choice) => ({
+    value: choice,
+    label: t(`language.options.${choice}`),
   }));
+  // One note at a time, under the choice (pop-up-buttons.md › Best practices: explanatory text
+  // below the list). The restart comes first: it is what the person can act on now.
+  const languageNote = model.language.needsRestart
+    ? t('language.restartNote')
+    : model.language.isDeviceLanguageMissing
+      ? t('language.deviceLanguageMissing')
+      : undefined;
   return (
     <Screen background="groupedBackground" testID="settings">
       <AppText variant="largeTitle" style={styles.title}>
@@ -54,7 +61,7 @@ export function SettingsScreen({ model, actions }: SettingsScreenProps) {
             />
           </ListSection>
         )}
-        <ListSection footer={model.language.needsRestart ? t('language.restartNote') : undefined}>
+        <ListSection footer={languageNote}>
           <ChoiceRow
             label={t('language.label')}
             options={languageOptions}

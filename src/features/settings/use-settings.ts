@@ -1,13 +1,15 @@
 import type { NotificationPermissions } from '@/data/notifications';
 import {
   SUPPORTED_LANGUAGES,
-  getDisplayedLanguage,
+  isSupportedLanguage,
+  resolveLanguage,
   setDisplayedLanguage,
   type AppLanguage,
 } from '@/i18n';
 import { useAppStore, type DataResetNotice, type ReminderSettings } from '@/store';
 
 import { useDailyGoal, type DailyGoalModel } from './daily-goal';
+import { readDeviceLanguageCodes } from './device-languages';
 import { useReminders, type RemindersModel } from './reminders';
 import {
   chooseDirectionFor,
@@ -15,15 +17,32 @@ import {
   type WritingDirectionPlatform,
 } from './writing-direction';
 
+/** The option that follows the phone's language: nothing is chosen in the app (D32). */
+export const DEVICE_LANGUAGE = 'device';
+
+/** An option of the language setting: the phone's language, or one of the app's. */
+export type LanguageChoice = typeof DEVICE_LANGUAGE | AppLanguage;
+
+/** The options, the phone's language first: it is the default (pop-up-buttons.md › Best practices). */
+export const LANGUAGE_CHOICES: readonly LanguageChoice[] = [
+  DEVICE_LANGUAGE,
+  ...SUPPORTED_LANGUAGES,
+];
+
 /** What the language rows show. */
 export interface LanguageModel {
-  readonly selected: AppLanguage;
-  readonly options: readonly AppLanguage[];
+  readonly selected: LanguageChoice;
+  readonly options: readonly LanguageChoice[];
   /**
-   * True when the selected language is written in the other direction than the running app: the
+   * True when the language shown is written in the other direction than the running app: the
    * texts are already in that language, the layout will only follow after a restart.
    */
   readonly needsRestart: boolean;
+  /**
+   * True when the app follows the phone but has none of its languages, and so shows its fallback
+   * language.
+   */
+  readonly isDeviceLanguageMissing: boolean;
 }
 
 /** What the settings screen shows. */
@@ -41,7 +60,7 @@ export interface SettingsModel {
 /** What the person can do on the settings screen. */
 export interface SettingsActions {
   dismissDataResetNotice: () => void;
-  selectLanguage: (language: AppLanguage) => void;
+  selectLanguage: (choice: LanguageChoice) => void;
   restartApp: () => void;
   setDailyGoalPages: (pages: number) => void;
   changeReminders: (change: Partial<ReminderSettings>) => void;
@@ -54,6 +73,11 @@ export interface SettingsActions {
 export interface SettingsDependencies {
   readonly notifications: NotificationPermissions;
   readonly direction: WritingDirectionPlatform;
+  /**
+   * The languages of the phone, most wanted first, as language codes ("fr", "ar"). Defaults to
+   * the phone's own, read the same way as at start-up.
+   */
+  readonly getDeviceLanguageCodes?: () => readonly (string | null)[];
   /** Opens the system's settings of the app. */
   readonly openSystemSettings: () => void;
   /** Shows the first-launch flow again. */
@@ -64,6 +88,7 @@ export interface SettingsDependencies {
 export function useSettings({
   notifications,
   direction,
+  getDeviceLanguageCodes = readDeviceLanguageCodes,
   openSystemSettings,
   openIntroduction,
 }: SettingsDependencies): { model: SettingsModel; actions: SettingsActions } {
@@ -71,26 +96,36 @@ export function useSettings({
   const saveLanguage = useAppStore((state) => state.setLanguage);
   const dataResetNotice = useAppStore((state) => state.dataResetNotice);
   const dismissDataResetNotice = useAppStore((state) => state.dismissDataResetNotice);
-  const selected = savedLanguage ?? getDisplayedLanguage();
   const dailyGoal = useDailyGoal();
   const reminders = useReminders({ notifications, asks: 'on-enable' });
+
+  // Read at each render: the phone's languages are its own, and may change while the app runs.
+  const deviceLanguageCodes = getDeviceLanguageCodes();
+  // The language the app shows, worked out exactly as at start-up.
+  const shown = resolveLanguage(savedLanguage, deviceLanguageCodes);
+  const hasDeviceLanguage = deviceLanguageCodes.some(
+    (code) => code !== null && isSupportedLanguage(code),
+  );
 
   return {
     model: {
       dataResetNotice,
       language: {
-        selected,
-        options: SUPPORTED_LANGUAGES,
+        selected: savedLanguage ?? DEVICE_LANGUAGE,
+        options: LANGUAGE_CHOICES,
         // The direction of the running app is fixed: only a restart can bring it in line.
-        needsRestart: !isLaidOutFor(selected, direction),
+        needsRestart: !isLaidOutFor(shown, direction),
+        isDeviceLanguageMissing: savedLanguage === null && !hasDeviceLanguage,
       },
       dailyGoal: dailyGoal.model,
       reminders: reminders.model,
     },
     actions: {
       dismissDataResetNotice,
-      selectLanguage: (language) => {
-        saveLanguage(language);
+      selectLanguage: (choice) => {
+        const chosen = choice === DEVICE_LANGUAGE ? null : choice;
+        saveLanguage(chosen);
+        const language = resolveLanguage(chosen, getDeviceLanguageCodes());
         // The texts change at once, so that the person can read what follows in the language
         // they chose; the layout follows only if its direction is already the right one.
         setDisplayedLanguage(language);
