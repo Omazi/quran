@@ -1,17 +1,21 @@
-"""Prepares the pictures of the app's first screen for the branch `ci-screens`.
+"""Prepares the pictures of the app's screens for the branch `ci-screens`.
 
     python3 tools/ci/publish-screens.py <downloaded artifact> <output folder> --run 123 --sha abc
 
 The artifact `ios-first-screen` comes from a job that ran the whole build, third-party tools
-included, so it is read as untrusted data: nothing in it is executed, only the four pictures the
-iOS check is known to take are kept, and each one must be a whole PNG file of a plausible size,
-read chunk by chunk to its end. The build log that travels in the same artifact is left behind.
+included, so it is read as untrusted data: nothing in it is executed, only the pictures listed in
+`tools/ci/screens.py` are kept (a fixed list of names, taken from this repository's `main`, not
+from the artifact), and each one must be a whole PNG file of a plausible size, read chunk by chunk
+to its end. The build log and any other file that travels in the same artifact are left behind.
 
-The output folder receives the pictures and a README.md that shows them with a label each. The
+The output folder receives the pictures and a README.md that shows them, grouped, with a caption
+under each. The
 workflow `.github/workflows/ios-screens.yml` then replaces the branch with that folder.
 """
 
 import argparse
+import html
+import importlib.util
 import os
 import pathlib
 import re
@@ -19,16 +23,26 @@ import struct
 import sys
 import zlib
 
-# File name -> label shown above the picture. The names are those of ios-check.yml.
-EXPECTED = {
-    "1-francais-clair.png": "Français, mode clair",
-    "2-francais-sombre.png": "Français, mode sombre",
-    "3-anglais-clair.png": "Anglais, mode clair",
-    "4-arabe-clair.png": "Arabe, mode clair (mise en page de droite à gauche)",
-}
+def _load_screens():
+    """The list of pictures, read from the file next to this one (its folder is not on the path
+    under `python3 -I`)."""
+    path = pathlib.Path(__file__).resolve().with_name("screens.py")
+    spec = importlib.util.spec_from_file_location("ci_screens", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+SCREENS = _load_screens()
+# File name -> caption shown under the picture. The names are those of ios-check.yml.
+EXPECTED = SCREENS.EXPECTED
+GROUP_OF = {shot.name: shot.group for shot in SCREENS.SHOTS}
+COLUMNS = 4
 
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 MAX_BYTES = 15 * 1024 * 1024
+MAX_TOTAL_BYTES = 200 * 1024 * 1024  # all the pictures together: the branch is pushed whole
+MAX_REPORT_BYTES = 200_000  # the crash hunt's text report: a few screens of text
 MAX_SIDE = 4000  # an iPhone screenshot is at most 1320 x 2868 pixels today
 
 
@@ -67,6 +81,25 @@ def png_size(data: bytes) -> tuple[int, int] | None:
         position = end
 
 
+def crash_report(data: bytes) -> tuple[str, str] | None:
+    """The verdict and the clean text of the crash hunt's report, or nothing.
+
+    Only what looks exactly like `tools/ci/crash-report.py`'s output is kept: UTF-8 text of a
+    plausible size whose first line is `VERDICT: ` and one known word. Characters that are not
+    printable (escape sequences, NUL) are dropped, so that nothing in it can act on a terminal.
+    """
+    if len(data) > MAX_REPORT_BYTES:
+        return None
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+    text = re.sub(r"[^\n\t\x20-\x7e\u00a0-\U0010ffff]", "", text.replace("\r", ""))
+    first = text.split("\n", 1)[0]
+    match = re.fullmatch(r"VERDICT: (" + "|".join(SCREENS.CRASH_VERDICTS) + ")", first)
+    return (match.group(1), text) if match else None
+
+
 def find(folder: pathlib.Path, name: str) -> pathlib.Path | None:
     """The one regular file called `name` under `folder`; links are never followed."""
     found = [
@@ -91,6 +124,7 @@ def main() -> int:
 
     args.out.mkdir(parents=True, exist_ok=False)
     kept = []
+    total = 0
     for name, label in EXPECTED.items():
         source = find(args.incoming, name)
         if source is None:
@@ -99,12 +133,16 @@ def main() -> int:
         if source.stat().st_size > MAX_BYTES:
             print(f"refused: {name} is too large")
             continue
+        if total + source.stat().st_size > MAX_TOTAL_BYTES:
+            print(f"refused: {name} would pass the total size allowed")
+            continue
         data = source.read_bytes()
         size = png_size(data)
         if size is None:
             print(f"refused: {name} is not a PNG picture")
             continue
         (args.out / name).write_bytes(data)
+        total += len(data)
         kept.append((name, label, size))
         print(f"kept: {name} {size[0]}x{size[1]}")
 
@@ -112,23 +150,56 @@ def main() -> int:
         print("::error::no picture to publish", file=sys.stderr)
         return 1
 
+    verdict = None
+    report_source = find(args.incoming, SCREENS.CRASH_REPORT)
+    if report_source is not None and report_source.stat().st_size <= MAX_REPORT_BYTES:
+        checked = crash_report(report_source.read_bytes())
+        if checked is None:
+            print(f"refused: {SCREENS.CRASH_REPORT} is not a report of the expected shape")
+        else:
+            verdict, report_text = checked
+            (args.out / SCREENS.CRASH_REPORT).write_text(report_text, encoding="utf-8")
+            print(f"kept: {SCREENS.CRASH_REPORT} ({verdict})")
+    else:
+        print(f"missing or too large: {SCREENS.CRASH_REPORT}")
+
     repository = "https://github.com/" + os.environ.get("GITHUB_REPOSITORY", "Omazi/quran")
     lines = [
-        "# Premier écran de l'appli, dans le simulateur d'iPhone",
+        "# Les écrans de l'appli, dans le simulateur d'iPhone",
         "",
-        "Images prises automatiquement par la vérification iOS, sur un Mac de GitHub.",
+        "Images prises automatiquement par la vérification iOS, sur un Mac de GitHub, dans une version",
+        "faite pour ce contrôle (jardin de démonstration, proches de démonstration).",
         "",
         f"- Version du code : [`{args.sha[:7]}`]({repository}/commit/{args.sha})",
         f"- Exécution : [{args.run}]({repository}/actions/runs/{args.run})",
+        f"- Images : {len(kept)} sur {len(EXPECTED)}",
         "",
-        "Cette branche ne contient que ces images. Elle est remplacée à chaque vérification :",
-        "ne rien y écrire à la main.",
+        "Cette branche ne contient que ces images (et le rapport de la chasse au plantage, s'il y en a un).",
+        "Elle est remplacée à chaque vérification : ne rien y écrire à la main.",
     ]
-    for name, label, (width, height) in kept:
-        lines += ["", f"## {label}", "", f'<img src="{name}" alt="{label}" width="320">', "", f"`{name}`, {width} × {height} pixels"]
-    missing = [label for name, label in EXPECTED.items() if name not in {k[0] for k in kept}]
+    if verdict is not None:
+        lines += [
+            "",
+            f"Chasse au plantage (l'appli feuillette l'introduction seule, puis agit sur le jardin d'un proche) : **{verdict}**, détail dans [`{SCREENS.CRASH_REPORT}`]({SCREENS.CRASH_REPORT}).",
+        ]
+    by_group: dict[str, list] = {}
+    for name, label, size in kept:
+        by_group.setdefault(GROUP_OF[name], []).append((name, label, size))
+    for group, pictures in by_group.items():
+        lines += ["", f"## {group}", "", "<table>"]
+        for start in range(0, len(pictures), COLUMNS):
+            lines.append("<tr>")
+            for name, label, (width, height) in pictures[start : start + COLUMNS]:
+                caption = html.escape(label)
+                lines.append(
+                    f'<td valign="top"><img src="{name}" alt="{caption}" width="200"><br>'
+                    f"<sub>{caption}<br><code>{name}</code> {width}×{height}</sub></td>"
+                )
+            lines.append("</tr>")
+        lines.append("</table>")
+    missing = [name for name in EXPECTED if name not in {k[0] for k in kept}]
     if missing:
-        lines += ["", "## Images manquantes", ""] + [f"- {label}" for label in missing]
+        lines += ["", "## Images manquantes", ""] + [f"- `{name}` : {EXPECTED[name]}" for name in missing]
     (args.out / "README.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return 0
 

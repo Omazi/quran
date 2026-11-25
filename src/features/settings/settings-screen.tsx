@@ -15,11 +15,13 @@ import {
   type IconSymbol,
 } from '@/ui';
 
+import { DiagnosticsSection } from '@/features/diagnostics';
 import { SyncStatusSection } from '@/features/sync';
 
 import { DailyGoalSection } from './daily-goal-section';
 import { RemindersSection } from './reminders-section';
 import type { SettingsActions, SettingsModel } from './use-settings';
+import { VersionSection } from './voice-diagnostics-section';
 
 export interface SettingsScreenProps {
   model: SettingsModel;
@@ -47,6 +49,10 @@ export function SettingsScreen({ model, actions }: SettingsScreenProps) {
         <SettingsSections model={model} actions={actions} />
         {/* The backup of the progress, on the phone and in the account (docs/specs/sync.md). */}
         <SyncStatusSection />
+        {/* The last closure the app noted, when there is one (src/features/diagnostics). */}
+        <DiagnosticsSection />
+        {/* The version; a long press on it shows the voice diagnostics (hidden). */}
+        <VersionSection />
       </GroupedList>
     </Screen>
   );

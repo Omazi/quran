@@ -175,8 +175,8 @@ describe('settings screen', () => {
     const cards = withDescendants(screen.getByTestId('settings-list')).filter(
       (element) => JSON.stringify(styleOf(element).backgroundColor) === surface,
     );
-    // Language, daily goal, reminders, introduction, backup status.
-    expect(cards).toHaveLength(5);
+    // Language, daily goal, reminders, introduction, backup status, version.
+    expect(cards).toHaveLength(6);
   });
 });
 

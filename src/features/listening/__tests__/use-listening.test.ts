@@ -1,6 +1,12 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import type { SpeechEngine } from '@/domain/listening';
+import {
+  SpeechEngineError,
+  type SpeechActivity,
+  type SpeechEndReason,
+  type SpeechEngine,
+  type SpeechFailure,
+} from '@/domain/listening';
 import type { VerseIndex } from '@/domain/recognition';
 
 import { createScenarioEngine } from '../simulated/scenarios';
@@ -187,7 +193,11 @@ describe('a listening, with the simulated engine and the real passage search', (
       status: 'listening',
       heardWordCount: 0,
       latestResult: null,
+      voice: false,
+      transcribing: false,
+      partial: [],
     });
+    expect(result.current.heardWords).toEqual([]);
   });
 
   it('closes the microphone when the screen goes away', async () => {
@@ -197,5 +207,86 @@ describe('a listening, with the simulated engine and the real passage search', (
     await wait(500);
     await unmount();
     expect(stop).toHaveBeenCalled();
+  });
+});
+
+/** An engine driven by the test: what it hears, what it does and how it ends. */
+function handEngine(startError?: Error) {
+  const activity = new Set<(activity: SpeechActivity) => void>();
+  const words = new Set<(words: readonly string[]) => void>();
+  const ends = new Set<(reason: SpeechEndReason, failure?: SpeechFailure) => void>();
+  const listen =
+    <Listener>(set: Set<Listener>) =>
+    (listener: Listener) => {
+      set.add(listener);
+      return () => {
+        set.delete(listener);
+      };
+    };
+  const engine: SpeechEngine = {
+    getMicrophonePermission: async () => 'granted',
+    requestMicrophonePermission: async () => 'granted',
+    start: async () => {
+      if (startError !== undefined) throw startError;
+    },
+    stop: async () => undefined,
+    onLevel: () => () => undefined,
+    onWords: listen(words),
+    onEnd: listen(ends),
+    onActivity: listen(activity),
+  };
+  return {
+    engine,
+    act: (change: Partial<SpeechActivity>) => {
+      for (const listener of activity) {
+        listener({ voice: false, transcribing: false, partial: [], ...change });
+      }
+    },
+    hear: (heard: readonly string[]) => {
+      for (const listener of words) listener(heard);
+    },
+    end: (reason: SpeechEndReason, failure?: SpeechFailure) => {
+      for (const listener of ends) listener(reason, failure);
+    },
+  };
+}
+
+describe('what the person sees while the engine works', () => {
+  it('the voice heard, then the words not final yet, then the final ones', async () => {
+    const hand = handEngine();
+    const { result } = await listenWith(hand.engine);
+    await wait(100);
+    expect(result.current.state).toMatchObject({ status: 'listening', voice: false });
+    await act(async () => hand.act({ voice: true }));
+    expect(result.current.state).toMatchObject({ voice: true });
+    await act(async () => hand.act({ transcribing: true, partial: ['قل', 'هو'] }));
+    expect(result.current.heardWords).toEqual(['قل', 'هو']);
+    await act(async () => hand.hear(['قل', 'هو']));
+    await wait(100);
+    await act(async () => hand.act({ partial: ['الله'] }));
+    expect(result.current.heardWords).toEqual(['قل', 'هو', 'الله']);
+  });
+
+  it('a start refused with a reason: failed, with that reason', async () => {
+    const hand = handEngine(new SpeechEngineError('model-missing', 'not in the app'));
+    const { result } = await listenWith(hand.engine);
+    await wait(100);
+    expect(result.current.state).toEqual({ status: 'failed', failure: 'model-missing' });
+  });
+
+  it('an engine that breaks while listening: failed, with what broke', async () => {
+    const hand = handEngine();
+    const { result } = await listenWith(hand.engine);
+    await wait(100);
+    await act(async () => hand.end('failed', 'no-audio'));
+    await wait(100);
+    expect(result.current.state).toEqual({ status: 'failed', failure: 'no-audio' });
+  });
+
+  it('a start that fails without saying why: failed, unknown', async () => {
+    const hand = handEngine(new Error('something'));
+    const { result } = await listenWith(hand.engine);
+    await wait(100);
+    expect(result.current.state).toEqual({ status: 'failed', failure: 'unknown' });
   });
 });

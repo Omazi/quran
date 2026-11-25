@@ -27,7 +27,7 @@ import {
 import { shownInviteCode, typedInviteCode } from './invite-code-text';
 import { isRefusal, refusalOf, type ShownRefusal } from './refusal';
 import { useSocialStore, useSocialVersion, type SocialStore } from './social-store';
-import { useAsync, type AsyncState } from './use-async';
+import { runFromButton, useAsync, type AsyncState } from './use-async';
 
 /** Runs an action of the tab, then tells every screen to read again; a refusal is kept to show. */
 function useAction(store: SocialStore) {
@@ -37,7 +37,8 @@ function useAction(store: SocialStore) {
     (work: () => Promise<unknown>, onDone?: () => void, onRefused?: (error: unknown) => void) => {
       setIsBusy(true);
       setRefusal(null);
-      work().then(
+      runFromButton(
+        work,
         () => {
           setIsBusy(false);
           onDone?.();
@@ -160,7 +161,7 @@ export function useFriendPage(
       }),
     [repository, userId, version, today, isDemonstration, store],
   );
-  const { run, refusal } = useAction(store);
+  const { run, refusal, setRefusal } = useAction(store);
   const remember = () => store.encouraged.set(userId, today);
   return {
     state,
@@ -175,7 +176,10 @@ export function useFriendPage(
             if (isRefusal(error, 'already-nudged-today')) {
               remember();
               store.changed();
+              return;
             }
+            // Any other refusal is said, as every other action of the page says it.
+            setRefusal(refusalOf(error));
           },
         ),
       remove: (texts) =>

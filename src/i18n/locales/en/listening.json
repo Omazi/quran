@@ -2,7 +2,10 @@
   "listening": {
     "title": "Listening…",
     "announcement": "Listening",
-    "stop": "Stop"
+    "stop": "Stop",
+    "preparing": "One moment…",
+    "hearing": "I can hear you",
+    "searching": "Finding the passage…"
   },
   "surah": "Surah {{name}}",
   "surahArabic": "سورة {{name}}",
@@ -25,24 +28,46 @@
     "rowHint": "Opens the reader at page {{page}}."
   },
   "nothingHeard": {
-    "title": "Nothing Heard",
-    "description": "Recite aloud, close to the phone, then try again."
+    "title": "I Didn’t Hear You",
+    "description": "Recite aloud, close to the phone."
   },
   "tooFewWords": {
-    "title": "Not Enough Words",
-    "description": "Recite a little longer: a few words are enough to find the passage."
+    "title": "I Didn’t Recognize This Passage",
+    "description": "Recite a little longer."
   },
   "noMatch": {
-    "title": "No Passage Found",
-    "description": "Recite again, a little more slowly."
+    "title": "I Didn’t Recognize This Passage",
+    "description": "Recite a little longer."
   },
   "microphoneDenied": {
-    "title": "Microphone Access Off",
-    "description": "To find a passage by reciting it, allow the microphone in Settings."
+    "title": "Microphone Denied",
+    "description": "Allow the microphone in Settings to find a passage by reciting it."
   },
   "failed": {
-    "title": "Listening Stopped",
-    "description": "Try again in a moment."
+    "microphoneUnavailable": {
+      "title": "Microphone Unavailable",
+      "description": "A call or another app may be using it. Try again in a moment."
+    },
+    "noAudio": {
+      "title": "No Sound from the Microphone",
+      "description": "Make sure no other app is using it, then try again."
+    },
+    "modelMissing": {
+      "title": "Voice Model Missing",
+      "description": "Reinstall the app from TestFlight to get recognition back."
+    },
+    "modelFailed": {
+      "title": "Voice Model Didn’t Load",
+      "description": "Quit the app completely, then open it again."
+    },
+    "transcriptionFailed": {
+      "title": "Recognition Stopped",
+      "description": "Try again. If it happens again, quit and reopen the app."
+    },
+    "unknown": {
+      "title": "Listening Stopped",
+      "description": "Try again in a moment."
+    }
   },
   "ready": {
     "title": "Ready when you are",
@@ -62,6 +87,8 @@
     "following": "Your recitation is followed on the page",
     "where": "Juz {{juz}}, page {{page}}",
     "stop": "Stop Listening",
-    "announcement": "Read this word again"
+    "announcement": "Read this word again",
+    "hearing": "I can hear you",
+    "heard": "Words heard: {{words}}"
   }
 }

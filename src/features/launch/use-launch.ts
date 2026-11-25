@@ -12,6 +12,8 @@ export interface UseLaunchOptions {
   hideSplash: () => void;
   /** Whether the device asks for reduced motion. Asked once, before anything moves. */
   readReducedMotion: () => Promise<boolean>;
+  /** The overlay is never shown: the iOS check's pictures of each screen (docs/BUILD.md). */
+  isSkipped?: boolean;
 }
 
 export interface LaunchState {
@@ -34,9 +36,10 @@ export function useLaunch({
   isReady,
   hideSplash,
   readReducedMotion,
+  isSkipped = false,
 }: UseLaunchOptions): LaunchState {
   // Decided once: an overlay that is already gone must not come back when the layout renders.
-  const [isShown, setIsShown] = useState(() => !hasLaunchPlayed());
+  const [isShown, setIsShown] = useState(() => !isSkipped && !hasLaunchPlayed());
   const [isLaidOut, setIsLaidOut] = useState(false);
   const [motion, setMotion] = useState<LaunchMotion | null>(null);
   const [isSettled, setIsSettled] = useState(false);

@@ -8,6 +8,11 @@
  * - `VOICE_MODEL_FILE`: a copy already on disk, used instead of downloading (still checked);
  * - `VOICE_MODEL_CACHE`: where the checked copy is kept (default `node_modules/.cache/voice-model`).
  * Behind a proxy, Node's `fetch` needs `NODE_USE_ENV_PROXY=1` (Node 22.21 or later).
+ *
+ * It is loud both ways: a missing or different model stops `expo prebuild` with an error that
+ * says why, and a good one prints `voice model ok: <bytes> <sha256>` once it is in place in the
+ * iOS project, so the build log shows the model went in. The Xcode project is checked to copy
+ * the file into the app; the CI then checks the built app holds it (testflight-build.yml).
  */
 const { createHash } = require('node:crypto');
 const fs = require('node:fs');
@@ -126,34 +131,87 @@ async function checkedModel(projectRoot) {
   );
 }
 
+/**
+ * Puts the checked model in the iOS project folder and checks the copy itself (a full disk or a
+ * cut copy would otherwise go into the app unnoticed). Throws when anything is wrong; says
+ * `voice model ok` when the file in place is the model.
+ */
+async function placeModel(
+  projectRoot,
+  destination,
+  log = (line) => process.stdout.write(`${line}\n`),
+) {
+  const source = await checkedModel(projectRoot);
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  fs.copyFileSync(source, destination);
+  if (!(await isTheModel(destination))) {
+    fs.rmSync(destination, { force: true });
+    throw new Error(
+      `The voice model copied to ${destination} is not ${manifest.file} (size or SHA-256 differs).`,
+    );
+  }
+  log(`voice model ok: ${manifest.bytes} ${manifest.sha256} (${destination})`);
+  return destination;
+}
+
 const withVoiceModelFile = (config) =>
   withDangerousMod(config, [
     'ios',
     async (config) => {
       const { projectRoot, platformProjectRoot, projectName } = config.modRequest;
-      const source = await checkedModel(projectRoot);
-      const destination = path.join(platformProjectRoot, projectName, manifest.file);
-      fs.copyFileSync(source, destination);
+      await placeModel(projectRoot, path.join(platformProjectRoot, projectName, manifest.file));
       return config;
     },
   ]);
 
-const withVoiceModelResource = (config) =>
-  withXcodeProject(config, (config) => {
-    const { projectName } = config.modRequest;
-    const filepath = path.join(projectName, manifest.file);
-    if (!config.modResults.hasFile(filepath)) {
+/**
+ * Whether the Xcode project copies `filepath` into the app: a file reference and a build file in
+ * the app's "Copy Bundle Resources" phase.
+ */
+function copiesIntoApp(project, filepath) {
+  const name = path.basename(filepath);
+  const buildFiles = project.pbxBuildFileSection();
+  const phase = project.pbxResourcesBuildPhaseObj();
+  if (!project.hasFile(filepath) || !phase || !Array.isArray(phase.files)) return false;
+  return phase.files.some(({ value }) => {
+    const buildFile = buildFiles[value];
+    return buildFile !== undefined && String(buildFile.fileRef_comment ?? '').includes(name);
+  });
+}
+
+function addModelResource(project, projectName) {
+  const filepath = path.join(projectName, manifest.file);
+  const refuse = (detail) =>
+    new Error(
+      `The Xcode project does not copy ${filepath} into the app ("Copy Bundle Resources"): ` +
+        `the app would ship without its voice model.${detail ? ` (${detail})` : ''}`,
+    );
+  if (!copiesIntoApp(project, filepath)) {
+    try {
       IOSConfig.XcodeUtils.addResourceFileToGroup({
         filepath,
         groupName: projectName,
-        project: config.modResults,
+        project,
         isBuildFile: true,
         verbose: false,
       });
+    } catch (error) {
+      throw refuse(error instanceof Error ? error.message : String(error));
     }
+  }
+  if (!copiesIntoApp(project, filepath)) throw refuse('');
+  return project;
+}
+
+const withVoiceModelResource = (config) =>
+  withXcodeProject(config, (config) => {
+    addModelResource(config.modResults, config.modRequest.projectName);
     return config;
   });
 
 module.exports = (config) => withVoiceModelResource(withVoiceModelFile(config));
 // For the tests.
 module.exports.download = download;
+module.exports.placeModel = placeModel;
+module.exports.addModelResource = addModelResource;
+module.exports.copiesIntoApp = copiesIntoApp;

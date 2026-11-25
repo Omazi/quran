@@ -94,6 +94,9 @@ const IDLE_FOLLOW: RecitationFollow = {
   target: null,
   rereadWord: null,
   subscribeToLevel: null,
+  isHearing: false,
+  heardWords: [],
+  failure: null,
   start: jest.fn(),
   stop: jest.fn(),
 };

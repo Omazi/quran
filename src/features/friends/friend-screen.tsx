@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { HIZB_COUNT } from '@/domain/quran';
+import { publishHandle } from '@/features/screen-check/handles';
 import { GARDEN_PICTURE_ASPECT_RATIO, GardenView3D } from '@/features/garden';
 import {
   ActionButton,
@@ -85,6 +86,18 @@ export function FriendScreen({
   const { t, i18n } = useTranslation('friends');
   const sky = useSkyStyle('visit');
   const [viewportHeight, setViewportHeight] = useState(0);
+  const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
+  const { encourage } = actions;
+  // The iOS check's automatic run presses Encourager and scrolls the page through these; nothing
+  // in any other build (the handle is only kept when the check opened it).
+  useEffect(
+    () =>
+      publishHandle('friend-page', {
+        encourage,
+        scrollTo: (y: number) => scroller.current?.scrollTo({ y, animated: true }),
+      }),
+    [encourage],
+  );
   if (model.status === 'unavailable') {
     return (
       <FriendsUnavailable
@@ -132,6 +145,7 @@ export function FriendScreen({
   return (
     <View style={[styles.screen, sky]} testID="friend">
       <ScrollView
+        ref={scroller}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.content}
         onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}

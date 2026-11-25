@@ -46,6 +46,22 @@ export const SPEECH_ENGINE_CONFIG = Object.freeze({
    */
   maxRepeatedWord: 2,
 
+  /** A voice stays "heard" on screen through gaps between syllables shorter than this. */
+  voiceHoldMs: 400,
+
+  /**
+   * Limits on the clock, so that nothing hangs without saying so (the limits above count the
+   * audio received, and count nothing when no audio comes):
+   * - no sound at all this long after the microphone opened: the microphone gives nothing;
+   */
+  noAudioMs: 3000,
+  /** - loading the model takes longer than this: it is treated as failed; */
+  prepareTimeoutMs: 30000,
+  /** - one reading by Whisper takes longer than this: it is treated as failed; */
+  transcribeTimeoutMs: 20000,
+  /** - the listening outlasts its own `maxListenMs` by this much on the clock: it ends. */
+  clockSlackMs: 3000,
+
   /** Finding a passage (`/listening`): the engine ends by itself after this long… */
   search: {
     maxListenMs: 30000,

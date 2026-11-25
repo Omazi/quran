@@ -5,7 +5,7 @@ import { parseEmail, signInProvidersFor, type Session, type SignInProvider } fro
 
 import { refusalOf, type ShownRefusal } from './refusal';
 import { useSocialStore, useSocialVersion } from './social-store';
-import { useAsync } from './use-async';
+import { runFromButton, useAsync } from './use-async';
 
 export type SessionState =
   | { readonly status: 'loading' }
@@ -70,7 +70,8 @@ export function useSignIn(): { model: SignInModel; actions: SignInActions } {
     (work: () => Promise<unknown>, onDone?: () => void) => {
       setIsBusy(true);
       setRefusal(null);
-      work().then(
+      runFromButton(
+        work,
         () => {
           setIsBusy(false);
           onDone?.();

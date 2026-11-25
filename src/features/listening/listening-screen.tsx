@@ -2,7 +2,13 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo } from 'react-native';
 
-import type { ListeningState, NothingFoundReason, SpeechEngine } from '@/domain/listening';
+import {
+  listeningPhase,
+  type ListeningState,
+  type NothingFoundReason,
+  type SpeechEngine,
+  type SpeechFailure,
+} from '@/domain/listening';
 import type { QuranStructure } from '@/domain/quran';
 import type { VerseIndex } from '@/domain/recognition';
 import { useReducedMotion } from '@/ui';
@@ -11,7 +17,7 @@ import { describePassage } from './passage-words';
 import { useListening } from './use-listening';
 import type { LoadVerseText } from './use-verse-texts';
 import { FoundView } from './views/found-view';
-import { ListeningView } from './views/listening-view';
+import { ListeningView, type ListeningViewPhase } from './views/listening-view';
 import { OutcomeView } from './views/outcome-view';
 import { PassagesView } from './views/passages-view';
 
@@ -30,6 +36,22 @@ export interface ListeningScreenProps {
   /** Opens the app's page in the system settings, where the microphone is allowed. */
   readonly onOpenSettings: () => void;
 }
+
+/**
+ * The words of each failure, in the `listening` namespace (`failed.<key>`): what broke and the fix,
+ * never a vague "try again" (ux-writing: name the fix).
+ */
+const FAILED: Readonly<Record<SpeechFailure, string>> = {
+  'microphone-unavailable': 'microphoneUnavailable',
+  'no-audio': 'noAudio',
+  'model-missing': 'modelMissing',
+  'model-failed': 'modelFailed',
+  'transcription-failed': 'transcriptionFailed',
+  unknown: 'unknown',
+};
+
+/** Failures that listening again cannot fix: the one button closes. */
+const FINAL_FAILURES: ReadonlySet<SpeechFailure> = new Set(['model-missing']);
 
 /** The words of each way a listening can end without a passage, in the `listening` namespace. */
 const NOT_FOUND: Readonly<Record<NothingFoundReason, string>> = {
@@ -54,7 +76,11 @@ export function ListeningScreen({
   onOpenSettings,
 }: ListeningScreenProps) {
   const { t, i18n } = useTranslation('listening');
-  const { state, listenAgain, stop } = useListening({ engine, loadVerseIndex, autoStart });
+  const { state, heardWords, listenAgain, stop } = useListening({
+    engine,
+    loadVerseIndex,
+    autoStart,
+  });
   const reducedMotion = useReducedMotion();
 
   const describe = (passage: Parameters<typeof describePassage>[0]) =>
@@ -120,16 +146,18 @@ export function ListeningScreen({
           testID="listening-microphone-denied"
         />
       );
-    case 'failed':
+    case 'failed': {
+      const key = FAILED[state.failure];
       return (
         <OutcomeView
-          title={t('failed.title')}
-          description={t('failed.description')}
-          action={again}
+          title={t(`failed.${key}.title`)}
+          description={t(`failed.${key}.description`)}
+          action={FINAL_FAILURES.has(state.failure) ? undefined : again}
           {...close}
           testID="listening-failed"
         />
       );
+    }
     case 'idle':
       // Waiting for the button: opened by a link, the microphone stays off until it is pressed.
       if (!autoStart) {
@@ -146,20 +174,29 @@ export function ListeningScreen({
       return (
         <ListeningView
           subscribeToLevel={engine.onLevel}
+          phase="preparing"
+          heardWords={heardWords}
           onStop={stop}
           reducedMotion={reducedMotion}
         />
       );
     default:
-      // Starting, starting, listening, and the instant before a closed screen goes away.
+      // Starting, listening, and the instant before a closed screen goes away.
       return (
         <ListeningView
           subscribeToLevel={engine.onLevel}
+          phase={viewPhaseOf(state)}
+          heardWords={heardWords}
           onStop={stop}
           reducedMotion={reducedMotion}
         />
       );
   }
+}
+
+/** What the listening view says: preparing until the microphone is open. */
+function viewPhaseOf(state: ListeningState): ListeningViewPhase {
+  return state.status === 'listening' ? listeningPhase(state) : 'preparing';
 }
 
 /** What VoiceOver says when the screen reaches a state; null where nothing new is shown. */
@@ -185,7 +222,7 @@ function announcementOf(
     case 'microphone-denied':
       return t('microphoneDenied.title');
     case 'failed':
-      return t('failed.title');
+      return t(`failed.${FAILED[state.failure]}.title`);
     default:
       return null;
   }

@@ -52,5 +52,30 @@
   },
   "introduction": {
     "replay": "Revoir la présentation"
+  },
+  "version": {
+    "label": "Version"
+  },
+  "voiceDiagnostics": {
+    "title": "Diagnostic de la voix",
+    "footer": "Ce que la reconnaissance a vu sur ce téléphone. Rien n’est envoyé.",
+    "model": "Modèle vocal",
+    "modelPresent": "présent, {{megabytes}} Mo ({{bytes}} octets)",
+    "modelAbsent": "absent",
+    "whisper": "Whisper",
+    "loaded": "chargé",
+    "notLoaded": "pas chargé",
+    "notTried": "pas encore essayé",
+    "microphone": "Micro",
+    "granted": "autorisé",
+    "denied": "refusé",
+    "undetermined": "pas encore demandé",
+    "level": "Dernier niveau",
+    "audio": "Morceaux de son reçus",
+    "transcript": "Dernière transcription",
+    "error": "Dernière erreur",
+    "native": "Micro (natif)",
+    "refresh": "Actualiser",
+    "unknown": "inconnu"
   }
 }

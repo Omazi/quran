@@ -203,6 +203,11 @@ export interface ListRowProps {
   valueAccessibilityLabel?: string;
   /** Makes the row open something: it then shows that it can be pressed. */
   onPress?: () => void;
+  /**
+   * A hidden gesture on the row (the version of the app opens the voice diagnostics). It adds no
+   * look of its own: what it reveals must never be needed.
+   */
+  onLongPress?: () => void;
   testID?: string;
 }
 

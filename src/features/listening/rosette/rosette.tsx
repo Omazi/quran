@@ -1,10 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Animated, {
+  Easing,
   useAnimatedProps,
   useAnimatedStyle,
   useFrameCallback,
   useSharedValue,
+  withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 import Svg, {
@@ -53,6 +55,11 @@ export interface RosetteProps {
   /** No petal leaves and nothing grows; the voice only lights the lines (D29). */
   readonly reducedMotion: boolean;
   /**
+   * Whether the microphone is open. Before (the model loading), the rosette is dim and still;
+   * it lights up when the phone listens. Default true.
+   */
+  readonly isLive?: boolean;
+  /**
    * Where the star is, when it is not where the listening screen puts it (the centre and radius,
    * in points of the box above). The first launch shows the rosette in a smaller box.
    */
@@ -74,6 +81,7 @@ export function Rosette({
   height,
   subscribeToLevel,
   reducedMotion,
+  isLive = true,
   frame,
   testID,
 }: RosetteProps) {
@@ -81,7 +89,19 @@ export function Rosette({
   const [initialMotion] = useState(createRosetteMotion);
   const motion = useSharedValue<RosetteMotion>(initialMotion);
   const inbox = useSharedValue<number[]>([]);
-  const allowPetals = !reducedMotion;
+  const allowPetals = !reducedMotion && isLive;
+  const liveness = useSharedValue(isLive ? 1 : ROSETTE_MOTION.notLiveOpacity);
+
+  useEffect(() => {
+    // A state change, faded: also with reduced motion (an opacity, not a movement).
+    liveness.set(
+      withTiming(isLive ? 1 : ROSETTE_MOTION.notLiveOpacity, {
+        duration: ROSETTE_MOTION.liveFadeMs,
+        easing: Easing.bezier(...ROSETTE_MOTION.liveFadeCurve),
+      }),
+    );
+  }, [isLive, liveness]);
+  const livenessStyle = useAnimatedStyle(() => ({ opacity: liveness.get() }));
 
   useEffect(
     () =>
@@ -118,8 +138,8 @@ export function Rosette({
   const isNight = colors.appearance === 'dark';
 
   return (
-    <View
-      style={StyleSheet.absoluteFill}
+    <Animated.View
+      style={[StyleSheet.absoluteFill, livenessStyle]}
       pointerEvents="none"
       accessible={false}
       accessibilityElementsHidden
@@ -216,7 +236,7 @@ export function Rosette({
           ))}
         </Layer>
       ) : null}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -236,7 +256,7 @@ function Layer({ motion, appearance, reducedMotion, family, box, children, testI
     const { level, time } = motion.get();
     return {
       opacity: lineOpacities(level, time, appearance, reducedMotion)[family],
-      transform: [{ scale: rosetteScale(level, reducedMotion) }],
+      transform: [{ scale: rosetteScale(level, reducedMotion, time) }],
     };
   });
   return (
@@ -267,7 +287,7 @@ function Petal({ index, motion, cx, cy, radius, colors }: PetalProps) {
     const slot = state.slots[index];
     const look = slot === undefined ? null : petalAppearance(slot, state.time);
     if (look === null || look.opacity <= 0) return { d: NO_PATH, strokeOpacity: 0, strokeWidth: 0 };
-    const size = radius * look.scale * rosetteScale(state.level, false);
+    const size = radius * look.scale * rosetteScale(state.level, false, state.time);
     return {
       d: petalPath(cx, cy, size, look.roundness),
       strokeOpacity: look.opacity * share,

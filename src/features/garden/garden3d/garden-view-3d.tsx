@@ -1,5 +1,5 @@
 import { GLView, type ExpoWebGLRenderingContext } from 'expo-gl';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Animated,
@@ -12,6 +12,7 @@ import {
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import type { GardenState } from '@/domain/garden';
+import { publishHandle } from '@/features/screen-check/handles';
 import { Pill, spacing, useReducedMotion, type IconSymbol } from '@/ui';
 
 import { GARDEN_PICTURE_ASPECT_RATIO } from '../config';
@@ -122,7 +123,13 @@ export function GardenView3D({
   });
   useEffect(() => surface.setMotionReduced(isMotionReduced), [isMotionReduced, surface]);
   useEffect(() => surface.setOnUse(hint.retire), [hint.retire, surface]);
-  useEffect(() => () => surface.dispose(), [surface]);
+  // In the commit that removes the GL view, not after it (a passive effect runs later): from
+  // then on no frame, gesture event or layout can draw into the context that leaves with it.
+  useLayoutEffect(() => () => surface.dispose(), [surface]);
+
+  // The iOS check's automatic run turns and zooms the garden through its controller; nothing in
+  // any other build (the handle is only kept when the check opened it).
+  useEffect(() => publishHandle('garden-controller', surface.controller), [surface]);
 
   const gesture = useGardenGestures(surface.controller, isReady && !hasFailed, testID);
   const model = modelStatus.status === 'ready' ? modelStatus.model : null;
@@ -145,13 +152,24 @@ export function GardenView3D({
     return () => fade.stop();
   }, [isReady, reveal]);
 
+  const resizeFrame = useRef<number | null>(null);
   const onLayout = useCallback(
     (event: LayoutChangeEvent) => {
       const { width, height } = event.nativeEvent.layout;
       // expo-gl resizes its drawing buffer with the view: draw at the new size next frame.
-      requestAnimationFrame(() => surface.setSize({ width, height }));
+      if (resizeFrame.current !== null) cancelAnimationFrame(resizeFrame.current);
+      resizeFrame.current = requestAnimationFrame(() => {
+        resizeFrame.current = null;
+        surface.setSize({ width, height });
+      });
     },
     [surface],
+  );
+  useEffect(
+    () => () => {
+      if (resizeFrame.current !== null) cancelAnimationFrame(resizeFrame.current);
+    },
+    [],
   );
 
   const onAccessibilityAction = useCallback(

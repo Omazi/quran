@@ -45,10 +45,65 @@ check › Run workflow). Aucun secret, rien n'est envoyé à Apple.
 - **iPhone build** : génère le projet iOS, installe les pods, compile pour iPhone sans
   signature, puis vérifie le contenu de l'appli (identifiant `com.omazi.quran`, JavaScript
   embarqué, police du Coran présente). C'est lui qui décide du résultat.
-- **First screen** : compile pour le simulateur, ouvre l'appli et garde une image de son
-  premier écran en français (clair et sombre), en anglais et en arabe. Les images sont dans
-  l'artefact `ios-first-screen` de l'exécution, puis sur la branche `ci-screens`. Il ne
-  bloque jamais : les images sont faites pour être regardées.
+- **First screen** : compile pour le simulateur, ouvre l'appli sur chacun de ses écrans et en
+  garde une image : les 16 pages de l'introduction (français clair et sombre, arabe clair, la
+  première en anglais), puis, avec un jardin et des proches de démonstration, le jardin, l'onglet
+  Coran, le lecteur (écriture uthmani et simple), l'écoute (prête, micro éteint), l'onglet Proches,
+  le jardin d'un proche, le profil et les réglages (français clair et sombre), et le jardin en
+  anglais et en arabe. La liste est `tools/ci/screens.py`. Les images sont dans l'artefact
+  `ios-first-screen` de l'exécution, puis sur la branche `ci-screens`. Il ne bloque jamais : les
+  images sont faites pour être regardées, et une image est prise même si un écran n'a pas pu
+  s'ouvrir.
+
+### Contrôle des écrans
+
+Cette tâche compile l'appli avec `EXPO_PUBLIC_SCREEN_CHECK=1` (`ios-check.yml`, et nulle part
+ailleurs : ni `testflight.yml`, ni `testflight-build.yml`, ni le workflow de DishPlay qui les
+appelle ; un test de l'appli le vérifie). Cette version comprend des arguments de lancement
+(`xcrun simctl launch … -screenCheckGo reader -screenCheckPage 3 -screenCheckScript imlaei
+-screenCheckSeed demo`) qui ouvrent un écran précis, sautent l'animation de lancement et, avec
+`demo`, remplissent l'appli (historique de lecture, temps passé, proches de démonstration
+connectés). L'adresse `/onboarding?page=N` (de 1 à 16) n'est lue que dans cette version. Sans la
+variable, rien de cela n'existe dans le paquet (`src/features/screen-check/door.ts`) : les
+arguments et le paramètre sont ignorés. L'écoute s'ouvre sans lancer le micro, comme pour tout
+lien. Les pages de l'introduction se photographient avant le remplissage (ensuite l'introduction
+n'est plus qu'une relecture) ; le nombre de pages est dans `tools/ci/screens.py`.
+
+### Diagnostic d'une fermeture (l'appli se ferme seule, sans journal)
+
+Deux signalements du propriétaire, sur iPhone en version TestFlight : l'appli se ferme (1) sur le
+jardin d'un proche après un pincement, « Encourager » et un défilement ; (2) en feuilletant
+l'introduction du premier lancement jusqu'au bout. Aucun journal de plantage n'arrive au projet.
+Trois outils, dans `src/features/diagnostics` :
+
+- **Un écran d'erreur à la place d'une appli fermée** : une erreur d'affichage (JavaScript) ne
+  ferme plus l'appli. Elle montre « Un problème est survenu. » et « Réessayer », avec le message,
+  les premières lignes de la pile et celles des composants, en petit texte sélectionnable, et un
+  bouton « Copier ou envoyer » (la feuille de partage du système, qui propose « Copier »).
+  Un `DiagnosticBoundary` entoure la navigation de la racine, des onglets et des proches (c'est lui
+  qui connaît les composants) ; chaque mise en page exporte aussi l'`ErrorBoundary` d'expo-router.
+- **Un enregistreur d'erreur fatale** : une erreur JavaScript fatale est écrite tout de suite dans
+  un petit fichier (`Documents/last-closure.json`, écriture synchrone, avant que le gestionnaire
+  par défaut ne ferme l'appli) avec le message, la pile, l'écran ouvert, la version, le modèle de
+  téléphone, les dernières erreurs de la console et une piste des 30 derniers écrans et gestes.
+  Au lancement suivant, une feuille « L'app s'est fermée la dernière fois » montre ce qui a été noté,
+  une seule fois ; la ligne « Dernière fermeture inattendue » des réglages (section Diagnostic) la
+  garde jusqu'à « Effacer ». **Si l'appli s'est fermée sans qu'aucune feuille ne vienne, la cause
+  n'est pas du JavaScript : c'est un plantage natif.** Rien n'est envoyé sans la personne.
+- **La chasse au plantage dans le simulateur** (dernière étape de « First screen » dans
+  `ios-check.yml`) : sur une installation neuve, la version de contrôle, lancée avec
+  `-screenCheckGo onboarding -screenCheckAutoSwipe 1`, feuillette toute l'introduction seule
+  (le code du pager que le doigt appelle, ressorts compris, d'abord calmement, puis assez vite pour
+  attraper une page encore en train de glisser), remplit l'appli, ouvre le proche de démonstration,
+  zoome et fait tourner son jardin 3D par son contrôleur, appuie sur « Encourager » et fait défiler
+  la page. Elle ne fait **pas** de toucher : les reconnaisseurs de gestes natifs ne sont pas
+  exercés (le simulateur de GitHub n'a pas d'outil de toucher sans XCUITest ni `idb`). L'appli note
+  son avancement dans `Documents/auto-run-progress.txt` ; la tâche lit ce fichier, l'enregistrement
+  de l'appli, les `.ips` de `~/Library/Logs/DiagnosticReports` et le journal du simulateur, écrit
+  `CRASH`, `OK` ou `INCOMPLETE` dans le résumé de l'étape et met le tout dans l'artefact
+  `ios-first-screen` (`build/crash/`). Le rapport texte `crash-report.txt` (`tools/ci/crash-report.py`)
+  est aussi publié sur la branche `ci-screens`, sous un nom de la liste fixe de `tools/ci/screens.py`.
+  Le code de la chasse n'existe que dans la version de contrôle (`door.ts`).
 
 Un push ne lance les Mac que s'il touche à ce dont l'appli est faite (`src/`, `assets/`,
 `modules/`, `app.json`, les dépendances, le script lui-même). La documentation seule ne
@@ -112,8 +167,18 @@ Le fichier n'est pas dans le dépôt. Pendant `npx expo prebuild`, le plugin
 `modules/voice-capture/voice-model.json`, vérifie sa taille et son SHA-256
 (`ef01ab44…8b52`), le garde dans `node_modules/.cache/voice-model` et le place dans le projet
 iOS. Un fichier qui ne correspond pas est refusé et la compilation s'arrête, avec l'adresse et la
-raison. Le Mac de GitHub le télécharge à chaque compilation (43,5 Mo) ; aucun script de
-`.github/workflows` n'a eu à changer.
+raison. Le Mac de GitHub le télécharge à chaque compilation (43,5 Mo).
+
+On voit qu'il est entré, à trois endroits :
+
+- le journal de `expo prebuild` affiche `voice model ok: 43537433 ef01ab44…` une fois le fichier
+  placé **et revérifié** dans `ios/<App>/` ; le plugin vérifie aussi que le projet Xcode le copie
+  dans l'appli (« Copy Bundle Resources ») et arrête la compilation sinon ;
+- après la compilation, `tools/ci/check-voice-model.sh` vérifie le fichier **dans l'appli
+  construite** (taille et SHA-256), dans `ios-check.yml` et `testflight-build.yml` ;
+- sur l'iPhone, Réglages → appui long sur « Version » : le diagnostic de la voix dit si le
+  fichier est dans l'appli et sa taille, si Whisper l'a chargé, l'état du micro, le dernier
+  niveau, la dernière transcription et la dernière erreur.
 
 - Hors ligne : `VOICE_MODEL_FILE=/chemin/ggml-quran-tiny-q8_0.bin` (toujours vérifié).
 - Derrière un proxy (la session de l'assistant) : `NODE_USE_ENV_PROXY=1`.
