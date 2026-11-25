@@ -25,6 +25,12 @@ export const SOCIAL_CONFIG = Object.freeze({
   maxGroupMembers: 50,
   /** Digits of the one-time code sent by e-mail. To align with the server's setting. */
   emailCodeLength: 6,
+  /** Shortest search query, once trimmed (rule 11). */
+  searchMinLength: 2,
+  /** Results of one search (rule 11). */
+  searchMaxResults: 20,
+  /** Searches one account may make in a minute: the server counts them (rule 11). */
+  searchesPerMinute: 30,
   /** Longest e-mail address a mail server accepts (RFC 5321 path limit). */
   maxEmailLength: 254,
 });
@@ -43,6 +49,12 @@ export const MAX_ID_LENGTH = 64;
 
 /** Khatmas, and therefore levels, are numbered from 1, as readers know them. */
 export const FIRST_LEVEL = 1;
+
+/**
+ * The start of the link an invitation QR code carries (rule 6, D36). `quranapp` is the scheme
+ * declared in `app.json`; a test keeps the two equal.
+ */
+export const INVITE_LINK_PREFIX = 'quranapp://invite/';
 
 /** Health of a garden: 0 is dead earth, 1 full health (docs/specs/garden.md). */
 export const NO_HEALTH = 0;
@@ -92,4 +104,19 @@ export const EDGE_SPACE_CODE_POINTS: readonly CodePointRange[] = Object.freeze([
   { first: 0x205f, last: 0x205f }, // medium mathematical space
   { first: 0x3000, last: 0x3000 }, // ideographic space
   { first: 0xfeff, last: 0xfeff }, // zero-width no-break space
+]);
+
+/**
+ * What separates the words of a name for a search (rule 11): the edge spaces, the hyphen, the
+ * underscore, the dot, the comma and both apostrophes. Spelled out so that the server splits
+ * names the very same way.
+ */
+export const SEARCH_WORD_SEPARATOR_CODE_POINTS: readonly CodePointRange[] = Object.freeze([
+  ...EDGE_SPACE_CODE_POINTS,
+  { first: 0x002d, last: 0x002d }, // hyphen-minus
+  { first: 0x002c, last: 0x002c }, // comma
+  { first: 0x002e, last: 0x002e }, // full stop
+  { first: 0x0027, last: 0x0027 }, // apostrophe
+  { first: 0x005f, last: 0x005f }, // underscore
+  { first: 0x2019, last: 0x2019 }, // right single quotation mark
 ]);

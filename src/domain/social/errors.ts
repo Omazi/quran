@@ -28,6 +28,11 @@ export type SocialRefusal =
   | 'invite-not-found'
   | 'invite-expired'
   | 'invite-is-yours'
+  // Rule 11: search by name. `too-many-searches` comes from the server only.
+  | 'search-query-too-short'
+  | 'search-query-too-long'
+  | 'search-query-forbidden-character'
+  | 'too-many-searches'
   // Rule 7: nudges.
   | 'already-nudged-today'
   // Rule 8: groups.

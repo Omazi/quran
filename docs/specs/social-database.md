@@ -69,6 +69,7 @@ Les noms sont ceux de `src/domain/social/types.ts` en `snake_case`. Les jours so
 | `daily_readings`   | `user_id`, `day`, `new_pages` (0 à 604)                                                                                                                        | une ligne par personne et par jour                                                                                                       |
 | `badges`           | `user_id`, `khatm_number` (≥ 1), `completed_on`                                                                                                                | un badge par khatma                                                                                                                      |
 | `reading_backups`  | `user_id`, `journal` (JSON, un objet, 2 Mo au plus), `updated_on`                                                                                              | **propriétaire seul** ; à confirmer (section 7)                                                                                          |
+| `search_attempts`  | **Ajoutée** (D36) : une ligne par recherche par nom (`user_id`, `attempted_at`), pour limiter à 30 par minute                                                  | personne ne la lit ni ne l'écrit                                                                                                         |
 | `invite_attempts`  | **Ajoutée** : essais ratés de code d'invitation (`user_id`, `attempted_at`)                                                                                    | personne ne la lit ni ne l'écrit                                                                                                         |
 
 Les identifiants de personnes sont des `uuid` (ceux de Supabase). Comparer deux `uuid` revient
@@ -110,20 +111,21 @@ aussi.)
 bloqué par le propriétaire. Les colonnes « Inconnu » et « Non connecté » sont les cas de la
 section 5 de la spec.
 
-| Table              | Propriétaire                                                       | Ami                                                                 | Inconnu | Bloqué                                     | Non connecté |
-| ------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------- | ------- | ------------------------------------------ | ------------ |
-| `profiles`         | lit, crée, change son nom et ses deux réglages                     | rien en direct ; son **nom** par `get_public_profiles`              | pareil  | rien, pas même le nom                      | rien         |
-| `garden_summaries` | lit, publie, change, retire le sien                                | rien en direct ; le jardin par `list_friends` / `get_friend_garden` | rien    | rien                                       | rien         |
-| `friendships`      | lit ses lignes ; écrit par fonctions                               | lit sa ligne                                                        | rien    | rien                                       | rien         |
-| `blocks`           | lit les siens ; écrit par fonctions                                | rien                                                                | rien    | **rien** (il ne voit pas qu'il est bloqué) | rien         |
-| `invites`          | lit et retire les siens ; crée par `create_invite`                 | rien                                                                | rien    | rien                                       | rien         |
-| `nudges`           | lit ceux qu'il envoie et reçoit                                    | idem pour ses propres lignes                                        | rien    | rien                                       | rien         |
-| `groups`           | lit ceux dont il est membre ; le propriétaire du groupe le renomme | idem                                                                | rien    | rien                                       | rien         |
-| `group_members`    | lit les membres des groupes dont il est membre                     | idem                                                                | rien    | rien                                       | rien         |
-| `daily_readings`   | lit, écrit, retire les siennes                                     | **rien** (seulement des sommes, par `group_leaderboard`)            | rien    | rien                                       | rien         |
-| `badges`           | lit, écrit, retire les siens                                       | lit si `show_level`                                                 | rien    | rien                                       | rien         |
-| `reading_backups`  | lit, écrit, retire la sienne                                       | **rien**                                                            | rien    | rien                                       | rien         |
-| `invite_attempts`  | rien                                                               | rien                                                                | rien    | rien                                       | rien         |
+| Table              | Propriétaire                                                       | Ami                                                                 | Inconnu                          | Bloqué                                     | Non connecté |
+| ------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------- | -------------------------------- | ------------------------------------------ | ------------ |
+| `profiles`         | lit, crée, change son nom et ses deux réglages                     | rien en direct ; son **nom** par `get_public_profiles`              | pareil, et par `search_profiles` | rien, pas même le nom                      | rien         |
+| `garden_summaries` | lit, publie, change, retire le sien                                | rien en direct ; le jardin par `list_friends` / `get_friend_garden` | rien                             | rien                                       | rien         |
+| `friendships`      | lit ses lignes ; écrit par fonctions                               | lit sa ligne                                                        | rien                             | rien                                       | rien         |
+| `blocks`           | lit les siens ; écrit par fonctions                                | rien                                                                | rien                             | **rien** (il ne voit pas qu'il est bloqué) | rien         |
+| `invites`          | lit et retire les siens ; crée par `create_invite`                 | rien                                                                | rien                             | rien                                       | rien         |
+| `nudges`           | lit ceux qu'il envoie et reçoit                                    | idem pour ses propres lignes                                        | rien                             | rien                                       | rien         |
+| `groups`           | lit ceux dont il est membre ; le propriétaire du groupe le renomme | idem                                                                | rien                             | rien                                       | rien         |
+| `group_members`    | lit les membres des groupes dont il est membre                     | idem                                                                | rien                             | rien                                       | rien         |
+| `daily_readings`   | lit, écrit, retire les siennes                                     | **rien** (seulement des sommes, par `group_leaderboard`)            | rien                             | rien                                       | rien         |
+| `badges`           | lit, écrit, retire les siens                                       | lit si `show_level`                                                 | rien                             | rien                                       | rien         |
+| `reading_backups`  | lit, écrit, retire la sienne                                       | **rien**                                                            | rien                             | rien                                       | rien         |
+| `invite_attempts`  | rien                                                               | rien                                                                | rien                             | rien                                       | rien         |
+| `search_attempts`  | rien                                                               | rien                                                                | rien                             | rien                                       | rien         |
 
 Les écritures qui touchent deux personnes **ne passent jamais par un accès direct à la table** :
 aucun droit d'insertion sur `friendships`, `blocks`, `invites`, `nudges`, `groups`,
@@ -168,6 +170,7 @@ objet de même nom ailleurs). Personne n'a le droit de les appeler sauf `authent
 | `add_group_member(group, user)`               | 8     | un membre ajoute **son** ami ; 50 membres au plus                                                                                                                                                                                   |
 | `leave_group(group, successor)`               | 8     | quitter ; le propriétaire d'un groupe qui a d'autres membres nomme son successeur ; seul, il ferme le groupe                                                                                                                        |
 | `get_public_profiles(ids)`                    | 4     | noms                                                                                                                                                                                                                                |
+| `search_profiles(query)`                      | 11    | recherche par nom (voir 3.6) : 20 résultats au plus, `id`, `display_name`, `relation` ; jamais soi-même ni une paire bloquée ; 30 recherches par minute et par compte                                                               |
 | `list_friends()`, `get_friend_garden(friend)` | 4     | jardins des amis                                                                                                                                                                                                                    |
 | `list_group_members(group)`                   | 8     | membres d'un de mes groupes, avec leur nom                                                                                                                                                                                          |
 | `group_leaderboard(group, from, to)`          | 9     | somme de `new_pages` par membre entre deux jours (366 jours au plus) ; rang 1 au plus grand, **ex æquo : même rang puis le suivant saute (1, 1, 3)** ; un membre sans lecture figure avec 0 ; classés par rang puis par identifiant |
@@ -181,7 +184,8 @@ tirets bas** : `cannot_befriend_yourself`, `already_friends`, `request_already_s
 `group_full`, `owner_must_hand_over`, `successor_not_a_member`, `name_empty`, `name_too_long`,
 `name_forbidden_character` (plus `name_has_edge_spaces`, `invalid_target`, `invalid_kind`,
 `invalid_answer`, `invalid_successor`, `invalid_period`, `invalid_ids`, `day_out_of_range`,
-`too_many_invites`, `not_authenticated`, `profile_required`).
+`too_many_invites`, `too_many_searches`, `search_query_too_short`, `search_query_too_long`,
+`search_query_forbidden_character`, `not_authenticated`, `profile_required`).
 
 Le blocage ne se voit pas : celui qui est bloqué reçoit `person_unavailable`, la même réponse que
 pour un compte qui n'existe pas ; celui qui a bloqué reçoit `you_blocked_them`.
@@ -205,6 +209,46 @@ majuscules automatiques (c'est l'écran qui les met).
   n'est jamais partagé). Pour durcir : limiter la création de comptes dans les réglages
   d'authentification de Supabase (NON VÉRIFIÉ).
 
+### 3.6 La recherche par nom (règle 11, D36) et la vie privée
+
+`search_profiles(query)` est une fonction `security definer`, appelable par `authenticated`
+seulement (`anon` : refusé). Elle n'ouvre **aucun droit de lecture sur `profiles`** : elle rend
+trois colonnes (`id`, `display_name`, `relation`), pas de réglage, pas de date, pas de jardin.
+
+- **Ce qu'elle fait.** Elle rogne la requête, la refuse si elle a moins de 2 ou plus de 30
+  caractères, un caractère de contrôle, ou moins de 2 caractères une fois normalisée ; la
+  normalise comme l'appli (`private.search_normalize`, mêmes listes que
+  `src/domain/social/search.ts` ; un fichier de cas commun, `supabase/tests/search-normalization.json`,
+  est lu par les deux côtés, donc un écart fait échouer un test) ; garde les noms dont un mot,
+  ou plusieurs mots à la suite, commence ainsi ; classe par nom normalisé puis `id` (classement
+  `"C"`) ; coupe à 20. La comparaison est un début de texte (`starts_with`, `position`), pas un
+  `like` : `%` et `_` ne sont pas des jokers.
+- **Qui n'apparaît jamais.** Soi-même ; toute personne liée par un blocage, dans un sens ou dans
+  l'autre (même réponse que pour un nom que personne ne porte : on ne sait pas qu'on est bloqué).
+  Il n'y a **pas de réglage « ne pas me trouver »** pour l'instant (le propriétaire n'en veut pas,
+  D36) ; option pour plus tard : une colonne `profiles.discoverable` et un filtre qui cache un
+  inconnu mais pas un ami ni une demande en attente. Une demande refusée a la relation `none` :
+  celui qui a envoyé ne l'apprend pas.
+- **Limite.** 30 recherches par minute et par compte : la fonction compte les lignes de
+  `search_attempts` de la dernière minute, refuse (`too_many_searches`) à partir de la trentième,
+  oublie les lignes de plus d'une heure, et prend un verrou par compte pour que deux appels
+  simultanés ne passent pas sous la limite. Une requête refusée n'est pas comptée (elle ne rend
+  rien). La table n'est lisible ni écrivable par personne.
+- **Pourquoi cela respecte « le moins de données possible ».** Un inconnu pouvait déjà lire **un
+  nom** (`get_public_profiles`), mais en connaissant un identifiant `uuid` aléatoire. La
+  recherche rend un nom **trouvable sans identifiant** : c'est une exposition **plus large**, que
+  le propriétaire a décidée (D36) et que ces bornes encadrent (début de mot, 2 caractères, 20
+  résultats, 30 par minute, blocages). Ce qui n'est **pas** exposé : le
+  jardin, le niveau, les pages, les dates, la liste d'amis. Reste le moissonnage lent par des
+  comptes jetables (30 × 20 noms par minute et par compte) : la limite de création de comptes de
+  Supabase est à régler (étape de la section 6 ; non vérifié).
+- **Coût.** La fonction normalise chaque nom à chaque recherche : sans problème pour quelques
+  dizaines de milliers de comptes. Au-delà, ranger le nom normalisé dans une colonne et
+  l'indexer (index de trigrammes) ; la règle ne change pas.
+- `lower()` suit le classement de la base : latin et arabe sont couverts quel qu'il soit ; le
+  cyrillique ou le grec demandent un classement `en_US.UTF-8` (celui de Supabase : de mémoire, non
+  vérifié) ; la base de test (`C`) ne les couvre pas, aucun test ne les affirme.
+
 ## 4. Ce qu'un client malveillant ne peut pas faire (et le test qui le dit)
 
 | Tentative                                                     | Ce qui l'arrête                                                                      |
@@ -220,6 +264,9 @@ majuscules automatiques (c'est l'écran qui les met).
 | Appeler une fonction sans être connecté                       | aucun droit d'exécution pour `anon`                                                  |
 | Écrire un jour dans le futur ou avant 2020, plus de 604 pages | contraintes et déclencheur                                                           |
 | Changer le propriétaire d'un groupe à la main                 | pas de droit sur `owner_id` ; la cohérence propriétaire / membre est vérifiée        |
+| Lister tous les noms par des recherches en rafale             | 2 caractères, début de mot, 20 résultats, 30 recherches par minute et par compte     |
+| Trouver quelqu'un qui m'a bloqué, ou savoir qu'il m'a bloqué  | `search_profiles` l'omet comme un nom inexistant                                     |
+| Chercher sans être connecté                                   | aucun droit d'exécution pour `anon`                                                  |
 
 ## 5. Les jours
 
@@ -318,15 +365,17 @@ borne appliquée.
 ### 7.3 Autres points à trancher
 
 - **Les groupes montrent à tout membre le nom et les pages des autres**, amis ou non, bloqués ou
-  non (plus que « le résumé du jardin » de la section 1). Même remarque que dans le README du
-  domaine.
+  non (plus que « le résumé du jardin » de la section 1). **Accepté par le propriétaire le 25
+  novembre 2026 (D36).**
 - **Un membre ajoute un ami à un groupe sans son accord** (la spec n'a pas d'invitation en
-  attente). L'ajouté peut partir à tout moment.
+  attente). L'ajouté peut partir à tout moment. **Accepté par le propriétaire (D36).**
 - **Un code d'invitation sert à plusieurs personnes** jusqu'à son dernier jour (choix de
   l'architecte). Le propriétaire peut le retirer (`delete` sur `invites`).
 - **Les noms** sont lisibles par toute personne connectée, non bloquée, qui connaît l'identifiant
   (rien n'oblige à être ami : règle 4). L'identifiant est un `uuid` aléatoire ; il est connu de
-  qui partage un groupe, un code d'invitation ou une demande.
+  qui partage un groupe, un code d'invitation ou une demande. Depuis D36, ils sont aussi
+  **trouvables par le début du nom** (`search_profiles`, section 3.6), sans réglage pour s'y
+  soustraire (option pour plus tard).
 - **Les encouragements** : le jour d'un encouragement est envoyé par l'appli et accepté à un jour
   près (section 5). Une appli modifiée peut donc en envoyer jusqu'à trois par ami et par
   « jour » (hier, aujourd'hui, demain).
@@ -349,8 +398,9 @@ borne appliquée.
   chaque test une transaction annulée à la fin. Chaque acteur agit pour de vrai : `SET ROLE
 anon` ou `authenticated` avec une identité (`omar` propriétaire, `sarah` amie acceptée,
   `mustapha` inconnu, `taghread` bloquée, `anon` non connecté).
-- `supabase/tests/social.test.mjs` : **88 tests en 12 groupes** (structure, une table ou un
-  ensemble de règles par groupe). À la fin de chaque test, les contrôles différés (un seul
+- `supabase/tests/social.test.mjs` : **107 tests en 13 groupes** (structure, une table ou un
+  ensemble de règles par groupe ; le dernier groupe est la recherche par nom, D36 : propriétaire,
+  inconnu, bloqué, non connecté, limite de 30 par minute, normalisation commune avec l'appli). À la fin de chaque test, les contrôles différés (un seul
   propriétaire par groupe, c'est `owner_id`) sont réglés : chaque test prouve aussi que les
   données restent cohérentes.
 - Une migration modifiée peut être essayée avec `SOCIAL_MIGRATION=/chemin/fichier.sql npm run
@@ -385,8 +435,8 @@ règle par ligne refuse déjà** : c'est le second verrou.
 À aligner avec le côté TypeScript. Les points marqués (A) viennent de l'architecte (message du
 24 novembre) ; les autres sont des choix de l'auteur.
 
-1. **Noms de tables et de colonnes** : ceux de `types.ts` en `snake_case`. Ajouts : la table
-   `invite_attempts`. Pas de colonne en plus ailleurs.
+1. **Noms de tables et de colonnes** : ceux de `types.ts` en `snake_case`. Ajouts : les tables
+   `invite_attempts` et `search_attempts` (D36). Pas de colonne en plus.
 2. **Identifiants** : `uuid`. (A) paire unique sur `least/greatest`, avec le classement `"C"` : pour
    des `uuid` c'est l'ordre des octets, le même que le classement `"C"` des écritures en
    minuscules.
@@ -443,3 +493,14 @@ règle par ligne refuse déjà** : c'est le second verrou.
     `is_group_member` et `can_view_level` (elles ne répondent que sur l'appelant) et
     `name_problem` (sans effet de bord). Les autres aides (`assert_no_block`, `are_friends`...) ne
     sont appelables par personne.
+18. **Recherche par nom** (D36, règle 11) : les mots d'un nom sont séparés par les espaces de bord,
+    `-`, `.`, `,`, `_`, `'` et `’` ; une requête de plusieurs mots trouve des mots qui se
+    suivent ; une personne bloquée dans un sens ou l'autre n'apparaît jamais ; une demande
+    refusée donne la relation `none` ; les relations rendues sont `friend`, `request-sent`,
+    `request-received`, `none` (les mêmes valeurs que `SearchRelation`, avec des tirets) ; la
+    limite est de 30 recherches par minute et par compte, les requêtes refusées ne comptent pas ;
+    le tri est celui du nom normalisé en classement `"C"` (comparaison des points de code ; deux
+    caractères hors du plan de base peuvent s'ordonner autrement côté appli, sans effet sur ce
+    qui est trouvé, seulement sur les 20 gardés quand il y en a davantage).
+19. **Lien du QR code** : `quranapp://invite/<CODE>` ; le serveur ne le voit jamais, il ne reçoit
+    que le code (`accept_invite`), sous la limite d'essais existante.

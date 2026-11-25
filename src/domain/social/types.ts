@@ -242,6 +242,16 @@ export interface OtherView {
 /** What `viewOf` gives; `null` stands for "nothing at all", between people a block separates. */
 export type PersonView = SelfView | FriendView | OtherView;
 
+/** What a person I found by name is to me. A declined request shows as `none`: no one is told. */
+export type SearchRelation = 'none' | 'friend' | 'request-sent' | 'request-received';
+
+/** One line of a search by name (rule 11): the name and the relation, nothing else. */
+export interface PersonSearchResult {
+  readonly userId: UserId;
+  readonly displayName: string;
+  readonly relation: SearchRelation;
+}
+
 /** A request waiting for an answer, as one of the two people sees it. */
 export interface FriendRequestView {
   readonly person: OtherView;

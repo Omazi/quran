@@ -156,6 +156,58 @@ describe('Demonstration of accounts and friends', () => {
     });
   });
 
+  describe('search by name (rule 11)', () => {
+    it('finds a friend and a waiting request by the start of the name, with the relation', async () => {
+      const { demo } = await signedIn();
+
+      expect(await demo.repository.searchPeople('sa')).toEqual([
+        { userId: sarah, displayName: 'Sarah', relation: 'friend' },
+      ]);
+      expect(await demo.repository.searchPeople(' YA ')).toEqual([
+        { userId: yacine, displayName: 'Yacine', relation: 'request-received' },
+      ]);
+    });
+
+    it('never finds oneself', async () => {
+      const { demo } = await signedIn();
+
+      expect(await demo.repository.searchPeople('omar')).toEqual([]);
+    });
+
+    it('a refused query is a refusal of the rule, and nothing is searched', async () => {
+      const { demo } = await signedIn();
+
+      await refusedWith(() => demo.repository.searchPeople('o'), 'search-query-too-short');
+      await refusedWith(
+        () => demo.repository.searchPeople('a\nb'),
+        'search-query-forbidden-character',
+      );
+    });
+
+    it('a stranger is found with relation none, and the request I send shows as sent', async () => {
+      const { demo } = await signedIn();
+      const mustaphas = demo.repositoryAs(mustapha);
+
+      expect(await mustaphas.searchPeople('yac')).toEqual([
+        { userId: yacine, displayName: 'Yacine', relation: 'none' },
+      ]);
+      await mustaphas.sendFriendRequest(yacine);
+      expect((await mustaphas.searchPeople('yac'))[0]?.relation).toBe('request-sent');
+    });
+
+    it('a block hides both people from each other, whoever blocked', async () => {
+      const { demo } = await signedIn();
+      await demo.repository.blockPerson(sarah);
+
+      expect(await demo.repository.searchPeople('sa')).toEqual([]);
+      expect(await demo.repositoryAs(sarah).searchPeople('om')).toEqual([]);
+      // Others are not affected.
+      expect((await demo.repositoryAs(mustapha).searchPeople('sa')).map((r) => r.userId)).toEqual([
+        sarah,
+      ]);
+    });
+  });
+
   describe('friends (rules 2 and 4)', () => {
     it('lists three friends in three states, by name', async () => {
       const { demo } = await signedIn();

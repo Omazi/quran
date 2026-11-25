@@ -2,7 +2,7 @@ import { addDays, compareLocalDates, type LocalDate } from '@/domain/shared/loca
 
 import { assertBondBetween, type Bond } from './bond';
 import { assertNoBlock } from './blocking';
-import { INVITE_CODE_ALPHABET, SOCIAL_CONFIG } from './config';
+import { INVITE_CODE_ALPHABET, INVITE_LINK_PREFIX, SOCIAL_CONFIG } from './config';
 import { SocialRuleError } from './errors';
 import type { Invite, UserId } from './types';
 import { assertId, assertLocalDate, assertObject } from './validation';
@@ -32,6 +32,30 @@ export function parseInviteCode(raw: string): string {
     );
   }
   return raw;
+}
+
+/**
+ * The text a QR code carries: `quranapp://invite/<CODE>` (D36). The code is checked first: a
+ * link is never made from a bad code.
+ */
+export function inviteLink(code: string): string {
+  return `${INVITE_LINK_PREFIX}${parseInviteCode(code)}`;
+}
+
+/**
+ * The code held by scanned or pasted text: exactly the link of `inviteLink`, or a bare valid
+ * code. Anything else is refused as a malformed code; the text is never trimmed or corrected,
+ * so a link with a path, a query or a space after it is not an invitation.
+ */
+export function parseInviteLink(text: string): string {
+  if (typeof text !== 'string') {
+    throw new TypeError(
+      `Invalid invitation link: expected text, got ${text === null ? 'null' : typeof text}`,
+    );
+  }
+  return parseInviteCode(
+    text.startsWith(INVITE_LINK_PREFIX) ? text.slice(INVITE_LINK_PREFIX.length) : text,
+  );
 }
 
 /**
