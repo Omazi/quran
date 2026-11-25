@@ -16,6 +16,11 @@ export const MIGRATION =
 export const SYNC_MIGRATION =
   process.env.SYNC_MIGRATION ?? join(here, '..', 'migrations', '20261125120000_sync.sql');
 
+// The device-name tightening (names that would pollute an object, refused).
+export const SYNC_DEVICE_MIGRATION =
+  process.env.SYNC_DEVICE_MIGRATION ??
+  join(here, '..', 'migrations', '20261126000000_sync_device_id.sql');
+
 const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 export const U = {
   omar: id(1), // the owner of the rows

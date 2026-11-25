@@ -6,6 +6,7 @@ import {
   createSyncMeta,
   eventId,
   fullStateEvents,
+  isDeviceId,
   mergeRemoteEvents,
   nextRetryDelay,
   nextStamp,
@@ -592,5 +593,47 @@ describe('any order of changes and syncs', () => {
     const [first, ...others] = phones.map((phone) => comparable(phone.values));
     for (const other of others) expect(other).toEqual(first);
     expect(() => getCurrentKhatm(phones[0]!.values.journal)).not.toThrow();
+  });
+});
+
+describe('names that would pollute an object', () => {
+  const reserved = ['__proto__', 'constructor', 'prototype'];
+
+  it('are not device names', () => {
+    for (const name of reserved) {
+      expect(isDeviceId(name)).toBe(false);
+      expect(
+        parseSyncEvent(
+          { kind: 'time', device: name, date: '2026-11-25', app: 5, reader: 1 },
+          RULES,
+        ),
+      ).toBeNull();
+    }
+    expect(isDeviceId('phone-1_A')).toBe(true);
+  });
+
+  it('merging time from such a device leaves Object.prototype untouched', () => {
+    const phone = new Device('a', { now: 1_000 });
+    phone.signIn('u');
+    const events = reserved.map((device) => ({
+      kind: 'time',
+      device,
+      date: '2026-11-25',
+      app: 5,
+      reader: 1,
+    }));
+    const merged = mergeRemoteEvents(phone.meta, phone.values, events as never, RULES, {
+      now: 1_000,
+      newDeviceId: () => 'fresh',
+    });
+    expect(({} as Record<string, unknown>)['2026-11-25']).toBeUndefined();
+    expect(merged.changed).toBe(false);
+  });
+
+  it('stored metadata naming such a device is damaged, not read', () => {
+    const phone = new Device('a', { now: 1_000 });
+    const stored = JSON.parse(JSON.stringify(phone.meta));
+    stored.time = JSON.parse('{"__proto__":{"2026-11-25":{"app":5,"reader":1}}}');
+    expect(readSyncMeta(stored, RULES)).toBeNull();
   });
 });

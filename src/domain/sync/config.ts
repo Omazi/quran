@@ -27,8 +27,12 @@ export const SYNC_CONFIG = Object.freeze({
   maxKhatm: 10_000,
 });
 
-/** Letters, digits, `-` and `_`: a device name. */
-export const DEVICE_ID_PATTERN = /^[A-Za-z0-9_-]{1,40}$/;
+/**
+ * Letters, digits, `-` and `_`: a device name. Never `__proto__`, `constructor` or `prototype`:
+ * a name is used as a key of the time counters, and pulled data is not to be trusted with those.
+ * (The app draws 20 random letters and digits.) Mirrored by `private.sync_device`.
+ */
+export const DEVICE_ID_PATTERN = /^(?!(?:__proto__|constructor|prototype)$)[A-Za-z0-9_-]{1,40}$/;
 
 /** A setting key: a letter, then letters, digits and `_`. Never `__proto__`. */
 export const SETTING_KEY_PATTERN = /^[A-Za-z][A-Za-z0-9_]{0,39}$/;

@@ -89,9 +89,17 @@ export function mergeRemoteEvents(
   for (const entry of values.journal) entries.set(entryKey(entry.khatm, entry.page), entry);
   let journalChanged = false;
 
-  const time: Record<DeviceId, Record<LocalDate, DaySeconds>> = {};
-  const counterOf = (device: DeviceId) =>
-    (time[device] ??= { ...(meta.time[device] ?? {}) }) as Record<LocalDate, DaySeconds>;
+  // No prototype: a key from elsewhere can never reach `Object.prototype`.
+  const time = new Map<DeviceId, Record<LocalDate, DaySeconds>>();
+  const counterOf = (device: DeviceId) => {
+    let counters = time.get(device);
+    if (counters === undefined) {
+      const own = Object.prototype.hasOwnProperty.call(meta.time, device) ? meta.time[device] : {};
+      counters = Object.assign(Object.create(null), own) as Record<LocalDate, DaySeconds>;
+      time.set(device, counters);
+    }
+    return counters;
+  };
   let hasTwin = false;
 
   const settings: Record<string, JsonValue> = { ...values.settings };
@@ -186,7 +194,7 @@ export function mergeRemoteEvents(
   }
 
   const mergedTime: Record<DeviceId, SecondsByDay> = { ...meta.time };
-  for (const [device, counters] of Object.entries(time)) {
+  for (const [device, counters] of time) {
     mergedTime[device] = toSecondsByDay(Object.entries(counters) as [LocalDate, DaySeconds][]);
   }
   const deviceId = hasTwin ? newDeviceId() : meta.deviceId;

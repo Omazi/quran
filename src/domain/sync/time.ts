@@ -11,7 +11,10 @@ export function daysOf(record: SecondsByDay): LocalDate[] {
 }
 
 export function secondsOn(record: SecondsByDay | null | undefined, date: LocalDate): DaySeconds {
-  return record?.[date] ?? NO_SECONDS;
+  if (record === null || record === undefined) return NO_SECONDS;
+  return Object.prototype.hasOwnProperty.call(record, date)
+    ? (record[date] ?? NO_SECONDS)
+    : NO_SECONDS;
 }
 
 /** A record of days built from checked days only. */

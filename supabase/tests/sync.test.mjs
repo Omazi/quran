@@ -4,11 +4,11 @@
 // mustapha (stranger), anon (signed-out visitor).
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { startDb, U, MIGRATION, SYNC_MIGRATION } from './harness.mjs';
+import { startDb, U, MIGRATION, SYNC_MIGRATION, SYNC_DEVICE_MIGRATION } from './harness.mjs';
 
 let db;
 before(async () => {
-  db = await startDb({ migrations: [MIGRATION, SYNC_MIGRATION] });
+  db = await startDb({ migrations: [MIGRATION, SYNC_MIGRATION, SYNC_DEVICE_MIGRATION] });
   process.stdout.write(`# PostgreSQL ${db.version}; migrations ${db.migration}\n`);
 });
 after(async () => {
@@ -233,6 +233,14 @@ describe('what the server refuses', () => {
     assert.equal(r.accepted, 0);
     assert.equal(r.rejected, bad.length);
     assert.deepEqual((await pull(w.omar)).events, []);
+  });
+
+  t('refuses device names that would pollute an object', async (w) => {
+    const bad = ['__proto__', 'constructor', 'prototype'].map((device) =>
+      time(device, '2026-11-20', 5),
+    );
+    const r = await push(w.omar, [...bad, time('phone-1_A', '2026-11-20', 5)]);
+    assert.deepEqual([r.accepted, r.rejected], [1, 3]);
   });
 
   t('keeps only the known fields of an event', async (w) => {
