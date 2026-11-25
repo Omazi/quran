@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
-import { pieceSizes, type GardenPaletteRole } from '../tokens';
+import { pieceSizes, type PaletteRole } from '../tokens';
 import { useColors } from '../use-colors';
 
 export interface ProgressRingProps {
@@ -22,7 +22,7 @@ export interface ProgressRingProps {
 }
 
 const TONES: Readonly<
-  Record<ProgressRingProps['tone'], { fill: GardenPaletteRole; track: GardenPaletteRole }>
+  Record<ProgressRingProps['tone'], { fill: PaletteRole; track: PaletteRole }>
 > = {
   water: { fill: 'waterFill', track: 'waterTrack' },
   growth: { fill: 'actionTint', track: 'actionTonal' },

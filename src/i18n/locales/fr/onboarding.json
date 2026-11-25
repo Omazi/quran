@@ -109,19 +109,6 @@
   },
   "notifications": {
     "label": "Aperçu des rappels",
-    "now": "maintenant",
-    "daily": {
-      "title": "Ta lecture du jour",
-      "body_one": "Il te reste {{count}} page aujourd’hui.",
-      "body_other": "Il te reste {{count}} pages aujourd’hui."
-    },
-    "thirsty": {
-      "title": "Ton jardin a soif",
-      "body": "Une page suffit pour que l’eau revienne."
-    },
-    "friday": {
-      "title": "C’est vendredi",
-      "body": "Pense à lire la sourate Al-Kahf."
-    }
+    "now": "maintenant"
   }
 }

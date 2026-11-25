@@ -53,61 +53,92 @@ export const appColors = {
 } as const satisfies Record<string, ColorPair>;
 
 /**
- * The palette of the validated mockups, "Le jardin, version 2" (docs/design/accueil.png, soif.png,
- * mort.png, nouveau.png, khatm.png). Owner's rule of 25 November 2026: the mockups are the visual
- * reference, and where they differ from the charter the mockup wins, each difference being listed
- * for the owner (SKILLS.md, deviations 70 to 79). Values are sampled from the mockups; dark
- * values are derived from them. A text colour is darkened from its sample only when the sample
- * misses 4.5:1 on the surface it sits on (accessibility.md › Vision); its sample is noted beside it.
- * The night values are the dusk direction the owner chose (25 November 2026), aligned with the
- * Proches tab's palette (src/ui/visit-palette.ts on work/mk-visit): a dusk sky, warm dark cards.
+ * The one palette of the app, after the validated mockups (docs/design/accueil.png, soif.png,
+ * mort.png, nouveau.png, khatm.png, mushaf.png, visite.png, bienvenue.png, voix.png). Owner's rule
+ * of 25 November 2026 (D39): the mockups are the visual reference, and where they differ from
+ * Apple's guidelines or the charter, the difference is listed for the owner (SKILLS.md). Values
+ * are sampled from the mockups; a text colour is darkened from its sample only when the sample
+ * misses 4.5:1 on the surface it sits on (accessibility.md › Vision), its sample noted beside it.
+ *
+ * One role, one value: the home screen, the Quran tab, the reader, the Proches tab and the
+ * voice-following view used to keep their own palettes, which gave the same role slightly
+ * different values (three page grounds, three greys of dots, two hairlines). They were merged
+ * here on 25 November 2026. The night values are the "dusk" the owner chose: a warm dark sky,
+ * warm dark cards (dark-mode.md › Dark Mode colors: dimmer backgrounds, brighter foregrounds).
  */
-export const gardenPalette = {
-  /** The page under the cards (accueil.png #F3F1EC). */
+export const palette = {
+  // --- Grounds and surfaces ------------------------------------------------------------------
+  /** The page under the cards of every tab (accueil.png #F3F1EC). */
   canvas: { light: '#F3F1EC', dark: '#151716' },
-  /** A card: white by day (accueil.png). */
+  /** The top of the sky over a page, which fades into `canvas` (accueil.png, visite.png, y = 0). */
+  skyTop: { light: '#FBE3C6', dark: '#2A2219' },
+  /** The warm ground around the mushaf page, in the reader and while following the voice (mushaf.png). */
+  pageGround: { light: '#F3EFE4', dark: '#151716' },
+  /** A card, a round button over the page, the watered pill: white by day (accueil.png). */
   surface: { light: '#FFFFFF', dark: '#222725' },
   /** The cream card inside a card ("Al-Kahf · Reprendre page 293"; the verse card of nouveau.png). */
   surfaceInset: { light: '#FBF7EC', dark: '#272319' },
   surfaceInsetBorder: { light: '#EFE4C8', dark: '#3B3425' },
-  /** The serif titles ("Ton jardin", "Jardins voisins"): green-black #1D2A23. */
+  /** A text field inside a card (visite.png): the page's ground, set in the white. */
+  field: { light: '#F3F1EC', dark: '#2C322F' },
+  /** Track of a segmented choice and of the search field on the page (mushaf.png, "Uthmani | Simple"). */
+  track: { light: '#EBE8E1', dark: '#0F1110' },
+  /** Hairline between two rows of a card. */
+  divider: { light: '#EFEAE0', dark: '#333836' },
+  /** The thin border of an outlined button ("Continuer avec Google", bienvenue.png). */
+  outline: { light: '#D9DCD8', dark: '#3D4441' },
+  /** The pill of the streak over the gradient: near white (#FEFAF5). */
+  pillSurface: { light: '#FEFAF5', dark: '#262824' },
+  /** The bottom bar under the mushaf page (mushaf.png #F9F7EE) and its top hairline. */
+  bar: { light: '#F9F7EE', dark: '#1B1E1D' },
+  barEdge: { light: '#E2DFD8', dark: '#333836' },
+  /** Colour of the soft shadows drawn with React Native's shadow props (the page, round buttons). */
+  shadow: { light: '#50391A', dark: '#000000' },
+  /** What dims the screen behind a sheet (nouveau.png). */
+  scrim: { light: 'rgba(58, 48, 32, 0.42)', dark: 'rgba(0, 0, 0, 0.6)' },
+
+  // --- Words ---------------------------------------------------------------------------------
+  /** The serif titles ("Ton jardin", "Jardins voisins", "Proches"): green-black #1D2A23. */
   heading: { light: '#1D2A23', dark: '#F1EADB' },
-  /**
-   * Secondary text, sampled #6D7771 (4.11:1 on the canvas), darkened to 5.05:1: the value the
-   * Proches tab chose for the same grey (src/ui/visit-palette.ts on work/mk-visit, `inkSecondary`).
-   */
+  /** Secondary text, sampled #6D7771 (4.11:1 on the canvas), darkened to 5.05:1. */
   muted: { light: '#5F6963', dark: '#A9B1AC' },
   /**
    * The date above the title, sampled #8A7B66 (3.38:1 on the gradient), darkened to pass 4.5:1 on
    * every gradient it sits on, the dust of mort.png included (5.18:1).
    */
   dateLabel: { light: '#5C5245', dark: '#B4A893' },
+  /** Removing and blocking, in words: 5.44:1 on a card, 5.43:1 at night (the system red is 3.55:1). */
+  destructiveText: { light: '#C0392B', dark: '#FF6B5E' },
+
+  // --- Action: forest green, the app's one action colour (owner, 25 November 2026) -----------
   /**
-   * The app's action colour, forest green #1F5C45 ("Lire et arroser", "Nouvelle khatma", every
-   * prominent button; owner's decision of 25 November 2026). At night the dusk green of the
-   * Proches tab (`forest`, src/ui/visit-palette.ts on work/mk-visit).
+   * Every prominent button: "Lire et arroser", "Nouvelle khatma", "Lire avec elle", the reader's
+   * microphone, and the system's prominent button. The label on it, `onAction`: 7.85:1 by day,
+   * 5.18:1 at night.
    */
   action: { light: '#1F5C45', dark: '#2E7A5B' },
-  /** The label on `action`: 7.85:1 by day, 5.18:1 at night. */
   onAction: { light: '#FFFFFF', dark: '#FFFFFF' },
-  /** Green text and symbols: "Tout voir", the leaf, the filled dots, "Hizb 24 terminé". */
+  /** Green words and symbols: "Tout voir", the leaf, the filled dots, a link button. */
   actionTint: { light: '#1F5C45', dark: '#7FCCA6' },
-  /** The quiet button ("Partager"): pale green #E6EFE9, label `actionTint`. */
+  /** The quiet button ("Partager", "Encourager"): pale green #E6EFE9, label `actionTint`. */
   actionTonal: { light: '#E6EFE9', dark: '#213A30' },
-  /** The avatar of the person, #32785D. */
-  avatarSelf: { light: '#32785D', dark: '#2E7A5B' },
+  /** The black capsule of "Continuer avec Apple" (bienvenue.png), white at night, and its label. */
+  contrastButton: { light: '#000000', dark: '#FFFFFF' },
+  onContrastButton: { light: '#FFFFFF', dark: '#000000' },
+
+  // --- Water: only where it means water --------------------------------------------------------
   /** Water in words: "Arrosage du jour", "Arrosé depuis 12 j"; sampled #2B7F93 (3.81:1 on the gradient), darkened to 4.76:1. */
   water: { light: '#236F80', dark: '#6CCAD8' },
   /** Water as a shape: the ring of the day, the drop (#3FA7B5). A graphic beside words. */
   waterFill: { light: '#3FA7B5', dark: '#4FB8C6' },
   /** Behind water: the track of the ring, the tile of a drop (#E3F1F3). */
   waterTrack: { light: '#E3F1F3', dark: '#1D3439' },
+
+  // --- The garden's states -------------------------------------------------------------------
   /** The flame of the streak (#F57834). A graphic beside the number. */
   flame: { light: '#F57834', dark: '#FF9152' },
-  /** A dot of the 60 not reached yet (#D1D8D4). */
+  /** A step not reached yet in a row of dots (#D1D8D4). */
   dotEmpty: { light: '#D1D8D4', dark: '#3A403D' },
-  /** The pill of the streak over the gradient: near white (#FEFAF5). */
-  pillSurface: { light: '#FEFAF5', dark: '#262824' },
   /** Thirst (soif.png): the banner, its title, its text, its symbol. */
   thirstSurface: { light: '#FBEBD3', dark: '#33261A' },
   thirst: { light: '#7A4A16', dark: '#F2C58A' },
@@ -119,17 +150,59 @@ export const gardenPalette = {
   /** The dry earth (mort.png): its title #3E3A33 and its text, sampled #6E685D (4.15:1), darkened to 5.05:1. */
   earth: { light: '#3E3A33', dark: '#E6E0D6' },
   earthSecondary: { light: '#615B51', dark: '#B3AA9C' },
+
+  // --- People --------------------------------------------------------------------------------
+  /** The avatar of the person, #32785D. */
+  avatarSelf: { light: '#32785D', dark: '#2E7A5B' },
   /**
-   * Friends' avatars (accueil.png: violet, ochre, blue; then green and rose, the values of the
-   * Proches tab), the same at night. They only decorate a name written beside them.
+   * Friends' avatars (accueil.png: violet, ochre, blue; then green and rose), the same at night.
+   * They only decorate a name written beside them. The initial on them is `onAction`, white.
    */
   avatarViolet: { light: '#7C5CD6', dark: '#7C5CD6' },
   avatarOchre: { light: '#D08A2E', dark: '#D08A2E' },
   avatarBlue: { light: '#2F80C2', dark: '#2F80C2' },
   avatarGreen: { light: '#3E8E6A', dark: '#3E8E6A' },
   avatarRose: { light: '#C4577E', dark: '#C4577E' },
-  /** What dims the screen behind a sheet (nouveau.png). */
-  scrim: { light: 'rgba(58, 48, 32, 0.42)', dark: 'rgba(0, 0, 0, 0.6)' },
+
+  // --- The mushaf page's frame (mushaf.png) ---------------------------------------------------
+  /** The double frame of the page: its outer rule, its inner rule, the band between them. */
+  frameOuter: { light: '#E5CEA0', dark: '#7A6234' },
+  frameInner: { light: '#EBDAB5', dark: '#5C4C2E' },
+  frameBand: { light: '#F2EAD6', dark: '#2A251C' },
+  /** The gold of the medallions, the corner points and the cartouche, top to bottom. */
+  gold: { light: '#C7A05A', dark: '#B8934A' },
+  goldLight: { light: '#F1D388', dark: '#D9B86E' },
+  goldDeep: { light: '#9D7526', dark: '#8A6A2E' },
+
+  // --- Following the voice (voix.png); the recognition rosette keeps the charter (D27, D29) ---
+  /** The two gold rules of the followed page's frame. */
+  followFrame: { light: '#D8BC82', dark: '#8C6F35' },
+  /** The word to read again: red ink in a rose pill. */
+  followRereadInk: { light: '#B02A22', dark: '#FF8F87' },
+  followRereadBack: { light: '#F8DEDC', dark: '#4A2522' },
+  /**
+   * The words not yet recited: ink at 32 % over the paper (voix.png draws them faint). Full ink
+   * when the person asks for more contrast (`useUpcomingInk`).
+   */
+  followUpcomingInk: { light: '#B4B1AA', dark: '#5F5B53' },
+  /** The word just recited. */
+  followCurrentBack: { light: '#EAD8B2', dark: '#4D3F22' },
+  /** The listening bar at the bottom: a green from its start to its end, and what it carries. */
+  followBarStart: { light: '#19715D', dark: '#155E4E' },
+  followBarEnd: { light: '#0B4A3D', dark: '#08362D' },
+  onFollowBar: { light: '#FFFFFF', dark: '#FFFFFF' },
+  onFollowBarSecondary: { light: '#E4EFEB', dark: '#D6E6E1' },
+  followBarControl: { light: '#FFFFFF2E', dark: '#FFFFFF29' },
+
+  // --- The launch (the app icon's layers; app.json's expo-splash-screen colours) --------------
+  /** The deep water behind the mark, a step deeper at night: `app.json` has the same two values. */
+  launchWater: { light: '#0B3C44', dark: '#072C33' },
+  /** The calligraphic word, the drops and the leaf of the mark, the same in both appearances. */
+  launchWord: { light: '#F6FBF9', dark: '#F6FBF9' },
+  launchDrops: { light: '#8FE0EA', dark: '#8FE0EA' },
+  launchLeaf: { light: '#8FDB6B', dark: '#8FDB6B' },
+
+  // --- The first launch (docs/design/premier-lancement-prototype.html) -----------------------
   /**
    * The page dots of the first launch (docs/design/premier-lancement-prototype.html, `.pc`): the
    * other pages' dots (ink at 22 %), the current one, and the translucent capsule under them where
@@ -141,12 +214,11 @@ export const gardenPalette = {
   pageDotsSurface: { light: 'rgba(255, 255, 255, 0.55)', dark: 'rgba(255, 255, 255, 0.14)' },
   pageDotsEdge: { light: 'rgba(255, 255, 255, 0.9)', dark: 'rgba(255, 255, 255, 0.22)' },
   /**
-   * Words over the deep green of the listening page (shazam.png, the prototype's `.copy.light`):
-   * white, and the prototype's white at 78 % as a solid value for the sentence (5.82:1 on
-   * #1F5C45, where the words begin).
+   * The sentence over the deep green of the listening page (shazam.png, the prototype's
+   * `.copy.light`): the prototype's white at 78 % as a solid value, 5.82:1 on #1F5C45 (`action`),
+   * where the words begin. Its title takes `onAction`, the same white.
    */
-  onDeep: { light: '#FFFFFF', dark: '#FFFFFF' },
-  onDeepSecondary: { light: '#D3E1DC', dark: '#D3E1DC' },
+  onActionSecondary: { light: '#D3E1DC', dark: '#D3E1DC' },
   /** The thin gold lines of the star pattern on that green (shazam.png): a decoration only. */
   patternLine: { light: 'rgba(232, 207, 152, 0.13)', dark: 'rgba(232, 207, 152, 0.1)' },
   /**
@@ -168,14 +240,14 @@ export const gardenPalette = {
 } as const satisfies Record<string, ColorPair>;
 
 /** High-contrast values of the palette's words and actions (color.md › Best practices). */
-export const highContrastGardenPalette = {
+export const highContrastPalette = {
   muted: { light: '#454D48', dark: '#CDD3CF' },
   action: { light: '#16443A', dark: '#1F5A43' },
   actionTint: { light: '#16443A', dark: '#A6E0C2' },
   water: { light: '#18525F', dark: '#9BE0EA' },
   drought: { light: '#663E14', dark: '#F5CB9E' },
   thirstSecondary: { light: '#663E14', dark: '#ECCDA8' },
-} as const satisfies Partial<Record<keyof typeof gardenPalette, ColorPair>>;
+} as const satisfies Partial<Record<keyof typeof palette, ColorPair>>;
 
 /** The avatar colours of friends, in the order they are given. */
 export const avatarRoles = [
@@ -184,7 +256,10 @@ export const avatarRoles = [
   'avatarBlue',
   'avatarGreen',
   'avatarRose',
-] as const satisfies readonly (keyof typeof gardenPalette)[];
+] as const satisfies readonly (keyof typeof palette)[];
+
+/** How many colours a friend's avatar can take (`Avatar`, `DottedProgress`). */
+export const avatarColorCount = avatarRoles.length;
 
 /** One stop of a gradient: where it sits, from 0 (top) to 1 (bottom), and its colour. */
 export type GradientStop = readonly [offset: number, color: string];
@@ -296,64 +371,23 @@ export const elevation = {
 } as const;
 
 /**
- * The palette of the validated mockups for the reader and the Quran tab (docs/design/mushaf.png
- * and accueil.png). Owner's rule of 25 November 2026: the validated mockups are the visual
- * reference, where the charter's "the system draws almost everything" had led the screens away
- * from them (SKILLS.md, deviation 80). Light values are measured on the PNGs. The mockups have no
- * dark version: the night is the "dusk" direction the owner chose (25 November 2026), a dusk sky
- * over warm dark cards, with the values of the Proches tab and the home screen
- * (src/ui/visit-palette.ts on work/mk-visit, `gardenPalette` on work/mk-home) so that the
- * screens agree (dark-mode.md › Dark Mode colors: dimmer backgrounds, brighter foregrounds). The
- * page of the mushaf keeps its own `paper` and `ink`, which this palette never changes.
- *
- * Surfaces and lines only. Text keeps the roles of the charter (`ink`, `inkSecondary`, `accent`,
- * `ornament`), close to the mockups' own text colours and measured for contrast; the
- * differences are questions for the owner (report of the reader rebuild).
- *
- * Prefixed `reader` on purpose: other screens may grow their own mockup tokens in parallel, and
- * the architect merges them.
+/**
+ * The launch: the deep water of the app icon and the three colours of its layers (word, drops,
+ * leaf), the same in both appearances except the water, which is a step deeper at night. The two
+ * water values are those of `app.json` (expo-splash-screen), so that the native launch screen and
+ * the animation that takes over from it are one colour, with no flash between them
+ * (launching.md › Launch screens). Scripts of the icon: tools/app-icon/make_icon.py. The values
+ * are roles of `palette` (`launch…`), read here in the shape the launch animation takes.
  */
-export const readerPalette = {
-  /** The sky at the top of the Quran tab (accueil.png, y = 0), fading into the ground. */
-  skyTop: { light: '#FBE3C6', dark: '#2A2219' },
-  /** The warm ground of the reader and of the Quran tab (mushaf.png, around the page). */
-  canvas: { light: '#F3EFE4', dark: '#151716' },
-  /** The white of the cards, of the round buttons and of the watered pill. */
-  card: { light: '#FFFFFF', dark: '#222725' },
-  /** The cream card that resumes the reading (accueil.png, "Al-Kahf · Reprendre page 293"). */
-  cardCream: { light: '#FBF7EC', dark: '#272319' },
-  /** Its thin golden edge. */
-  cardCreamEdge: { light: '#EFE4C8', dark: '#3B3425' },
-  /** Hairline between two rows of a card. */
-  divider: { light: '#EFEAE0', dark: '#333836' },
-  /** Track of a segmented choice and of the search field (mushaf.png, "Uthmani | Simple"). */
-  track: { light: '#EBE8E1', dark: '#0F1110' },
-  /** The water ring of the day (accueil.png): its track, then its fill. */
-  ringTrack: { light: '#E3F1F3', dark: '#1D3439' },
-  ring: { light: '#3FA7B5', dark: '#4FB8C6' },
-  /** The double frame of the page: its outer rule, its inner rule, the band between them. */
-  frameOuter: { light: '#E5CEA0', dark: '#7A6234' },
-  frameInner: { light: '#EBDAB5', dark: '#5C4C2E' },
-  frameBand: { light: '#F2EAD6', dark: '#2A251C' },
-  /** The gold of the medallions, the corner points and the cartouche, top to bottom. */
-  gold: { light: '#C7A05A', dark: '#B8934A' },
-  goldLight: { light: '#F1D388', dark: '#D9B86E' },
-  goldDeep: { light: '#9D7526', dark: '#8A6A2E' },
-  /**
-   * The app's action colour, forest green (owner's decision of 25 November 2026): the big
-   * microphone of the reader (mushaf.png). At night the dusk green of the Proches tab and the home
-   * screen (`forest`, `gardenPalette.action`). White on it: 7.85:1 by day, 5.18:1 at night.
-   */
-  action: { light: '#1F5C45', dark: '#2E7A5B' },
-  onAction: { light: '#FFFFFF', dark: '#FFFFFF' },
-  /** The bottom bar under the page (mushaf.png #F9F7EE) and its top hairline. */
-  bar: { light: '#F9F7EE', dark: '#1B1E1D' },
-  barEdge: { light: '#E2DFD8', dark: '#333836' },
-  /** Colour of the soft shadow under the page, the cards and the round buttons. */
-  shadow: { light: '#50391A', dark: '#000000' },
-} as const satisfies Record<string, ColorPair>;
+export const launchColors = {
+  water: palette.launchWater,
+  word: palette.launchWord.light,
+  drops: palette.launchDrops.light,
+  leaf: palette.launchLeaf.light,
+} as const;
 
-export type ReaderPaletteRole = keyof typeof readerPalette;
+/** Width of the launch mark in points: the `imageWidth` the native launch screen used (app.json). */
+export const launchMarkWidth = 180;
 
 /**
  * A QR code: dark modules on a light ground in both appearances. Scanners are made for that
@@ -405,8 +439,8 @@ export const iosSystemColorNames = {
 
 export type SystemColorRole = keyof typeof iosSystemColorNames;
 export type AppColorRole = keyof typeof appColors;
-export type GardenPaletteRole = keyof typeof gardenPalette;
-export type ColorRole = SystemColorRole | AppColorRole | GardenPaletteRole;
+export type PaletteRole = keyof typeof palette;
+export type ColorRole = SystemColorRole | AppColorRole | PaletteRole;
 
 /**
  * The roles an icon may take. A dynamic system colour keeps its meaning (color.md › System
@@ -440,6 +474,32 @@ export type IconColorRole = Exclude<
   | 'avatarBlue'
   | 'avatarGreen'
   | 'avatarRose'
+  | 'skyTop'
+  | 'pageGround'
+  | 'field'
+  | 'track'
+  | 'divider'
+  | 'outline'
+  | 'bar'
+  | 'barEdge'
+  | 'shadow'
+  | 'contrastButton'
+  | 'frameOuter'
+  | 'frameInner'
+  | 'frameBand'
+  | 'gold'
+  | 'goldLight'
+  | 'goldDeep'
+  | 'followFrame'
+  | 'followRereadBack'
+  | 'followCurrentBack'
+  | 'followBarStart'
+  | 'followBarEnd'
+  | 'followBarControl'
+  | 'launchWater'
+  | 'launchWord'
+  | 'launchDrops'
+  | 'launchLeaf'
   | 'pageDot'
   | 'pageDotCurrent'
   | 'pageDotsSurface'
@@ -679,6 +739,8 @@ export const pieceSizes = {
   ringSmallStroke: 3,
   /** One dot of the 60-step progress, and the least space between two. */
   dot: 4,
+  /** The avatar of a friend's page (visite.png). */
+  avatarLarge: 48,
   /** The avatar of the header, and of a friend's card. */
   avatarMedium: 36,
   avatarSmall: 24,
@@ -737,13 +799,9 @@ export const layout = {
 
 /**
  * Shapes of the validated mockups for the reader and the Quran tab, measured on
- * docs/design/mushaf.png and accueil.png (390 points wide). See `readerPalette`.
+ * docs/design/mushaf.png and accueil.png (390 points wide). Colours in `palette`.
  */
 export const readerShapes = {
-  /** The white cards of the Quran tab (accueil.png). */
-  cardRadius: 20,
-  /** A card inside a card: the cream resume card. */
-  innerCardRadius: radius.md,
   /** Height of the sky at the top of the Quran tab, as in accueil.png behind the title. */
   skyHeight: 320,
   /** The round buttons of the reader's bar: 40 points drawn, 44 touched (`layout.touchTarget`). */
@@ -756,9 +814,6 @@ export const readerShapes = {
   /** The watered pill: its height at the default text size, and its fully rounded ends. */
   pillHeight: 30,
   pillRadius: 15,
-  /** Diameter of the water ring of the day, and the width of its stroke. */
-  ringSize: 56,
-  ringStroke: 5,
   /** The page frame: its distance to the screen edges, then its parts, from the outside in. */
   frameInset: 14,
   frameOuterRule: 2,

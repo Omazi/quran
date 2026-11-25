@@ -1,0 +1,42 @@
+{
+  "channel": "Rappels",
+  "hiddenPreview": "Un rappel pour toi",
+  "kinds": {
+    "daily-goal": {
+      "title": "Ton jardin t’attend",
+      "body": "Quelques pages, et son eau continue de couler."
+    },
+    "water-stopped": {
+      "title": "L’eau s’est arrêtée",
+      "body": "L’eau de ton jardin ne coule plus. Une page la fait repartir."
+    },
+    "thirsty": {
+      "title": "Ton jardin a soif",
+      "body": "Ses plantes attendent un peu d’eau."
+    },
+    "wilting": {
+      "title": "Ton jardin se fane",
+      "body": "Il tient encore : quelques pages suffisent à le redresser."
+    },
+    "dying": {
+      "title": "Ton jardin a besoin de toi",
+      "body": "Ses éléments commencent à s’effacer. Rien n’est perdu."
+    },
+    "last-chance": {
+      "title": "Ton jardin tient encore",
+      "body": "Il peut revivre dès aujourd’hui."
+    },
+    "dead": {
+      "title": "Ton jardin s’est asséché",
+      "body": "La terre se souvient de tout. Une page, et l’eau revient."
+    },
+    "come-back": {
+      "title": "Ton jardin est toujours là",
+      "body": "Il t’attend quand tu veux. Une page suffit pour que l’eau revienne."
+    },
+    "friday-kahf": {
+      "title": "C’est vendredi",
+      "body": "Un moment pour la sourate Al-Kahf ?"
+    }
+  }
+}

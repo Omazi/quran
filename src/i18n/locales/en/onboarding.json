@@ -109,19 +109,6 @@
   },
   "notifications": {
     "label": "Preview of your reminders",
-    "now": "now",
-    "daily": {
-      "title": "Today’s reading",
-      "body_one": "{{count}} page left today.",
-      "body_other": "{{count}} pages left today."
-    },
-    "thirsty": {
-      "title": "Your garden is thirsty",
-      "body": "One page is enough to bring the water back."
-    },
-    "friday": {
-      "title": "It’s Friday",
-      "body": "Remember to read Surah Al-Kahf."
-    }
+    "now": "now"
   }
 }

@@ -2,7 +2,7 @@ import { useId } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, Defs, Line, Pattern, Polygon, Rect } from 'react-native-svg';
 
-import { useGardenPaletteValues } from '../use-colors';
+import { useColorValues } from '../use-colors';
 
 /** The tile of the pattern, in points: 54, as in the prototype (`#pz`). */
 const TILE = 54;
@@ -29,7 +29,7 @@ export interface StarPatternProps {
  * frame). Screen readers skip it and touches go through.
  */
 export function StarPattern({ style }: StarPatternProps) {
-  const { patternLine } = useGardenPaletteValues();
+  const { patternLine } = useColorValues();
   // An id per instance: two patterns on one page must not share a definition.
   const id = `stars-${useId().replace(/[^a-zA-Z0-9-]/g, '')}`;
   const line = { stroke: patternLine, strokeWidth: STROKE, fill: 'none' } as const;

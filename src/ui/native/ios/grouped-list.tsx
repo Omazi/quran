@@ -15,13 +15,18 @@ import {
   font,
   foregroundStyle,
   headerProminence,
+  listRowBackground,
   scrollContentBackground,
 } from '@expo/ui/swift-ui/modifiers';
 import { StyleSheet, View } from 'react-native';
 
 import { appleTextStyles, fontFamily, spacing, textStyles } from '../../tokens';
 import { useColors } from '../../use-colors';
-import { GroupedListScope, useGroupedListGuard } from '../grouped-list-scope';
+import {
+  GroupedListScope,
+  useGroupedListAppearance,
+  useGroupedListGuard,
+} from '../grouped-list-scope';
 import type { GroupedListProps, ListRowProps, ListSectionProps } from '../types';
 import { SwiftUIHost } from './swiftui-host';
 
@@ -31,17 +36,31 @@ const TERTIARY = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
 
 /**
  * The system's grouped list: headers, footers and space separate the groups
- * (lists-and-tables.md › Style). It scrolls by itself and fills the place it is given.
+ * (lists-and-tables.md › Style). It scrolls by itself and fills the place it is given. In the
+ * garden appearance the form hides its own background, so the screen's warm canvas shows
+ * through, and each section gives its rows the white of the mockups' cards (see `ListSection`).
+ * With a clear background the form hides its background too, and the screen's backdrop shows
+ * around the system's own rounded groups.
  */
-export function GroupedList({ children, header, background = 'system', testID }: GroupedListProps) {
+export function GroupedList({
+  children,
+  header,
+  appearance = 'system',
+  background = 'system',
+  testID,
+}: GroupedListProps) {
+  // The garden canvas and a clear list both need the Form to draw no background of its own; the
+  // groups keep theirs (the system's, or the garden's white rows).
+  const hidesBackground = appearance === 'garden' || background === 'clear';
   const list = (
     <SwiftUIHost size="fill">
       <Form
         testID={testID}
-        // `clear`: the Form draws no background of its own, its groups keep theirs.
-        modifiers={background === 'clear' ? [scrollContentBackground('hidden')] : undefined}
+        modifiers={hidesBackground ? [scrollContentBackground('hidden')] : undefined}
       >
-        <GroupedListScope background={background}>{children}</GroupedListScope>
+        <GroupedListScope appearance={appearance} background={background}>
+          {children}
+        </GroupedListScope>
       </Form>
     </SwiftUIHost>
   );
@@ -63,6 +82,7 @@ const styles = StyleSheet.create({
 export function ListSection({ title, titleQuran, footer, children }: ListSectionProps) {
   useGroupedListGuard('ListSection');
   const colors = useColors();
+  const appearance = useGroupedListAppearance();
   // With Quran text in the header, the header is built here: the title as the system draws it,
   // the Arabic at the trailing end in the Quran font, growing with the text size. The system's
   // increased header prominence raises the title next to the Arabic, which is larger: otherwise
@@ -86,9 +106,14 @@ export function ListSection({ title, titleQuran, footer, children }: ListSection
         </Text>
       </HStack>
     ) : undefined;
+  const modifiers = [
+    ...(header === undefined ? [] : [headerProminence('increased')]),
+    // Applied to the section, the row background reaches each of its rows.
+    ...(appearance === 'garden' ? [listRowBackground(colors.surface)] : []),
+  ];
   return (
     <Section
-      modifiers={header === undefined ? undefined : [headerProminence('increased')]}
+      modifiers={modifiers.length === 0 ? undefined : modifiers}
       title={header === undefined ? title : undefined}
       header={header}
       footer={footer === undefined ? undefined : <Text>{footer}</Text>}

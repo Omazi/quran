@@ -2,16 +2,9 @@ import { CameraView } from 'expo-camera';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { layout, visitShape, type IconSymbol } from '@/ui';
+import { ActionButton, AppText, Card, Icon, layout, radius, type IconSymbol } from '@/ui';
 
-import {
-  FriendsButton,
-  FriendsCard,
-  FriendsPage,
-  FriendsRow,
-  FriendsSymbol,
-  FriendsText,
-} from './friends-kit';
+import { FriendsPage, FriendsRow } from './friends-kit';
 import { FriendsLoading } from './screen-states';
 import type { ScanInviteActions, ScanInviteModel } from './use-friends';
 
@@ -41,36 +34,33 @@ export function ScanInviteScreen({ model, actions }: ScanInviteScreenProps) {
       model.camera === 'askable' ? 'ask' : model.camera === 'blocked' ? 'denied' : 'failed';
     return (
       <FriendsPage isUnderBar testID={`scan-${state}`}>
-        <FriendsCard>
+        <Card contentGap="md">
           <FriendsRow
             label={t(`scan.${state}Title`)}
             detail={t(`scan.${state}Text`)}
             leading={
-              <FriendsSymbol
-                symbol={state === 'ask' ? CAMERA_SYMBOL : CAMERA_OFF_SYMBOL}
-                color="inkSecondary"
-              />
+              <Icon symbol={state === 'ask' ? CAMERA_SYMBOL : CAMERA_OFF_SYMBOL} color="muted" />
             }
           />
           {state === 'ask' ? (
-            <FriendsButton
-              kind="primary"
+            <ActionButton
+              variant="filled"
               label={t('scan.continue')}
               onPress={actions.askForCamera}
               testID="scan-continue"
             />
           ) : state === 'denied' ? (
-            <FriendsButton
-              kind="soft"
+            <ActionButton
+              variant="tonal"
               label={t('scan.openSettings')}
               onPress={actions.openSettings}
               testID="scan-open-settings"
             />
           ) : null}
-          <FriendsText variant="footnote" color="inkSecondary">
+          <AppText variant="footnote" color="muted">
             {t('scan.typeInstead')}
-          </FriendsText>
-        </FriendsCard>
+          </AppText>
+        </Card>
       </FriendsPage>
     );
   }
@@ -98,14 +88,14 @@ export function ScanInviteScreen({ model, actions }: ScanInviteScreenProps) {
           onMountError={actions.cameraFailed}
         />
       </View>
-      <FriendsText variant="subhead" color="inkSecondary" align="center">
+      <AppText variant="subhead" color="muted" align="center">
         {footer}
-      </FriendsText>
+      </AppText>
     </FriendsPage>
   );
 }
 
 const styles = StyleSheet.create({
-  frame: { borderRadius: visitShape.cardRadius, overflow: 'hidden', minHeight: layout.touchTarget },
+  frame: { borderRadius: radius.xl, overflow: 'hidden', minHeight: layout.touchTarget },
   camera: { aspectRatio: 1, width: '100%' },
 });

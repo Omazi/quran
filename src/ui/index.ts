@@ -17,19 +17,11 @@ export { QuranText, type QuranTextProps, type QuranTextRun } from './components/
 export { Screen, type ScreenBackground, type ScreenProps } from './components/screen';
 export { useHighContrast, useReducedMotion } from './device-settings';
 export { useSafeInsets } from './safe-insets';
-export {
-  listeningOpacity,
-  listeningShape,
-  useListeningColors,
-  useUpcomingInk,
-  type ListeningColors,
-} from './listening-tokens';
+export { listeningOpacity, listeningShape, useUpcomingInk } from './listening-tokens';
 export { getWritingDirection, type WritingDirection } from './direction';
 export { appFonts } from './fonts';
-// The palette of the validated mockups, used by the Proches tab (see visit-palette.ts), with the
-// charter's text styles and field behaviours its own components are built from.
-export * from './visit-palette';
-export { appleTextStyles, textStyles } from './tokens';
+// The text styles and field behaviours the Proches tab's own text field is built from.
+export { textStyles } from './tokens';
 export { TEXT_FIELD_BEHAVIOURS } from './native/text-field-kinds';
 export * from './native';
 export {
@@ -39,9 +31,12 @@ export {
   type BarChartProps,
 } from './components/bar-chart';
 export {
+  avatarColorCount,
   chart,
   emphasisWeight,
   fontFamily,
+  launchColors,
+  launchMarkWidth,
   layout,
   pieceSizes,
   MINIMUM_FONT_SIZE,
@@ -52,7 +47,7 @@ export {
   storyLayout,
   storyMotion,
   type BackdropName,
-  type GardenPaletteRole,
+  type PaletteRole,
   type QuranTextStyleName,
   type AppColorRole,
   type ColorRole,
@@ -63,19 +58,23 @@ export {
   type TextStyleName,
 } from './tokens';
 export {
-  gardenPaletteValuesFor,
   useBackdropGradient,
   useColors,
+  useColorValues,
   useElevation,
-  useGardenPaletteValues,
   type Colors,
+  type ColorValues,
 } from './use-colors';
 export { PageDots, type PageDotsProps } from './components/page-dots';
 export { PAGE_DOTS } from './components/page-dots-shape';
 export { StarPattern, type StarPatternProps } from './components/star-pattern';
 export { SwipePager, type SwipePagerProps } from './components/swipe-pager';
 export { SWIPE_PAGING, crossfade, stageLayerOpacity, swapOpacity } from './components/swipe-paging';
-export { ActionButton, type ActionButtonProps } from './components/action-button';
+export {
+  ActionButton,
+  type ActionButtonProps,
+  type ActionButtonVariant,
+} from './components/action-button';
 export { ArabicDisplayText, type ArabicDisplayTextProps } from './components/arabic-display-text';
 export { Avatar, type AvatarProps } from './components/avatar';
 export { Card, type CardProps, type CardTone } from './components/card';
@@ -85,4 +84,3 @@ export { IconTile, type IconTileProps, type IconTileTone } from './components/ic
 export { Pill, type PillProps } from './components/pill';
 export { ProgressRing, type ProgressRingProps } from './components/progress-ring';
 export { SectionHeader, type SectionHeaderProps } from './components/section-header';
-export { useReaderPalette, useReaderPaletteValues, type ReaderPalette } from './use-colors';

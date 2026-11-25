@@ -24,6 +24,7 @@ import {
   APPEARANCES_AND_DIRECTIONS,
   directionDependentStyles,
   fixedHeightsAroundText,
+  iosPaletteColor,
   LARGEST_FONT_SCALE,
   resetDeviceConditions,
   setDeviceConditions,
@@ -34,7 +35,7 @@ import {
 import {
   appColors,
   fallbackSystemColors,
-  gardenPalette,
+  palette,
   layout,
   stateOpacity,
   textStyles,
@@ -148,15 +149,34 @@ describe('default controls, together', () => {
   it.each(['light', 'dark'] as const)('take their colours from the %s theme', async (scheme) => {
     setDeviceConditions({ os: 'android', scheme });
     await render(<EveryControl />);
-    expect(styleOf(screen.getByTestId('primary')).backgroundColor).toBe(
-      gardenPalette.actionTint[scheme],
-    );
-    expect(styleOf(screen.getByText('Lire et arroser')).color).toBe(appColors.onAccent[scheme]);
-    expect(styleOf(screen.getByText('Plus tard')).color).toBe(gardenPalette.actionTint[scheme]);
+    expect(styleOf(screen.getByTestId('primary')).backgroundColor).toBe(palette.action[scheme]);
+    expect(styleOf(screen.getByText('Lire et arroser')).color).toBe(palette.onAction[scheme]);
+    expect(styleOf(screen.getByText('Plus tard')).color).toBe(palette.actionTint[scheme]);
     expect(styleOf(screen.getByText('3 pages sur 5')).color).toBe(
       fallbackSystemColors.secondaryLabel[scheme],
     );
     expect(styleOf(screen.getByText('Aujourd’hui')).color).toBe(fallbackSystemColors.label[scheme]);
+    // The switch, the stepper and the time take the action green too, as on iOS, where the host
+    // tints every control with it (deviation 75): the water's teal keeps the water's meaning only.
+    const action = palette.actionTint[scheme];
+    // React Native hands the track colour to the platform switch under its own name.
+    const onTracks = screen.container
+      .queryAll(
+        ({ props }) => props.trackColorForTrue !== undefined || props.onTintColor !== undefined,
+      )
+      .map(({ props }) => props.trackColorForTrue ?? props.onTintColor);
+    expect(onTracks.length).toBeGreaterThan(0);
+    for (const color of onTracks) expect(color).toBe(action);
+    const timeTexts = screen
+      .getByTestId('time')
+      .queryAll(({ type, props }) => type === 'Text' && /30/.test(String(props.children)));
+    expect(timeTexts).toHaveLength(1);
+    expect(styleOf(timeTexts[0]!).color).toBe(action);
+    const stepSymbols = screen
+      .getByTestId('goal')
+      .queryAll(({ props }) => props.tintColor !== undefined);
+    expect(stepSymbols.length).toBe(2);
+    for (const symbol of stepSymbols) expect(symbol.props.tintColor).toBe(action);
   });
 
   it('survive the largest text size: nothing is cut, capped or kept on one line', async () => {
@@ -220,13 +240,9 @@ describe('default Button', () => {
         <Button label="Simple" variant="plain" onPress={jest.fn()} testID="plain" />
       </>,
     );
-    expect(styleOf(screen.getByTestId('primary')).backgroundColor).toBe(
-      gardenPalette.actionTint.light,
-    );
+    expect(styleOf(screen.getByTestId('primary')).backgroundColor).toBe(palette.actionTint.light);
     expect(styleOf(screen.getByTestId('secondary')).backgroundColor).toBeUndefined();
-    expect(styleOf(screen.getByTestId('secondary')).borderColor).toBe(
-      gardenPalette.actionTint.light,
-    );
+    expect(styleOf(screen.getByTestId('secondary')).borderColor).toBe(palette.actionTint.light);
     expect(styleOf(screen.getByTestId('plain')).backgroundColor).toBeUndefined();
     expect(styleOf(screen.getByTestId('plain')).borderWidth).toBeUndefined();
   });
@@ -312,6 +328,30 @@ describe('default GroupedList', () => {
     expect(screen.getByText('Vendredi : sourate Al-Kahf')).toBeOnTheScreen();
   });
 
+  it('in the garden appearance, lays each section on a white card over the warm canvas', async () => {
+    setDeviceConditions();
+    await render(
+      <GroupedList appearance="garden" testID="list">
+        <ListSection title="Rappels" footer="Tu peux les changer dans les réglages.">
+          <ListRow label="Vendredi : sourate Al-Kahf" />
+        </ListSection>
+      </GroupedList>,
+    );
+    // Under Jest the platform is iOS: the colour is the dynamic one of the palette.
+    const surface = JSON.stringify(iosPaletteColor('surface'));
+    const cards = withDescendants(screen.getByTestId('list')).filter(
+      (element) => JSON.stringify(styleOf(element).backgroundColor) === surface,
+    );
+    expect(cards).toHaveLength(1);
+    const card = cards[0]!;
+    expect(styleOf(card).borderRadius).toBeGreaterThan(0);
+    expect(card).toHaveTextContent('Vendredi : sourate Al-Kahf');
+    // The header and the footer stay on the canvas, outside the card, as on iOS.
+    expect(card).not.toHaveTextContent(/Rappels|Tu peux/);
+    expect(screen.getByRole('header', { name: 'Rappels' })).toBeOnTheScreen();
+    expect(directionDependentStyles(screen.getByTestId('list'))).toEqual([]);
+  });
+
   it('shows a section without header or footer', async () => {
     setDeviceConditions();
     await render(
@@ -348,7 +388,7 @@ describe('default GroupedList', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('puts a decorative symbol before the words of a row, in the accent', async () => {
+  it('puts a decorative symbol before the words of a row, in the action green', async () => {
     setDeviceConditions();
     const onPress = jest.fn();
     await render(
@@ -759,7 +799,7 @@ describe('default ButtonRow', () => {
       </InList>,
     );
     const button = screen.getByRole('button', { name: 'Lire et arroser' });
-    expect(styleOf(button).backgroundColor).toBe(gardenPalette.actionTint.light);
+    expect(styleOf(button).backgroundColor).toBe(palette.action.light);
     expect(button.parent && styleOf(button.parent)).toEqual({ alignSelf: 'stretch' });
     expect(button.parent?.parent && styleOf(button.parent.parent)).toMatchObject({
       paddingHorizontal: layout.screenMargin,

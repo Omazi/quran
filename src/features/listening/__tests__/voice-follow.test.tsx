@@ -3,8 +3,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { quranRepository, quranStructure } from '@/data/quran';
 import { showLanguage } from '@/features/garden/test-support/screen-conditions';
-import { listeningPalette } from '@/ui/listening-tokens';
-import { appColors } from '@/ui/tokens';
+import { appColors, palette } from '@/ui/tokens';
 import {
   directionDependentStyles,
   resetDeviceConditions,
@@ -83,15 +82,13 @@ describe('the voice-following screen (voix.png)', () => {
       const upcoming = screen.getByTestId(`follow-word-${await indexOf('18:10', 4)}`);
       const before = screen.getByTestId(`follow-word-${await indexOf('18:9', 3)}`);
       expect(styleOf(skipped)).toMatchObject({
-        color: listeningPalette.followRereadInk[scheme],
-        backgroundColor: listeningPalette.followRereadBack[scheme],
+        color: palette.followRereadInk[scheme],
+        backgroundColor: palette.followRereadBack[scheme],
       });
-      expect(styleOf(recited).backgroundColor).toBe(listeningPalette.followCurrentBack[scheme]);
-      expect(JSON.stringify(styleOf(upcoming).color)).toContain(
-        listeningPalette.followUpcomingInk[scheme],
-      );
+      expect(styleOf(recited).backgroundColor).toBe(palette.followCurrentBack[scheme]);
+      expect(JSON.stringify(styleOf(upcoming).color)).toContain(palette.followUpcomingInk[scheme]);
       expect(JSON.stringify(styleOf(before).color)).not.toContain(
-        listeningPalette.followUpcomingInk[scheme],
+        palette.followUpcomingInk[scheme],
       );
     },
   );

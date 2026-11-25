@@ -1,7 +1,14 @@
 import { render, screen } from '@testing-library/react-native';
 
 import { BarChart, niceAxisTop, type BarChartBar } from '../components/bar-chart';
-import { directionDependentStyles, resetDeviceConditions } from '../test-support/environment';
+import {
+  directionDependentStyles,
+  iosAppColor,
+  iosPaletteColor,
+  resetDeviceConditions,
+  setDeviceConditions,
+  styleOf,
+} from '../test-support/environment';
 
 afterEach(resetDeviceConditions);
 
@@ -56,6 +63,19 @@ describe('BarChart', () => {
     await expect(
       render(<BarChart bars={[{ ...bars[0]!, value: -1 }]} formatValue={String} />),
     ).rejects.toThrow(RangeError);
+  });
+
+  it('draws its bars in water by default, and in the green of growth when asked', async () => {
+    setDeviceConditions();
+    const barColors = () =>
+      screen
+        .getByTestId('chart-bar-wed')
+        .children.filter((child) => typeof child !== 'string')
+        .map((child) => styleOf(child).backgroundColor);
+    const view = await render(<BarChart bars={bars} formatValue={String} testID="chart" />);
+    expect(barColors()).toEqual([iosAppColor('accent')]);
+    await view.rerender(<BarChart bars={bars} formatValue={String} tone="growth" testID="chart" />);
+    expect(barColors()).toEqual([iosPaletteColor('actionTint')]);
   });
 
   it('uses no left or right of its own, so it mirrors in Arabic', async () => {

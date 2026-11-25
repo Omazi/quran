@@ -11,6 +11,14 @@ accepted (MIT, BSD, Apache-2.0).
 Packages installed earlier are not listed here yet: to be completed (see the end of this file).
 
 
+expo-haptics 58.0.8 (dependency; version chosen by `npx expo install` for SDK 58)
+--------------------
+Use:      a light impact when a page is bookmarked or its bookmark removed in the reader
+          (src/features/reader/use-reader.ts). No dependency of its own.
+Licence:  MIT. "Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"
+File:     node_modules/expo-haptics/LICENSE
+
+
 expo-camera 58.0.14 (dependency; version chosen by `npx expo install` for SDK 58)
 -------------------
 Use:      reads a friend's QR code of invitation (src/features/friends/scan-invite-screen.tsx).
@@ -45,6 +53,64 @@ Use:      computes the QR code of my invitation (src/ui/components/qr-code.tsx),
           react-native-svg, already in the app.
 Licence:  MIT. "Copyright (c) Project Nayuki" and "Copyright (c) 2023 Anthony Fu"
 File:     node_modules/uqr/LICENSE
+
+
+whisper.rn 0.7.4 (dependency; the speech engine, D42)
+----------------
+Use:      runs Whisper on the phone (src/data/speech/whisper-transcriber.ts).
+Licence:  MIT. "Copyright (c) 2023 Jhen-Jie Hong"
+File:     node_modules/whisper.rn/LICENSE
+It contains, compiled into ios/rnwhisper.xcframework and as sources in cpp/:
+  - whisper.cpp 1.9.3 and ggml (https://github.com/ggml-org/whisper.cpp): MIT,
+    "Copyright (c) 2023-2026 The ggml authors" (whisper.cpp's LICENSE, read in a clone of the
+    repository on 25 November 2026; the package does not copy that file).
+  - cpp/ggml-cpu/ops.cpp, one function: "MIT licensed. Copyright (c) 2023 Jeffrey Quesnelle and
+    Bowen Peng." (YaRN rope scaling).
+
+  safe-buffer 5.2.1 (dependency of whisper.rn)
+  Licence:  MIT. "Copyright (c) Feross Aboukhadijeh"
+  File:     node_modules/safe-buffer/LICENSE
+
+buffer 6.0.3 (dependency; needed by safe-buffer, which requires Node's `buffer` module, absent
+------------  from React Native: without it the bundle cannot be built)
+Licence:  MIT. "Copyright (c) Feross Aboukhadijeh, and other contributors."
+File:     node_modules/buffer/LICENSE
+
+  base64-js 1.5.1 (dependency of buffer)
+  Licence:  MIT. "Copyright (c) 2014 Jameson Little"
+  File:     node_modules/base64-js/LICENSE
+
+  ieee754 1.2.1 (dependency of buffer)
+  Licence:  BSD 3-Clause. "Copyright 2008 Fair Oaks Labs, Inc."
+  File:     node_modules/ieee754/LICENSE
+  Its clause 2 asks that binary redistributions reproduce the notice: to go on the app's page
+  of notices with the others (see below).
+
+
+The Whisper model of the app (not an npm package; downloaded by the build, D42)
+-------------------------------------------
+File:     ggml-quran-tiny-q8_0.bin, 43,537,433 bytes, SHA-256
+          ef01ab441b004f9e6f1ea98d397b43452b3a45efab7c3928ab37af655dde8b52
+          (modules/voice-capture/voice-model.json). Copied into the app; not in the repository.
+Model:    tarteel-ai/whisper-tiny-ar-quran, by Tarteel AI: OpenAI Whisper tiny fine-tuned on
+          Quran recitation. Revision c3d7e624af5c81bef25a10a2af3a5a84cb4dd0f0.
+Licence:  Apache License 2.0 (text: modules/voice-capture/MODEL-LICENSE.txt).
+          Read in the LICENSE file of the repository that publishes the converted file
+          (github.com/mano270699/watazawwadu-models) and, for the base model, in the NOTICE of
+          a second, independent conversion (github.com/be2clack/sirat-models). The model card
+          on huggingface.co could not be opened from the assistant's session (host refused):
+          to be checked once by a person (D42).
+Changes:  converted to GGML with whisper.cpp's models/convert-h5-to-ggml.py and quantized to
+          q8_0 with whisper-quantize, by the publisher of the file; weights otherwise unchanged
+          (its README). Apache-2.0 section 4 asks that the licence go with the model and that
+          changed files say so: this entry and MODEL-LICENSE.txt do it in the repository; the app
+          must show them too once it has a page of notices (see below).
+Base:     openai/whisper-tiny, OpenAI: MIT (github.com/openai/whisper, LICENSE).
+
+  Credit: the native microphone module (modules/voice-capture) follows the lessons written in
+  expo-pcm-recorder (MIT, "Copyright (c) 2025-2026 Muhammed Durakovic",
+  github.com/Tilawi/expo-pcm-recorder): the input format queried right before installing the
+  tap, the sample rate converted by AVAudioConverter. No code of it is in the app.
 
 
 The MIT licence asks that its copyright and permission notice be included in all copies or

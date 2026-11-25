@@ -25,7 +25,7 @@ import {
   storyMotion,
   useColors,
   useElevation,
-  useGardenPaletteValues,
+  useColorValues,
   useReducedMotion,
 } from '@/ui';
 
@@ -132,7 +132,7 @@ export function RecognitionScene({ isShown, sources }: RecognitionSceneProps) {
 
 /** The golden disc of the microphone: a radial gold, the system's microphone symbol on it. */
 function Microphone() {
-  const palette = useGardenPaletteValues();
+  const palette = useColorValues();
   const shadow = useElevation('floating');
   return (
     <View style={[styles.microphone, { boxShadow: shadow }]}>
@@ -170,7 +170,7 @@ function Ray({
   beat: SharedValue<number>;
   found: SharedValue<number>;
 }) {
-  const { orbRays } = useGardenPaletteValues();
+  const { orbRays } = useColorValues();
   const angle = (360 / storyLayout.orbRayCount) * ray;
   const delay = (ray * RAY_DELAY_STEP) % 1;
   const span = storyLayout.orbRayLongest - storyLayout.orbRayShortest;
@@ -197,7 +197,7 @@ function Ray({
 }
 
 function Ring({ beat, offset }: { beat: SharedValue<number>; offset: number }) {
-  const { orbRays } = useGardenPaletteValues();
+  const { orbRays } = useColorValues();
   const spread = useAnimatedStyle(() => {
     const progress = (beat.value + offset) % 1;
     return { opacity: 0.9 * (1 - progress), transform: [{ scale: 0.6 + 0.65 * progress }] };

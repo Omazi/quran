@@ -21,20 +21,19 @@ type Reminder = 'daily' | 'thirsty' | 'friday';
 
 export interface NotificationPreviewsProps {
   reminders: RemindersModel;
-  /** The pages of the day's goal: the daily reminder says how many are left. */
-  dailyGoalPages: number;
 }
 
 /**
  * The notifications the reminders will send, drawn as the system shows them (the prototype's
- * `.notif`): the app's icon, a title, the time, one line. Each one appears or goes as its switch is
+ * `.notif`): the app's icon, a title, the time, one line. Their words are those the reminders
+ * really send (the `notifications` namespace, src/features/reminders). Each one appears or goes as its switch is
  * turned, so the person sees what a reminder is before choosing it (onboarding.md › Best
  * practices: teach through interactivity). Examples only: screen readers skip them, the switches
  * say everything. They are left out at the largest text sizes and on short screens, where the
  * settings need the room (layout.md › Adaptability).
  */
-export function NotificationPreviews({ reminders, dailyGoalPages }: NotificationPreviewsProps) {
-  const { t, i18n } = useTranslation('onboarding');
+export function NotificationPreviews({ reminders }: NotificationPreviewsProps) {
+  const { t, i18n } = useTranslation('notifications');
   const { height, fontScale } = useWindowDimensions();
   const [cardHeight, setCardHeight] = useState(0);
   if (height < SHORT_WINDOW || fontScale > layout.sideBySideMaxFontScale) return null;
@@ -48,24 +47,24 @@ export function NotificationPreviews({ reminders, dailyGoalPages }: Notification
   if (reminders.dailyEnabled) {
     shown.push({
       id: 'daily',
-      title: t('notifications.daily.title'),
-      body: t('notifications.daily.body', { count: dailyGoalPages }),
+      title: t('kinds.daily-goal.title'),
+      body: t('kinds.daily-goal.body'),
       when: time(reminders.dailyTime),
     });
   }
   if (reminders.thirstyGardenEnabled) {
     shown.push({
       id: 'thirsty',
-      title: t('notifications.thirsty.title'),
-      body: t('notifications.thirsty.body'),
+      title: t('kinds.thirsty.title'),
+      body: t('kinds.thirsty.body'),
       when: time(reminders.dailyTime),
     });
   }
   if (reminders.fridayKahfEnabled) {
     shown.push({
       id: 'friday',
-      title: t('notifications.friday.title'),
-      body: t('notifications.friday.body'),
+      title: t('kinds.friday-kahf.title'),
+      body: t('kinds.friday-kahf.body'),
       when: time(reminders.fridayTime),
     });
   }

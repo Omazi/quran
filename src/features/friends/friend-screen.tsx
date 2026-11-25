@@ -4,21 +4,23 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { HIZB_COUNT } from '@/domain/quran';
 import { GARDEN_PICTURE_ASPECT_RATIO, GardenScene } from '@/features/garden';
-import { layout, Placeholder, spacing, useVisitColors, visitShape, type IconSymbol } from '@/ui';
-
-import { avatarRoleOf, initialOf } from './friend-avatar';
-import { visitSummary } from './friend-words';
 import {
-  FriendsAvatar,
-  FriendsButton,
-  FriendsButtonPair,
-  FriendsCard,
-  FriendsHizbDots,
-  FriendsRow,
-  FriendsSeparator,
-  FriendsText,
-  useSkyStyle,
-} from './friends-kit';
+  ActionButton,
+  AppText,
+  Avatar,
+  Card,
+  DottedProgress,
+  layout,
+  Placeholder,
+  radius,
+  spacing,
+  useColors,
+  type IconSymbol,
+} from '@/ui';
+
+import { avatarIndexOf, initialOf } from './friend-avatar';
+import { visitSummary } from './friend-words';
+import { FriendsButtonPair, FriendsRow, FriendsSeparator, useSkyStyle } from './friends-kit';
 import type { FriendPageModel } from './friends-model';
 import type { ShownRefusal } from './refusal';
 import { FriendsUnavailable } from './screen-states';
@@ -103,7 +105,7 @@ export function FriendScreen({
   }
   const { card, level, streakDays } = model;
   const name = card.name;
-  const colour = avatarRoleOf(card.userId);
+  const colour = avatarIndexOf(card.userId);
   const number = (value: number) => formatNumber(value, i18n.language);
   const confirmation = (kind: 'remove' | 'block') => ({
     title: t(`friend.${kind}Title`, { name }),
@@ -147,31 +149,31 @@ export function FriendScreen({
               <GardenScene state={card.garden} size="band" />
             )}
           </View>
-          <FriendsCard radius="sheet" style={styles.sheet}>
+          <Card shape="sheet" style={styles.sheet}>
             <View style={styles.who}>
-              <FriendsAvatar initial={initialOf(name)} color={colour} />
+              <Avatar content={{ initial: initialOf(name) }} color={colour} size="large" />
               <View style={styles.whoWords}>
-                <FriendsText variant="name" accessibilityRole="header">
+                <AppText variant="title3" accessibilityRole="header">
                   {name}
-                </FriendsText>
-                <FriendsText variant="subhead" color="inkSecondary" testID="friend-summary">
+                </AppText>
+                <AppText variant="subhead" color="muted" testID="friend-summary">
                   {visitSummary(card, t)}
-                </FriendsText>
+                </AppText>
               </View>
             </View>
             {card.hizbCompleted === null ? null : (
-              <FriendsHizbDots
-                completed={card.hizbCompleted}
+              <DottedProgress
+                reached={card.hizbCompleted}
                 total={HIZB_COUNT}
                 color={colour}
-                label={t('friend.hizbProgress')}
-                valueText={t('friend.hizbOutOf', { count: card.hizbCompleted })}
+                accessibilityLabel={t('friend.hizbProgress')}
+                accessibilityValue={t('friend.hizbOutOf', { count: card.hizbCompleted })}
                 testID="friend-hizb"
               />
             )}
             <FriendsButtonPair>
-              <FriendsButton
-                kind="soft"
+              <ActionButton
+                variant="tonal"
                 symbol={model.encouragedToday ? HEART_FILLED : HEART}
                 label={model.encouragedToday ? t('friend.encouraged') : t('friend.encourageShort')}
                 accessibilityLabel={
@@ -180,31 +182,31 @@ export function FriendScreen({
                 accessibilityHint={t('friend.encourageNote')}
                 onPress={actions.encourage}
                 isDone={model.encouragedToday}
-                isWide
+                grows
                 testID="friend-encourage"
               />
-              <FriendsButton
-                kind="primary"
+              <ActionButton
+                variant="filled"
                 symbol={BOOK}
                 label={t('friend.read')}
                 accessibilityHint={t('friend.readHint')}
                 onPress={() => openReader?.()}
-                isWide
+                grows
                 testID="friend-read"
               />
             </FriendsButtonPair>
             {refusal === null ? null : (
-              <FriendsText variant="footnote" color="inkSecondary" testID="friend-refusal">
+              <AppText variant="footnote" color="muted" testID="friend-refusal">
                 {t(`refusals.${refusal}`)}
-              </FriendsText>
+              </AppText>
             )}
-          </FriendsCard>
+          </Card>
         </View>
 
-        <FriendsCard style={styles.more}>
-          <FriendsText variant="title2" color="title">
+        <Card contentGap="md" style={styles.more}>
+          <AppText variant="title2" color="heading">
             {t('friend.readingTitle')}
-          </FriendsText>
+          </AppText>
           <View style={styles.tiles}>
             {streakDays === null ? null : (
               <FriendsStat
@@ -229,9 +231,9 @@ export function FriendScreen({
             )}
           </View>
           {level === null ? (
-            <FriendsText variant="subhead" color="inkSecondary" testID="friend-level-hidden">
+            <AppText variant="subhead" color="muted" testID="friend-level-hidden">
               {t('friend.levelHidden', { name })}
-            </FriendsText>
+            </AppText>
           ) : (
             <View>
               <FriendsRow
@@ -254,24 +256,25 @@ export function FriendScreen({
             </View>
           )}
           {level === null ? null : (
-            <FriendsText variant="footnote" color="inkSecondary">
+            <AppText variant="footnote" color="muted">
               {t('friend.hasanatNote')}
-            </FriendsText>
+            </AppText>
           )}
-        </FriendsCard>
+        </Card>
 
         {renderOptions === undefined ? (
-          <FriendsCard style={[styles.more, styles.manage]}>
+          <Card contentGap="md" style={[styles.more, styles.manage]}>
             {menu.items.map((item, index) => (
-              <FriendsButton
+              <ActionButton
                 key={item.label}
-                kind="destructive"
+                variant="destructive"
+                fullWidth={false}
                 label={item.label}
                 onPress={item.onPress}
                 testID={index === 0 ? 'friend-remove' : 'friend-block'}
               />
             ))}
-          </FriendsCard>
+          </Card>
         ) : null}
       </ScrollView>
       {renderOptions?.(menu)}
@@ -284,7 +287,7 @@ export function FriendScreen({
  * it (the "24 hizb sur 60" of the home screen, accueil.png). VoiceOver reads it as one element.
  */
 function FriendsStat({ value, label, testID }: { value: string; label: string; testID: string }) {
-  const colors = useVisitColors();
+  const colors = useColors();
   return (
     <View
       accessible
@@ -292,12 +295,12 @@ function FriendsStat({ value, label, testID }: { value: string; label: string; t
       style={[styles.tile, { backgroundColor: colors.field }]}
       testID={testID}
     >
-      <FriendsText variant="headline" color="title">
+      <AppText variant="headline" color="heading">
         {value}
-      </FriendsText>
-      <FriendsText variant="footnote" color="inkSecondary">
+      </AppText>
+      <AppText variant="footnote" color="muted">
         {label}
-      </FriendsText>
+      </AppText>
     </View>
   );
 }
@@ -318,20 +321,20 @@ const styles = StyleSheet.create({
     marginHorizontal: layout.screenMargin,
   },
   sheet: {
-    marginHorizontal: visitShape.sheetMargin,
-    marginBottom: visitShape.sheetMargin,
+    marginHorizontal: spacing.sm,
+    marginBottom: spacing.sm,
     gap: spacing.md + spacing.xs,
   },
   who: { flexDirection: 'row', alignItems: 'center', gap: layout.controlGap },
   whoWords: { flex: 1, gap: spacing.xs / 2 },
-  more: { marginHorizontal: visitShape.sheetMargin },
+  more: { marginHorizontal: spacing.sm },
   manage: { gap: spacing.none, paddingVertical: spacing.sm },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   tile: {
     flexGrow: 1,
     flexBasis: 0,
     minWidth: spacing.xxl * 2,
-    borderRadius: visitShape.tileRadius,
+    borderRadius: radius.md,
     padding: layout.controlGap,
     gap: spacing.xs / 2,
   },

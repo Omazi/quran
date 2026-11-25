@@ -336,6 +336,11 @@ de la création du projet, et **à vérifier dans la documentation de Supabase e
 
 ### 7.1 La sauvegarde du journal
 
+> **Tranché le 25 novembre 2026 (D43)** : le propriétaire veut toujours une sauvegarde dans le
+> compte. Elle passe par les tables de synchronisation (`specs/sync.md`,
+> `20261125120000_sync.sql`), pas par `reading_backups`, que l'appli n'utilise pas : une migration
+> pourra la supprimer.
+
 `docs/specs/social.md` demande une confirmation du propriétaire avant toute mise en service, car le
 journal de lecture révèle une pratique religieuse. Le fichier SQL crée la table
 `reading_backups`, **lisible et modifiable par son propriétaire seul** (aucune lecture par un ami,

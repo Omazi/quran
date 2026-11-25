@@ -3,28 +3,34 @@ import arFriends from './locales/ar/friends.json';
 import arGarden from './locales/ar/garden.json';
 import arHome from './locales/ar/home.json';
 import arListening from './locales/ar/listening.json';
+import arNotifications from './locales/ar/notifications.json';
 import arOnboarding from './locales/ar/onboarding.json';
 import arProfile from './locales/ar/profile.json';
 import arReader from './locales/ar/reader.json';
 import arSettings from './locales/ar/settings.json';
+import arSync from './locales/ar/sync.json';
 import enCommon from './locales/en/common.json';
 import enFriends from './locales/en/friends.json';
 import enGarden from './locales/en/garden.json';
 import enHome from './locales/en/home.json';
 import enListening from './locales/en/listening.json';
+import enNotifications from './locales/en/notifications.json';
 import enOnboarding from './locales/en/onboarding.json';
 import enProfile from './locales/en/profile.json';
 import enReader from './locales/en/reader.json';
 import enSettings from './locales/en/settings.json';
+import enSync from './locales/en/sync.json';
 import frCommon from './locales/fr/common.json';
 import frFriends from './locales/fr/friends.json';
 import frGarden from './locales/fr/garden.json';
 import frHome from './locales/fr/home.json';
 import frListening from './locales/fr/listening.json';
+import frNotifications from './locales/fr/notifications.json';
 import frOnboarding from './locales/fr/onboarding.json';
 import frProfile from './locales/fr/profile.json';
 import frReader from './locales/fr/reader.json';
 import frSettings from './locales/fr/settings.json';
+import frSync from './locales/fr/sync.json';
 
 export const SUPPORTED_LANGUAGES = ['fr', 'en', 'ar'] as const;
 export type AppLanguage = (typeof SUPPORTED_LANGUAGES)[number];
@@ -45,6 +51,8 @@ export const NAMESPACES = [
   'settings',
   'profile',
   'friends',
+  'notifications',
+  'sync',
 ] as const;
 
 export const resources = {
@@ -57,7 +65,9 @@ export const resources = {
     profile: frProfile,
     listening: frListening,
     settings: frSettings,
+    notifications: frNotifications,
     friends: frFriends,
+    sync: frSync,
   },
   en: {
     common: enCommon,
@@ -68,7 +78,9 @@ export const resources = {
     profile: enProfile,
     listening: enListening,
     settings: enSettings,
+    notifications: enNotifications,
     friends: enFriends,
+    sync: enSync,
   },
   ar: {
     common: arCommon,
@@ -79,6 +91,8 @@ export const resources = {
     profile: arProfile,
     listening: arListening,
     settings: arSettings,
+    notifications: arNotifications,
     friends: arFriends,
+    sync: arSync,
   },
 } as const;

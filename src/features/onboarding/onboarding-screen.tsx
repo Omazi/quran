@@ -255,7 +255,7 @@ function BrandBar({
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
-        <AppText variant="title2" color="onDeep">
+        <AppText variant="title2" color="onAction">
           {name}
         </AppText>
       </Animated.View>

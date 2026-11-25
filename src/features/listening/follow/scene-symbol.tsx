@@ -7,7 +7,7 @@ export interface SceneSymbolProps {
   readonly symbol: IconSymbol;
   /** Size in points at the default text size; it grows with the person's text size. */
   readonly size: number;
-  /** A colour of the listening palette. */
+  /** A plain colour of the palette (`useColorValues`). */
   readonly color: string;
   /**
    * The symbol shows a direction (back): it points the other way in Arabic

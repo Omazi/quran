@@ -65,14 +65,26 @@ export interface GroupedListProps {
    */
   header?: ReactNode;
   /**
-   * `system` (default): the grouped background of the system. `clear`: no background of its own,
-   * so that the screen's backdrop shows around the groups, which keep their own surface: on iOS
-   * the system's rounded groups, elsewhere a rounded card per group. For a list laid over a
-   * picture or a gradient, as the validated first-launch prototype lays its settings.
+   * `system` (default): the system's grouped backgrounds. `garden`: the warm canvas of the
+   * validated mockups under the list and its rows on white cards (`palette`), so a page of
+   * system rows (the settings) looks like the rest of the app. The rows and controls stay the
+   * system's; place the list on a `Screen` with the `canvas` background.
    */
-  background?: 'system' | 'clear';
+  appearance?: GroupedListAppearance;
+  /**
+   * `system` (default): the list draws the background its appearance gives it. `clear`: no
+   * background of its own, so that the screen's backdrop shows around the groups, which keep
+   * their own surface: on iOS the system's rounded groups, elsewhere a rounded card per group.
+   * For a list laid over a picture or a gradient, as the validated first-launch prototype lays
+   * its settings.
+   */
+  background?: GroupedListBackground;
   testID?: string;
 }
+
+export type GroupedListAppearance = 'system' | 'garden';
+
+export type GroupedListBackground = 'system' | 'clear';
 
 export interface ListSectionProps {
   /** Header of the section. */
@@ -396,8 +408,8 @@ export interface IconProps {
   /** A foreground role. Defaults to the primary label colour. */
   color?: IconColorRole;
   /**
-   * A colour of the mockup palette (`useReaderPalette`), for a symbol on one of its surfaces, such
-   * as white on the forest green of the reader's microphone. Takes the place of `color`.
+   * A colour given as a value, for a symbol drawn on a surface whose colour is not a foreground
+   * role, such as white on a gradient. Takes the place of `color`.
    */
   tint?: ColorValue;
   /** What the icon means. Omit it for an icon that only decorates a text that says the same. */

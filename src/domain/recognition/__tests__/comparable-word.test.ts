@@ -13,6 +13,7 @@ import {
   type ComparableWord,
 } from '../comparable-word';
 import { RECOGNITION_CONFIG } from '../config';
+import { isSameWordHeard } from '../index';
 
 function comparable(text: string): ComparableWord {
   const [word] = toComparableWords([text], 'text');
@@ -167,5 +168,18 @@ describe('joinedWordsSimilarity — two words for one', () => {
   it('does not join a word that would bring no letter of its own', () => {
     // A lone hamza before أن is not "أن in two words".
     expect(joinedWordsSimilarity(comparable('ا'), comparable('أن'), comparable('أن'))).toBe(0);
+  });
+});
+
+describe('isSameWordHeard (public)', () => {
+  it('accepts the vowels, the script and a little transcription noise', () => {
+    expect(isSameWordHeard('الْمُرْسِلِ', 'ٱلۡمُرۡسَلِينَ')).toBe(true);
+    expect(isSameWordHeard('الحكيم', 'ٱلۡحَكِيمِ')).toBe(true);
+  });
+
+  it('refuses another word, and any difference in a short word', () => {
+    expect(isSameWordHeard('قال', 'أَوَى')).toBe(false);
+    expect(isSameWordHeard('من', 'عَن')).toBe(false);
+    expect(isSameWordHeard('', 'عَن')).toBe(false);
   });
 });

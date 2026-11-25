@@ -135,7 +135,9 @@ texte, ciel, couleur des mots, taille de la scène }`. Changer leur nombre ou le
      pages) : sous la ligne, une note donne l'équivalence et la durée, qui change quand on
      touche au sélecteur (`onboarding.md › Best practices` : apprendre en faisant).
    - _Rappels_ : en haut, les notifications que l'appli enverra, chacune montrée ou retirée
-     avec son interrupteur (masquées aux grandes tailles de texte et sur les écrans courts) ;
+     avec son interrupteur (masquées aux grandes tailles de texte et sur les écrans courts),
+     avec les mots que les rappels envoient vraiment (`notifications.json`, et non ceux du
+     prototype) ;
      puis la liste groupée du système posée sur le ciel — rappel du jour et son heure,
      « mon jardin a soif », vendredi : sourate Al-Kahf (désactivé par défaut). Un seul bouton,
      « Créer mon jardin », à la place des points ; la demande d'autorisation du système le suit

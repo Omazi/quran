@@ -10,7 +10,7 @@ import {
   showLanguage,
   type ScreenConditions,
 } from '@/features/garden/test-support/screen-conditions';
-import { appColors } from '@/ui/tokens';
+import { appColors, palette } from '@/ui/tokens';
 import {
   directionDependentStyles,
   renderOnIOS,
@@ -199,7 +199,7 @@ function printedName(surah: number, isArabic: boolean): string {
 /** Whether a button is the prominent one: its label is drawn on the accent. */
 function isProminent(name: string, conditions: ScreenConditions): boolean {
   const appearance = conditions.scheme === 'dark' ? 'dark' : 'light';
-  return styleOf(screen.getByText(name)).color === appColors.onAccent[appearance];
+  return styleOf(screen.getByText(name)).color === palette.onAction[appearance];
 }
 
 describe.each(MATRIX)(

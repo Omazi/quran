@@ -56,4 +56,16 @@ describe('following a recitation word by word', () => {
       RangeError,
     );
   });
+
+  it('takes a word spelled a little wrong by the engine for the word recited', () => {
+    // Whisper tiny on 36:3 wrote « الْمُرْسِلِ » for ٱلۡمُرۡسَلِينَ (measured, D42).
+    const words = 'إِنَّكَ لَمِنَ ٱلۡمُرۡسَلِينَ عَلَىٰ صِرَٰطٖ مُّسۡتَقِيمٖ'.split(' ');
+    const state = followRecitation(startFollowing(0), words, ['إِنَّكَ', 'لَمِنَ', 'الْمُرْسِلِ']);
+    expect(state).toEqual({ next: 3, current: 2, reread: null });
+  });
+
+  it('a word repeated by the reader, or given twice by the engine, is not a mistake', () => {
+    const state = hear(startFollowing(0), 'إذ', 'أوى');
+    expect(hear(state, 'أوى')).toBe(state);
+  });
 });

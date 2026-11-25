@@ -12,18 +12,16 @@ import {
   backdropGradients,
   elevation,
   fallbackSystemColors,
-  gardenPalette,
+  palette,
   highContrastAppColors,
-  highContrastGardenPalette,
+  highContrastPalette,
   iosSystemColorNames,
-  readerPalette,
   type AppColorRole,
   type BackdropName,
   type ColorPair,
   type ColorRole,
-  type GardenPaletteRole,
+  type PaletteRole,
   type GradientStop,
-  type ReaderPaletteRole,
 } from './tokens';
 
 /** One colour per role of the charter, ready to be used in a style. */
@@ -52,9 +50,9 @@ function highContrastOf(role: AppColorRole): ColorPair | undefined {
 }
 
 /** The high-contrast values of a colour of the mockups' palette, when it has some. */
-function highContrastOfPalette(role: GardenPaletteRole): ColorPair | undefined {
+function highContrastOfPalette(role: PaletteRole): ColorPair | undefined {
   // Widened on purpose: only the words and actions have high-contrast values.
-  const variants: Partial<Record<GardenPaletteRole, ColorPair>> = highContrastGardenPalette;
+  const variants: Partial<Record<PaletteRole, ColorPair>> = highContrastPalette;
   return variants[role];
 }
 
@@ -76,7 +74,7 @@ function getIosColors(): Colors {
         highContrastDark: highContrastOf(role)?.dark,
       }),
     ),
-    ...mapRoles(gardenPalette, (pair: ColorPair, role) =>
+    ...mapRoles(palette, (pair: ColorPair, role) =>
       DynamicColorIOS({
         light: pair.light,
         dark: pair.dark,
@@ -95,7 +93,7 @@ function buildFallbackColors(appearance: Appearance, contrast: Contrast): Colors
       const highContrast = contrast === 'high' ? highContrastOf(role) : undefined;
       return (highContrast ?? pair)[appearance];
     }),
-    ...mapRoles(gardenPalette, (pair: ColorPair, role) => {
+    ...mapRoles(palette, (pair: ColorPair, role) => {
       const highContrast = contrast === 'high' ? highContrastOfPalette(role) : undefined;
       return (highContrast ?? pair)[appearance];
     }),
@@ -144,76 +142,44 @@ export function useElevation(level: keyof typeof elevation): string {
   return elevation[level][scheme === 'dark' ? 'dark' : 'light'];
 }
 
-/** The mockup palette of the reader and the Quran tab, one colour per role. */
-export type ReaderPalette = Readonly<Record<ReaderPaletteRole, ColorValue>>;
+/** Every app colour as a plain value, for the current appearance and contrast. */
+export type ColorValues = Readonly<Record<AppColorRole | PaletteRole, string>>;
 
-/**
- * The mockups' palette (`gardenPalette`) as plain values for the device appearance, for what
- * cannot take a dynamic colour: a colour animated between two values on the UI thread, the
- * strokes and gradients of react-native-svg.
- */
-export function useGardenPaletteValues(): Readonly<Record<GardenPaletteRole, string>> {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  return gardenPaletteValues[scheme];
+function buildColorValues(appearance: Appearance, contrast: Contrast): ColorValues {
+  const pick = <Role extends string>(
+    source: Readonly<Record<Role, ColorPair>>,
+    variantOf: (role: Role) => ColorPair | undefined,
+  ): Record<Role, string> => {
+    const roles = Object.keys(source) as Role[];
+    return Object.fromEntries(
+      roles.map((role) => {
+        const variant = contrast === 'high' ? variantOf(role) : undefined;
+        return [role, (variant ?? source[role])[appearance]];
+      }),
+    ) as Record<Role, string>;
+  };
+  return { ...pick(appColors, highContrastOf), ...pick(palette, highContrastOfPalette) };
 }
 
-/** The same palette in one appearance, whatever the device's: over a surface that is always dark. */
-export function gardenPaletteValuesFor(
-  appearance: Appearance,
-): Readonly<Record<GardenPaletteRole, string>> {
-  return gardenPaletteValues[appearance];
-}
-
-function plainPalette(appearance: Appearance): Readonly<Record<GardenPaletteRole, string>> {
-  const roles = Object.keys(gardenPalette) as GardenPaletteRole[];
-  return Object.fromEntries(roles.map((role) => [role, gardenPalette[role][appearance]])) as Record<
-    GardenPaletteRole,
-    string
-  >;
-}
-
-const gardenPaletteValues = { light: plainPalette('light'), dark: plainPalette('dark') };
-
-let iosReaderPalette: ReaderPalette | undefined;
-const fallbackReaderPalette: Readonly<Record<Appearance, ReaderPalette>> = {
-  light: mapRoles(readerPalette, (pair: ColorPair) => pair.light),
-  dark: mapRoles(readerPalette, (pair: ColorPair) => pair.dark),
+const colorValues: Readonly<Record<Contrast, Record<Appearance, ColorValues>>> = {
+  standard: {
+    light: buildColorValues('light', 'standard'),
+    dark: buildColorValues('dark', 'standard'),
+  },
+  high: { light: buildColorValues('light', 'high'), dark: buildColorValues('dark', 'high') },
 };
 
 /**
- * The same palette as plain values for the device appearance, for what cannot take a dynamic
- * colour: the strokes and gradients of react-native-svg.
+ * The same colours as `useColors`, as plain values for the device appearance and contrast, for
+ * what cannot take a dynamic colour: the strokes and gradients of react-native-svg, CSS gradients
+ * and box shadows, a colour animated between two values on the UI thread. A change of appearance
+ * renders again. `appearance` fixes the appearance whatever the device's, for a surface that is
+ * always dark (the deep green of the first launch's listening page); the contrast still follows
+ * the device.
  */
-export function useReaderPaletteValues(): Readonly<Record<ReaderPaletteRole, string>> {
-  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
-  return readerPaletteValues[scheme];
-}
-
-const readerPaletteValues = {
-  light: mapPlain('light'),
-  dark: mapPlain('dark'),
-};
-
-function mapPlain(appearance: Appearance): Readonly<Record<ReaderPaletteRole, string>> {
-  const roles = Object.keys(readerPalette) as ReaderPaletteRole[];
-  return Object.fromEntries(roles.map((role) => [role, readerPalette[role][appearance]])) as Record<
-    ReaderPaletteRole,
-    string
-  >;
-}
-
-/**
- * The surfaces and lines of the validated mockups (tokens `readerPalette`): dynamic colours on
- * iOS, the value of the device appearance elsewhere, like `useColors`. These are surfaces: a text
- * takes a role of `useColors` through `AppText`.
- */
-export function useReaderPalette(): ReaderPalette {
+export function useColorValues(appearance?: Appearance): ColorValues {
   const scheme = useColorScheme();
-  if (Platform.OS === 'ios') {
-    iosReaderPalette ??= mapRoles(readerPalette, (pair: ColorPair) =>
-      DynamicColorIOS({ light: pair.light, dark: pair.dark }),
-    );
-    return iosReaderPalette;
-  }
-  return fallbackReaderPalette[scheme === 'dark' ? 'dark' : 'light'];
+  const isHighContrast = useHighContrast();
+  const resolved = appearance ?? (scheme === 'dark' ? 'dark' : 'light');
+  return colorValues[isHighContrast ? 'high' : 'standard'][resolved];
 }

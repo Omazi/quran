@@ -21,6 +21,7 @@ import {
   listRowInsets,
   listRowSeparator,
   shapes,
+  tint,
 } from '@expo/ui/swift-ui/modifiers';
 import { useWindowDimensions } from 'react-native';
 
@@ -126,14 +127,17 @@ export function ButtonPairRow({
   const colors = useColors();
   const { fontScale } = useWindowDimensions();
   const isStacked = fontScale > layout.sideBySideMaxFontScale;
-  const preferredLabelColor =
-    preferredVariant === 'primary' && preferred.disabled !== true
-      ? [foregroundStyle(colors.onAccent)]
-      : [];
+  // The prominent one is filled with the action green of every filled button, white label.
+  const isFilled = preferredVariant === 'primary' && preferred.disabled !== true;
+  const preferredLabelColor = isFilled ? [foregroundStyle(colors.onAction)] : [];
   const buttons = [
     pairButton(
       preferred,
-      [buttonStyle(SYSTEM_PAIR_STYLE[preferredVariant]), controlSize('large')],
+      [
+        buttonStyle(SYSTEM_PAIR_STYLE[preferredVariant]),
+        controlSize('large'),
+        ...(isFilled ? [tint(colors.action)] : []),
+      ],
       [frame({ maxWidth: Infinity }), ...preferredLabelColor],
     ),
     pairButton(
@@ -166,7 +170,7 @@ const SYSTEM_PAIR_STYLE = { primary: 'borderedProminent', secondary: 'bordered' 
 
 function pairButton(
   item: ButtonPairItem,
-  style: ReturnType<typeof buttonStyle | typeof controlSize>[],
+  style: ReturnType<typeof buttonStyle | typeof controlSize | typeof tint>[],
   labelModifiers: ReturnType<typeof foregroundStyle | typeof frame | typeof contentShape>[],
 ) {
   return (

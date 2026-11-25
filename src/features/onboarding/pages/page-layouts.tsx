@@ -30,7 +30,7 @@ const WORD_COLORS: Readonly<
 > = {
   garden: { title: 'heading', text: 'muted' },
   dust: { title: 'heading', text: 'earthSecondary' },
-  deep: { title: 'onDeep', text: 'onDeepSecondary' },
+  deep: { title: 'onAction', text: 'onActionSecondary' },
 };
 
 const SWIPE_SYMBOL = { ios: 'chevron.backward.2', android: 'keyboard_double_arrow_left' } as const;

@@ -7,7 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { layout } from '../tokens';
-import { gardenPaletteValuesFor, useElevation, useGardenPaletteValues } from '../use-colors';
+import { useColorValues, useElevation } from '../use-colors';
 import { PAGE_DOTS, pageDotShape } from './page-dots-shape';
 
 export interface PageDotsProps {
@@ -70,8 +70,8 @@ export function PageDots({
   if (!Number.isInteger(index) || index < 0 || index >= count) {
     throw new RangeError(`There is no page ${index} among ${count} dots.`);
   }
-  const palette = useGardenPaletteValues();
-  const deep = gardenPaletteValuesFor('dark');
+  const palette = useColorValues();
+  const deep = useColorValues('dark');
   const shadow = useElevation('card');
   const hasGlass = systemGlassIsAvailable();
   const hasPrevious = index > 0;

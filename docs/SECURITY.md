@@ -2,7 +2,8 @@
 
 ## Principes
 
-- **Le moins de données possible.** Le lot 1 ne crée aucun compte et n'envoie rien.
+- **Le moins de données possible.** Sans compte, rien n'est envoyé. Avec un compte, seule la
+  progression de la personne part vers son compte, pour elle seule (D43, `specs/sync.md`).
 - **La voix reste sur le téléphone.** La reconnaissance est faite sur l'appareil ; aucun
   enregistrement n'est transmis ni conservé sans accord explicite.
 - **Aucun secret dans l'application ni dans le dépôt.** Tout ce qui est embarqué dans une
@@ -143,19 +144,68 @@ Trois réglages GitHub restent à activer par le propriétaire, maintenant que l
 Décision du propriétaire : **changer de téléphone, ou supprimer l'appli puis la
 retélécharger, doit ramener la personne là où elle en était** (D16).
 
-Le journal de lecture révèle une pratique religieuse. Il ne quitte le téléphone que vers
-les sauvegardes personnelles de la personne (son compte Apple ou Google), jamais vers un
-serveur de l'appli tant que les comptes (lot 3) n'existent pas.
+Décision du propriétaire du 25 novembre 2026 (D43) : **toujours une sauvegarde locale et une
+sauvegarde dans le compte**, synchronisées (`specs/sync.md`).
 
-| Cas                             | Android                                                | iOS                                                                                                                                               |
-| ------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Nouveau téléphone               | Sauvegarde automatique de Google (`allowBackup: true`) | Sauvegarde iCloud ou transfert direct : le stockage de l'appli y est inclus (`RCTAsyncStorageExcludeFromBackup: false`)                           |
-| Suppression puis réinstallation | Restauré à l'installation par la sauvegarde de Google  | **Pas couvert par la sauvegarde** : iOS efface les données d'une appli supprimée. Il faut une copie dans iCloud (à faire, voir `specs/backup.md`) |
+Le journal de lecture révèle une pratique religieuse. Sans compte, il ne quitte le téléphone que
+vers les sauvegardes personnelles de la personne (son compte Apple ou Google). Avec un compte, il
+est aussi gardé sur le serveur, pour elle seule : voir « Synchronisation avec le compte » plus bas.
+
+| Cas                             | Android                                                 | iOS                                                                                                                                               |
+| ------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Nouveau téléphone               | Sauvegarde automatique de Google (`allowBackup: true`)  | Sauvegarde iCloud ou transfert direct : le stockage de l'appli y est inclus (`RCTAsyncStorageExcludeFromBackup: false`)                           |
+| Suppression puis réinstallation | Restauré à l'installation par la sauvegarde de Google   | **Pas couvert par la sauvegarde** : iOS efface les données d'une appli supprimée. Il faut une copie dans iCloud (à faire, voir `specs/backup.md`) |
+| Avec un compte (tous les cas)   | Tout revient à la connexion, fusionné avec le téléphone | Tout revient à la connexion, fusionné avec le téléphone                                                                                           |
 
 Limites à connaître : tout cela dépend des réglages de la personne (sauvegarde Google ou
 iCloud activée). Rien n'est vérifié sur un appareil.
+Les deux réglages d'`app.json` ont été relus dans les fichiers natifs produits par
+`expo prebuild` (25 novembre 2026), et un test échoue si l'un disparaît.
+
+## Synchronisation avec le compte
+
+Détail : `specs/sync.md` ; tables et fonctions : `supabase/migrations/20261125120000_sync.sql`.
+
+- **Propriétaire seul.** RLS sur `sync_events` et `sync_accounts` ; une personne connectée lit ses
+  propres événements et rien d'autre ; personne n'écrit les tables directement ; `anon` n'a aucun
+  droit. Les lignes sont supprimées avec le compte. Testé (`npm run db:test`, `sync.test.mjs`).
+- **Le serveur ne fait pas confiance à l'appli.** `sync_push` contrôle chaque événement champ par
+  champ, le réécrit avec ses seuls champs connus, refuse les jours impossibles, borne la taille (2 Ko
+  par événement, 200 par appel, 100 000 par compte) et limite à 120 appels par minute. Un
+  horodatage est ramené à un jour au plus après l'heure du serveur.
+- **L'appli ne fait pas confiance au serveur.** Tout ce qui revient est recontrôlé
+  (`parseSyncEvent`) puis passé par les règles du magasin ; une valeur refusée est ignorée.
+- **Aucun secret dans l'appli ni dans le dépôt.** L'appli ne reçoit que l'URL du projet et sa clé
+  publiable, publiques par nature : elles sont dans `app.json` (`expo.extra.supabase`), et des
+  variables `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` peuvent les remplacer. La clé secrète (`service_role`) ne sort jamais du tableau de bord de Supabase. Le jeton de
+  session viendra de Supabase Auth et sera gardé dans le trousseau, jamais dans le document.
+- **Ce qui reste vrai** : le journal est lisible sur le serveur par qui détient la clé secrète du
+  projet (le propriétaire, Supabase). Une appli modifiée ne peut écrire que dans son propre compte.
+- **Identifiant de téléphone** : 20 caractères tirés au hasard, propres à l'appli, qui ne disent
+  rien de l'appareil ; ils ne servent qu'à additionner le temps de plusieurs téléphones d'une même
+  personne.
+- **Non vérifié** : l'API REST et l'authentification réelles de Supabase (tests sur PostgreSQL
+  seul, imitation écrite de mémoire). À refaire sur le vrai projet avec deux comptes d'essai.
 
 ## Notifications
 
 Seules des notifications locales sont utilisées : l'envoi à distance est désactivé dans la
 configuration, et aucun jeton n'est demandé.
+
+## Micro et reconnaissance vocale (D42)
+
+- **La voix ne quitte pas le téléphone.** Le micro (`modules/voice-capture`) envoie les
+  échantillons à JavaScript, en mémoire ; Whisper (whisper.rn) les lit sur le téléphone. Aucun
+  fichier audio n'est écrit, rien n'est envoyé. L'appli n'ouvre aucune connexion pour reconnaître
+  la voix : le modèle est dans l'appli dès l'installation.
+- **Le micro n'est ouvert que sur l'écran qui écoute**, après l'alerte du système, demandée au
+  moment de l'usage (texte en français, anglais, arabe : `app.json`, `assets/app-metadata`). Il se
+  ferme dès que le passage est trouvé, au bouton « Arrêter », quand l'écran se ferme, quand
+  l'appli passe en arrière-plan, et quand le système reprend le micro (appel, Siri). Pas de mode
+  audio en arrière-plan. Micro refusé : l'écran renvoie vers les réglages du système.
+- **Le modèle est vérifié à la compilation.** Il est téléchargé par le plugin du module pendant
+  `npx expo prebuild`, et refusé si son SHA-256 n'est pas celui de `voice-model.json`. Un modèle
+  n'exécute pas de code, mais un fichier changé pourrait faire planter whisper.cpp ou tromper la
+  reconnaissance : l'empreinte l'empêche d'entrer dans l'appli.
+- L'appareil photo garde son seul usage (scanner un QR code) : il n'enregistre jamais de son. La
+  clé `NSMicrophoneUsageDescription` est celle de l'appli, pas celle du plugin de l'appareil photo.

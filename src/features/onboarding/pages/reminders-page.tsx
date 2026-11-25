@@ -27,9 +27,7 @@ export function RemindersPage({ page, model, actions }: OnboardingPageProps) {
       title={t(page.title)}
       text={t(page.text)}
       words={page.words}
-      above={
-        <NotificationPreviews reminders={model.reminders} dailyGoalPages={model.dailyGoal.pages} />
-      }
+      above={<NotificationPreviews reminders={model.reminders} />}
       below={
         notice === undefined ? null : (
           // Between the reminders and the button it announces, in reading order.

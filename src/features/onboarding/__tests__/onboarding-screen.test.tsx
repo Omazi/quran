@@ -234,7 +234,7 @@ describe('first-launch flow', () => {
   it.each([
     [0, 'heading', 'muted'],
     [8, 'heading', 'earthSecondary'],
-    [11, 'onDeep', 'onDeepSecondary'],
+    [11, 'onAction', 'onActionSecondary'],
   ] as const)(
     'writes page %i in the colours of its sky: a %s title over a %s sentence',
     async (page, titleColor, textColor) => {
@@ -591,7 +591,7 @@ describe('reminders page', () => {
     await fireEvent.press(screen.getByRole('switch', { name: FRIDAY }));
     expect(screen.getByText(WILL_ASK)).toBeOnTheScreen();
     expect(
-      screen.getByText('Pense à lire la sourate Al-Kahf.', { includeHiddenElements: true }),
+      screen.getByText('Un moment pour la sourate Al-Kahf ?', { includeHiddenElements: true }),
     ).toBeOnTheScreen();
   });
 
