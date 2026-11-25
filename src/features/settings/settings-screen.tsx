@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next';
+
+import { SyncStatusSection } from '@/features/sync';
 import { Button, ChoiceRow, GroupedList, ListRow, ListSection, Screen } from '@/ui';
 
 import { DailyGoalSection } from './daily-goal-section';
@@ -23,6 +25,8 @@ export function SettingsScreen({ model, actions }: SettingsScreenProps) {
       <GroupedList testID="settings-list">
         <DataResetNoticeSection model={model} actions={actions} />
         <SettingsSections model={model} actions={actions} />
+        {/* The backup of the progress, on the phone and in the account (docs/specs/sync.md). */}
+        <SyncStatusSection />
       </GroupedList>
     </Screen>
   );

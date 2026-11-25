@@ -466,3 +466,35 @@ l'eau. Le mot fait pousser le jardin. Détail, couleurs, couches, pistes écart�
 
 _Changerait si_ le propriétaire préfère une autre écriture ou une autre couleur, ou si le rendu sur
 iPhone déçoit : les réglages sont en tête de `make_icon.py`, et on relance l'outil.
+
+## D43 — Toujours une sauvegarde locale et une sauvegarde dans le compte, synchronisées
+
+Demande du propriétaire, 25 novembre 2026 : « l'utilisateur doit toujours avoir une sauvegarde
+locale ainsi qu'une sauvegarde sur le cloud ; s'il change de téléphone, il retrouve ses infos ;
+hors ligne (ou pendant une mise à jour), ça sauvegarde en local et, quand il se connecte, ça
+synchronise ». Elle tranche la question laissée ouverte par `specs/social-database.md` (7.1) :
+le journal **est** gardé sur le serveur, pour son propriétaire seul. Détail : `specs/sync.md`.
+
+- **Le téléphone d'abord** : l'écran ne lit que le magasin local, toujours écrit en premier, dans
+  un seul document qui contient aussi ce qui reste à synchroniser ; une seconde copie de ce
+  document le remplace s'il est abîmé ; chaque version passée est relue sans perte.
+- **Synchronisation par événements** (pages lues, temps par téléphone et par jour, réglages,
+  signets, pauses), identifiés par leur contenu, fusionnés de façon déterministe ; jardin,
+  statistiques et khatmas sont recalculés depuis le journal fusionné. Le dernier choix gagne pour
+  les réglages (horloge hybride, corrigée par celle du serveur), sauf la graine des jardins (la
+  plus ancienne) et l'introduction terminée (vrai gagne).
+- **Serveur** : deux tables Supabase, propriétaire seul (RLS), écrites uniquement par deux
+  fonctions qui contrôlent, bornent et limitent ; compactage des événements dépassés.
+- **Compte** : la synchronisation commence après la connexion (Apple, Google, e-mail par Supabase
+  Auth, à brancher) ; à la première connexion, tout le téléphone est envoyé et fusionné, jamais
+  écrasé. En attendant le projet, l'appli fonctionne entièrement hors ligne et le dit dans les
+  réglages.
+- **Sans nouvelle dépendance** : pas de bibliothèque Supabase ni de NetInfo ; `fetch` suffit et un
+  échec de requête dit qu'on est hors ligne.
+
+Vie privée : le journal révèle une pratique religieuse. Sur le serveur, il est lisible par le
+propriétaire du projet et par Supabase (clé secrète), par personne d'autre. Option écartée pour
+l'instant : le chiffrer dans l'appli avec une clé que seule la personne a (une clé perdue serait
+une progression perdue).
+_Changerait si_ le propriétaire choisit le chiffrement côté appli, ou un autre serveur : seules la
+migration et `createSupabaseSyncBackend` seraient à refaire, les règles de fusion restent.
