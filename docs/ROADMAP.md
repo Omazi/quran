@@ -46,6 +46,12 @@ Micro, modèle sur l'appareil, lecture suivie, reconnaissance d'un passage (« S
   3. donner la suite de l'aya, à voix haute (reconnaissance) ou en la choisissant ;
   4. choisir la bonne aya parmi plusieurs.
 
+- **Écouter un récitateur, avec suivi** (demande du propriétaire, 25 novembre 2026, à
+  traiter plus tard) : choisir parmi plusieurs récitateurs ; pendant la récitation, le
+  lecteur tourne les pages tout seul et montre le mot récité. Demande l'audio de chaque
+  récitateur et le minutage mot à mot de chaque récitation : sources et licences à
+  vérifier avant tout (règle des licences permissives).
+
 ## Lot 3 — Les proches
 
 Comptes, proches, visite des jardins, jardins partagés (khatm de groupe), confidentialité.

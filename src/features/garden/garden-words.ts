@@ -65,6 +65,14 @@ export function gardenWaterStatus(state: GardenState, t: GardenTranslate): strin
 }
 
 /**
+ * The second line of the water row: what a page does for the water. None on the bare earth,
+ * where there is no water yet and nothing to say about it.
+ */
+export function gardenWaterDetail(state: GardenState, t: GardenTranslate): string | null {
+  return state.phase === 'bare' ? null : t(`water.detail.${state.water}`);
+}
+
+/**
  * The name of an element, from its kind. Several elements share a kind ("bed-1", "bed-2"): the
  * locale files translate the kinds, never the ids.
  */

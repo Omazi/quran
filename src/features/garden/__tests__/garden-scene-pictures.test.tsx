@@ -61,20 +61,14 @@ describe('GardenScene with its pictures', () => {
     expect(drawnAssets()).toEqual([baseAsset('h00-f0')]);
   });
 
-  it('lays the growing element over the garden at the opacity it has grown to', async () => {
+  it('draws no half-grown element: only the elements of the hizb already complete', async () => {
     await showLanguage('fr');
     const base = garden(24);
     if (base.nextElement === null) throw new Error('The test needs a next element.');
     const state = { ...base, nextElement: { ...base.nextElement, growth: 0.4 } };
     await render(<GardenScene state={state} size="band" />);
-    const growing = screen.getByTestId('garden-growing');
-    expect(growing).toHaveStyle({ opacity: 0.4 });
-    expect(drawnAssets()).toEqual([
-      baseAsset('h24-f0'),
-      waterAsset('h24-f0-w2'),
-      baseAsset('h25-f0'),
-      waterAsset('h25-f0-w2'),
-    ]);
+    expect(screen.queryByTestId('garden-growing')).toBeNull();
+    expect(drawnAssets()).toEqual([baseAsset('h24-f0'), waterAsset('h24-f0-w2')]);
   });
 
   it('keeps the proportions of the picture, and the whole space of a page for the other size', async () => {

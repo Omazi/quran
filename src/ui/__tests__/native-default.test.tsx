@@ -728,6 +728,45 @@ describe('default ContentRow', () => {
     expect(screen.getByTestId('content')).toHaveProp('accessible', false);
   });
 
+  it('runs to the side edges, with no inset, when it is edge to edge', async () => {
+    setDeviceConditions({ os: 'android' });
+    await render(
+      <InList>
+        <ContentRow isEdgeToEdge testID="content">
+          <RNText>Scène du jardin</RNText>
+        </ContentRow>
+      </InList>,
+    );
+    expect(styleOf(screen.getByTestId('content'))).toEqual({ alignSelf: 'stretch' });
+  });
+
+  it('sits in a bare section with no divider and no padding, unlike a section of rows', async () => {
+    setDeviceConditions({ os: 'android' });
+    await render(
+      <InList>
+        <ListSection isBare>
+          <ContentRow testID="bare">
+            <RNText>Scène du jardin</RNText>
+          </ContentRow>
+        </ListSection>
+        <ListSection>
+          <ContentRow testID="framed">
+            <RNText>Un titre</RNText>
+          </ContentRow>
+        </ListSection>
+      </InList>,
+    );
+    const section = (id: string) => {
+      const parent = screen.getByTestId(id).parent;
+      if (parent === null) throw new Error('No section.');
+      return styleOf(parent);
+    };
+    expect(section('bare').borderBottomWidth).toBeUndefined();
+    expect(section('bare').paddingVertical).toBeUndefined();
+    expect(section('framed').borderBottomWidth).toBeGreaterThan(0);
+    expect(section('framed').paddingVertical).toBeGreaterThan(0);
+  });
+
   it('is one element for screen readers when it is given a label', async () => {
     setDeviceConditions();
     await render(

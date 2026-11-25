@@ -12,8 +12,10 @@ skill Apple Design (étapes 1 à 3). Voir [SKILLS.md](SKILLS.md).
 - **Rôle de l'interface** : s'effacer devant deux contenus, la page du mushaf et le
   jardin. Tout le reste est du système.
 - **Signature** : le jardin. C'est le seul endroit où l'on met 120 % d'effort
-  (SwiftUI Design, étape 4). Tant que ses vrais modèles n'existent pas, la signature est
-  un emplacement neutre, et on l'assume.
+  (SwiftUI Design, étape 4). Depuis D35, il s'affiche en images rendues à partir des modèles
+  3D choisis par le propriétaire (D22), pas dessinées en code (D12 reste vrai). Il court d'un
+  bord à l'autre de l'écran, sans cadre. Une image absente donne l'emplacement neutre et
+  nommé.
 
 ## 2. Trois directions
 
@@ -109,7 +111,8 @@ animations » (`motion.md › Best practices`). Rien d'autre que les animations 
 ### Icônes et images
 
 SF Symbols, de la graisse du texte voisin (`sf-symbols.md › Weights and scales`). Pas d'emoji, pas
-d'illustration dessinée en code. Image manquante = emplacement neutre et nommé.
+d'illustration dessinée en code. Le jardin est la seule image : des rendus de modèles 3D (D35). Image manquante = emplacement
+neutre et nommé.
 
 ### Voix
 
@@ -120,7 +123,8 @@ titres, comme le système.
 
 ## 4. Ce qui manque encore
 
-- Le style et les modèles du jardin (voir D12).
+- Le moteur 3D du jardin : faire tourner le jardin et visiter celui d'un proche (D4, D35).
+  Les jardins des autres niveaux (D23). Le jardin en images est celui du niveau 1.
 - La présentation du texte du Coran : à revoir avec le propriétaire.
 - Le nom de l'appli et son icône.
 - Version iPad (largeur « regular ») : lot ultérieur ; le lot 1 vise l'iPhone.

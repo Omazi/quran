@@ -39,7 +39,7 @@ export interface HomeScreenProps {
  * It only shows the model it receives. The whole screen is one list of the system
  * (lists-and-tables.md › Style), so it scrolls as one and nothing is cut at the largest text
  * sizes (layout.md › Adaptability). Its order is the order of importance (layout.md › Visual
- * hierarchy): the title and the streak, the scene, the state of the day, then what to read today
+ * hierarchy): the title and the streak, the scene under it, edge to edge, the state of the day, then what to read today
  * with the one coloured button right under it (buttons.md › Style), then the gauges and the
  * elements. The scene is its one signature; everything around it is the system's.
  *
@@ -77,13 +77,17 @@ function ReadyHome({ model, actions }: { model: HomeReadyModel; actions: HomeAct
   return (
     <Screen background="groupedBackground" testID="home">
       <GroupedList testID="home-list">
-        <ListSection>
+        <ListSection isBare>
           <ContentRow>
-            <HomeTitle streakDays={model.streakDays} />
+            <View style={styles.readyTitle}>
+              <HomeTitle streakDays={model.streakDays} />
+            </View>
           </ContentRow>
-        </ListSection>
-        <ListSection>
-          <ContentRow>
+          {
+            // The garden is the signature of the screen, not a row of text: it runs from edge to
+            // edge under the title, with no frame and no divider around it.
+          }
+          <ContentRow isEdgeToEdge>
             <GardenScene state={garden} size="band" />
           </ContentRow>
         </ListSection>
@@ -150,6 +154,8 @@ const styles = StyleSheet.create({
     rowGap: spacing.xs,
   },
   title: { flexShrink: 1 },
+  // The space the section used to give the title, now that the scene runs into it.
+  readyTitle: { paddingVertical: spacing.sm },
   unavailableTitle: {
     paddingHorizontal: layout.screenMargin,
     paddingTop: spacing.sm,

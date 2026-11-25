@@ -6,7 +6,7 @@
 
 import { DEFAULT_GARDEN_CONFIG, type GardenConfig, type GardenState } from '@/domain/garden';
 
-import { BARE_TREES_AFTER_WILTING_DAYS, GARDEN_STEP_COUNT, MAX_ELEMENT_STEPS } from './config';
+import { BARE_TREES_AFTER_WILTING_DAYS, MAX_ELEMENT_STEPS } from './config';
 import { SHIPPED_GARDEN_IMAGES } from './garden-images';
 
 /** Leaf cover: 0 full leaf, 1 grass and flowers dull, 2 half of the trees bare, 3 all bare. */
@@ -23,13 +23,12 @@ export interface GardenStage {
   readonly water: WaterLevel;
 }
 
+/**
+ * What the scene draws: one stage. An element appears only when its hizb is complete (D35): the
+ * growth of the element being earned stays in `GardenState.nextElement`, for the words.
+ */
 export interface GardenPicture {
   readonly stage: GardenStage;
-  /**
-   * How much of the element being earned is shown, above 0 up to 1, or null when it is not
-   * shown. The picture of one more element is laid over the stage at that opacity.
-   */
-  readonly growth: number | null;
 }
 
 /** The names of the pictures that exist, without the pictures themselves. */
@@ -105,33 +104,17 @@ export function gardenPicture(
   };
   if (!hasStage(stage, images)) return null;
 
-  const next = state.nextElement;
-  const grows =
-    next !== null && next.isVisible && next.growth > 0 && count + 1 <= GARDEN_STEP_COUNT;
-  const growing: GardenStage = { ...stage, count: count + 1 };
-  const growth = grows && hasStage(growing, images) ? Math.min(1, next.growth) : null;
-  return { stage, growth };
+  return { stage };
 }
 
 export interface PictureNames {
   readonly base: string;
   readonly water: string | null;
-  readonly growing: {
-    readonly base: string;
-    readonly water: string | null;
-    readonly opacity: number;
-  } | null;
 }
 
 /** The files a picture is made of. */
-export function pictureNames({ stage, growth }: GardenPicture): PictureNames {
-  const next: GardenStage = { ...stage, count: stage.count + 1 };
-  return {
-    base: baseName(stage),
-    water: waterName(stage),
-    growing:
-      growth === null ? null : { base: baseName(next), water: waterName(next), opacity: growth },
-  };
+export function pictureNames({ stage }: GardenPicture): PictureNames {
+  return { base: baseName(stage), water: waterName(stage) };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -158,12 +141,14 @@ function spread(from: number, to: number, limit: number): number[] {
 
 /**
  * The pictures to pass through to go from one stage to another, the first excluded and the last
- * included, in the order the garden dries: the water leaves first, then the leaves fall, then
- * the elements disappear. Coming back, the same steps run the other way round: the elements
- * return, then the leaves, then the water (docs/specs/garden.md, "Ce qu'on voit, étape par
- * étape"). When some things get worse and others better, the worse come first.
+ * included. Drying goes in the order the garden dries: the water leaves first, then the leaves
+ * fall, then the elements disappear. Coming back goes in this order: the water returns first (the
+ * same day as the reading, in the garden module), then the leaves, then the elements (architect's
+ * decision, D35). When some things get worse and others better, the worse come first.
  *
- * Empty when the two stages are the same. Never goes through a stage the set lacks.
+ * The water has no picture on an earth with no element: its step is then made without a picture
+ * of its own, and the water is there from the first element that returns. Empty when the two
+ * stages are the same. Never goes through a stage the set lacks.
  */
 export function pictureSteps(
   from: GardenStage,
@@ -171,13 +156,20 @@ export function pictureSteps(
   images: GardenImageNames,
 ): PictureStep[] {
   const steps: PictureStep[] = [];
+  // What the garden is, step by step; the picture shown is `shown(current)`.
   let current = from;
+  // The water of a garden with no element does not exist: it is only a number in the path.
+  const shown = (stage: GardenStage): GardenStage =>
+    stage.count === 0 ? { ...stage, water: 0 as WaterLevel } : stage;
+  let last = shown(from);
   const go = (next: Partial<GardenStage>, direction: PictureStep['direction']): void => {
-    const stage: GardenStage = { ...current, ...next };
-    // The water of a garden with no element does not exist: it is only a number in the path.
-    const shown = stage.count === 0 ? { ...stage, water: 0 as WaterLevel } : stage;
-    if (hasStage(shown, images)) steps.push({ stage: shown, direction });
-    current = shown;
+    current = { ...current, ...next };
+    const stage = shown(current);
+    const isSame =
+      stage.count === last.count && stage.foliage === last.foliage && stage.water === last.water;
+    if (isSame || !hasStage(stage, images)) return;
+    steps.push({ stage, direction });
+    last = stage;
   };
 
   // Worse first: water, then foliage, then fewer elements.
@@ -192,17 +184,17 @@ export function pictureSteps(
       go({ count }, 'decay');
     }
   }
-  // Then better, the other way round: elements, foliage, water.
-  if (to.count > from.count) {
-    for (const count of spread(from.count, to.count, MAX_ELEMENT_STEPS)) {
-      go({ count }, 'recovery');
-    }
+  // Then better: the water first, then the leaves, then the elements.
+  for (let water = from.water + 1; water <= to.water; water += 1) {
+    go({ water: water as WaterLevel }, 'recovery');
   }
   for (let foliage = from.foliage - 1; foliage >= to.foliage; foliage -= 1) {
     go({ foliage: foliage as FoliageStage }, 'recovery');
   }
-  for (let water = from.water + 1; water <= to.water; water += 1) {
-    go({ water: water as WaterLevel }, 'recovery');
+  if (to.count > from.count) {
+    for (const count of spread(from.count, to.count, MAX_ELEMENT_STEPS)) {
+      go({ count }, 'recovery');
+    }
   }
   return steps;
 }

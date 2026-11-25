@@ -344,5 +344,10 @@ Licence des modèles, lue le 24 novembre 2026 sur les pages des auteurs : Quater
 Kenney, CC0 (fichier de licence du kit). Les fichiers utilisés viennent de miroirs GitHub,
 pas des sites des auteurs, que cette machine ne peut pas joindre : à retélécharger à la
 source avant une publication sur l'App Store.
+Précisions du 25 novembre 2026 (architecte, après la revue de design) : un élément
+n'apparaît que lorsque son hizb est terminé (plus d'image à moitié transparente : elle
+faisait un fantôme) ; à la reprise, l'eau revient d'abord, puis les feuilles, puis les
+éléments ; les images sont recoupées à la même boîte (`specs/garden-pictures.md`). La terre
+morte reste une terre morte.
 _Changerait si_ le moteur 3D est validé sur téléphone : `GardenScene` est le seul composant
 à remplacer.

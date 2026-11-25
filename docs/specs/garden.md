@@ -108,8 +108,10 @@ morte, ni l'inverse. Chaque état ci-dessous est une image distincte, et l'on pa
 | 10 à 13    | Les éléments disparaissent un à un, les derniers arrivés d'abord                     |
 | 14         | Terre morte                                                                          |
 
-À la reprise, on remonte les mêmes étapes dans l'autre sens, **plus vite** : un jour de
-lecture rattrape trois jours de sécheresse, et l'eau revient le jour même. Si l'on ouvre
+À la reprise, on remonte les étapes **plus vite**, et dans cet ordre (décision de l'architecte,
+25 novembre 2026) : **l'eau revient d'abord**, le jour même de la lecture, puis les feuilles,
+puis les éléments. Un jour de lecture rattrape trois jours de sécheresse. Sur une terre sans
+élément l'eau n'a pas d'image : elle est là dès le premier élément qui revient. Si l'on ouvre
 l'appli après plusieurs jours d'absence, ou après une lecture qui fait remonter le jardin
 de plusieurs étapes, l'animation passe par les étapes intermédiaires au lieu de sauter à
 l'état final. Avec « Réduire les animations », on montre l'état final, sans transition.

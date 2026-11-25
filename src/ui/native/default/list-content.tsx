@@ -45,16 +45,22 @@ export function ButtonRow(props: ButtonRowProps) {
 
 /**
  * Default content row: a block as wide as the list, with the side inset of the other rows, so
- * that its content lines up with them as it does inside the iOS list.
+ * that its content lines up with them as it does inside the iOS list; or with no inset at all
+ * when it runs edge to edge.
  */
-export function ContentRow({ children, accessibilityLabel, testID }: ContentRowProps) {
+export function ContentRow({
+  children,
+  accessibilityLabel,
+  isEdgeToEdge = false,
+  testID,
+}: ContentRowProps) {
   useGroupedListGuard('ContentRow');
   return (
     <View
       accessible={accessibilityLabel !== undefined}
       accessibilityLabel={accessibilityLabel}
       testID={testID}
-      style={styles.content}
+      style={isEdgeToEdge ? styles.edgeToEdge : styles.content}
     >
       <OutsideGroupedList>{children}</OutsideGroupedList>
     </View>
@@ -77,4 +83,5 @@ const styles = StyleSheet.create({
   // The words take the width left by the icon and wrap at large text sizes.
   words: { flexGrow: 1, flexShrink: 1, gap: spacing.xs },
   content: { alignSelf: 'stretch', paddingHorizontal: layout.screenMargin },
+  edgeToEdge: { alignSelf: 'stretch' },
 });

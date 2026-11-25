@@ -1,7 +1,6 @@
 import {
   computeGardenState,
   DEFAULT_GARDEN_CONFIG,
-  GARDEN_CATALOG,
   type GardenConfig,
   type GardenState,
 } from '@/domain/garden';
@@ -154,7 +153,7 @@ describe('gardenPicture: the water', () => {
   it('has no water on the bare earth, which has no channel yet', () => {
     const picture = pictureOf(previewGardenState({ hizbCompleted: 0 }));
     expect(picture.stage).toEqual({ count: 0, foliage: 0, water: 0 });
-    expect(pictureNames(picture)).toEqual({ base: 'h00-f0', water: null, growing: null });
+    expect(pictureNames(picture)).toEqual({ base: 'h00-f0', water: null });
   });
 
   it('never asks for water at 0 elements, even if the state says so', () => {
@@ -169,11 +168,7 @@ describe('gardenPicture: the dead earth', () => {
     expect(dead.phase).toBe('dead');
     expect(dead.hizbCompleted).toBe(24);
     expect(dead.visibleElements).toHaveLength(0);
-    expect(pictureNames(pictureOf(dead))).toEqual({
-      base: 'h00-f3',
-      water: null,
-      growing: null,
-    });
+    expect(pictureNames(pictureOf(dead))).toEqual({ base: 'h00-f3', water: null });
   });
 
   it('is not the bare earth: both have no element, the foliage tells them apart', () => {
@@ -183,52 +178,26 @@ describe('gardenPicture: the dead earth', () => {
   });
 });
 
-describe('gardenPicture: the element that grows', () => {
+describe('gardenPicture: the element that grows is not drawn (D35)', () => {
   function growing(state: GardenState, growth: number): GardenState {
     if (state.nextElement === null) throw new Error('The test needs a next element.');
     return { ...state, nextElement: { ...state.nextElement, growth } };
   }
 
-  it('lays the picture of one more element over the garden, as opaque as it has grown', () => {
-    const picture = pictureOf(growing(after(0), 0.4));
+  it.each([0.1, 0.4, 0.99, 1])('shows no half-grown element, at a growth of %s', (growth) => {
+    const state = growing(after(0), growth);
+    const picture = pictureOf(state);
+    expect(picture).toEqual({ stage: pictureOf(after(0)).stage });
     expect(picture.stage.count).toBe(24);
-    expect(picture.growth).toBe(0.4);
-    expect(pictureNames(picture).growing).toEqual({
-      base: 'h25-f0',
-      water: 'h25-f0-w2',
-      opacity: 0.4,
-    });
+    expect(pictureNames(picture)).toEqual({ base: 'h24-f0', water: 'h24-f0-w2' });
   });
 
-  it('keeps the foliage and the water of the garden under it', () => {
-    const picture = pictureOf(growing(after(1), 0.5));
-    expect(pictureNames(picture).growing).toMatchObject({ base: 'h25-f0', water: 'h25-f0-w1' });
+  it('keeps the growth in the garden state, for the words', () => {
+    expect(growing(after(0), 0.4).nextElement?.growth).toBe(0.4);
   });
 
-  it('shows nothing of it before the first page of its hizb is read', () => {
-    expect(pictureOf(growing(after(0), 0)).growth).toBeNull();
-  });
-
-  it('shows all of it from the first element of a bare earth', () => {
-    const bare = growing(previewGardenState({ hizbCompleted: 0 }), 1);
-    expect(pictureNames(pictureOf(bare)).growing).toEqual({
-      base: 'h01-f0',
-      water: null,
-      opacity: 1,
-    });
-  });
-
-  it('does not show it while the drought hides elements (same rule as the garden module)', () => {
-    const dying = after(dyingMinDroughtDays);
-    const state = growing(dying, 0.5);
-    expect(state.nextElement?.isVisible).toBe(false);
-    expect(pictureOf(state).growth).toBeNull();
-  });
-
-  it('has none once the garden is complete', () => {
-    const complete = previewGardenState({ hizbCompleted: GARDEN_CATALOG.length });
-    expect(complete.nextElement).toBeNull();
-    expect(pictureOf(complete).growth).toBeNull();
+  it('shows the element once its hizb is complete', () => {
+    expect(pictureOf(after(0, 25)).stage.count).toBe(25);
   });
 });
 
@@ -250,15 +219,6 @@ describe('gardenPicture: an incomplete set of pictures', () => {
   it('gives none for an empty set, and never throws', () => {
     const empty = { base: new Set<string>(), water: new Set<string>() };
     expect(gardenPicture(after(0), { images: empty })).toBeNull();
-  });
-
-  it('keeps the garden and leaves out the growing element when only that picture is missing', () => {
-    const base = new Set(IMAGES.base);
-    base.delete('h25-f0');
-    const state = { ...after(0), nextElement: { ...after(0).nextElement!, growth: 0.5 } };
-    const picture = gardenPicture(state, { images: { base, water: IMAGES.water } });
-    expect(picture?.stage.count).toBe(24);
-    expect(picture?.growth).toBeNull();
   });
 });
 

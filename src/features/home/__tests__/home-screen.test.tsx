@@ -277,7 +277,9 @@ describe('HomeScreen, the words of each state in French', () => {
     expect(screen.getByTestId('home-streak')).toHaveTextContent(
       `${model.streakDays} jours de suite`,
     );
-    expect(screen.getByTestId('garden-water')).toHaveTextContent('L’eau coule');
+    expect(screen.getByTestId('garden-water')).toHaveTextContent(
+      /^L’eau couleUne page par jour suffit à la faire couler\.$/,
+    );
     expect(screen.getByTestId('home-today-pages')).toHaveTextContent('Pages lues3 sur 5');
     expect(screen.getByTestId('home-next-page')).toHaveTextContent(
       `ReprendrePage ${model.reading.nextPage}`,

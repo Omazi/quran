@@ -125,6 +125,11 @@ describe('GardenScene without its pictures', () => {
   });
 });
 
+const escaped = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** The text of a row is its words then its second line, run together. */
+const startsWith = (text: string): RegExp => new RegExp(`^${escaped(text)}`);
+const endsWith = (text: string): RegExp => new RegExp(`${escaped(text)}$`);
+
 describe('the garden in words', () => {
   it.each(SCREEN_CONDITIONS)(
     'shows the rules of a thirsty garden ($scheme, $language)',
@@ -167,8 +172,19 @@ describe('the garden in words', () => {
     await showLanguage('fr');
     expect(state.water).toBe(water);
     await render(<Readout state={state} />);
-    expect(screen.getByTestId('garden-water')).toHaveTextContent(words);
+    expect(screen.getByTestId('garden-water')).toHaveTextContent(startsWith(words));
   });
+
+  it.each(waterWords)(
+    'adds a second line, what a page does for the water: %s',
+    async (_, state) => {
+      await showLanguage('fr');
+      await render(<Readout state={state} />);
+      const detail = frGarden.water.detail[state.water];
+      expect(screen.getByTestId('garden-water')).toHaveTextContent(endsWith(detail));
+      expect(detail).not.toBe(frGarden.water.status[state.water]);
+    },
+  );
 
   it('does not call the bare earth dry: there is no water yet, and no health to show', async () => {
     await showLanguage('fr');

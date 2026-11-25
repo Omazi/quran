@@ -101,6 +101,12 @@ les tests, selon les usages de Material, sans imiter iOS.
   on n'est plus dans la liste : une ligne y est refusée, un contrôle y reçoit son propre hôte.
   `accessibilityLabel` sert au contenu que le lecteur d'écran ne sait pas lire (une scène
   dessinée) : la ligne devient un seul élément, son contenu n'est plus lu morceau par morceau.
+  `isEdgeToEdge` fait courir le contenu d'un bord à l'autre de l'écran, sans la marge des
+  autres lignes : pour une image qui est la signature de l'écran (le jardin de l'accueil) ; le
+  contenu garde alors ses propres marges. On le pose dans une `ListSection isBare`, qui ne
+  dessine ni filet ni espace autour de ses lignes nues (sur iOS, le système n'en dessine pas
+  non plus). Sur iOS la ligne a la largeur que la liste donne à une ligne, avec sa marge
+  latérale : **non vérifié sur un iPhone** (voir l'écart 30 de `docs/design/SKILLS.md`).
 - **`LabelRow`** : `tone` colore le symbole seul (`accent` par défaut, `growth`, `warning`,
   `secondaryLabel`), jamais les mots, qui disent toujours ce que la couleur dit
   (`color.md › Inclusive color`). Le symbole est décoratif, le lecteur d'écran lit les mots.

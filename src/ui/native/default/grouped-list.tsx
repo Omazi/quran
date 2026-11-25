@@ -20,11 +20,15 @@ export function GroupedList({ children, testID }: GroupedListProps) {
   );
 }
 
-export function ListSection({ title, footer, children }: ListSectionProps) {
+export function ListSection({ title, footer, children, isBare = false }: ListSectionProps) {
   useGroupedListGuard('ListSection');
   const colors = useColors();
   return (
-    <View style={[styles.section, { borderBottomColor: colors.separator }]}>
+    <View
+      style={
+        isBare ? styles.bareSection : [styles.section, { borderBottomColor: colors.separator }]
+      }
+    >
       {title === undefined ? null : (
         <AppText
           accessibilityRole="header"
@@ -100,6 +104,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  bareSection: { alignSelf: 'stretch' },
   sectionText: {
     paddingHorizontal: layout.screenMargin,
     paddingVertical: spacing.sm,
