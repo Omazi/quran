@@ -30,9 +30,11 @@ interface SwiftUIHostProps {
  * so the same control works alone on a screen and inside a `GroupedList`, where the list is
  * already the host.
  *
- * The host is also the one place where the app's accent is given to SwiftUI, as the tint of
- * everything below: the system then applies it where it uses an accent, such as the background
- * of a prominent button (color.md › Liquid Glass color). The system gives the content its
+ * The host is also the one place where the app's action colour is given to SwiftUI, as the tint
+ * of everything below: the system then applies it where it uses an accent, such as the background
+ * of a prominent button (color.md › Liquid Glass color). It is the forest green of the validated
+ * mockups (owner's decision, 25 November 2026), lighter at night so that it reads on a dark
+ * background; the water's teal keeps the water's meaning only. The system gives the content its
  * appearance, text size and contrast; the writing direction is passed on from React Native.
  */
 export function SwiftUIHost({ size, children }: SwiftUIHostProps) {
@@ -45,7 +47,7 @@ export function SwiftUIHost({ size, children }: SwiftUIHostProps) {
         size === 'content' ? true : size === 'contentHeight' ? { vertical: true } : false
       }
       layoutDirection={getWritingDirection() === 'rtl' ? 'rightToLeft' : 'leftToRight'}
-      seedColor={colors.accent}
+      seedColor={colors.actionTint}
       style={size === 'content' ? undefined : size === 'fill' ? styles.fill : styles.stretch}
     >
       <InsideSwiftUI.Provider value>{children}</InsideSwiftUI.Provider>

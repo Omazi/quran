@@ -1,56 +1,120 @@
 {
-  "title": "Jardin",
+  "title": "Ton jardin",
   "streak_one": "{{count}} jour de suite",
   "streak_other": "{{count}} jours de suite",
-  "notice": {
-    "bare": {
-      "title": "Terre nue",
-      "text": "Ton premier hizb fera naître ton jardin."
-    },
-    "thirsty": {
-      "title": "Jardin assoiffé",
-      "text": "Une page suffit pour faire revenir l’eau."
-    },
-    "wilting": {
-      "title": "Jardin fané",
-      "text": "Une page aujourd’hui, et il reprend des forces."
-    },
-    "dying": {
-      "title": "Jardin mourant",
-      "text": "Une page fait déjà revenir des éléments."
-    },
-    "dead": {
-      "title": "Terre morte",
-      "text": "Tes hizb lus restent acquis. Une page fait revenir l’eau."
-    },
-    "recovering": {
-      "title": "L’eau est revenue",
-      "text": "Ton jardin reprend des forces. Continue demain."
-    },
-    "complete": {
-      "title": "Khatma terminée",
-      "text": "Ton jardin est complet. Lis une page pour commencer la suivante\u00a0: un nouveau jardin t’attend."
-    }
+  "profile": "Profil",
+  "growing": {
+    "title": "Hizb {{hizb}}",
+    "value": "{{percent}} % du hizb lu"
+  },
+  "progress": {
+    "watered_one": "Arrosé depuis {{count}} j",
+    "watered_other": "Arrosé depuis {{count}} j",
+    "still_one": "Sans eau depuis {{count}} j",
+    "still_other": "Sans eau depuis {{count}} j",
+    "dry_one": "À sec depuis {{count}} j",
+    "dry_other": "À sec depuis {{count}} j",
+    "wateredLabel_one": "Arrosé depuis {{count}} jour",
+    "wateredLabel_other": "Arrosé depuis {{count}} jours",
+    "stillLabel_one": "Sans eau depuis {{count}} jour",
+    "stillLabel_other": "Sans eau depuis {{count}} jours",
+    "dryLabel_one": "À sec depuis {{count}} jour",
+    "dryLabel_other": "À sec depuis {{count}} jours"
   },
   "today": {
-    "title": "Aujourd’hui",
-    "pages": {
-      "label": "Pages lues",
-      "value": "{{read}} sur {{goal}}",
-      "valueReached": "{{read}} sur {{goal}}, objectif atteint"
-    },
-    "finish": {
-      "label": "Fin estimée",
-      "labelNext": "Fin de la suivante",
-      "today": "Aujourd’hui"
-    },
-    "footer_one": "Estimation au rythme de ton objectif\u00a0: {{count}} page par jour.",
-    "footer_other": "Estimation au rythme de ton objectif\u00a0: {{count}} pages par jour."
+    "title": "Arrosage du jour",
+    "pages_one": "{{count}} page sur {{goal}}",
+    "pages_other": "{{count}} pages sur {{goal}}",
+    "hizbLeft_one": "Encore {{count}} page pour finir le hizb {{hizb}}",
+    "hizbLeft_other": "Encore {{count}} pages pour finir le hizb {{hizb}}",
+    "onePage": "Une page suffit pour que l’eau revienne",
+    "resume": "Reprendre page {{page}}",
+    "start": "Commencer page {{page}}"
   },
   "actions": {
     "read": "Lire et arroser",
-    "resumeAt": "Reprendre · Page {{page}}",
-    "startAt": "Commencer · Page {{page}}"
+    "waterNow": "Arroser maintenant",
+    "readOnePage": "Lire une page"
+  },
+  "added": {
+    "title": "Ajouté au hizb {{hizb}}"
+  },
+  "notice": {
+    "recovering": {
+      "title": "L’eau est revenue",
+      "text": "Ton jardin reprend des forces. Continue demain."
+    }
+  },
+  "thirst": {
+    "title": {
+      "thirsty": "Ton jardin a soif",
+      "wilting": "Ton jardin fane",
+      "dying": "Ton jardin se dessèche"
+    },
+    "text": {
+      "thirsty_one": "{{count}} jour sans lecture : l’eau s’est arrêtée et l’herbe jaunit.",
+      "thirsty_other": "{{count}} jours sans lecture : l’eau s’est arrêtée et l’herbe jaunit.",
+      "wilting_one": "{{count}} jour sans lecture : les arbres perdent leurs feuilles.",
+      "wilting_other": "{{count}} jours sans lecture : les arbres perdent leurs feuilles.",
+      "dying_one": "{{count}} jour sans lecture : des éléments du jardin disparaissent.",
+      "dying_other": "{{count}} jours sans lecture : des éléments du jardin disparaissent."
+    },
+    "next": {
+      "wilting_one": "Demain, les arbres perdent leurs feuilles.",
+      "wilting_other": "Dans {{count}} jours, les arbres perdent leurs feuilles.",
+      "dying_one": "Demain, des éléments commencent à disparaître.",
+      "dying_other": "Dans {{count}} jours, des éléments commencent à disparaître.",
+      "dead_one": "Demain, il ne restera qu’une terre sèche.",
+      "dead_other": "Dans {{count}} jours, il ne restera qu’une terre sèche."
+    }
+  },
+  "dead": {
+    "title": "Ton jardin s’est desséché",
+    "text_one": "{{count}} jour sans lecture. Il ne reste qu’une terre sèche.",
+    "text_other": "{{count}} jours sans lecture. Il ne reste qu’une terre sèche.",
+    "kept_one": "Ton hizb reste compté.",
+    "kept_other": "Tes {{count}} hizb restent comptés.",
+    "comeBack": "Dès que tu reprends, l’eau revient, puis ton jardin repousse, élément par élément."
+  },
+  "complete": {
+    "count": "{{hizb}} hizb sur {{total}}",
+    "title": "Ton jardin est complet",
+    "blessing": "تقبّل الله منك",
+    "blessingMeaning": "Qu’Allah l’accepte de toi.",
+    "hizb": "hizb",
+    "pages": "pages",
+    "days_one": "jour",
+    "days_other": "jours",
+    "summary_one": "{{hizb}} hizb, {{pages}} pages, en {{count}} jour",
+    "summary_other": "{{hizb}} hizb, {{pages}} pages, en {{count}} jours",
+    "share": "Partager",
+    "newKhatma": "Nouvelle khatma",
+    "shareMessage_one": "J’ai terminé une khatma en {{count}} jour. Mon jardin est complet.",
+    "shareMessage_other": "J’ai terminé une khatma en {{count}} jours. Mon jardin est complet."
+  },
+  "arrival": {
+    "hizb": "Hizb {{hizb}} terminé",
+    "next": "Prochain élément, au hizb {{hizb}} : {{element}}.",
+    "see": "Voir dans mon jardin",
+    "share": "Partager",
+    "close": "Fermer",
+    "shareMessage": "J’ai terminé le hizb {{hizb}} : un nouvel élément pousse dans mon jardin."
+  },
+  "neighbours": {
+    "title": "Jardins voisins",
+    "seeAll": "Tout voir",
+    "watered_one": "{{hizb}} hizb, arrosé depuis {{count}} j",
+    "watered_other": "{{hizb}} hizb, arrosé depuis {{count}} j",
+    "rested_one": "{{hizb}} hizb, arrosé il y a {{count}} j",
+    "rested_other": "{{hizb}} hizb, arrosé il y a {{count}} j",
+    "thirsty_one": "{{hizb}} hizb, a soif depuis {{count}} j",
+    "thirsty_other": "{{hizb}} hizb, a soif depuis {{count}} j",
+    "dry": "{{hizb}} hizb, jardin desséché",
+    "complete": "Jardin complet",
+    "new": "{{hizb}} hizb",
+    "hidden": "Jardin masqué",
+    "signedOut": "Connecte-toi dans Proches pour voir ici les jardins de tes proches.",
+    "empty": "Ajoute un proche pour voir son jardin ici."
   },
   "unavailable": {
     "title": "Jardin indisponible",

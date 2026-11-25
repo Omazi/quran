@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { quranStructure } from '@/data/quran';
+import type { LocalDate } from '@/domain/shared/local-date';
 
 import { buildHomeModel, type HomeModel, type HomeModelInput } from './home-model';
 import { useHomeSource } from './home-source';
@@ -14,6 +15,8 @@ export interface HomeModelDependencies {
 
 export interface HomeModelResult {
   readonly model: HomeModel;
+  /** The day the model was built for. */
+  readonly today: LocalDate;
   /** Builds the model again from the data as it is now: the action of the unavailable state. */
   readonly retry: () => void;
 }
@@ -56,5 +59,5 @@ export function useHomeModel({ clock }: HomeModelDependencies = {}): HomeModelRe
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [journal, dailyGoalPages, userSeed, lastOpenedPage, pauses, today, attempt],
   );
-  return { model, retry };
+  return { model, today, retry };
 }

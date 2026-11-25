@@ -1,64 +1,212 @@
 {
-  "title": "الحديقة",
+  "title": "حديقتك",
   "streak_zero": "{{count}} يوم متتالٍ",
   "streak_one": "يوم واحد متتالٍ",
   "streak_two": "يومان متتاليان",
   "streak_few": "{{count}} أيام متتالية",
   "streak_many": "{{count}} يومًا متتاليًا",
   "streak_other": "{{count}} يوم متتالٍ",
-  "notice": {
-    "bare": {
-      "title": "أرض جرداء",
-      "text": "حزبك الأول يُنبت حديقتك."
-    },
-    "thirsty": {
-      "title": "حديقة عطشى",
-      "text": "صفحة واحدة تكفي ليعود الماء."
-    },
-    "wilting": {
-      "title": "حديقة ذابلة",
-      "text": "صفحة اليوم تعيد إليها قوتها."
-    },
-    "dying": {
-      "title": "حديقة يابسة",
-      "text": "صفحة واحدة تعيد بعض عناصرها."
-    },
-    "dead": {
-      "title": "أرض ميتة",
-      "text": "أحزابك المقروءة باقية لك. صفحة واحدة تعيد الماء."
-    },
-    "recovering": {
-      "title": "عاد الماء",
-      "text": "حديقتك تستعيد قوتها. واصل غدًا."
-    },
-    "complete": {
-      "title": "اكتملت الختمة",
-      "text": "حديقتك مكتملة. اقرأ صفحة لتبدأ الختمة التالية: حديقة جديدة بانتظارك."
-    }
+  "profile": "الملف الشخصي",
+  "growing": {
+    "title": "الحزب {{hizb}}",
+    "value": "قُرئ {{percent}}٪ من الحزب"
+  },
+  "progress": {
+    "watered_zero": "مَسقيّة منذ {{count}} ي",
+    "watered_one": "مَسقيّة منذ {{count}} ي",
+    "watered_two": "مَسقيّة منذ {{count}} ي",
+    "watered_few": "مَسقيّة منذ {{count}} ي",
+    "watered_many": "مَسقيّة منذ {{count}} ي",
+    "watered_other": "مَسقيّة منذ {{count}} ي",
+    "still_zero": "بلا ماء منذ {{count}} ي",
+    "still_one": "بلا ماء منذ {{count}} ي",
+    "still_two": "بلا ماء منذ {{count}} ي",
+    "still_few": "بلا ماء منذ {{count}} ي",
+    "still_many": "بلا ماء منذ {{count}} ي",
+    "still_other": "بلا ماء منذ {{count}} ي",
+    "dry_zero": "جافة منذ {{count}} ي",
+    "dry_one": "جافة منذ {{count}} ي",
+    "dry_two": "جافة منذ {{count}} ي",
+    "dry_few": "جافة منذ {{count}} ي",
+    "dry_many": "جافة منذ {{count}} ي",
+    "dry_other": "جافة منذ {{count}} ي",
+    "wateredLabel_zero": "مَسقيّة منذ {{count}} يوم",
+    "wateredLabel_one": "مَسقيّة منذ يوم واحد",
+    "wateredLabel_two": "مَسقيّة منذ يومين",
+    "wateredLabel_few": "مَسقيّة منذ {{count}} أيام",
+    "wateredLabel_many": "مَسقيّة منذ {{count}} يومًا",
+    "wateredLabel_other": "مَسقيّة منذ {{count}} يوم",
+    "stillLabel_zero": "بلا ماء منذ {{count}} يوم",
+    "stillLabel_one": "بلا ماء منذ يوم واحد",
+    "stillLabel_two": "بلا ماء منذ يومين",
+    "stillLabel_few": "بلا ماء منذ {{count}} أيام",
+    "stillLabel_many": "بلا ماء منذ {{count}} يومًا",
+    "stillLabel_other": "بلا ماء منذ {{count}} يوم",
+    "dryLabel_zero": "جافة منذ {{count}} يوم",
+    "dryLabel_one": "جافة منذ يوم واحد",
+    "dryLabel_two": "جافة منذ يومين",
+    "dryLabel_few": "جافة منذ {{count}} أيام",
+    "dryLabel_many": "جافة منذ {{count}} يومًا",
+    "dryLabel_other": "جافة منذ {{count}} يوم"
   },
   "today": {
-    "title": "اليوم",
-    "pages": {
-      "label": "الصفحات المقروءة",
-      "value": "{{read}} من {{goal}}",
-      "valueReached": "{{read}} من {{goal}}، تحقق الهدف"
-    },
-    "finish": {
-      "label": "الختم المتوقع",
-      "labelNext": "ختم التالية",
-      "today": "اليوم"
-    },
-    "footer_zero": "تقدير على وتيرة هدفك: {{count}} صفحة في اليوم.",
-    "footer_one": "تقدير على وتيرة هدفك: صفحة واحدة في اليوم.",
-    "footer_two": "تقدير على وتيرة هدفك: صفحتان في اليوم.",
-    "footer_few": "تقدير على وتيرة هدفك: {{count}} صفحات في اليوم.",
-    "footer_many": "تقدير على وتيرة هدفك: {{count}} صفحة في اليوم.",
-    "footer_other": "تقدير على وتيرة هدفك: {{count}} صفحة في اليوم."
+    "title": "سقي اليوم",
+    "pages_zero": "{{count}} صفحة من {{goal}}",
+    "pages_one": "صفحة واحدة من {{goal}}",
+    "pages_two": "صفحتان من {{goal}}",
+    "pages_few": "{{count}} صفحات من {{goal}}",
+    "pages_many": "{{count}} صفحة من {{goal}}",
+    "pages_other": "{{count}} صفحة من {{goal}}",
+    "hizbLeft_zero": "بقيت {{count}} صفحة لإتمام الحزب {{hizb}}",
+    "hizbLeft_one": "بقيت صفحة واحدة لإتمام الحزب {{hizb}}",
+    "hizbLeft_two": "بقيت صفحتان لإتمام الحزب {{hizb}}",
+    "hizbLeft_few": "بقيت {{count}} صفحات لإتمام الحزب {{hizb}}",
+    "hizbLeft_many": "بقيت {{count}} صفحة لإتمام الحزب {{hizb}}",
+    "hizbLeft_other": "بقيت {{count}} صفحة لإتمام الحزب {{hizb}}",
+    "onePage": "صفحة واحدة تكفي ليعود الماء",
+    "resume": "المتابعة من الصفحة {{page}}",
+    "start": "البدء من الصفحة {{page}}"
   },
   "actions": {
     "read": "اقرأ واسقِ",
-    "resumeAt": "المتابعة · الصفحة {{page}}",
-    "startAt": "البداية · الصفحة {{page}}"
+    "waterNow": "اسقِ الآن",
+    "readOnePage": "اقرأ صفحة"
+  },
+  "added": {
+    "title": "أُضيف عند الحزب {{hizb}}"
+  },
+  "notice": {
+    "recovering": {
+      "title": "عاد الماء",
+      "text": "حديقتك تستعيد قوتها. واصل غدًا."
+    }
+  },
+  "thirst": {
+    "title": {
+      "thirsty": "حديقتك عطشى",
+      "wilting": "حديقتك تذبل",
+      "dying": "حديقتك تجفّ"
+    },
+    "text": {
+      "thirsty_zero": "{{count}} يوم بلا قراءة: توقف الماء واصفرّ العشب.",
+      "thirsty_one": "يوم واحد بلا قراءة: توقف الماء واصفرّ العشب.",
+      "thirsty_two": "يومان بلا قراءة: توقف الماء واصفرّ العشب.",
+      "thirsty_few": "{{count}} أيام بلا قراءة: توقف الماء واصفرّ العشب.",
+      "thirsty_many": "{{count}} يومًا بلا قراءة: توقف الماء واصفرّ العشب.",
+      "thirsty_other": "{{count}} يوم بلا قراءة: توقف الماء واصفرّ العشب.",
+      "wilting_zero": "{{count}} يوم بلا قراءة: الأشجار تفقد أوراقها.",
+      "wilting_one": "يوم واحد بلا قراءة: الأشجار تفقد أوراقها.",
+      "wilting_two": "يومان بلا قراءة: الأشجار تفقد أوراقها.",
+      "wilting_few": "{{count}} أيام بلا قراءة: الأشجار تفقد أوراقها.",
+      "wilting_many": "{{count}} يومًا بلا قراءة: الأشجار تفقد أوراقها.",
+      "wilting_other": "{{count}} يوم بلا قراءة: الأشجار تفقد أوراقها.",
+      "dying_zero": "{{count}} يوم بلا قراءة: بعض عناصر الحديقة تختفي.",
+      "dying_one": "يوم واحد بلا قراءة: بعض عناصر الحديقة تختفي.",
+      "dying_two": "يومان بلا قراءة: بعض عناصر الحديقة تختفي.",
+      "dying_few": "{{count}} أيام بلا قراءة: بعض عناصر الحديقة تختفي.",
+      "dying_many": "{{count}} يومًا بلا قراءة: بعض عناصر الحديقة تختفي.",
+      "dying_other": "{{count}} يوم بلا قراءة: بعض عناصر الحديقة تختفي."
+    },
+    "next": {
+      "wilting_zero": "بعد {{count}} يوم، تفقد الأشجار أوراقها.",
+      "wilting_one": "غدًا، تفقد الأشجار أوراقها.",
+      "wilting_two": "بعد يومين، تفقد الأشجار أوراقها.",
+      "wilting_few": "بعد {{count}} أيام، تفقد الأشجار أوراقها.",
+      "wilting_many": "بعد {{count}} يومًا، تفقد الأشجار أوراقها.",
+      "wilting_other": "بعد {{count}} يوم، تفقد الأشجار أوراقها.",
+      "dying_zero": "بعد {{count}} يوم، تبدأ بعض العناصر بالاختفاء.",
+      "dying_one": "غدًا، تبدأ بعض العناصر بالاختفاء.",
+      "dying_two": "بعد يومين، تبدأ بعض العناصر بالاختفاء.",
+      "dying_few": "بعد {{count}} أيام، تبدأ بعض العناصر بالاختفاء.",
+      "dying_many": "بعد {{count}} يومًا، تبدأ بعض العناصر بالاختفاء.",
+      "dying_other": "بعد {{count}} يوم، تبدأ بعض العناصر بالاختفاء.",
+      "dead_zero": "بعد {{count}} يوم، لن يبقى إلا أرض جافة.",
+      "dead_one": "غدًا، لن يبقى إلا أرض جافة.",
+      "dead_two": "بعد يومين، لن يبقى إلا أرض جافة.",
+      "dead_few": "بعد {{count}} أيام، لن يبقى إلا أرض جافة.",
+      "dead_many": "بعد {{count}} يومًا، لن يبقى إلا أرض جافة.",
+      "dead_other": "بعد {{count}} يوم، لن يبقى إلا أرض جافة."
+    }
+  },
+  "dead": {
+    "title": "جفّت حديقتك",
+    "text_zero": "{{count}} يوم بلا قراءة. لم يبق إلا أرض جافة.",
+    "text_one": "يوم واحد بلا قراءة. لم يبق إلا أرض جافة.",
+    "text_two": "يومان بلا قراءة. لم يبق إلا أرض جافة.",
+    "text_few": "{{count}} أيام بلا قراءة. لم يبق إلا أرض جافة.",
+    "text_many": "{{count}} يومًا بلا قراءة. لم يبق إلا أرض جافة.",
+    "text_other": "{{count}} يوم بلا قراءة. لم يبق إلا أرض جافة.",
+    "kept_zero": "أحزابك الـ{{count}} باقية لك.",
+    "kept_one": "حزبك باقٍ لك.",
+    "kept_two": "حزباك باقيان لك.",
+    "kept_few": "أحزابك الـ{{count}} باقية لك.",
+    "kept_many": "أحزابك الـ{{count}} باقية لك.",
+    "kept_other": "أحزابك الـ{{count}} باقية لك.",
+    "comeBack": "ما إن تعود إلى القراءة حتى يعود الماء، ثم تنمو حديقتك من جديد، عنصرًا بعد عنصر."
+  },
+  "complete": {
+    "count": "{{hizb}} من {{total}} حزبًا",
+    "title": "اكتملت حديقتك",
+    "blessing": "تقبّل الله منك",
+    "blessingMeaning": "تقبّل الله منك",
+    "hizb": "حزبًا",
+    "pages": "صفحة",
+    "days_zero": "يوم",
+    "days_one": "يوم",
+    "days_two": "يومان",
+    "days_few": "أيام",
+    "days_many": "يومًا",
+    "days_other": "يوم",
+    "summary_zero": "{{hizb}} حزبًا، {{pages}} صفحة، في {{count}} يوم",
+    "summary_one": "{{hizb}} حزبًا، {{pages}} صفحة، في {{count}} يوم",
+    "summary_two": "{{hizb}} حزبًا، {{pages}} صفحة، في {{count}} يوم",
+    "summary_few": "{{hizb}} حزبًا، {{pages}} صفحة، في {{count}} يوم",
+    "summary_many": "{{hizb}} حزبًا، {{pages}} صفحة، في {{count}} يوم",
+    "summary_other": "{{hizb}} حزبًا، {{pages}} صفحة، في {{count}} يوم",
+    "share": "مشاركة",
+    "newKhatma": "ختمة جديدة",
+    "shareMessage_zero": "أتممت ختمة في {{count}} يوم. اكتملت حديقتي.",
+    "shareMessage_one": "أتممت ختمة في يوم واحد. اكتملت حديقتي.",
+    "shareMessage_two": "أتممت ختمة في يومين. اكتملت حديقتي.",
+    "shareMessage_few": "أتممت ختمة في {{count}} أيام. اكتملت حديقتي.",
+    "shareMessage_many": "أتممت ختمة في {{count}} يومًا. اكتملت حديقتي.",
+    "shareMessage_other": "أتممت ختمة في {{count}} يوم. اكتملت حديقتي."
+  },
+  "arrival": {
+    "hizb": "اكتمل الحزب {{hizb}}",
+    "next": "العنصر التالي، عند الحزب {{hizb}}: {{element}}.",
+    "see": "شاهِد في حديقتي",
+    "share": "مشاركة",
+    "close": "إغلاق",
+    "shareMessage": "أتممت الحزب {{hizb}}: عنصر جديد ينمو في حديقتي."
+  },
+  "neighbours": {
+    "title": "حدائق الجيران",
+    "seeAll": "عرض الكل",
+    "watered_zero": "{{hizb}} حزبًا، مَسقيّة منذ {{count}} ي",
+    "watered_one": "{{hizb}} حزبًا، مَسقيّة منذ {{count}} ي",
+    "watered_two": "{{hizb}} حزبًا، مَسقيّة منذ {{count}} ي",
+    "watered_few": "{{hizb}} حزبًا، مَسقيّة منذ {{count}} ي",
+    "watered_many": "{{hizb}} حزبًا، مَسقيّة منذ {{count}} ي",
+    "watered_other": "{{hizb}} حزبًا، مَسقيّة منذ {{count}} ي",
+    "rested_zero": "{{hizb}} حزبًا، سُقيت قبل {{count}} ي",
+    "rested_one": "{{hizb}} حزبًا، سُقيت قبل {{count}} ي",
+    "rested_two": "{{hizb}} حزبًا، سُقيت قبل {{count}} ي",
+    "rested_few": "{{hizb}} حزبًا، سُقيت قبل {{count}} ي",
+    "rested_many": "{{hizb}} حزبًا، سُقيت قبل {{count}} ي",
+    "rested_other": "{{hizb}} حزبًا، سُقيت قبل {{count}} ي",
+    "thirsty_zero": "{{hizb}} حزبًا، عطشى منذ {{count}} ي",
+    "thirsty_one": "{{hizb}} حزبًا، عطشى منذ {{count}} ي",
+    "thirsty_two": "{{hizb}} حزبًا، عطشى منذ {{count}} ي",
+    "thirsty_few": "{{hizb}} حزبًا، عطشى منذ {{count}} ي",
+    "thirsty_many": "{{hizb}} حزبًا، عطشى منذ {{count}} ي",
+    "thirsty_other": "{{hizb}} حزبًا، عطشى منذ {{count}} ي",
+    "dry": "{{hizb}} حزبًا، حديقة جافة",
+    "complete": "حديقة مكتملة",
+    "new": "{{hizb}} حزبًا",
+    "hidden": "حديقة مخفية",
+    "signedOut": "سجّل الدخول في «الأحبّة» لترى هنا حدائق أحبّتك.",
+    "empty": "أضف حبيبًا لترى حديقته هنا."
   },
   "unavailable": {
     "title": "الحديقة غير متاحة",

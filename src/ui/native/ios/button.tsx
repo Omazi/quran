@@ -46,10 +46,14 @@ export function Button({
   assertButtonRole({ variant, role });
   const colors = useColors();
   const isListAction = useIsInsideSwiftUI() && variant === 'plain';
-  // The system draws a white label on the prominent style in both appearances. On the light
-  // accent of the dark appearance that is 1.96:1, so the label takes the charter's `onAccent`.
-  // A disabled button keeps the system's own dimmed colours.
-  const labelColor = variant === 'primary' && !disabled ? [foregroundStyle(colors.onAccent)] : [];
+  // The prominent style is filled with the forest green, lighter at night: its label takes the
+  // charter's `onAccent`, white by day (7.85:1), black at night (11.09:1), where the system's white
+  // would not be readable. The other styles write their label in that green. A disabled or
+  // destructive button keeps the system's own colours.
+  const labelColor =
+    disabled || role === 'destructive'
+      ? []
+      : [foregroundStyle(variant === 'primary' ? colors.onAccent : colors.actionTint)];
   const labelWidth = fullWidth ? [frame({ maxWidth: Infinity })] : [];
   const labelTarget =
     variant === 'plain' && !isListAction

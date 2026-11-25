@@ -19,6 +19,7 @@ import {
 } from '../test-support/environment';
 import {
   appColors,
+  gardenPalette,
   appleTextStyles,
   fallbackSystemColors,
   highContrastAppColors,
@@ -210,7 +211,11 @@ describe('useColors', () => {
   );
 
   it('covers every role on both kinds of platform', async () => {
-    const roles = [...Object.keys(iosSystemColorNames), ...Object.keys(appColors)].sort();
+    const roles = [
+      ...Object.keys(iosSystemColorNames),
+      ...Object.keys(appColors),
+      ...Object.keys(gardenPalette),
+    ].sort();
     setDeviceConditions({ os: 'ios' });
     expect(Object.keys((await renderHook(() => useColors())).result.current).sort()).toEqual(roles);
     setDeviceConditions({ os: 'android' });

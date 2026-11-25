@@ -14,7 +14,7 @@ import { DIRECTION_RESTART_KEY } from '@/features/settings';
 import { REJECTED_DATA_KEY, RESET_NOTICE_KEY, STORED_DATA_KEY, STORED_DATA_VERSION } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
 import {
-  iosAppColor,
+  iosPaletteColor,
   resetDeviceConditions,
   setDeviceConditions,
   type RenderedElement,
@@ -313,8 +313,9 @@ describe('returning person', () => {
       ['Proches', { sf: 'person.2.fill' }],
       ['Profil', { sf: 'person.crop.circle.fill' }],
     ]);
-    // The selected tab takes the accent, and the bar the direction React Native runs in.
-    expect(tabsHost()).toHaveProp('tabBarTintColor', iosAppColor('accent'));
+    // The selected tab takes the action green (owner's decision of 25 November 2026), and the bar
+    // the direction React Native runs in.
+    expect(tabsHost()).toHaveProp('tabBarTintColor', iosPaletteColor('actionTint'));
     expect(tabsHost()).toHaveProp('layoutDirection', 'ltr');
     expect(tabsHost()).toHaveProp('tabBarHidden', undefined);
     expect(SplashScreen.hide).toHaveBeenCalled();
@@ -355,7 +356,7 @@ describe('returning person', () => {
       .queryAll(({ type }) => type === 'RNSScreenStackHeaderConfig')
       .find(({ props }) => props.title === 'Réglages');
     expect(header).toHaveProp('hidden', false);
-    expect(header).toHaveProp('color', iosAppColor('accent'));
+    expect(header).toHaveProp('color', iosPaletteColor('actionTint'));
     expect(screen.getByRole('adjustable', { name: 'Pages par jour' })).toHaveAccessibilityValue({
       text: '12',
     });
@@ -460,8 +461,8 @@ describe('returning person', () => {
       .queryAll(({ type }) => type === 'RNSScreenStackHeaderConfig')
       .find(({ props }) => props.title === 'Présentation');
     expect(header).toHaveProp('hidden', false);
-    // The back button takes the accent of the app, not the system's blue.
-    expect(header).toHaveProp('color', iosAppColor('accent'));
+    // The back button takes the action green of the app, not the system's blue.
+    expect(header).toHaveProp('color', iosPaletteColor('actionTint'));
 
     // Opened again, the flow simply ends: "Terminé", and the system is asked nothing.
     await swipeToPage(LAST_PAGE);

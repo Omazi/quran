@@ -15,6 +15,7 @@ export { QrCode, qrCodeModules, type QrCodeProps } from './components/qr-code';
 export { QuranText, type QuranTextProps, type QuranTextRun } from './components/quran-text';
 export { Screen, type ScreenBackground, type ScreenProps } from './components/screen';
 export { useReducedMotion } from './device-settings';
+export { useSafeInsets } from './safe-insets';
 export { getWritingDirection, type WritingDirection } from './direction';
 export { appFonts } from './fonts';
 export * from './native';
@@ -28,9 +29,12 @@ export {
   chart,
   fontFamily,
   layout,
+  pieceSizes,
   radius,
   spacing,
   stateOpacity,
+  type BackdropName,
+  type GardenPaletteRole,
   type QuranTextStyleName,
   type AppColorRole,
   type ColorRole,
@@ -40,4 +44,14 @@ export {
   type TextColorRole,
   type TextStyleName,
 } from './tokens';
-export { useColors, type Colors } from './use-colors';
+export { useBackdropGradient, useColors, useElevation, type Colors } from './use-colors';
+export { ActionButton, type ActionButtonProps } from './components/action-button';
+export { ArabicDisplayText, type ArabicDisplayTextProps } from './components/arabic-display-text';
+export { Avatar, type AvatarProps } from './components/avatar';
+export { Card, type CardProps, type CardTone } from './components/card';
+export { DottedProgress, type DottedProgressProps } from './components/dotted-progress';
+export { GradientBackdrop, type GradientBackdropProps } from './components/gradient-backdrop';
+export { IconTile, type IconTileProps, type IconTileTone } from './components/icon-tile';
+export { Pill, type PillProps } from './components/pill';
+export { ProgressRing, type ProgressRingProps } from './components/progress-ring';
+export { SectionHeader, type SectionHeaderProps } from './components/section-header';

@@ -25,7 +25,7 @@ async function renderHome(store: AppStore) {
 }
 
 describe('the developer preview of the home screen (development only)', () => {
-  it('is the last section of the list and starts on the real data', async () => {
+  it('is the last part of the screen and starts on the real data', async () => {
     expect(__DEV__).toBe(true);
     await renderHome(createTestAppStore());
     expect(screen.getByRole('header', { name: 'Aperçu des états' })).toBeOnTheScreen();
@@ -74,7 +74,7 @@ describe('the developer preview of the home screen (development only)', () => {
     expect(screen.getByRole('image', { name: /^Terre nue/ })).toBeOnTheScreen();
   });
 
-  it('is a row of the system list on an iPhone', async () => {
+  it('renders on an iPhone', async () => {
     await showLanguage('fr');
     await renderOnIOS(
       <AppStoreProvider store={createTestAppStore()}>

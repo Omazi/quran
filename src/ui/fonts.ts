@@ -12,11 +12,19 @@ import { Amiri_700Bold } from '@expo-google-fonts/amiri/700Bold';
 const KFGQPCHafsUthmanic: number = require('../../assets/fonts/KFGQPC-HAFS-Uthmanic-Script-v0.18.ttf');
 
 /**
- * Fonts bundled with the app, for Quran text only, keyed by the names used in the `fontFamily`
- * tokens. The interface itself uses the system fonts. Pass this map to `useFonts` once, in the
- * root layout.
+ * Fraunces SemiBold, the serif of the titles in the validated mockups (owner's decision of
+ * 25 November 2026; SIL Open Font License, see assets/fonts/NOTICE.txt). One weight is shipped:
+ * every title is set in it.
+ */
+const FrauncesSemiBold: number = require('../../assets/fonts/Fraunces-SemiBold.ttf');
+
+/**
+ * Fonts bundled with the app, keyed by the names used in the `fontFamily` tokens: the Quran
+ * fonts, and the serif of the titles. The rest of the interface uses the system font. Pass this
+ * map to `useFonts` once, in the root layout, which waits for them before the first screen.
  */
 export const appFonts = {
   KFGQPCHafsUthmanic,
   Amiri_700Bold,
+  FrauncesSemiBold,
 } as const;

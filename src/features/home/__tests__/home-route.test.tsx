@@ -39,9 +39,11 @@ async function renderRoute(store: AppStore) {
 describe('the "Jardin" tab', () => {
   it('shows a new person a bare earth, not made-up data', async () => {
     await renderRoute(createTestAppStore());
-    expect(screen.getByRole('header', { name: 'Jardin' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Ton jardin' })).toBeOnTheScreen();
     expect(screen.getByRole('image', { name: /^Terre nue, aucun hizb terminé/ })).toBeOnTheScreen();
-    expect(screen.getByTestId('home-today-pages')).toHaveTextContent('Pages lues0 sur 5');
+    expect(screen.getByTestId('home-today-pages')).toHaveTextContent(/0 page sur 5/);
+    // Nothing read yet: the first page is to start, not to resume.
+    expect(screen.getByTestId('home-resume')).toHaveTextContent('Al-FatihaCommencer page 1الفاتحة');
   });
 
   it('shows the garden of what the person read', async () => {
@@ -64,22 +66,22 @@ describe('the "Jardin" tab', () => {
     expect(router.push).toHaveBeenCalledWith(`/reader/${resumePage}`);
     // Nothing was added to the journal: the pages of the day are what they were.
     expect(store.getState().journal).toBe(journal);
-    expect(screen.getByTestId('home-today-pages')).toHaveTextContent('Pages lues3 sur 5');
+    expect(screen.getByTestId('home-today-pages')).toHaveTextContent(/3 pages sur 5/);
   });
 
-  it('names on its button the page it opens, once the reader was opened elsewhere', async () => {
+  it('names above its button the page it opens, once the reader was opened elsewhere', async () => {
     const store = readerStore();
     store.getState().setLastOpenedPage(293);
     await renderRoute(store);
-    expect(screen.getByTestId('home-read')).toHaveTextContent(
-      'Lire et arroserReprendre · Page 293',
-    );
+    // accueil.png: "Al-Kahf · Reprendre page 293", the Arabic name beside it. Page 293 opens on
+    // the last verses of Al-Isra: the surah of its first verse names it, as the reader does.
+    expect(screen.getByTestId('home-resume')).toHaveTextContent('Al-IsraReprendre page 293الإسراء');
     expect(screen.queryByTestId('home-next-page')).toBeNull();
     await fireEvent.press(screen.getByRole('button', { name: /^Lire et arroser/ }));
     expect(router.push).toHaveBeenCalledWith('/reader/293');
   });
 
-  it('names the first unread page on the button too while the reader was never opened', async () => {
+  it('names the first unread page too while the reader was never opened', async () => {
     const store = readerStore();
     await renderRoute(store);
     const resumePage = resolveResumePage({
@@ -87,8 +89,8 @@ describe('the "Jardin" tab', () => {
       journal: store.getState().journal,
       hizbPageRanges: quranStructure.hizbPageRanges(),
     });
-    expect(screen.getByTestId('home-read')).toHaveTextContent(
-      `Lire et arroserReprendre · Page ${resumePage}`,
+    expect(screen.getByTestId('home-resume')).toHaveTextContent(
+      new RegExp(`Reprendre page ${resumePage}`),
     );
   });
 });

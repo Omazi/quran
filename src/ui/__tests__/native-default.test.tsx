@@ -34,6 +34,7 @@ import {
 import {
   appColors,
   fallbackSystemColors,
+  gardenPalette,
   layout,
   stateOpacity,
   textStyles,
@@ -147,9 +148,11 @@ describe('default controls, together', () => {
   it.each(['light', 'dark'] as const)('take their colours from the %s theme', async (scheme) => {
     setDeviceConditions({ os: 'android', scheme });
     await render(<EveryControl />);
-    expect(styleOf(screen.getByTestId('primary')).backgroundColor).toBe(appColors.accent[scheme]);
+    expect(styleOf(screen.getByTestId('primary')).backgroundColor).toBe(
+      gardenPalette.actionTint[scheme],
+    );
     expect(styleOf(screen.getByText('Lire et arroser')).color).toBe(appColors.onAccent[scheme]);
-    expect(styleOf(screen.getByText('Plus tard')).color).toBe(appColors.accent[scheme]);
+    expect(styleOf(screen.getByText('Plus tard')).color).toBe(gardenPalette.actionTint[scheme]);
     expect(styleOf(screen.getByText('3 pages sur 5')).color).toBe(
       fallbackSystemColors.secondaryLabel[scheme],
     );
@@ -208,7 +211,7 @@ describe('default Button', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('fills only the main action with the accent', async () => {
+  it('fills only the main action with the action green', async () => {
     setDeviceConditions({ os: 'android' });
     await render(
       <>
@@ -217,9 +220,13 @@ describe('default Button', () => {
         <Button label="Simple" variant="plain" onPress={jest.fn()} testID="plain" />
       </>,
     );
-    expect(styleOf(screen.getByTestId('primary')).backgroundColor).toBe(appColors.accent.light);
+    expect(styleOf(screen.getByTestId('primary')).backgroundColor).toBe(
+      gardenPalette.actionTint.light,
+    );
     expect(styleOf(screen.getByTestId('secondary')).backgroundColor).toBeUndefined();
-    expect(styleOf(screen.getByTestId('secondary')).borderColor).toBe(appColors.accent.light);
+    expect(styleOf(screen.getByTestId('secondary')).borderColor).toBe(
+      gardenPalette.actionTint.light,
+    );
     expect(styleOf(screen.getByTestId('plain')).backgroundColor).toBeUndefined();
     expect(styleOf(screen.getByTestId('plain')).borderWidth).toBeUndefined();
   });
@@ -752,7 +759,7 @@ describe('default ButtonRow', () => {
       </InList>,
     );
     const button = screen.getByRole('button', { name: 'Lire et arroser' });
-    expect(styleOf(button).backgroundColor).toBe(appColors.accent.light);
+    expect(styleOf(button).backgroundColor).toBe(gardenPalette.actionTint.light);
     expect(button.parent && styleOf(button.parent)).toEqual({ alignSelf: 'stretch' });
     expect(button.parent?.parent && styleOf(button.parent.parent)).toMatchObject({
       paddingHorizontal: layout.screenMargin,

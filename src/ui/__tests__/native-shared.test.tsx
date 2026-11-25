@@ -68,8 +68,9 @@ describe('entry of the native controls', () => {
     }
   });
 
-  it('no longer exports the hand-made button styles and the shadowed card', () => {
-    for (const name of ['Card', 'elevation', 'palette', 'typography']) {
+  it('no longer exports the hand-made button styles of the first mockups', () => {
+    // The card came back with the validated mockups (SKILLS.md, deviation 73), as a component.
+    for (const name of ['elevation', 'palette', 'typography']) {
       expect(ui).not.toHaveProperty(name);
     }
   });
@@ -270,7 +271,8 @@ describe('default Icon', () => {
     setDeviceConditions();
     await render(<Icon symbol={DROP} textStyle="largeTitle" testID="icon" />);
     expect(styleOf(icon('icon'))).toMatchObject({ width: 34, height: 34 });
-    expect(icon('icon')).toHaveProp('weight', 'bold');
+    // The weight of the title's Fraunces SemiBold.
+    expect(icon('icon')).toHaveProp('weight', 'semibold');
   });
 
   it('is an image with a name when it carries meaning', async () => {

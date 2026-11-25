@@ -23,4 +23,7 @@ composition des écrans.
   qui affiche un `GardenState`.
 - Les boutons « Continuer avec Apple / Google » de l'écran de bienvenue appartiennent au
   lot 3 (comptes). Au lot 1, l'appli démarre sans compte.
-- Couleurs, typographies et espacements : `src/ui/tokens.ts` fait foi, pas les captures.
+- Règle du propriétaire (25 novembre 2026) : ces maquettes sont la référence visuelle. Leurs
+  couleurs, la serif Fraunces et leurs mesures sont relevées dans `src/ui/tokens.ts`
+  (`gardenPalette`, `pieceSizes`) ; chaque écart avec la charte ou les règles d’Apple est inscrit
+  dans `SKILLS.md` et soumis au propriétaire.

@@ -4,9 +4,15 @@
  * Everything else in this folder is private.
  */
 
+export { newArrival, type Arrival } from './arrival';
 export {
   buildHomeModel,
   type HomeActions,
+  type HomeCompletedKhatma,
+  type HomeDrought,
+  type HomeHizb,
+  type HomeLayout,
+  type HomeWaterRun,
   type HomeModel,
   type HomeModelInput,
   type HomeNotice,
@@ -24,3 +30,5 @@ export {
   type HomeModelResult,
 } from './use-home-model';
 export { deviceLocalDate, useToday, type Clock } from './use-today';
+export { useHomeScreen, type HomeScreenData } from './use-home-screen';
+export type { NeighbourGarden, NeighbourGardens } from './neighbours';

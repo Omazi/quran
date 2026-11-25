@@ -9,12 +9,19 @@ import {
 import { useHighContrast } from './device-settings';
 import {
   appColors,
+  backdropGradients,
+  elevation,
   fallbackSystemColors,
+  gardenPalette,
   highContrastAppColors,
+  highContrastGardenPalette,
   iosSystemColorNames,
   type AppColorRole,
+  type BackdropName,
   type ColorPair,
   type ColorRole,
+  type GardenPaletteRole,
+  type GradientStop,
 } from './tokens';
 
 /** One colour per role of the charter, ready to be used in a style. */
@@ -42,6 +49,13 @@ function highContrastOf(role: AppColorRole): ColorPair | undefined {
   return variants[role];
 }
 
+/** The high-contrast values of a colour of the mockups' palette, when it has some. */
+function highContrastOfPalette(role: GardenPaletteRole): ColorPair | undefined {
+  // Widened on purpose: only the words and actions have high-contrast values.
+  const variants: Partial<Record<GardenPaletteRole, ColorPair>> = highContrastGardenPalette;
+  return variants[role];
+}
+
 /**
  * iOS: every role is a dynamic colour. The system resolves it when it draws, so one object
  * serves both appearances and Increase Contrast, and a change of either needs no render.
@@ -60,6 +74,14 @@ function getIosColors(): Colors {
         highContrastDark: highContrastOf(role)?.dark,
       }),
     ),
+    ...mapRoles(gardenPalette, (pair: ColorPair, role) =>
+      DynamicColorIOS({
+        light: pair.light,
+        dark: pair.dark,
+        highContrastLight: highContrastOfPalette(role)?.light,
+        highContrastDark: highContrastOfPalette(role)?.dark,
+      }),
+    ),
   };
   return iosColors;
 }
@@ -69,6 +91,10 @@ function buildFallbackColors(appearance: Appearance, contrast: Contrast): Colors
     ...mapRoles(fallbackSystemColors, (pair: ColorPair) => pair[appearance]),
     ...mapRoles(appColors, (pair: ColorPair, role) => {
       const highContrast = contrast === 'high' ? highContrastOf(role) : undefined;
+      return (highContrast ?? pair)[appearance];
+    }),
+    ...mapRoles(gardenPalette, (pair: ColorPair, role) => {
+      const highContrast = contrast === 'high' ? highContrastOfPalette(role) : undefined;
       return (highContrast ?? pair)[appearance];
     }),
   };
@@ -99,4 +125,19 @@ export function useColors(): Colors {
   const isHighContrast = useHighContrast();
   if (Platform.OS === 'ios') return getIosColors();
   return fallbackColors[isHighContrast ? 'high' : 'standard'][scheme === 'dark' ? 'dark' : 'light'];
+}
+
+/**
+ * The stops of a gradient behind the garden, for the current appearance. A gradient is drawn by
+ * an SVG, which takes plain values: the appearance is read here, and a change of it renders again.
+ */
+export function useBackdropGradient(name: BackdropName): readonly GradientStop[] {
+  const scheme = useColorScheme();
+  return backdropGradients[name][scheme === 'dark' ? 'dark' : 'light'];
+}
+
+/** A soft shadow of the mockups for the current appearance (`elevation`), as a box shadow. */
+export function useElevation(level: keyof typeof elevation): string {
+  const scheme = useColorScheme();
+  return elevation[level][scheme === 'dark' ? 'dark' : 'light'];
 }

@@ -34,6 +34,7 @@ const SYSTEM_FONT = { fontFamily: undefined };
 const HEADING_VARIANTS: ReadonlySet<TextStyleName> = new Set([
   'largeTitle',
   'displayTitle',
+  'title1',
   'title2',
 ]);
 

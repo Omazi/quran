@@ -69,6 +69,17 @@ décoration qui ne porte aucune information), sombre `#D9A441` (celui de `orname
 de contraste élevé dans tous les réglages, `#0A4F59` clair, `#8FE0EA` sombre, pour l'étoile du
 cœur de la rosace ; elle n'a pas de variante à elle.
 
+**Palette des maquettes validées** (25 novembre 2026). Règle du propriétaire : les maquettes de
+`docs/design/` font foi ; où elles diffèrent de cette charte, la maquette l’emporte et l’écart lui
+est soumis (SKILLS.md, écarts 70 à 79). Leurs couleurs vivent à part, dans `gardenPalette`
+(`src/ui/tokens.ts`), relevées sur les images ; un gris trop pâle y est foncé jusqu’à 4,5:1, sa
+valeur d’origine notée à côté. Deux décisions du propriétaire s’y ajoutent : **la couleur d’action
+de toute l’appli est le vert forêt des maquettes** (`#1F5C45` de jour, `#7FCCA6` pour une étiquette
+ou un bouton du système la nuit, `#2E7A5B` pour la capsule des maquettes la nuit) ; le bleu d’eau
+(`accent`, `water`) ne garde que le sens « eau, arrosage » ; la nuit suit la direction
+« crépuscule » (ciel de crépuscule, cartes sombres et chaudes), alignée sur la palette de Proches.
+Les tableaux ci-dessus restent ceux de la direction A pour le reste de l’appli jusqu’à leur fusion.
+
 Soif et alerte : orange système, pour l'icône et la jauge seulement ; le mot qui
 l'accompagne reste dans la couleur du texte, parce que l'orange n'est pas assez lisible
 sur fond clair (`accessibility.md › Vision`). Action destructive : rouge système. Aucune information
@@ -81,20 +92,28 @@ L'eau est aussi le geste de l'appli : le bouton principal dit « Lire et arroser
 
 ### Typographie
 
-Deux familles, toutes deux du système (`typography.md` ; SwiftUI Design, règles 1 et 5) :
-**New York** pour les grands titres, **San Francisco** pour le reste. Les polices
-embarquées ne servent qu'au texte du Coran. Quatre tailles au plus par écran. Tailles
+Deux familles (`typography.md` ; SwiftUI Design, règles 1 et 5) : **Fraunces** (demi-gras,
+embarquée, licence OFL) pour les titres, comme sur les maquettes validées (décision du
+propriétaire, 25 novembre 2026 ; écart 71), **San Francisco** pour le reste. New York ne sert plus
+qu’au titre de l’écran d’écoute (Display Title). Les autres polices embarquées ne servent qu'au
+texte du Coran. Quatre tailles au plus par écran (l’accueil des maquettes en compte plus :
+écart 72). Tailles
 d'Apple, qui suivent le réglage de taille de texte de la personne :
 
-| Style         | Taille / interligne       | Usage                                                              |
-| ------------- | ------------------------- | ------------------------------------------------------------------ |
-| Large Title   | 34 / 41, gras, New York   | Titre d'écran                                                      |
-| Display Title | 36 / 40, normal, New York | Le mot d'un écran immersif (écran d’écoute ; écart 33 du registre) |
-| Title 2       | 22 / 28, gras, New York   | Titre de page du premier lancement, de carte                       |
-| Headline      | 17 / 22, demi-gras        | Libellé important                                                  |
-| Body          | 17 / 22                   | Texte                                                              |
-| Subhead       | 15 / 20                   | Texte secondaire                                                   |
-| Footnote      | 13 / 18                   | Notes, légendes                                                    |
+| Style              | Taille / interligne          | Usage                                                              |
+| ------------------ | ---------------------------- | ------------------------------------------------------------------ |
+| Large Title        | 34 / 41, demi-gras, Fraunces | Titre d'écran                                                      |
+| Display Title      | 36 / 40, normal, New York    | Le mot d'un écran immersif (écran d’écoute ; écart 33 du registre) |
+| Title 1            | 28 / 34, demi-gras, Fraunces | Message d’un écran ou d’une feuille (maquettes ; écart 72)         |
+| Title 2            | 22 / 28, demi-gras, Fraunces | Titre de page du premier lancement, de carte                       |
+| Figure             | 24 / 30, gras                | Chiffre lu d’abord : bilan d’une khatma (maquettes ; écart 72)     |
+| Title 3            | 20 / 25, gras                | Valeur d’une carte : « 5 pages sur 8 » (maquettes ; écart 72)      |
+| Headline           | 17 / 22, demi-gras           | Libellé important                                                  |
+| Body               | 17 / 22                      | Texte                                                              |
+| Callout            | 16 / 21, demi-gras           | Nom dans une carte (maquettes ; écart 72)                          |
+| Subhead            | 15 / 20                      | Texte secondaire                                                   |
+| Subhead Emphasized | 15 / 20, demi-gras           | Libellé court qui ouvre une carte (maquettes ; écart 72)           |
+| Footnote           | 13 / 18                      | Notes, légendes                                                    |
 
 Minimum 11 points, pas de graisse fine (`typography.md › Ensuring legibility`).
 

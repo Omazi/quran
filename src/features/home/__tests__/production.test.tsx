@@ -49,7 +49,7 @@ describe('the home screen in a production bundle', () => {
         <HomeRoute />
       </AppStoreProvider>,
     );
-    expect(screen.getByRole('header', { name: 'Jardin' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Ton jardin' })).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: /^Lire et arroser/ })).toBeOnTheScreen();
     expect(mockLoadDevPreview).not.toHaveBeenCalled();
     expect(screen.queryByTestId('home-dev-preview')).toBeNull();
@@ -74,7 +74,7 @@ describe('the home screen in a production bundle', () => {
     expect(
       screen.getByRole('image', { name: /^Jardin assoiffé, 24 hizb sur 60/ }),
     ).toBeOnTheScreen();
-    await fireEvent.press(screen.getByRole('button', { name: /^Lire et arroser/ }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Arroser maintenant' }));
     expect(store.getState().journal).toBe(journal);
     expect(mockLoadDevPreview).not.toHaveBeenCalled();
   });

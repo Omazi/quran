@@ -412,10 +412,15 @@ describe('text styles', () => {
   const CHARTER_NAMES: Record<TextStyleName, string> = {
     largeTitle: 'Large Title',
     displayTitle: 'Display Title',
+    title1: 'Title 1',
     title2: 'Title 2',
+    figure: 'Figure',
+    title3: 'Title 3',
     headline: 'Headline',
     body: 'Body',
+    callout: 'Callout',
     subhead: 'Subhead',
+    subheadEmphasized: 'Subhead Emphasized',
     footnote: 'Footnote',
   };
   const names = Object.keys(textStyles) as TextStyleName[];
@@ -427,23 +432,39 @@ describe('text styles', () => {
     expect(textStyles[name].lineHeight).toBe(Number(row?.[2]));
   });
 
-  it('keeps the weights of the charter: bold titles, regular display title, semibold headline, regular text', () => {
-    expect(names.map((name) => textStyles[name].fontWeight)).toEqual([
-      '700',
-      '400',
-      '700',
-      '600',
-      '400',
-      '400',
-      '400',
+  it('keeps the weights of the charter: bold titles and figures, regular display title, semibold labels, regular text', () => {
+    expect(names.map((name) => [name, textStyles[name].fontWeight])).toEqual([
+      // The titles are set in Fraunces SemiBold, the one weight the app ships.
+      ['largeTitle', '600'],
+      ['displayTitle', '400'],
+      ['title1', '600'],
+      ['title2', '600'],
+      ['figure', '700'],
+      ['title3', '700'],
+      ['headline', '600'],
+      ['body', '400'],
+      ['callout', '600'],
+      ['subhead', '400'],
+      ['subheadEmphasized', '600'],
+      ['footnote', '400'],
     ]);
   });
 
-  it('sets the three titles in the system serif and the rest in the system font', () => {
-    expect(textStyles.largeTitle.fontFamily).toBe(fontFamily.serif);
-    expect(textStyles.title2.fontFamily).toBe(fontFamily.serif);
+  it('sets the titles in Fraunces, the display title in the system serif, the rest in the system font', () => {
+    expect(textStyles.largeTitle.fontFamily).toBe(fontFamily.display);
+    expect(textStyles.title1.fontFamily).toBe(fontFamily.display);
+    expect(textStyles.title2.fontFamily).toBe(fontFamily.display);
     expect(textStyles.displayTitle.fontFamily).toBe(fontFamily.serif);
-    for (const name of ['headline', 'body', 'subhead', 'footnote'] as const) {
+    for (const name of [
+      'figure',
+      'title3',
+      'headline',
+      'body',
+      'callout',
+      'subhead',
+      'subheadEmphasized',
+      'footnote',
+    ] as const) {
       expect(textStyles[name]).not.toHaveProperty('fontFamily');
     }
   });
@@ -463,10 +484,16 @@ describe('text styles', () => {
     expect(appleTextStyles).toEqual({
       largeTitle: 'largeTitle',
       displayTitle: 'largeTitle',
+      title1: 'title1',
       title2: 'title2',
+      // A figure of 24 points scales as Title 2 (22 points), the nearest of Apple's styles.
+      figure: 'title2',
+      title3: 'title3',
       headline: 'headline',
       body: 'body',
+      callout: 'callout',
       subhead: 'subheadline',
+      subheadEmphasized: 'subheadline',
       footnote: 'footnote',
     });
   });
@@ -477,8 +504,8 @@ describe('spacing, shapes and targets', () => {
     expect(spacing).toEqual({ none: 0, xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 });
   });
 
-  it('has the three radii of the charter', () => {
-    expect(radius).toEqual({ sm: 8, md: 12, lg: 16 });
+  it('has the three radii of the charter, the card of the mockups and the capsule', () => {
+    expect(radius).toEqual({ sm: 8, md: 12, lg: 16, xl: 24, full: 999 });
   });
 
   it('keeps 16 points at the screen edge and 12 between controls', () => {

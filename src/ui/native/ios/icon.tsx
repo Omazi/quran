@@ -18,6 +18,11 @@ const SWIFTUI_WEIGHT = {
   '700': 'bold',
 } as const satisfies Record<FontWeightToken, string>;
 
+/** SwiftUI spells Title 1 `title`; React Native spells it `title1`. */
+function swiftUITextStyle<Style extends string>(style: Style): Exclude<Style, 'title1'> | 'title' {
+  return style === 'title1' ? 'title' : (style as Exclude<Style, 'title1'>);
+}
+
 /**
  * An SF Symbol, drawn by SwiftUI in the text style and weight of the neighbouring text
  * (sf-symbols.md › Weights and scales). Being set in a text style, it grows with Dynamic Type
@@ -39,7 +44,7 @@ export function Icon({
         testID={testID}
         modifiers={[
           font({
-            textStyle: appleTextStyles[textStyle],
+            textStyle: swiftUITextStyle(appleTextStyles[textStyle]),
             weight: SWIFTUI_WEIGHT[textStyles[textStyle].fontWeight],
           }),
           foregroundStyle(colors[color]),

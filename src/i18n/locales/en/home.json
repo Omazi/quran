@@ -1,56 +1,120 @@
 {
-  "title": "Garden",
+  "title": "Your Garden",
   "streak_one": "{{count}} day in a row",
   "streak_other": "{{count}} days in a row",
-  "notice": {
-    "bare": {
-      "title": "Bare Earth",
-      "text": "Your first hizb will bring your garden to life."
-    },
-    "thirsty": {
-      "title": "Thirsty Garden",
-      "text": "One page is enough to bring the water back."
-    },
-    "wilting": {
-      "title": "Wilted Garden",
-      "text": "A page today, and it regains its strength."
-    },
-    "dying": {
-      "title": "Withered Garden",
-      "text": "One page already brings some elements back."
-    },
-    "dead": {
-      "title": "Dead Earth",
-      "text": "The hizb you have read stay yours. One page brings the water back."
-    },
-    "recovering": {
-      "title": "The Water Is Back",
-      "text": "Your garden is regaining its strength. Keep going tomorrow."
-    },
-    "complete": {
-      "title": "Khatma Complete",
-      "text": "Your garden is complete. Read a page to start the next one: a new garden awaits you."
-    }
+  "profile": "Profile",
+  "growing": {
+    "title": "Hizb {{hizb}}",
+    "value": "{{percent}}% of the hizb read"
+  },
+  "progress": {
+    "watered_one": "Watered for {{count}} d",
+    "watered_other": "Watered for {{count}} d",
+    "still_one": "No water for {{count}} d",
+    "still_other": "No water for {{count}} d",
+    "dry_one": "Dry for {{count}} d",
+    "dry_other": "Dry for {{count}} d",
+    "wateredLabel_one": "Watered for {{count}} day",
+    "wateredLabel_other": "Watered for {{count}} days",
+    "stillLabel_one": "No water for {{count}} day",
+    "stillLabel_other": "No water for {{count}} days",
+    "dryLabel_one": "Dry for {{count}} day",
+    "dryLabel_other": "Dry for {{count}} days"
   },
   "today": {
-    "title": "Today",
-    "pages": {
-      "label": "Pages Read",
-      "value": "{{read}} of {{goal}}",
-      "valueReached": "{{read}} of {{goal}}, goal reached"
-    },
-    "finish": {
-      "label": "Estimated End",
-      "labelNext": "End of the Next One",
-      "today": "Today"
-    },
-    "footer_one": "Estimate based on your goal: {{count}} page a day.",
-    "footer_other": "Estimate based on your goal: {{count}} pages a day."
+    "title": "Today’s Watering",
+    "pages_one": "{{count}} page of {{goal}}",
+    "pages_other": "{{count}} pages of {{goal}}",
+    "hizbLeft_one": "{{count}} more page to finish hizb {{hizb}}",
+    "hizbLeft_other": "{{count}} more pages to finish hizb {{hizb}}",
+    "onePage": "One page is enough to bring the water back",
+    "resume": "Resume at page {{page}}",
+    "start": "Start at page {{page}}"
   },
   "actions": {
     "read": "Read and Water",
-    "resumeAt": "Resume · Page {{page}}",
-    "startAt": "Start · Page {{page}}"
+    "waterNow": "Water Now",
+    "readOnePage": "Read a Page"
+  },
+  "added": {
+    "title": "Added at hizb {{hizb}}"
+  },
+  "notice": {
+    "recovering": {
+      "title": "The Water Is Back",
+      "text": "Your garden is regaining its strength. Keep going tomorrow."
+    }
+  },
+  "thirst": {
+    "title": {
+      "thirsty": "Your Garden Is Thirsty",
+      "wilting": "Your Garden Is Wilting",
+      "dying": "Your Garden Is Drying Up"
+    },
+    "text": {
+      "thirsty_one": "{{count}} day without reading: the water has stopped and the grass is turning yellow.",
+      "thirsty_other": "{{count}} days without reading: the water has stopped and the grass is turning yellow.",
+      "wilting_one": "{{count}} day without reading: the trees are losing their leaves.",
+      "wilting_other": "{{count}} days without reading: the trees are losing their leaves.",
+      "dying_one": "{{count}} day without reading: parts of the garden are disappearing.",
+      "dying_other": "{{count}} days without reading: parts of the garden are disappearing."
+    },
+    "next": {
+      "wilting_one": "Tomorrow, the trees lose their leaves.",
+      "wilting_other": "In {{count}} days, the trees lose their leaves.",
+      "dying_one": "Tomorrow, parts of the garden start to disappear.",
+      "dying_other": "In {{count}} days, parts of the garden start to disappear.",
+      "dead_one": "Tomorrow, only dry earth will be left.",
+      "dead_other": "In {{count}} days, only dry earth will be left."
+    }
+  },
+  "dead": {
+    "title": "Your Garden Has Dried Up",
+    "text_one": "{{count}} day without reading. Only dry earth is left.",
+    "text_other": "{{count}} days without reading. Only dry earth is left.",
+    "kept_one": "Your hizb still counts.",
+    "kept_other": "Your {{count}} hizb still count.",
+    "comeBack": "As soon as you start again, the water comes back, then your garden grows again, one element at a time."
+  },
+  "complete": {
+    "count": "{{hizb}} of {{total}} hizb",
+    "title": "Your Garden Is Complete",
+    "blessing": "تقبّل الله منك",
+    "blessingMeaning": "May Allah accept it from you.",
+    "hizb": "hizb",
+    "pages": "pages",
+    "days_one": "day",
+    "days_other": "days",
+    "summary_one": "{{hizb}} hizb, {{pages}} pages, in {{count}} day",
+    "summary_other": "{{hizb}} hizb, {{pages}} pages, in {{count}} days",
+    "share": "Share",
+    "newKhatma": "New Khatma",
+    "shareMessage_one": "I finished a khatma in {{count}} day. My garden is complete.",
+    "shareMessage_other": "I finished a khatma in {{count}} days. My garden is complete."
+  },
+  "arrival": {
+    "hizb": "Hizb {{hizb}} finished",
+    "next": "Next element, at hizb {{hizb}}: {{element}}.",
+    "see": "See in My Garden",
+    "share": "Share",
+    "close": "Close",
+    "shareMessage": "I finished hizb {{hizb}}: something new is growing in my garden."
+  },
+  "neighbours": {
+    "title": "Neighbouring Gardens",
+    "seeAll": "See All",
+    "watered_one": "{{hizb}} hizb, watered for {{count}} d",
+    "watered_other": "{{hizb}} hizb, watered for {{count}} d",
+    "rested_one": "{{hizb}} hizb, watered {{count}} d ago",
+    "rested_other": "{{hizb}} hizb, watered {{count}} d ago",
+    "thirsty_one": "{{hizb}} hizb, thirsty for {{count}} d",
+    "thirsty_other": "{{hizb}} hizb, thirsty for {{count}} d",
+    "dry": "{{hizb}} hizb, garden dried up",
+    "complete": "Garden complete",
+    "new": "{{hizb}} hizb",
+    "hidden": "Garden hidden",
+    "signedOut": "Sign in under Friends to see your friends’ gardens here.",
+    "empty": "Add a friend to see their garden here."
   },
   "unavailable": {
     "title": "Garden Unavailable",

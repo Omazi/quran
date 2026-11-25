@@ -62,7 +62,7 @@ function RootStack() {
   // without them the navigation library paints its own light theme.
   const pushedPage = {
     headerShown: true,
-    headerTintColor: colors.accent,
+    headerTintColor: colors.actionTint,
     headerBackButtonDisplayMode: 'minimal',
     headerStyle: { backgroundColor: colors.groupedBackground },
     headerTitleStyle: { color: colors.label },
@@ -84,7 +84,7 @@ function RootStack() {
         options={{
           headerShown: true,
           headerTransparent: true,
-          headerTintColor: colors.accent,
+          headerTintColor: colors.actionTint,
           headerBackButtonDisplayMode: 'minimal',
         }}
       />
@@ -92,7 +92,7 @@ function RootStack() {
           opened again from the settings (see onboarding/index.tsx). */}
       <Stack.Screen
         name="onboarding/index"
-        options={{ title: t('replayTitle'), headerTintColor: colors.accent }}
+        options={{ title: t('replayTitle'), headerTintColor: colors.actionTint }}
       />
     </Stack>
   );

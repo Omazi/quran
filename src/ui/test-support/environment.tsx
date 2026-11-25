@@ -21,7 +21,15 @@ import {
 } from 'react-native';
 
 import { NativeImplementation } from '../native/implementation';
-import { appColors, highContrastAppColors, type AppColorRole, type ColorPair } from '../tokens';
+import {
+  appColors,
+  gardenPalette,
+  highContrastAppColors,
+  highContrastGardenPalette,
+  type AppColorRole,
+  type ColorPair,
+  type GardenPaletteRole,
+} from '../tokens';
 
 /** A rendered host element, as the testing library returns it. */
 export type RenderedElement = typeof screen.container;
@@ -126,6 +134,18 @@ export function iosAppColor(role: AppColorRole): ColorValue {
   return DynamicColorIOS({
     light: appColors[role].light,
     dark: appColors[role].dark,
+    highContrastLight: variants[role]?.light,
+    highContrastDark: variants[role]?.dark,
+  });
+}
+
+/** What `useColors` gives on iOS for a colour of the mockups' palette. */
+export function iosPaletteColor(role: GardenPaletteRole): ColorValue {
+  // Widened on purpose: only some roles have high-contrast values.
+  const variants: Partial<Record<GardenPaletteRole, ColorPair>> = highContrastGardenPalette;
+  return DynamicColorIOS({
+    light: gardenPalette[role].light,
+    dark: gardenPalette[role].dark,
     highContrastLight: variants[role]?.light,
     highContrastDark: variants[role]?.dark,
   });

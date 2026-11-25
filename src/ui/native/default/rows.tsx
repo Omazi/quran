@@ -174,7 +174,7 @@ export function ChoiceRow<Value extends string>({
           >
             <Icon
               symbol={isSelected ? SELECTED_SYMBOL : UNSELECTED_SYMBOL}
-              color={isSelected ? 'accent' : 'secondaryLabel'}
+              color={isSelected ? 'actionTint' : 'secondaryLabel'}
             />
             <AppText style={styles.optionLabel}>{option.label}</AppText>
           </Pressable>

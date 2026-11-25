@@ -32,6 +32,7 @@ import type { IconSymbol } from '../native/types';
 import {
   APPEARANCES_AND_DIRECTIONS,
   iosAppColor,
+  iosPaletteColor,
   LARGEST_FONT_SCALE,
   resetDeviceConditions,
   setDeviceConditions,
@@ -42,7 +43,8 @@ import {
 } from '../test-support/environment';
 import { touchTargets } from '../tokens';
 
-const ON_ACCENT = { type: 'color', color: iosAppColor('onAccent') };
+const ON_ACTION = { type: 'color', color: iosAppColor('onAccent') };
+const ACTION_TINT = { type: 'color', color: iosPaletteColor('actionTint') };
 const BOOK: IconSymbol = { ios: 'book.closed', android: 'book_2' };
 const DROP: IconSymbol = { ios: 'drop.fill', android: 'water_drop' };
 /** A decorative icon is hidden from screen readers, and so from the default queries. */
@@ -117,8 +119,8 @@ describe('iOS hosts', () => {
       for (const host of hosts()) {
         expect(host).toHaveProp('layoutDirection', rightToLeft ? 'rightToLeft' : 'leftToRight');
         expect(host.props.colorScheme).toBeUndefined();
-        // The accent is given once, to the host, as the tint of everything below.
-        expect(host).toHaveProp('seedColor', iosAppColor('accent'));
+        // The action colour is given once, to the host, as the tint of everything below.
+        expect(host).toHaveProp('seedColor', iosPaletteColor('actionTint'));
       }
     },
   );
@@ -150,7 +152,7 @@ describe('iOS Button', () => {
     expect(modifierOf(button, 'buttonStyle')).toMatchObject({ style });
     expect(modifierOf(button, 'tint')).toBeUndefined();
     expect(button.props.role).toBeUndefined();
-    expect(hosts()[0]).toHaveProp('seedColor', iosAppColor('accent'));
+    expect(hosts()[0]).toHaveProp('seedColor', iosPaletteColor('actionTint'));
     expect(swiftUITexts(button)).toEqual(['Action']);
   });
 
@@ -179,10 +181,10 @@ describe('iOS Button', () => {
     setDeviceConditions();
     await render(<Button label="Lire et arroser" onPress={jest.fn()} testID="button" />);
     const label = firstChild(screen.getByTestId('button'));
-    expect(modifierOf(label, 'foregroundStyle')).toMatchObject({ style: ON_ACCENT });
+    expect(modifierOf(label, 'foregroundStyle')).toMatchObject({ style: ON_ACTION });
   });
 
-  it('leaves the label of the other styles, and of a disabled button, to the system', async () => {
+  it('writes the other styles in the green that reads on the screen, and leaves a disabled button to the system', async () => {
     setDeviceConditions();
     await render(
       <>
@@ -191,10 +193,13 @@ describe('iOS Button', () => {
         <Button label="C" onPress={jest.fn()} disabled testID="disabled" />
       </>,
     );
-    for (const testID of ['secondary', 'plain', 'disabled']) {
+    for (const testID of ['secondary', 'plain']) {
       const label = firstChild(screen.getByTestId(testID));
-      expect(modifierOf(label, 'foregroundStyle')).toBeUndefined();
+      expect(modifierOf(label, 'foregroundStyle')).toMatchObject({ style: ACTION_TINT });
     }
+    expect(
+      modifierOf(firstChild(screen.getByTestId('disabled')), 'foregroundStyle'),
+    ).toBeUndefined();
     expect(modifierOf(screen.getByTestId('disabled'), 'disabled')).toMatchObject({
       disabled: true,
     });
@@ -448,7 +453,7 @@ describe('iOS rows', () => {
     expect(picker).toHaveProp('displayedComponents', ['hourAndMinute']);
     expect(modifierOf(picker, 'datePickerStyle')).toMatchObject({ style: 'compact' });
     expect(modifierOf(picker, 'tint')).toBeUndefined();
-    expect(hosts()[0]).toHaveProp('seedColor', iosAppColor('accent'));
+    expect(hosts()[0]).toHaveProp('seedColor', iosPaletteColor('actionTint'));
     const shown = new Date(picker.props.selection as string);
     expect([shown.getHours(), shown.getMinutes()]).toEqual([20, 30]);
     await fireEvent(picker, 'dateChange', {
@@ -468,7 +473,7 @@ describe('iOS status', () => {
     expect(bar).toHaveProp('value', 0.4);
     expect(modifierOf(bar, 'progressViewStyle')).toMatchObject({ style: 'linear' });
     expect(modifierOf(bar, 'tint')).toBeUndefined();
-    expect(hosts()[0]).toHaveProp('seedColor', iosAppColor('accent'));
+    expect(hosts()[0]).toHaveProp('seedColor', iosPaletteColor('actionTint'));
     expect(modifierOf(bar, 'accessibilityLabel')).toMatchObject({ label: 'Téléchargement' });
   });
 
@@ -575,7 +580,7 @@ describe('iOS Icon', () => {
     });
     expect(modifierOf(screen.getByTestId('title', HIDDEN), 'font')).toMatchObject({
       textStyle: 'largeTitle',
-      weight: 'bold',
+      weight: 'semibold',
     });
   });
 
@@ -840,7 +845,7 @@ describe('iOS ButtonPairRow', () => {
     const accept = screen.getByTestId('accept');
     const decline = screen.getByTestId('decline');
     expect(modifierOf(accept, 'buttonStyle')).toMatchObject({ style: 'borderedProminent' });
-    expect(modifierOf(firstChild(accept), 'foregroundStyle')).toMatchObject({ style: ON_ACCENT });
+    expect(modifierOf(firstChild(accept), 'foregroundStyle')).toMatchObject({ style: ON_ACTION });
     // Each states its style: in a list row, buttons without one would press together.
     expect(modifierOf(decline, 'buttonStyle')).toMatchObject({ style: 'borderless' });
     for (const button of [accept, decline]) {
@@ -932,7 +937,7 @@ describe('iOS ButtonRow', () => {
     );
     const button = screen.getByTestId('button');
     expect(modifierOf(button, 'buttonStyle')).toMatchObject({ style: 'borderedProminent' });
-    expect(modifierOf(firstChild(button), 'foregroundStyle')).toMatchObject({ style: ON_ACCENT });
+    expect(modifierOf(firstChild(button), 'foregroundStyle')).toMatchObject({ style: ON_ACTION });
     await fireEvent(button, 'buttonPress');
     expect(onPress).toHaveBeenCalledTimes(1);
   });

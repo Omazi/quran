@@ -14,3 +14,19 @@ export function formatLongDate(date: LocalDate, language: string): string {
     timeZone: 'UTC',
   }).format(new Date(`${date}T00:00:00Z`));
 }
+
+/**
+ * The day above the title of the home screen: weekday, day and month, "Lundi 23 novembre",
+ * "Monday, November 23". The first letter is a capital, as at the start of a sentence: French
+ * writes weekdays in lower case inside a sentence.
+ */
+export function formatHeaderDate(date: LocalDate, language: string): string {
+  const text = new Intl.DateTimeFormat(`${language}-u-nu-latn`, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(`${date}T00:00:00Z`));
+  const [first = '', ...rest] = Array.from(text);
+  return first.toLocaleUpperCase(language) + rest.join('');
+}

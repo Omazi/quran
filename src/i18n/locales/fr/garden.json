@@ -86,16 +86,16 @@
     },
     "health": {
       "label": "Santé",
-      "value": "{{state}}, {{percent}}\u00a0%",
-      "minimum": "0\u00a0%",
-      "maximum": "100\u00a0%"
+      "value": "{{state}}, {{percent}} %",
+      "minimum": "0 %",
+      "maximum": "100 %"
     },
     "elements": {
       "title": "Éléments"
     },
     "next": {
       "label": "Prochain élément",
-      "value": "{{element}}, {{percent}}\u00a0%"
+      "value": "{{element}}, {{percent}} %"
     },
     "last": {
       "label": "Dernier élément"
@@ -112,5 +112,61 @@
       "label": "Verset qui l’inspire",
       "value": "Sourate {{surah}}, verset {{ayah}}"
     }
+  },
+  "growing": {
+    "pomegranate": "un grenadier pousse",
+    "date-palm": "un palmier-dattier pousse",
+    "olive": "un olivier pousse",
+    "fig": "un figuier pousse",
+    "cypress": "un cyprès pousse",
+    "orange": "un oranger pousse",
+    "channels": "les canaux se creusent",
+    "paving": "le dallage se pose",
+    "bed": "un parterre se dessine",
+    "stepping-stones": "un chemin de pierres se trace",
+    "flowers": "des fleurs vont éclore",
+    "fountain": "une fontaine se construit",
+    "springs": "des sources vont jaillir",
+    "birds": "des oiseaux approchent",
+    "wall": "un mur s’élève",
+    "trellis": "une treille grimpe",
+    "gate": "une porte se dresse",
+    "lanterns": "des lanternes se préparent",
+    "butterflies": "des papillons approchent",
+    "pavilion": "un pavillon se construit",
+    "carpets": "des tapis se déroulent",
+    "cushions": "des coussins s’installent",
+    "lectern": "un pupitre se prépare",
+    "roses": "des roses bourgeonnent",
+    "waterfall": "une cascade se forme",
+    "full-bloom": "le jardin va fleurir"
+  },
+  "arrival": {
+    "pomegranate": "Un grenadier pousse dans ton jardin",
+    "date-palm": "Un palmier-dattier pousse dans ton jardin",
+    "olive": "Un olivier pousse dans ton jardin",
+    "fig": "Un figuier pousse dans ton jardin",
+    "cypress": "Un cyprès s’élève dans ton jardin",
+    "orange": "Un oranger pousse dans ton jardin",
+    "channels": "L’eau coule dans ton jardin",
+    "paving": "Des allées dallées traversent ton jardin",
+    "bed": "Un nouveau parterre dans ton jardin",
+    "stepping-stones": "Un chemin de pierres traverse ton jardin",
+    "flowers": "Des fleurs éclosent dans ton jardin",
+    "fountain": "Une fontaine coule dans ton jardin",
+    "springs": "Des sources jaillissent dans ton jardin",
+    "birds": "Des oiseaux se posent dans ton jardin",
+    "wall": "Un mur abrite ton jardin",
+    "trellis": "Une treille ombrage ton jardin",
+    "gate": "Une porte s’ouvre sur ton jardin",
+    "lanterns": "Des lanternes éclairent ton jardin",
+    "butterflies": "Des papillons volent dans ton jardin",
+    "pavilion": "Un pavillon s’élève dans ton jardin",
+    "carpets": "Des tapis sont déroulés dans ton jardin",
+    "cushions": "Des coussins sont posés dans ton jardin",
+    "lectern": "Un pupitre t’attend dans ton jardin",
+    "roses": "Des roses fleurissent dans ton jardin",
+    "waterfall": "Une cascade coule dans ton jardin",
+    "full-bloom": "Ton jardin est en pleine floraison"
   }
 }

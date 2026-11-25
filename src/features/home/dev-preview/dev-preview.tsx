@@ -13,10 +13,11 @@
  */
 
 import { useMemo, useSyncExternalStore } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { quranStructure } from '@/data/quran';
 import type { LocalDate } from '@/domain/shared/local-date';
-import { ChoiceRow, ListSection, type ChoiceOption } from '@/ui';
+import { AppText, Card, layout, radius, spacing, stateOpacity, useColors } from '@/ui';
 
 import type { HomeSource } from '../home-model';
 import { buildReadingHistory, type ReadingHistoryName } from './reading-histories';
@@ -24,7 +25,7 @@ import { buildReadingHistory, type ReadingHistoryName } from './reading-historie
 /** What the home screen shows: the person's own data, or one of the made-up histories. */
 export type DevPreviewChoice = 'store' | ReadingHistoryName;
 
-const OPTIONS: readonly ChoiceOption<DevPreviewChoice>[] = [
+const OPTIONS: readonly { value: DevPreviewChoice; label: string }[] = [
   { value: 'store', label: 'Mes vraies données' },
   { value: 'bare-earth', label: 'Terre nue' },
   { value: 'thriving', label: 'Florissant (hizb 24)' },
@@ -38,9 +39,8 @@ const OPTIONS: readonly ChoiceOption<DevPreviewChoice>[] = [
 
 const WORDS = {
   title: 'Aperçu des états',
-  label: 'État montré',
   footer:
-    'Visible dans les versions de test seulement. Rien n’est enregistré\u00a0: tes données ne changent pas.',
+    'Visible dans les versions de test seulement. Rien n’est enregistré : tes données ne changent pas.',
 } as const;
 
 let choice: DevPreviewChoice = 'store';
@@ -81,18 +81,60 @@ export function usePreviewedSource(source: HomeSource, today: LocalDate): HomeSo
   return history ?? source;
 }
 
-/** The last section of the home screen where the preview exists: the choice of what it shows. */
+/** The last part of the home screen where the preview exists: the choice of what it shows. */
 export function DevPreviewSection() {
   const chosen = useDevPreviewChoice();
+  const colors = useColors();
   return (
-    <ListSection title={WORDS.title} footer={WORDS.footer}>
-      <ChoiceRow
-        label={WORDS.label}
-        options={OPTIONS}
-        value={chosen}
-        onChange={setDevPreviewChoice}
-        testID="home-dev-preview"
-      />
-    </ListSection>
+    <View style={styles.section} testID="home-dev-preview-section">
+      <Card tone="quiet">
+        <AppText variant="headline" accessibilityRole="header">
+          {WORDS.title}
+        </AppText>
+        <View accessibilityRole="radiogroup" style={styles.options} testID="home-dev-preview">
+          {OPTIONS.map((option) => {
+            const isSelected = option.value === chosen;
+            return (
+              <Pressable
+                key={option.value}
+                accessibilityRole="radio"
+                accessibilityLabel={option.label}
+                accessibilityState={{ checked: isSelected }}
+                onPress={() => setDevPreviewChoice(option.value)}
+                style={({ pressed }) => [
+                  styles.option,
+                  { backgroundColor: isSelected ? colors.action : colors.actionTonal },
+                  pressed && styles.pressed,
+                ]}
+              >
+                <AppText variant="subhead" color={isSelected ? 'onAction' : 'actionTint'}>
+                  {option.label}
+                </AppText>
+              </Pressable>
+            );
+          })}
+        </View>
+        <AppText variant="footnote" color="muted">
+          {WORDS.footer}
+        </AppText>
+      </Card>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  section: { paddingHorizontal: layout.screenMargin, paddingTop: spacing.lg },
+  options: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginVertical: layout.controlGap,
+  },
+  option: {
+    minHeight: layout.touchTarget,
+    justifyContent: 'center',
+    paddingHorizontal: layout.controlGap,
+    borderRadius: radius.full,
+  },
+  pressed: { opacity: stateOpacity.pressed },
+});

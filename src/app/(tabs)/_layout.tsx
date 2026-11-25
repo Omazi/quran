@@ -7,9 +7,8 @@ import { getWritingDirection, useColors } from '@/ui';
 
 /**
  * The sections of the app in the system tab bar: one word and one filled symbol each,
- * always visible (tab-bars.md › Best practices). The selected tab takes the accent, the colour
- * of water, which differs from the green of the garden behind the bar
- * (color.md › Liquid Glass color).
+ * always visible (tab-bars.md › Best practices). The selected tab takes the forest green of the
+ * validated mockups, the app's action colour (owner's decision, 25 November 2026).
  */
 export default function TabsLayout() {
   const { t } = useTranslation('common');
@@ -23,7 +22,7 @@ export default function TabsLayout() {
   if (!hasFinishedIntroduction) return <Redirect href="/onboarding" />;
   return (
     <NativeTabs
-      tintColor={colors.accent}
+      tintColor={colors.actionTint}
       // The native tab bar follows the direction of the system, not the one React Native was
       // started with: it has to be told (react-native-screens, `TabsHost` › `direction`).
       unstable_nativeProps={{ direction: getWritingDirection() }}
