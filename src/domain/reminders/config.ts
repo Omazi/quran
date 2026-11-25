@@ -11,6 +11,12 @@ export const REMINDERS_CONFIG = Object.freeze({
    * no reading reminder is sent until the user reads again.
    */
   comeBackWeeks: 4,
+  /**
+   * Most notifications kept scheduled at once. iOS keeps the 64 soonest and silently drops the
+   * rest, so staying under it keeps what the person sees equal to what the plan says. A plan
+   * holds at most 35; the rest of the room is for a plan that grows.
+   */
+  maxPendingNotifications: 60,
 });
 
 /**

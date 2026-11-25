@@ -62,6 +62,12 @@ Fichiers : `types.ts` (vocabulaire), `config.ts` (nombres et priorité), `time-o
 (heures et heures calmes), `calendar.ts` (vendredi, pause), `garden-days.ts` (le jardin
 jour par jour), `plan-reminders.ts` (l'assemblage), `validation.ts` (entrées).
 
+## Programmation
+
+`notification-schedule.ts` : `buildNotificationSlots` (identifiants stables, 60 au plus),
+`notificationTargetOf` (où mène le toucher), `notificationSignature` et `diffNotifications`
+(ce qu'il faut annuler et programmer). Spécification : « Programmation » de `reminders.md`.
+
 ## Décisions
 
 Lectures retenues là où la spécification est floue ou muette. Chacune a un test.

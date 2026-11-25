@@ -1,0 +1,42 @@
+{
+  "channel": "Reminders",
+  "hiddenPreview": "A reminder for you",
+  "kinds": {
+    "daily-goal": {
+      "title": "Your garden is waiting",
+      "body": "A few pages, and its water keeps flowing."
+    },
+    "water-stopped": {
+      "title": "The water has stopped",
+      "body": "The water in your garden has stopped flowing. One page starts it again."
+    },
+    "thirsty": {
+      "title": "Your garden is thirsty",
+      "body": "Its plants are waiting for a little water."
+    },
+    "wilting": {
+      "title": "Your garden is wilting",
+      "body": "It is holding on: a few pages will lift it back up."
+    },
+    "dying": {
+      "title": "Your garden needs you",
+      "body": "Its elements are starting to fade. Nothing is lost."
+    },
+    "last-chance": {
+      "title": "Your garden is still holding on",
+      "body": "It can come back to life today."
+    },
+    "dead": {
+      "title": "Your garden has dried out",
+      "body": "The soil remembers everything. One page, and the water returns."
+    },
+    "come-back": {
+      "title": "Your garden is still here",
+      "body": "It will wait for you. One page is enough for the water to return."
+    },
+    "friday-kahf": {
+      "title": "It’s Friday",
+      "body": "A moment for Surah Al-Kahf?"
+    }
+  }
+}
