@@ -3,6 +3,7 @@
  * folder is private. See docs/specs/recognition.md and ./README.md.
  */
 export { RECOGNITION_CONFIG } from './config';
+export { isSameWordHeard } from './comparable-word';
 export { createFollowSession } from './follow-session';
 export { normalizeArabic, toAccentKey } from './normalize';
 export { createVerseIndex } from './verse-index';

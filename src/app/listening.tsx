@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { quranStructure } from '@/data/quran';
 import {
-  createTrialEngine,
+  createListeningEngine,
   ListeningScreen,
   loadQuranVerseIndex,
   loadQuranVerseText,
@@ -11,13 +11,14 @@ import {
 } from '@/features/listening';
 
 /**
- * The listening screen, for trials only (docs/specs/listening.md, section 4): no button leads
- * here. `/listening?scenario=several` plays a scenario of the simulated engine; a published build
- * has no engine and sends the address home.
+ * The listening screen: the reader's microphone leads here. It listens with the phone's speech
+ * engine (D42). In development and test builds, `/listening?scenario=several` plays a scenario of
+ * the simulated engine instead; where the phone has no engine, a published build sends the
+ * address home.
  */
 export default function ListeningRoute() {
   const { scenario } = useLocalSearchParams<{ scenario?: string }>();
-  const [engine] = useState(() => createTrialEngine(scenario));
+  const [engine] = useState(() => createListeningEngine(scenario));
   const navigation = useListeningNavigation();
   if (engine === null) return <Redirect href="/" />;
   return (

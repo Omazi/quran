@@ -62,6 +62,23 @@ describe('a listening, with the simulated engine and the real passage search', (
     expect(state.passages.isComplete).toBe(true);
   });
 
+  it('a passage recited after words too noisy to place: found by its latest words', async () => {
+    // What a transcription of an ordinary reader can look like: a mangled opening, then 112:1–4.
+    const noisy = 'سيارة كبيرة جميلة حمراء سريعة جديدة قديمة غالية رخيصة واسعة نظيفة'.split(' ');
+    const surah112 = 'قل هو الله أحد الله الصمد لم يلد ولم يولد'.split(' ');
+    const steps = recitationSteps([...noisy, ...surah112], { startAt: 500, seed: 3 });
+    const engine = createSimulatedSpeechEngine({
+      permission: 'granted',
+      steps: [...steps, { at: (steps[steps.length - 1]?.at ?? 0) + 1500, end: 'finished' }],
+    });
+    const { result } = await listenWith(engine);
+    await wait(60000);
+    expect(result.current.state).toMatchObject({
+      status: 'found',
+      passage: { start: { surah: 112, verse: 1 } },
+    });
+  });
+
   it('words that are not from the Quran: nothing found, and why', async () => {
     const { result } = await listenWith(createScenarioEngine('nothing'));
     await wait(20000);

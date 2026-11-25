@@ -83,12 +83,59 @@ Liste tirée de la relecture design, dans l'ordre :
 5. La taille de texte au maximum.
 6. Le téléphone en arabe : redémarrage au premier lancement, onglets et pages en miroir.
 
+## La reconnaissance vocale (D42)
+
+Trois pièces natives entrent dans l'appli avec la reconnaissance vocale :
+
+- **whisper.rn 0.7.4** (npm, MIT) : Whisper sur le téléphone (whisper.cpp 1.9.3, Metal sur
+  iPhone). Module « Turbo » de React Native, relié automatiquement ; iOS 13 au minimum, l'appli
+  vise iOS 16.4. Par défaut il apporte un `rnwhisper.xcframework` déjà compilé (3,5 Mo pour
+  l'iPhone) : rien n'est compilé de whisper.cpp sur le Mac de GitHub.
+- **`modules/voice-capture`** (module local de l'appli, Swift) : le micro, converti en 16 kHz.
+  Relié automatiquement comme les autres modules de `modules/` (il n'est pas dans
+  `expo.autolinking.exclude`). Voir son `README.md`.
+- **Le modèle** `ggml-quran-tiny-q8_0.bin` (43,5 Mo), copié dans l'appli par le plugin du module.
+
+Vérifié sous Linux le 25 novembre 2026 (copie temporaire, `npx expo prebuild --platform ios
+--no-install`) : le projet iOS contient le modèle (empreinte vérifiée) dans les ressources de la
+cible, `NSMicrophoneUsageDescription` dans `Info.plist` (français) et dans les
+`InfoPlist.strings` anglais, français et arabe ; l'autoliaison trouve `whisper.rn` et
+`voice-capture`. **Pas vérifié** : la compilation par Xcode 26.6 (aucun Mac ici) ; la première
+exécution de `ios-check.yml` ou de l'envoi TestFlight le dira. Points à regarder dans son journal
+si elle échoue : `VoiceCaptureModule.swift` (jamais compilé), les en-têtes `RCTBridge+Private.h`
+utilisés par whisper.rn pour installer ses fonctions JSI (présents dans React Native 0.88).
+
+### Le modèle de la voix
+
+Le fichier n'est pas dans le dépôt. Pendant `npx expo prebuild`, le plugin
+(`modules/voice-capture/app.plugin.js`) le télécharge à l'adresse de
+`modules/voice-capture/voice-model.json`, vérifie sa taille et son SHA-256
+(`ef01ab44…8b52`), le garde dans `node_modules/.cache/voice-model` et le place dans le projet
+iOS. Un fichier qui ne correspond pas est refusé et la compilation s'arrête, avec l'adresse et la
+raison. Le Mac de GitHub le télécharge à chaque compilation (43,5 Mo) ; aucun script de
+`.github/workflows` n'a eu à changer.
+
+- Hors ligne : `VOICE_MODEL_FILE=/chemin/ggml-quran-tiny-q8_0.bin` (toujours vérifié).
+- Derrière un proxy (la session de l'assistant) : `NODE_USE_ENV_PROXY=1`.
+- Changer de modèle : nouveau fichier, nouvelle taille, nouvelle empreinte dans
+  `voice-model.json`, et D42 à mettre à jour.
+
+L'adresse actuelle est la publication GitHub d'un tiers (`mano270699/watazawwadu-models`), qui a
+converti le modèle de Tarteel (Apache-2.0) sans le modifier. L'empreinte protège contre un fichier
+changé, pas contre une publication supprimée : **décision du propriétaire** dans D42 (héberger
+une copie dans une publication du dépôt `Omazi/quran`, puis mettre son adresse en premier).
+
 ## Version d'essai et version publiée
 
 Une compilation faite avec la variable `EXPO_PUBLIC_STATE_PREVIEW=1` affiche en bas de
 l'onglet Jardin la section « Aperçu », qui fait passer le jardin d'un état à l'autre. La
 version publiée se compile sans cette variable et ne contient pas cet aperçu
 (`src/features/home/state-preview.ts`).
+
+La même variable garde le moteur vocal simulé : `/listening?scenario=…` et
+`/voice-follow?…&scenario=follow` rejouent un scénario, pour les tests et les captures. Sans
+scénario, même une version d'essai écoute avec le vrai micro. La version publiée (TestFlight) n'a
+que le vrai moteur (`src/features/listening/speech-engine-door.ts`).
 
 ## Ce qui n'est pas encore activé
 

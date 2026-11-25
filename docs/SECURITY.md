@@ -159,3 +159,21 @@ iCloud activée). Rien n'est vérifié sur un appareil.
 
 Seules des notifications locales sont utilisées : l'envoi à distance est désactivé dans la
 configuration, et aucun jeton n'est demandé.
+
+## Micro et reconnaissance vocale (D42)
+
+- **La voix ne quitte pas le téléphone.** Le micro (`modules/voice-capture`) envoie les
+  échantillons à JavaScript, en mémoire ; Whisper (whisper.rn) les lit sur le téléphone. Aucun
+  fichier audio n'est écrit, rien n'est envoyé. L'appli n'ouvre aucune connexion pour reconnaître
+  la voix : le modèle est dans l'appli dès l'installation.
+- **Le micro n'est ouvert que sur l'écran qui écoute**, après l'alerte du système, demandée au
+  moment de l'usage (texte en français, anglais, arabe : `app.json`, `assets/app-metadata`). Il se
+  ferme dès que le passage est trouvé, au bouton « Arrêter », quand l'écran se ferme, quand
+  l'appli passe en arrière-plan, et quand le système reprend le micro (appel, Siri). Pas de mode
+  audio en arrière-plan. Micro refusé : l'écran renvoie vers les réglages du système.
+- **Le modèle est vérifié à la compilation.** Il est téléchargé par le plugin du module pendant
+  `npx expo prebuild`, et refusé si son SHA-256 n'est pas celui de `voice-model.json`. Un modèle
+  n'exécute pas de code, mais un fichier changé pourrait faire planter whisper.cpp ou tromper la
+  reconnaissance : l'empreinte l'empêche d'entrer dans l'appli.
+- L'appareil photo garde son seul usage (scanner un QR code) : il n'enregistre jamais de son. La
+  clé `NSMicrophoneUsageDescription` est celle de l'appli, pas celle du plugin de l'appareil photo.
