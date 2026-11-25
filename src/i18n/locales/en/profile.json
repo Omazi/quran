@@ -5,33 +5,58 @@
   },
   "periods": {
     "label": "Period",
-    "today": "Today",
+    "today": "Day",
     "week": "Week",
     "month": "Month",
     "all-time": "All Time"
   },
-  "hasanat": {
+  "hero": {
     "caption": {
-      "today": "Hasanat today",
-      "week": "Hasanat this week",
-      "month": "Hasanat this month",
-      "all-time": "Hasanat since you started"
-    },
+      "hasanat": {
+        "today": "Hasanat today",
+        "week": "Hasanat this week",
+        "month": "Hasanat this month",
+        "all-time": "Hasanat since you started"
+      },
+      "verses": {
+        "today": "Verses today",
+        "week": "Verses this week",
+        "month": "Verses this month",
+        "all-time": "Verses since you started"
+      },
+      "words": {
+        "today": "Words today",
+        "week": "Words this week",
+        "month": "Words this month",
+        "all-time": "Words since you started"
+      },
+      "pages": {
+        "today": "Pages today",
+        "week": "Pages this week",
+        "month": "Pages this month",
+        "all-time": "Pages since you started"
+      },
+      "readingTime": {
+        "today": "Reading time today",
+        "week": "Reading time this week",
+        "month": "Reading time this month",
+        "all-time": "Reading time since you started"
+      }
+    }
+  },
+  "hasanat": {
     "value": "≈ {{value}}",
     "valueSpoken": "About {{value}} hasanat, an estimate",
     "note": "An estimate: ten hasanat for each letter read, after the hadith reported by Ibn Mas‘ud (Sunan al-Tirmidhi no. 2910). Only Allah knows the reward."
   },
   "figures": {
-    "versesRead": "Verses Read",
-    "wordsRead": "Words Read",
-    "pagesRead": "Pages Read",
-    "readingTime": "Reading Time",
-    "appTime": "Time in the App"
+    "label": "Figure Shown",
+    "choice": "{{name}}, {{value}}",
+    "hasanatSpoken": "about {{value}}",
+    "appTime": "Time in the app: {{value}}",
+    "appTimeSpoken": "Time in the app, {{value}}"
   },
   "chart": {
-    "titleDay": "Each Day",
-    "titleMonth": "Each Month",
-    "metricLabel": "Show",
     "metrics": {
       "hasanat": "Hasanat",
       "verses": "Verses",
@@ -47,8 +72,11 @@
   "khatmas": {
     "title": "Your Gardens",
     "inProgress": "Garden {{number}} · in progress",
+    "inProgressUntil": "Garden {{number}} · in progress · estimated end {{date}}",
     "complete": "Garden {{number}} · completed on {{date}}",
-    "detail": "Khatma {{number}} · {{pages}} pages · {{verses}} verses · {{words}} words · ≈ {{hasanat}} hasanat"
+    "detail": "Khatma {{number}} · {{pages}} pages · {{verses}} verses · {{words}} words · ≈ {{hasanat}} hasanat",
+    "pace_one": "Estimated end at the pace of your goal: {{count}} page a day.",
+    "pace_other": "Estimated end at the pace of your goal: {{count}} pages a day."
   },
   "empty": {
     "title": "Your First Page Is Waiting",

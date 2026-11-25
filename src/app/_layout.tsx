@@ -58,16 +58,17 @@ function RootStack() {
   const colors = useColors();
   // The settings page of the profile opens over the tabs, as the reader does, with the system bar,
   // its title and its back button, a chevron alone (toolbars.md › Navigation; deviation 52). The bar
-  // takes the system's grouped background and label colours, which follow the dark appearance:
-  // without them the navigation library paints its own light theme.
+  // takes the warm canvas and the title colour of the validated mockups, which follow the dark
+  // appearance, so it runs into the page under it (deviation 101); without them the navigation
+  // library paints its own light theme.
   const pushedPage = {
     headerShown: true,
     headerTintColor: colors.actionTint,
     headerBackButtonDisplayMode: 'minimal',
-    headerStyle: { backgroundColor: colors.groupedBackground },
-    headerTitleStyle: { color: colors.label },
+    headerStyle: { backgroundColor: colors.canvas },
+    headerTitleStyle: { color: colors.heading },
     headerShadowVisible: false,
-    contentStyle: { backgroundColor: colors.groupedBackground },
+    contentStyle: { backgroundColor: colors.canvas },
   } as const;
   return (
     <Stack screenOptions={{ headerShown: false }}>

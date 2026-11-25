@@ -24,6 +24,7 @@ export {
 } from './reminders';
 export { RemindersSection, type RemindersSectionProps } from './reminders-section';
 export {
+  DataResetNoticeCard,
   DataResetNoticeSection,
   SettingsScreen,
   SettingsSections,
