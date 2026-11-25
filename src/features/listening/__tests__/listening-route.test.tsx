@@ -1,6 +1,7 @@
 import { render, renderHook, screen } from '@testing-library/react-native';
 import type { ComponentType } from 'react';
 import { Linking } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { showLanguage } from '@/features/garden/test-support/screen-conditions';
 import { resetDeviceConditions } from '@/ui/test-support/environment';
@@ -23,6 +24,11 @@ jest.mock('expo-router', () => ({
 // A mock factory runs before imports: `require` is the only way to load the stand-in here.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 jest.mock('react-native-reanimated', () => require('../test-support/reanimated-stand-in'));
+
+const METRICS = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 47, left: 0, right: 0, bottom: 34 },
+};
 
 afterEach(async () => {
   jest.clearAllMocks();
@@ -68,8 +74,12 @@ describe('the route', () => {
     const ListeningRoute = jest.requireActual<{ default: ComponentType }>(
       '@/app/listening',
     ).default;
-    await render(<ListeningRoute />);
-    expect(screen.getByRole('header', { name: 'À l’écoute…' })).toBeOnTheScreen();
+    await render(
+      <SafeAreaProvider initialMetrics={METRICS}>
+        <ListeningRoute />
+      </SafeAreaProvider>,
+    );
+    expect(screen.getByRole('header', { name: 'Reconnaître un passage' })).toBeOnTheScreen();
     expect(screen.queryByTestId('redirect')).toBeNull();
   });
 });

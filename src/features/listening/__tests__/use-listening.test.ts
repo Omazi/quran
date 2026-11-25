@@ -45,7 +45,7 @@ describe('a listening, with the simulated engine and the real passage search', (
     await wait(20000);
     expect(result.current.state).toMatchObject({
       status: 'found',
-      passage: { start: { surah: 2, verse: 255 } },
+      passage: { start: { surah: 18, verse: 10 } },
     });
     expect(stop).toHaveBeenCalled();
   });

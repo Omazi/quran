@@ -5,9 +5,9 @@
  *
  * Reanimated's own mock (`react-native-reanimated/mock`, with `react-native-reanimated/jest/resolver`
  * as the Jest resolver) was tried and kept out: its shared values have no `modify`, which the
- * rosette uses to hand the voice levels to the UI thread, so 37 tests of the listening screen
+ * voice orb uses to hand the voice levels to the UI thread, so 37 tests of the listening screen
  * fail with "inbox.modify is not a function". This stand-in covers
- * what the rosette uses, and renders the first frame: animated props and styles are computed once,
+ * what the voice orb and the voice meter use, and renders the first frame: animated props and styles are computed once,
  * from the shared values as they are, and frame callbacks are kept so a test can run them.
  */
 import { forwardRef, useState, type ComponentType, type ReactNode } from 'react';

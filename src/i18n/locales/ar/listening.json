@@ -1,8 +1,9 @@
 {
   "listening": {
-    "title": "جارٍ الاستماع…",
     "announcement": "جارٍ الاستماع",
-    "stop": "إيقاف"
+    "stop": "أوقف الاستماع",
+    "heading": "التعرّف على مقطع",
+    "prompt": "اتلُ مقطعًا أو أسمِعه"
   },
   "surah": "سورة {{name}}",
   "surahArabic": "سورة {{name}}",
@@ -12,9 +13,10 @@
   "page": "الصفحة {{page}}",
   "found": {
     "announcement": "تم التعرّف على المقطع: {{surah}}، {{verses}}",
-    "open": "افتح الصفحة {{page}}",
-    "where": "{{verses}} · الصفحة {{page}}",
-    "continues": "تتمة المقطع في القارئ."
+    "open": "افتح في المصحف",
+    "continues": "تتمة المقطع في القارئ.",
+    "label": "تم التعرّف على المقطع",
+    "openHint": "يفتح القارئ على الصفحة {{page}}."
   },
   "several": {
     "title": "عدة مقاطع",
@@ -26,7 +28,8 @@
     "description_other": "هذه الكلمات توجد في {{count}} موضع. اختر الموضع الذي كنت تتلوه.",
     "incomplete": "{{shown}} من أصل {{count}}. تابع التلاوة لتضييق القائمة.",
     "rowValue": "الآية {{verse}} · الصفحة {{page}}",
-    "rowHint": "يفتح القارئ على الصفحة {{page}}."
+    "rowHint": "يفتح القارئ على الصفحة {{page}}.",
+    "choose": "أيّها كنت تتلو؟"
   },
   "nothingHeard": {
     "title": "لم يُسمع شيء",
@@ -51,6 +54,19 @@
   "actions": {
     "listenAgain": "استمع مجددًا",
     "openSettings": "افتح الإعدادات",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "back": "رجوع"
+  },
+  "verseInline": "الآية {{verse}}",
+  "versesInline": "الآيات {{first}} إلى {{last}}",
+  "place": "{{name}}، {{verses}}",
+  "follow": {
+    "title": "أستمع إليك",
+    "reread": "أعد قراءة هذه الكلمة:",
+    "rereadLabel": "أعد قراءة هذه الكلمة: {{word}}",
+    "following": "تلاوتك متابَعة على الصفحة",
+    "where": "الجزء {{juz}}، الصفحة {{page}}",
+    "stop": "أوقف الاستماع",
+    "announcement": "أعد قراءة هذه الكلمة"
   }
 }

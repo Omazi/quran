@@ -1,8 +1,9 @@
 {
   "listening": {
-    "title": "À l’écoute…",
     "announcement": "À l’écoute",
-    "stop": "Arrêter"
+    "stop": "Arrêter l’écoute",
+    "heading": "Reconnaître un passage",
+    "prompt": "Récite ou fais écouter un passage"
   },
   "surah": "Sourate {{name}}",
   "surahArabic": "سورة {{name}}",
@@ -12,9 +13,10 @@
   "page": "Page {{page}}",
   "found": {
     "announcement": "Passage reconnu : {{surah}}, {{verses}}",
-    "open": "Ouvrir à la page {{page}}",
-    "where": "{{verses}} · Page {{page}}",
-    "continues": "La suite s’ouvre dans le lecteur."
+    "open": "Ouvrir dans le mushaf",
+    "continues": "La suite s’ouvre dans le lecteur.",
+    "label": "Passage reconnu",
+    "openHint": "Ouvre le lecteur à la page {{page}}."
   },
   "several": {
     "title": "Plusieurs passages",
@@ -22,7 +24,8 @@
     "description_other": "Ces mots se trouvent à {{count}} endroits. Choisis celui que tu récitais.",
     "incomplete": "{{shown}} endroits sur {{count}}. Récite la suite pour réduire la liste.",
     "rowValue": "Verset {{verse}} · Page {{page}}",
-    "rowHint": "Ouvre le lecteur à la page {{page}}."
+    "rowHint": "Ouvre le lecteur à la page {{page}}.",
+    "choose": "Lequel récitais-tu ?"
   },
   "nothingHeard": {
     "title": "Rien entendu",
@@ -47,6 +50,19 @@
   "actions": {
     "listenAgain": "Écouter à nouveau",
     "openSettings": "Ouvrir les réglages",
-    "close": "Fermer"
+    "close": "Fermer",
+    "back": "Retour"
+  },
+  "verseInline": "verset {{verse}}",
+  "versesInline": "versets {{first}} à {{last}}",
+  "place": "{{name}}, {{verses}}",
+  "follow": {
+    "title": "J’écoute",
+    "reread": "Relis ce mot :",
+    "rereadLabel": "Relis ce mot : {{word}}",
+    "following": "Suis ta récitation sur la page",
+    "where": "Juz {{juz}}, page {{page}}",
+    "stop": "Arrêter l’écoute",
+    "announcement": "Relis ce mot"
   }
 }

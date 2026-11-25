@@ -10,6 +10,17 @@ branche ensuite sans toucher à l'écran.
 Tout ce document applique [la règle des skills](../design/SKILLS.md) et
 [la charte](../design/brand-spec.md) : les lire d'abord.
 
+## Mise à jour du 25 novembre 2026 : les maquettes font foi
+
+Règle du propriétaire : les maquettes validées sont la référence visuelle. L'écran suit
+désormais `docs/design/shazam.png` (fond vert et treillis d'étoiles, micro doré dans ses
+anneaux, carte blanche du résultat) ; la rosace est retirée, son rythme reste aux ondes du
+micro. Les cinq états (écoute, passage reconnu, plusieurs passages, rien trouvé, micro refusé
+ou échec) gardent la même scène ; seule la carte change. Le suivi de la voix
+(`docs/design/voix.png`) existe en écran d'essai, `/voice-follow?page=294&from=18:10`, avec la
+règle du domaine `followRecitation`. Couleurs et tailles : `src/ui/listening-tokens.ts`.
+Écarts et questions au propriétaire : `design/SKILLS.md`, écarts 85 à 89.
+
 ## Références
 
 - Le dessin validé : `/home/claude/gen/ecoute/styles/site/index.html` (prototype animé,

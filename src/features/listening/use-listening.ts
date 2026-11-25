@@ -33,7 +33,7 @@ function isActive(state: ListeningState): boolean {
  * engine as soon as the screen has its answer. The rules of the states are the domain's
  * (`transition`); this hook only tells it what happened, in the order it happened.
  *
- * The level of the voice does not pass through here: the rosette subscribes to it directly.
+ * The level of the voice does not pass through here: the microphone and its rings subscribe to it directly.
  */
 export function useListening({ engine, loadVerseIndex }: ListeningDependencies): Listening {
   const [state, dispatch] = useReducer(transition, INITIAL_LISTENING_STATE);

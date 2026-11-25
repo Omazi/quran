@@ -11,5 +11,7 @@ export type {
   TiedPassages,
 } from './listening-machine';
 export { locatePassage } from './passage-location';
+export { followRecitation, startFollowing } from './recitation-follow';
+export type { FollowState } from './recitation-follow';
 export type { PassageLocation } from './passage-location';
 export type { MicrophonePermission, SpeechEndReason, SpeechEngine, Unsubscribe } from './types';

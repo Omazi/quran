@@ -29,3 +29,9 @@ export function createTrialEngine(scenario: string | undefined): SpeechEngine | 
   if (simulation === null) return null;
   return simulation.createScenarioEngine(simulation.parseScenario(scenario));
 }
+
+/** A new engine for the voice-following screen: the simulated recitation of 18:10, or null. */
+export function createFollowTrialEngine(): SpeechEngine | null {
+  if (simulation === null) return null;
+  return simulation.createScenarioEngine('follow');
+}
