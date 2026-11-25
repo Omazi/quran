@@ -298,3 +298,30 @@ Ce qui ne le porte pas, exprès : l'identifiant `com.omazi.quran`, le nom du dé
 et le schéma de lien (`quranapp`). Ils sont neutres, personne ne les voit, et ils survivent
 ainsi à un changement de nom.
 _Changerait si_ Apple refuse le nom : on en choisit un autre, seul le nom affiché bouge.
+
+## D32 — La langue : celle du téléphone, modifiable dans les réglages
+
+Décision du propriétaire, 24 novembre 2026, après la première installation. L'appli ne
+demande pas la langue au premier lancement : elle prend celle du téléphone (français,
+anglais ou arabe ; à défaut, la langue de repli de l'appli). La personne peut en changer
+ensuite depuis les réglages de l'appli.
+
+## D33 — Comptes et proches : d'abord sur de fausses données
+
+Décision du propriétaire, 24 novembre 2026 : il créera le projet Supabase plus tard. En
+attendant, l'inscription et les proches fonctionnent sur de fausses données, et tout ce qui
+ne dépend pas du serveur est prêt : les modèles, les règles, les interfaces, les tables et
+leurs règles d'accès. Détail : `specs/social.md`. Le jour où le serveur existe, on écrit une
+seconde mise en œuvre des mêmes interfaces ; aucun écran ne change.
+_Changerait si_ le propriétaire choisit un autre serveur que Supabase : seules les tables et
+cette seconde mise en œuvre seraient à refaire.
+
+## D34 — Après la première installation : l'ordre du travail
+
+Le 24 novembre 2026, le propriétaire a installé la première version par TestFlight et l'a
+jugée vide : pas de Coran, pas de jardin, pas d'écoute, pas d'inscription ni de proches. Il
+a demandé que tout avance en parallèle. Ordre de ce qui lui sera montré : le lecteur du
+Coran (`specs/reader.md`), le jardin en images dans le premier lancement et l'accueil,
+l'écran d'écoute (`specs/listening.md`), puis l'inscription et les proches
+(`specs/social.md`). Aucune nouvelle version ne lui est envoyée avant qu'un écran complet
+ait passé la revue de design (D28).
