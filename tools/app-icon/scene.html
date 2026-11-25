@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- The app icon's scene (decision D38), rendered by tools/app-icon/make_icon.py in a headless
+     browser. three.js (MIT) is served from the garden render tool, outside this repository;
+     every shape is built here. Nothing here ships in the app. -->
+<style>html,body{margin:0;background:transparent}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/three/build/three.module.js","three/addons/":"/three/examples/jsm/"}}</script>
+</head>
+<body>
+<script type="module">
+// The app icon: a young tree rooted at the edge of a small stream that runs down a soft lawn
+// towards the viewer ("gardens beneath which rivers flow"). Everything is plain geometry built
+// here: a sphere cap for the lawn, a ribbon for the stream, a trunk and a crown of a few
+// low-poly masses with two shades (toon material). No model file, no texture.
+import * as THREE from 'three';
+
+function toonRamp(steps) {
+  const tex = new THREE.DataTexture(new Uint8Array(steps), steps.length, 1, THREE.RedFormat);
+  tex.minFilter = THREE.NearestFilter; tex.magFilter = THREE.NearestFilter; tex.needsUpdate = true;
+  return tex;
+}
+
+window.build = async function (o) {
+  const scene = new THREE.Scene();
+  const parts = {};
+  const ramp = toonRamp(o.toonSteps);
+  const toon = (hex) => new THREE.MeshToonMaterial({ color: new THREE.Color(hex), gradientMap: ramp });
+
+  // Lawn: the top of a large sphere; the camera sees its crown and the slope down to the bottom edge.
+  const R = o.moundRadius, top = o.moundTop;
+  const height = (x, z) => -R + top + Math.sqrt(Math.max(R * R - x * x - z * z, 0));
+  const lawn = new THREE.Mesh(new THREE.SphereGeometry(R, 160, 80, 0, Math.PI * 2, 0, Math.PI / 2.2),
+    new THREE.MeshLambertMaterial({ color: new THREE.Color(o.lawn) }));
+  lawn.position.y = top - R; lawn.receiveShadow = true;
+  parts.ground = lawn;
+
+  // Stream: a ribbon on the lawn, deeper in the middle, lighter at its banks, one highlight.
+  const pts = o.stream.map(([x, z]) => new THREE.Vector3(x, 0, z));
+  const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+  const N = 260, M = 8, pos = [], col = [], idx = [];
+  const deep = new THREE.Color(o.waterDeep), bank = new THREE.Color(o.waterBank), shine = new THREE.Color(o.waterShine);
+  for (let i = 0; i <= N; i++) {
+    const t = i / N, p = curve.getPoint(t), d = curve.getTangent(t);
+    const nx = -d.z, nz = d.x, len = Math.hypot(nx, nz);
+    const w = (o.streamWidth[0] + (o.streamWidth[1] - o.streamWidth[0]) * t) / 2;
+    for (let j = 0; j <= M; j++) {
+      const u = j / M * 2 - 1;  // -1 bank, 0 middle, 1 bank
+      const x = p.x + nx / len * w * u, z = p.z + nz / len * w * u;
+      pos.push(x, height(x, z) + o.streamLift, z);
+      const c = deep.clone().lerp(bank, Math.pow(Math.abs(u), 1.6));
+      const h = o.highlight; // [t0, t1, u0, u1]: a short light streak
+      if (t > h[0] && t < h[1] && u > h[2] && u < h[3]) {
+        const k = Math.sin(Math.PI * (t - h[0]) / (h[1] - h[0])) * Math.sin(Math.PI * (u - h[2]) / (h[3] - h[2]));
+        c.lerp(shine, Math.max(0, k) * 0.9);
+      }
+      col.push(c.r, c.g, c.b);
+    }
+  }
+  for (let i = 0; i < N; i++) for (let j = 0; j < M; j++) {
+    const a = i * (M + 1) + j, b = a + M + 1;
+    idx.push(a, b, a + 1, a + 1, b, b + 1);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setIndex(idx); g.computeVertexNormals();
+  const water = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+  water.receiveShadow = true;
+  parts.water = water;
+
+  // Tree: a short sturdy trunk and a crown of a few big low-poly masses.
+  const tree = new THREE.Group();
+  const [tx, tz] = o.treeAt, base = height(tx, tz) - 0.05;
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(o.trunk[0], o.trunk[1], o.trunk[2], 8), toon(o.bark));
+  trunk.position.set(tx, base + o.trunk[2] / 2, tz);
+  tree.add(trunk);
+  for (const [dx, dy, dz, r, shade] of o.crown) {
+    const geo = new THREE.IcosahedronGeometry(r, o.crownDetail);
+    const m = new THREE.Mesh(geo, toon(shade === 1 ? o.leafDeep : o.leaf));
+    m.material.flatShading = true;
+    m.position.set(tx + dx, base + o.trunk[2] + dy, tz + dz);
+    m.rotation.set(dx * 3, dy * 5, dz * 7);
+    tree.add(m);
+  }
+  for (const [dx, dy, dz] of o.fruit) {
+    const f = new THREE.Mesh(new THREE.IcosahedronGeometry(o.fruitRadius, 1), toon(o.fruitColour));
+    f.position.set(tx + dx, base + o.trunk[2] + dy, tz + dz);
+    tree.add(f);
+  }
+  tree.traverse((n) => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
+  parts.tree = tree;
+
+  for (const k of Object.keys(parts)) scene.add(parts[k]);
+  // Light: a clear warm key from the upper left, a cool sky fill.
+  scene.add(new THREE.HemisphereLight(new THREE.Color(o.sky), new THREE.Color(o.bounce), o.fill));
+  const sun = new THREE.DirectionalLight(new THREE.Color(o.sunColour), o.key);
+  sun.position.set(...o.sun); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048); sun.shadow.radius = 8; sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.02;
+  const s = 4; Object.assign(sun.shadow.camera, { left: -s, right: s, top: s, bottom: -s, near: 0.1, far: 40 });
+  sun.shadow.intensity = o.shadow;
+  scene.add(sun);
+  window.state = { scene, parts };
+  return true;
+};
+
+window.shot = function (o, only, below) {
+  const { scene, parts } = window.state;
+  const W = o.size;
+  if (!window.r) {
+    window.r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: true });
+    window.r.shadowMap.enabled = true; window.r.shadowMap.type = THREE.PCFSoftShadowMap;
+    window.r.setClearColor(0x000000, 0); document.body.appendChild(window.r.domElement);
+  }
+  const r = window.r; r.setPixelRatio(1); r.setSize(W, W, false);
+  // `only`: the parts drawn in colour. `below`: parts drawn as depth only (they hide what is
+  // behind them). Every other part is invisible to the camera but still casts its shadow.
+  const saved = [];
+  for (const [k, g] of Object.entries(parts)) g.traverse((n) => {
+    if (!n.isMesh) return;
+    saved.push([n, n.material.colorWrite, n.material.depthWrite]);
+    const drawn = !only || only.includes(k), occluder = below && below.includes(k);
+    n.material.colorWrite = drawn;
+    n.material.depthWrite = drawn || occluder;
+  });
+  const cam = new THREE.PerspectiveCamera(o.fov, 1, 0.1, 100);
+  const az = THREE.MathUtils.degToRad(o.az), el = THREE.MathUtils.degToRad(o.el);
+  const t = new THREE.Vector3(...o.target);
+  cam.position.set(t.x + Math.sin(az) * Math.cos(el) * o.dist, t.y + Math.sin(el) * o.dist, t.z + Math.cos(az) * Math.cos(el) * o.dist);
+  cam.lookAt(t);
+  cam.setViewOffset(W, W, o.offset[0] * W, o.offset[1] * W, W, W);
+  r.render(scene, cam);
+  for (const [n, cw, dw] of saved) { n.material.colorWrite = cw; n.material.depthWrite = dw; }
+  return r.domElement.toDataURL('image/png');
+};
+window.ready = true;
+</script>
+</body>
+</html>

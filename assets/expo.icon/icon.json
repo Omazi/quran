@@ -1,35 +1,115 @@
 {
-  "fill": {
-    "automatic-gradient": "extended-srgb:0.00000,0.47843,1.00000,1.00000"
-  },
+  "fill-specializations": [
+    {
+      "value": {
+        "linear-gradient": [
+          "srgb:0.83922,0.92549,0.88627,1.00000",
+          "srgb:0.49020,0.75294,0.77255,1.00000"
+        ],
+        "orientation": {
+          "start": {
+            "x": 0.5,
+            "y": 0
+          },
+          "stop": {
+            "x": 0.5,
+            "y": 1
+          }
+        }
+      }
+    },
+    {
+      "appearance": "dark",
+      "value": {
+        "linear-gradient": [
+          "srgb:0.05490,0.35294,0.38824,1.00000",
+          "srgb:0.02353,0.18039,0.20000,1.00000"
+        ],
+        "orientation": {
+          "start": {
+            "x": 0.5,
+            "y": 0
+          },
+          "stop": {
+            "x": 0.5,
+            "y": 1
+          }
+        }
+      }
+    }
+  ],
   "groups": [
     {
+      "name": "Tree",
       "layers": [
         {
-          "image-name": "expo-symbol 2.svg",
-          "name": "expo-symbol 2",
-          "position": {
-            "scale": 1,
-            "translation-in-points": [1.1008400065293245e-5, -16.046875]
-          }
-        },
-        {
-          "image-name": "grid.png",
-          "name": "grid"
+          "image-name": "tree.png",
+          "name": "tree",
+          "glass": true
         }
       ],
       "shadow": {
         "kind": "neutral",
         "opacity": 0.5
       },
+      "specular": true,
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      }
+    },
+    {
+      "name": "Water",
+      "layers": [
+        {
+          "image-name": "water.png",
+          "name": "water",
+          "glass": true
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      },
+      "specular": true,
       "translucency": {
         "enabled": true,
-        "value": 0.5
-      }
+        "value": 0.2
+      },
+      "opacity-specializations": [
+        {
+          "appearance": "tinted",
+          "value": 0.8
+        }
+      ]
+    },
+    {
+      "name": "Ground",
+      "layers": [
+        {
+          "image-name": "ground.png",
+          "name": "ground",
+          "glass": true
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
+      },
+      "specular": true,
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      },
+      "opacity-specializations": [
+        {
+          "appearance": "tinted",
+          "value": 0.45
+        }
+      ]
     }
   ],
   "supported-platforms": {
-    "circles": ["watchOS"],
     "squares": "shared"
   }
 }

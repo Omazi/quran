@@ -120,7 +120,7 @@ animations » (`motion.md › Best practices`). Rien d'autre que les animations 
 ### Icônes et images
 
 SF Symbols, de la graisse du texte voisin (`sf-symbols.md › Weights and scales`). Pas d'emoji, pas
-d'illustration dessinée en code. Le jardin est la seule image : des rendus de modèles 3D (D35). Image manquante = emplacement
+d'illustration dessinée en code. Le jardin est la seule image : des rendus de modèles 3D (D35). L'icône de l'appli est aussi un rendu 3D (plus bas, « Icône »). Image manquante = emplacement
 neutre et nommé.
 
 ### Voix
@@ -130,12 +130,65 @@ fait et garde le même nom tout le long (Apple Design, angle 5). Majuscules : en
 en début de phrase seulement ; en anglais, celles des titres pour les boutons et les
 titres, comme le système.
 
+### Icône
+
+Décision D38. Sources : `app-icons.md` (Apple Design), skill Frontend design (une seule idée
+forte), trois revues de design du 25 novembre 2026, et le choix du propriétaire pour le jardin en
+images 3D (D35). Fichiers produits par `tools/app-icon/make_icon.py` (scène :
+`tools/app-icon/scene.html`).
+
+**L'idée.** Un jeune arbre fruitier enraciné au bord d'un petit ruisseau qui descend vers nous sur
+une pelouse douce : lire arrose le jardin, et le jardin « sous lequel coulent les ruisseaux » répond
+au nom (écho à faire confirmer par une personne qualifiée, comme le nom, D31). C'est un rendu 3D,
+comme le jardin de l'appli (D35), mais tout est construit dans la scène : une calotte de sphère pour
+la pelouse, un ruban pour le ruisseau, un tronc et une couronne de cinq masses en facettes à deux
+tons (clair et ombre). Aucun modèle, aucune texture, aucune île ni socle.
+
+**Couleurs, par rôle.**
+
+| Rôle              | Où                   | Valeur                                                                                      |
+| ----------------- | -------------------- | ------------------------------------------------------------------------------------------- |
+| Ciel et eau       | Fond, de haut en bas | `#D6ECE2` → `#7DC0C5` ; apparence sombre `#0E5A63` → `#062E33`                              |
+| Eau (`accent`)    | Le ruisseau          | milieu `#2C8FA2`, rives `#86D3DB`, un reflet `#E8FAFB` ; pas plus clair que l'arbre éclairé |
+| Jardin (`growth`) | Pelouse, couronne    | pelouse `#6DBA4E`, feuillage `#7CC95A` (deux tons), tronc `#6E4630`                         |
+| Fruits            | Cinq fruits          | corail `#FF8A70`, de la luminance des feuilles                                              |
+
+Lumière : une lumière chaude et nette venue d'en haut à gauche (`#FFE6C2`), un ciel froid en
+complément. Ni or ni papier.
+
+**Couches** (`assets/expo.icon`, format Icon Composer, `app-icons.md › Layer design`) : le fond
+est le dégradé d'Icon Composer lui-même (clair et sombre). Trois groupes, du dessus vers le dessous :
+l'arbre (`tree.png`), le ruisseau (`water.png`, translucidité 0,2), la pelouse (`ground.png`). Des PNG
+à transparence, parce que c'est un rendu (`app-icons.md › Layer design`). Chaque couche est entière
+sous celles du dessus, et coupée seulement par ce qui se tient devant elle. En teinté et en
+transparent, l'ordre de clarté est gardé par l'opacité : arbre, ruisseau (80 %), pelouse (45 %).
+
+**Composition** (`app-icons.md › Icon shape` : contenu centré). L'arbre est centré à 2 % près
+(un peu à gauche), 53 % de la largeur, 56 % de la hauteur ; la pelouse et le ruisseau sortent par le
+bas. À 29 pixels : un arbre et un ruban d'eau. Les fruits se voient à partir de 60 pixels ; ils
+ont la luminance des feuilles pour ne pas faire de taches dans les versions d'une seule teinte (en
+rouge, la couronne y devenait un champignon tacheté). Sur Android, l'arbre tient dans le cercle de
+sécurité ; la pelouse passe sous le masque.
+
+**Écran de lancement** : une couleur unie, sans logo (`launching.md › Launch screens`) ;
+`splash-icon.png` existe mais n'est pas affiché.
+
+**Écarté, et pourquoi** (rendus : voir D38) :
+
+- Le plan du jardin vu d'en haut (version 1) : une fleur autour de l'étoile générique.
+- La parcelle vue de trois quarts, en vectoriel (version 2) : une puce électronique, très sombre.
+- L'arbre sur une île flottante avec un bassin rond (versions 3 et 4, modèles Kenney puis
+  Quaternius) : une icône de jeu mobile ou d'appli de concentration ; le socle ovale donnait un verre
+  à pied en silhouette ; des fruits sombres faisaient des bouches.
+- Le même sujet en vectoriel plat : une illustration de banque d'images.
+- Plus tôt : une goutte qui devient feuille, la rosace seule, la calligraphie de جنتك (texte
+  déconseillé par `app-icons.md › Design`).
+
 ## 4. Ce qui manque encore
 
 - Le moteur 3D du jardin : faire tourner le jardin et visiter celui d'un proche (D4, D35).
   Les jardins des autres niveaux (D23). Le jardin en images est celui du niveau 1.
 - La présentation du texte du Coran : à revoir avec le propriétaire.
-- Le nom de l'appli et son icône.
 - Version iPad (largeur « regular ») : lot ultérieur ; le lot 1 vise l'iPhone.
 
 ## 5. Critique du plan

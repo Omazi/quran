@@ -1,0 +1,15 @@
+App icon: provenance
+====================
+
+Files: assets/expo.icon/ (icon.json and Assets/: tree.png, water.png, ground.png) and, in
+assets/images/, icon.png, android-icon-foreground.png, android-icon-background.png,
+android-icon-monochrome.png, favicon.png, splash-icon.png (decision D38).
+
+They are renders, made on 25 November 2026 by tools/app-icon/make_icon.py from the scene
+tools/app-icon/scene.html. Every shape in them is built by that scene (a sphere cap for the lawn,
+a ribbon for the stream, a cylinder and a few icosahedra for the tree, small spheres for the
+fruit); every colour and the light are set there. No 3D model, texture, font or other third-party
+material is in them. They belong to the project.
+
+Tools used to make them, not shipped in the app: three.js 0.187.0 (MIT), run in headless
+Chromium through Playwright (Apache-2.0), Python with Pillow (MIT-CMU) and numpy (BSD-3-Clause).
