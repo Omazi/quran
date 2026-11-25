@@ -6,12 +6,17 @@ import {
   appleTextStyles,
   fontFamily,
   layout,
+  radius,
   spacing,
   stateOpacity,
   textStyles,
 } from '../../tokens';
-import { useColors } from '../../use-colors';
-import { GroupedListScope, useGroupedListGuard } from '../grouped-list-scope';
+import { useColors, useElevation } from '../../use-colors';
+import {
+  GroupedListScope,
+  useGroupedListBackground,
+  useGroupedListGuard,
+} from '../grouped-list-scope';
 import type { GroupedListProps, IconSymbol, ListRowProps, ListSectionProps } from '../types';
 import { Icon } from './icon';
 
@@ -20,11 +25,15 @@ import { Icon } from './icon';
  * a small header names each section, a hairline separates the sections, and there are no inset
  * cards and no disclosure chevrons, which are iOS conventions.
  */
-export function GroupedList({ children, header, testID }: GroupedListProps) {
+export function GroupedList({ children, header, background = 'system', testID }: GroupedListProps) {
   return (
-    <ScrollView style={styles.list} testID={testID}>
+    <ScrollView
+      style={styles.list}
+      contentContainerStyle={background === 'clear' ? styles.clearContent : undefined}
+      testID={testID}
+    >
       {header}
-      <GroupedListScope>{children}</GroupedListScope>
+      <GroupedListScope background={background}>{children}</GroupedListScope>
     </ScrollView>
   );
 }
@@ -38,10 +47,16 @@ export function ListSection({
 }: ListSectionProps) {
   useGroupedListGuard('ListSection');
   const colors = useColors();
+  const shadow = useElevation('card');
+  const isOverBackdrop = useGroupedListBackground() === 'clear' && !isBare;
   return (
     <View
       style={
-        isBare ? styles.bareSection : [styles.section, { borderBottomColor: colors.separator }]
+        isBare
+          ? styles.bareSection
+          : isOverBackdrop
+            ? styles.clearSection
+            : [styles.section, { borderBottomColor: colors.separator }]
       }
     >
       {title === undefined ? null : (
@@ -66,7 +81,14 @@ export function ListSection({
           )}
         </View>
       )}
-      {children}
+      {isOverBackdrop ? (
+        // Over a backdrop the rows sit on a card of their own, the surface of the mockups.
+        <View style={[styles.card, { backgroundColor: colors.surface, boxShadow: shadow }]}>
+          {children}
+        </View>
+      ) : (
+        children
+      )}
       {footer === undefined ? null : (
         <AppText variant="footnote" color="secondaryLabel" style={styles.sectionText}>
           {footer}
@@ -142,6 +164,9 @@ export function ListRow({
 
 const styles = StyleSheet.create({
   list: { flex: 1 },
+  clearContent: { paddingVertical: spacing.sm },
+  clearSection: { paddingHorizontal: layout.screenMargin, paddingVertical: spacing.sm },
+  card: { borderRadius: radius.xl, overflow: 'hidden' },
   section: {
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,

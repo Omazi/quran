@@ -11,13 +11,13 @@ import {
 } from '@/features/onboarding';
 
 /**
- * The scenes of the introduction: the garden of each page, drawn by the garden's own scene from
- * the state its rules give. The pages that show something else keep a named placeholder.
+ * The gardens of the introduction, drawn by the garden's own scene from the state its rules give,
+ * as wide as the space they are given. A scene that is not a garden keeps a named placeholder.
  */
 const renderScene: SceneRenderer = (scene) => {
   const garden = gardenOfScene(scene);
   if (garden === null) return renderPlaceholderScene(scene);
-  return <GardenScene state={previewGardenState(garden)} size="fill" />;
+  return <GardenScene state={previewGardenState(garden)} size="band" />;
 };
 
 /**
@@ -36,8 +36,15 @@ export default function OnboardingRoute() {
   });
   return (
     <>
-      {/* The pages are swiped sideways, so the back swipe is left to the back button. */}
-      <Stack.Screen options={{ headerShown: model.isReplay, gestureEnabled: false }} />
+      {/* The pages are swiped sideways, so the back swipe is left to the back button. Opened
+          again, the system's bar floats over the sky of the introduction. */}
+      <Stack.Screen
+        options={{
+          headerShown: model.isReplay,
+          headerTransparent: model.isReplay,
+          gestureEnabled: false,
+        }}
+      />
       <OnboardingScreen model={model} actions={actions} renderScene={renderScene} />
     </>
   );

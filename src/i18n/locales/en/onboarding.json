@@ -5,8 +5,8 @@
   },
   "replayTitle": "Introduction",
   "finish": {
-    "ask-permission": "Continue",
-    "start": "Get Started",
+    "ask-permission": "Create My Garden",
+    "start": "Create My Garden",
     "done": "Done"
   },
   "permissionNotice": "Your phone will then ask you to allow notifications.",
@@ -22,68 +22,106 @@
   },
   "pages": {
     "bareEarth": {
-      "title": "Bare Earth",
-      "text": "Sixty hizb to turn it into a garden. Swipe to\u00a0continue."
+      "title": "Bare earth.",
+      "text": "Sixty hizb to turn it into a garden."
     },
     "hizb8": {
-      "title": "Read, and the Water Flows",
-      "text": "Every new page you read waters your garden. The channels fill up and the first trees\u00a0arrive."
+      "title": "Read, and the water flows.",
+      "text": "Every new page you read waters your garden. The channels fill up and the first trees arrive."
     },
     "hizb20": {
-      "title": "One Hizb, One New Element",
-      "text": "A tree, flowers, a fountain: each hizb you finish adds\u00a0something."
+      "title": "One hizb, one new element.",
+      "text": "A tree, flowers, a fountain: each hizb you finish adds something."
     },
     "hizb30": {
-      "title": "Halfway There, the Walls Rise",
-      "text": "Your garden takes shape, hizb after\u00a0hizb."
+      "title": "Halfway there, the walls rise.",
+      "text": "Your garden takes shape, hizb after hizb."
     },
     "hizb40": {
-      "title": "The Gates Open",
-      "text": "The further you go, the more beautiful it\u00a0becomes."
+      "title": "The gates open.",
+      "text": "The further you go, the more beautiful it becomes."
     },
     "hizb60": {
-      "title": "At the Sixtieth Hizb, Your Garden Is Complete",
-      "text": "You have read the whole Quran, and this garden no longer\u00a0dries."
+      "title": "Your garden is complete.",
+      "text": "Sixty hizb: you have read the whole Quran. This garden no longer dries."
     },
     "thirsty": {
-      "title": "Stop Reading, and It Gets Thirsty",
-      "text": "The water stops flowing and the grass turns\u00a0pale."
+      "title": "Stop on the way, and it gets thirsty.",
+      "text": "The water stops flowing and the grass turns pale."
     },
     "wilting": {
-      "title": "Then It Wilts",
-      "text": "The grass yellows, the trees take on autumn colors, the channels run\u00a0dry."
+      "title": "Then it wilts.",
+      "text": "The grass yellows, the leaves fall, the channels run dry."
     },
     "dying": {
-      "title": "The Trees Go Bare",
-      "text": "The flowers are gone and the earth\u00a0cracks."
+      "title": "The trees go bare.",
+      "text": "The flowers are gone and the earth cracks."
     },
     "dead": {
-      "title": "And It Turns Back into Dead Earth",
-      "text": "Two weeks without reading, and nothing is\u00a0left."
+      "title": "And it turns back into dead earth.",
+      "text": "Two weeks without reading, and nothing is left."
     },
     "revival": {
-      "title": "One Page Is Enough to Revive It",
-      "text": "The hizb you have read stay yours. Start again, and the water\u00a0returns."
+      "title": "One page is enough to revive it.",
+      "text": "The hizb you have read stay yours. Start again, and the water returns."
     },
     "voice": {
-      "title": "Read Aloud, the App Follows You",
-      "text": "Each word lights up as you recite it. A misread word turns red, so you can read it\u00a0again."
+      "title": "Read aloud, the app follows you.",
+      "text": "Each word lights up as you recite it. A misread word turns red, so you can read it again."
     },
     "recognition": {
-      "title": "Where Is This Passage From?",
-      "text": "Hearing a recitation? Let the app listen: it tells you the surah and the\u00a0verse."
+      "title": "Where is this passage from?",
+      "text": "Hearing a recitation? Let the app listen: it tells you the surah and the verse."
     },
     "friends": {
-      "title": "With Your Loved Ones",
-      "text": "Visit their gardens, encourage each other, and read a khatma\u00a0together."
+      "title": "With your loved ones.",
+      "text": "Visit their gardens, encourage each other, and read a khatma together."
     },
     "goal": {
-      "title": "Your Daily Goal",
-      "text": "It is up to you. You can change it whenever you\u00a0like."
+      "title": "Your daily goal.",
+      "text": "It is up to you. You can change it whenever you like."
     },
     "reminders": {
-      "title": "Your Reminders",
-      "text": "So your garden never runs out of\u00a0water."
+      "title": "Your reminders.",
+      "text": "So your garden never runs out of water."
+    }
+  },
+  "hint": "Swipe",
+  "captions": {
+    "hizb": "Hizb {{hizb}}",
+    "drought_one": "{{count}} day without reading",
+    "drought_other": "{{count}} days without reading",
+    "revival": "You start reading again"
+  },
+  "recognition": {
+    "found": "Passage found",
+    "page": "Page {{page}}",
+    "where": "{{surah}}, verse {{verse}}"
+  },
+  "friends": {
+    "hizb_one": "{{count}} hizb",
+    "hizb_other": "{{count}} hizb",
+    "names": {
+      "first": "Mustapha",
+      "second": "Sarah",
+      "third": "Taghread"
+    }
+  },
+  "notifications": {
+    "label": "Preview of your reminders",
+    "now": "now",
+    "daily": {
+      "title": "Today’s reading",
+      "body_one": "{{count}} page left today.",
+      "body_other": "{{count}} pages left today."
+    },
+    "thirsty": {
+      "title": "Your garden is thirsty",
+      "body": "One page is enough to bring the water back."
+    },
+    "friday": {
+      "title": "It’s Friday",
+      "body": "Remember to read Surah Al-Kahf."
     }
   }
 }

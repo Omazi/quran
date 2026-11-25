@@ -19,6 +19,8 @@ export interface ActionButtonProps {
   /** What VoiceOver says. Required for a button that shows only a symbol. */
   accessibilityLabel?: string;
   onPress: () => void;
+  /** Shown faded and not pressable, while what it started is under way. */
+  disabled?: boolean;
   /** Spans the width it is given, or takes the room its content needs. Defaults to true. */
   fullWidth?: boolean;
   testID?: string;
@@ -38,6 +40,7 @@ export function ActionButton({
   variant = 'filled',
   accessibilityLabel,
   onPress,
+  disabled = false,
   fullWidth = true,
   testID,
 }: ActionButtonProps) {
@@ -55,12 +58,15 @@ export function ActionButton({
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? label}
         onPress={onPress}
+        disabled={disabled}
+        accessibilityState={{ disabled }}
         testID={testID}
         style={({ pressed }) => [
           styles.button,
           label === undefined ? styles.iconOnly : null,
           { backgroundColor: isFilled ? colors.action : colors.actionTonal },
           pressed && styles.pressed,
+          disabled && styles.disabled,
         ]}
       >
         {symbol === undefined ? null : (
@@ -93,4 +99,5 @@ const styles = StyleSheet.create({
   iconOnly: { paddingHorizontal: spacing.none },
   label: { flexShrink: 1 },
   pressed: { opacity: stateOpacity.pressed },
+  disabled: { opacity: stateOpacity.disabled },
 });

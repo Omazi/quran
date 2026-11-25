@@ -15,6 +15,7 @@ import {
   font,
   foregroundStyle,
   headerProminence,
+  scrollContentBackground,
 } from '@expo/ui/swift-ui/modifiers';
 import { StyleSheet, View } from 'react-native';
 
@@ -32,11 +33,15 @@ const TERTIARY = foregroundStyle({ type: 'hierarchical', style: 'tertiary' });
  * The system's grouped list: headers, footers and space separate the groups
  * (lists-and-tables.md › Style). It scrolls by itself and fills the place it is given.
  */
-export function GroupedList({ children, header, testID }: GroupedListProps) {
+export function GroupedList({ children, header, background = 'system', testID }: GroupedListProps) {
   const list = (
     <SwiftUIHost size="fill">
-      <Form testID={testID}>
-        <GroupedListScope>{children}</GroupedListScope>
+      <Form
+        testID={testID}
+        // `clear`: the Form draws no background of its own, its groups keep theirs.
+        modifiers={background === 'clear' ? [scrollContentBackground('hidden')] : undefined}
+      >
+        <GroupedListScope background={background}>{children}</GroupedListScope>
       </Form>
     </SwiftUIHost>
   );

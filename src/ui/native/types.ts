@@ -64,6 +64,13 @@ export interface GroupedListProps {
    * could never reach them (SKILLS.md, deviation 30).
    */
   header?: ReactNode;
+  /**
+   * `system` (default): the grouped background of the system. `clear`: no background of its own,
+   * so that the screen's backdrop shows around the groups, which keep their own surface: on iOS
+   * the system's rounded groups, elsewhere a rounded card per group. For a list laid over a
+   * picture or a gradient, as the validated first-launch prototype lays its settings.
+   */
+  background?: 'system' | 'clear';
   testID?: string;
 }
 

@@ -3,9 +3,27 @@ import { createContext, useContext, type ReactNode } from 'react';
 /** True below a `GroupedList`, in either implementation. */
 const InsideGroupedList = createContext(false);
 
+/** The background of the enclosing list (`GroupedListProps.background`). */
+const GroupedListBackground = createContext<'system' | 'clear'>('system');
+
 /** Set by both implementations of `GroupedList` around their content. */
-export function GroupedListScope({ children }: { children: ReactNode }) {
-  return <InsideGroupedList.Provider value>{children}</InsideGroupedList.Provider>;
+export function GroupedListScope({
+  children,
+  background = 'system',
+}: {
+  children: ReactNode;
+  background?: 'system' | 'clear';
+}) {
+  return (
+    <InsideGroupedList.Provider value>
+      <GroupedListBackground.Provider value={background}>{children}</GroupedListBackground.Provider>
+    </InsideGroupedList.Provider>
+  );
+}
+
+/** The background of the list a section belongs to. */
+export function useGroupedListBackground(): 'system' | 'clear' {
+  return useContext(GroupedListBackground);
 }
 
 /**

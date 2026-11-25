@@ -49,6 +49,8 @@ export {
   readerShapes,
   spacing,
   stateOpacity,
+  storyLayout,
+  storyMotion,
   type BackdropName,
   type GardenPaletteRole,
   type QuranTextStyleName,
@@ -60,7 +62,19 @@ export {
   type TextColorRole,
   type TextStyleName,
 } from './tokens';
-export { useBackdropGradient, useColors, useElevation, type Colors } from './use-colors';
+export {
+  gardenPaletteValuesFor,
+  useBackdropGradient,
+  useColors,
+  useElevation,
+  useGardenPaletteValues,
+  type Colors,
+} from './use-colors';
+export { PageDots, type PageDotsProps } from './components/page-dots';
+export { PAGE_DOTS } from './components/page-dots-shape';
+export { StarPattern, type StarPatternProps } from './components/star-pattern';
+export { SwipePager, type SwipePagerProps } from './components/swipe-pager';
+export { SWIPE_PAGING, crossfade, stageLayerOpacity, swapOpacity } from './components/swipe-paging';
 export { ActionButton, type ActionButtonProps } from './components/action-button';
 export { ArabicDisplayText, type ArabicDisplayTextProps } from './components/arabic-display-text';
 export { Avatar, type AvatarProps } from './components/avatar';

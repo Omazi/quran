@@ -147,6 +147,33 @@ export function useElevation(level: keyof typeof elevation): string {
 /** The mockup palette of the reader and the Quran tab, one colour per role. */
 export type ReaderPalette = Readonly<Record<ReaderPaletteRole, ColorValue>>;
 
+/**
+ * The mockups' palette (`gardenPalette`) as plain values for the device appearance, for what
+ * cannot take a dynamic colour: a colour animated between two values on the UI thread, the
+ * strokes and gradients of react-native-svg.
+ */
+export function useGardenPaletteValues(): Readonly<Record<GardenPaletteRole, string>> {
+  const scheme = useColorScheme() === 'dark' ? 'dark' : 'light';
+  return gardenPaletteValues[scheme];
+}
+
+/** The same palette in one appearance, whatever the device's: over a surface that is always dark. */
+export function gardenPaletteValuesFor(
+  appearance: Appearance,
+): Readonly<Record<GardenPaletteRole, string>> {
+  return gardenPaletteValues[appearance];
+}
+
+function plainPalette(appearance: Appearance): Readonly<Record<GardenPaletteRole, string>> {
+  const roles = Object.keys(gardenPalette) as GardenPaletteRole[];
+  return Object.fromEntries(roles.map((role) => [role, gardenPalette[role][appearance]])) as Record<
+    GardenPaletteRole,
+    string
+  >;
+}
+
+const gardenPaletteValues = { light: plainPalette('light'), dark: plainPalette('dark') };
+
 let iosReaderPalette: ReaderPalette | undefined;
 const fallbackReaderPalette: Readonly<Record<Appearance, ReaderPalette>> = {
   light: mapRoles(readerPalette, (pair: ColorPair) => pair.light),

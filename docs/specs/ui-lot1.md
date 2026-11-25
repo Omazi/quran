@@ -6,8 +6,11 @@ Android viendra ensuite sur la même base de code.
 Tout ce document applique [la règle des skills](../design/SKILLS.md) et
 [la charte](../design/brand-spec.md) : les lire d'abord. Les renvois du type
 `toggles.md › Mobile (iOS, iPadOS)` désignent les pages d'Apple du skill Apple Design.
-Référence de comportement pour le premier lancement :
-`docs/design/premier-lancement-prototype.html` (son **aspect** n'est pas une référence).
+Référence du premier lancement, pour le comportement **et pour l'aspect** :
+`docs/design/premier-lancement-prototype.html` et la maquette `docs/design/bienvenue.png`
+(règle du propriétaire du 25 novembre 2026 : « Même le onboarding doit ressembler à ce qu'on
+avait prévu »). Là où le prototype et les règles d'Apple divergent, l'écart est inscrit au
+registre (écarts 118 à 122) et soumis au propriétaire, qui tranche au cas par cas.
 
 ## Règles de conception
 
@@ -79,54 +82,69 @@ userSeed, pauses, reminders }` et journal de lecture (type du domaine). `reminde
    AsyncStorage derrière une interface déclarée côté magasin. Tout ce qui est relu du
    stockage est **validé** (version de schéma, types, bornes) : un contenu corrompu est
    écarté sans plantage. `userSeed` est tiré une fois.
-3. **Premier lancement.**
+3. **Premier lancement.** Aspect : celui du prototype validé (voir plus haut).
    - _Rôle_ : faire comprendre en quelques gestes que lire arrose le jardin, puis prendre
      deux réglages.
-   - _Signature_ : la scène du jardin, qui change à chaque page.
-   - Un pageur horizontal natif, **un geste = une page**. Ni « Continuer » ni « Passer »
-     (décision du propriétaire). Indicateur de pages du système, centré en bas, non coloré
-     (`page-controls.md › Best practices` et `› Customizing indicators`).
-   - **Les pages sont des données** : une liste ordonnée `{ id, scène, titre, texte }`.
-     Changer leur nombre ou leur ordre ne touche pas au code du pageur.
+   - _Signature_ : la scène du jardin, qui change à chaque page **sous le doigt**.
+   - La langue est celle du téléphone (aucune page de langue).
+   - **Composition** (prototype, mesures dans `storyLayout`, `src/ui/tokens.ts`) : le nom de
+     l'appli en haut (serif Fraunces) ; la scène au milieu, sur 48 % de la hauteur ; sous le
+     jardin, une légende courte (« Hizb 8 », « 3 jours sans lecture ») ; le titre (Large Title,
+     Fraunces) et sa phrase en bas ; les points de page centrés tout en bas.
+   - **Le ciel** : le dégradé chaud de `bienvenue.png`, qui pâlit vers le gris puis la
+     poussière pendant la sécheresse, devient lever de soleil au jardin complet, vert profond
+     à étoiles pour l'écoute et ciel pâle pour les proches ; crépuscule la nuit.
+   - **Le geste** (`SwipePager`, `src/ui`) : un geste = une page ; les pages glissent sous le
+     doigt de droite à gauche (de gauche à droite en arabe) ; le ciel, la scène et la légende
+     restent en place et changent avec la position, de sorte que le jardin pousse, sèche et
+     revit à la vitesse où l'on glisse, sans rien attendre. Ni « Continuer » ni « Passer »
+     (décision du propriétaire). Les points de page du prototype, dans une capsule de verre
+     sur iOS 26 (`PageDots`) ; un toucher d'un côté ou de l'autre tourne la page, et VoiceOver
+     les tourne par l'élément réglable. « Réduire les animations » : la page vient sans
+     glissement quand elle est demandée par les points, et toutes les démonstrations
+     s'arrêtent.
+   - **Les pages sont des données** (`pages.ts`) : une liste ordonnée `{ id, scène, titre,
+texte, ciel, couleur des mots, taille de la scène }`. Changer leur nombre ou leur ordre ne
+     touche pas au code du pageur.
 
    ```
    ┌──────────────────────┐
+   │       Jannatuk       │  nom de l'appli, Fraunces
    │                      │
-   │   scène du jardin    │  emplacement nommé
-   │   (hizb 8)           │  « Jardin au hizb 8 »
+   │   scène du jardin    │  images des modèles 3D (D35)
+   │      ( Hizb 8 )      │  légende
    │                      │
-   ├──────────────────────┤
-   │ Lis, et l'eau coule. │  Title 2, New York
-   │ Une phrase.          │  Body
-   │                      │
-   │        • • ● • •     │  indicateur système
+   │ Lis, et l'eau coule. │  Large Title, Fraunces
+   │ Une phrase.          │  Body, gris
+   │      ( ●━ • • • )     │  points de page, capsule de verre
    └──────────────────────┘
    ```
 
-   - Pages (version vue par le propriétaire, 16) : terre nue ; hizb 8, 20, 30, 40, 60 ;
-     3, 6, 10 et 14 jours sans lecture ; « une page suffit pour le faire revivre » ; lecture
-     à voix haute ; « d'où vient ce passage ? » ; avec tes proches ; ton objectif du jour ;
-     tes rappels.
-   - _Objectif du jour_ : liste groupée, ligne « Pages par jour » avec sa valeur et le
-     sélecteur − / + (`steppers.md › Best practices` : la valeur modifiée est visible),
-     de 1 à 60, valeur par défaut déjà posée. Pas de boutons de repères : sous la
-     ligne, une note donne l'équivalence et la durée (« 5 pages par jour, soit un demi-hizb :
-     une khatma en 121 jours »), qui change quand on touche au sélecteur
-     (`onboarding.md › Best practices` : apprendre en faisant).
-   - _Rappels_ : liste groupée d'interrupteurs (`toggles.md › Mobile (iOS, iPadOS)` : un
-     interrupteur vit dans une ligne de liste) — rappel du jour et son heure (sélecteur
-     d'heure compact, `pickers.md`), « mon jardin a soif », vendredi : sourate Al-Kahf.
-     Un seul bouton en bas. La demande d'autorisation du système le suit si un rappel est
-     activé ; le libellé du bouton et l'écran respectent
-     `privacy.md › Pre-alert screens, windows, or views` (un seul bouton, qui annonce la demande ; aucune
-     autre sortie).
-   - **Deux points à trancher par le propriétaire**, inscrits au registre des écarts :
-     16 pages et pas de « Passer », contre les règles d'Apple. Une liste de 10 pages est
-     prête dans les données (`ONBOARDING_PAGES_SHORT`) : terre nue, hizb 20, hizb 60,
-     soif, terre morte, revivre, voix, d'où vient ce passage, objectif, rappels.
-   - **Deux pages non validées** : _lecture à voix haute_ et _rappels_. Elles sont codées
-     avec les composants du système, sans effet. Leur design sera exploré avec le skill
-     Wireframe (cinq options en noir et blanc) avant d'être refait.
+   - Pages (15 aujourd'hui) : terre nue (avec l'indication « Glisse ») ; hizb 8, 20, 30, 40,
+     60 (jardin complet, qui ne sèche plus) ; 3, 6, 10 et 14 jours sans lecture, sur un jardin
+     encore en chemin (l'eau s'en va d'abord, puis les feuilles, puis les éléments) ; « une page
+     suffit pour le faire revivre » ; « d'où vient ce passage ? » (démonstration de l'écoute :
+     le micro doré écoute, puis la carte du passage Al-Kahf 18:10 monte, texte tiré des
+     données) ; avec tes proches (Mustapha, Sarah, Taghread, D25) ; ton objectif du jour ; tes
+     rappels. La page « lecture à voix haute » reste écrite et apparaîtra quand la fonction
+     existera (`SHIPPED_FEATURES`).
+   - _Objectif du jour_ : sous la terre nue, en petit ; liste groupée du système posée sur le
+     ciel, ligne « Pages par jour » avec sa valeur et le sélecteur − / +
+     (`steppers.md › Best practices`), de 1 à 60, valeur par défaut déjà posée. Pas de boutons
+     de repères (le propriétaire ne veut pas de grands boutons de choix sur les dernières
+     pages) : sous la ligne, une note donne l'équivalence et la durée, qui change quand on
+     touche au sélecteur (`onboarding.md › Best practices` : apprendre en faisant).
+   - _Rappels_ : en haut, les notifications que l'appli enverra, chacune montrée ou retirée
+     avec son interrupteur (masquées aux grandes tailles de texte et sur les écrans courts) ;
+     puis la liste groupée du système posée sur le ciel — rappel du jour et son heure,
+     « mon jardin a soif », vendredi : sourate Al-Kahf (désactivé par défaut). Un seul bouton,
+     « Créer mon jardin », à la place des points ; la demande d'autorisation du système le suit
+     si un rappel est activé, annoncée par la phrase placée juste avant lui
+     (`privacy.md › Pre-alert screens, windows, or views`, écart 120). Les valeurs choisies sont
+     celles que le module des rappels programme.
+   - **Points à trancher par le propriétaire**, inscrits au registre : 15 pages et pas de
+     « Passer » (écart 3) ; le libellé du bouton (écart 120) ; le pageur et les points dessinés
+     (écart 118). Une liste courte est prête dans les données (`ONBOARDING_PAGES_SHORT`).
 
 4. **Onglets natifs** : Jardin, Coran, Réglages — un mot et un SF Symbol plein chacun,
    jamais masqués (`tab-bars.md › Best practices`). « Coran » : écran d'attente du système

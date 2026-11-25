@@ -1,133 +1,212 @@
-import { useState, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { useEffect, type ReactNode } from 'react';
+import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import Animated, {
+  Easing,
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { AppText, layout, spacing, useColors } from '@/ui';
+import {
+  AppText,
+  Icon,
+  layout,
+  pieceSizes,
+  spacing,
+  storyLayout,
+  storyMotion,
+  useReducedMotion,
+  useSafeInsets,
+  type TextColorRole,
+} from '@/ui';
 
-/** The smallest height of a scene: below it an image would no longer read. */
-const SCENE_MIN_HEIGHT = spacing.xxl * 4;
+import type { OnboardingWords } from '../pages';
 
-/**
- * The share of the page height the scene takes. A share of the page, not of what the words leave,
- * so that the scene and the first word of every page sit at the same height as the pages slide
- * past one another. Half of the page: the garden, its words and the page indicator read in one
- * glance, with about 14 % of the page empty above the garden where 0.6 left about 25 % (deviation
- * 31 of docs/design/SKILLS.md).
- */
-const SCENE_PAGE_SHARE = 0.5;
+/** The colours of a title and of its sentence, for each kind of words (`OnboardingPage.words`). */
+const WORD_COLORS: Readonly<
+  Record<OnboardingWords, { title: TextColorRole; text: TextColorRole }>
+> = {
+  garden: { title: 'heading', text: 'muted' },
+  dust: { title: 'heading', text: 'earthSecondary' },
+  deep: { title: 'onDeep', text: 'onDeepSecondary' },
+};
 
-/** The smallest height left to a list of settings: about three rows at the default text size. */
-const LIST_MIN_HEIGHT = layout.touchTarget * 3;
+const SWIPE_SYMBOL = { ios: 'chevron.backward.2', android: 'keyboard_double_arrow_left' } as const;
 
-interface PageTextProps {
+interface PageWordsProps {
   title: string;
   text: string;
-  /** How far the page indicator lies over the bottom of the page (`OnboardingPageProps`). */
-  bottomInset: number;
+  words: OnboardingWords;
+  /** "Glisse", with chevrons that point the way: on the first page only. */
+  hint?: string;
 }
 
 /**
- * The words of a page: its title, in the page-title style of the charter, and one sentence. The
- * sentence is the content of the page, so it takes the primary label colour like the title
- * (accessibility.md › Vision); size and weight tell them apart. Both follow the writing direction
- * (right-to-left.md › Text alignment).
+ * The words of a page: its title, in the serif of the mockups (Large Title, Fraunces), and one
+ * sentence in the quieter colour under it (the prototype's `h1` and `p`). Both follow the writing
+ * direction (right-to-left.md › Text alignment) and the person's text size.
  */
-function PageText({ title, text }: Pick<PageTextProps, 'title' | 'text'>) {
+function PageWords({ title, text, words, hint }: PageWordsProps) {
+  const colors = WORD_COLORS[words];
   return (
-    <View style={styles.text}>
-      <AppText variant="title2">{title}</AppText>
-      <AppText>{text}</AppText>
+    <View style={styles.words}>
+      <AppText variant="largeTitle" color={colors.title}>
+        {title}
+      </AppText>
+      <AppText color={colors.text}>{text}</AppText>
+      {hint === undefined ? null : <SwipeHint label={hint} />}
     </View>
   );
 }
 
-export interface ScenePageLayoutProps extends PageTextProps {
-  /** Drawn in the space above the words. */
-  scene: ReactNode;
+/**
+ * The prototype's "Glisse ‹‹‹": the chevrons drift the way the pages go, gently and without end,
+ * the only hint that the pages are swiped. Still with "reduce motion" (motion.md › Best practices).
+ * The chevrons point backwards, which SF Symbols mirror in Arabic, where the pages come from the
+ * left.
+ */
+function SwipeHint({ label }: { label: string }) {
+  const isMotionReduced = useReducedMotion();
+  const drift = useSharedValue(0);
+  useEffect(() => {
+    if (isMotionReduced) {
+      cancelAnimation(drift);
+      drift.value = 0.5;
+      return;
+    }
+    drift.value = withRepeat(
+      withTiming(1, { duration: storyMotion.hintMs, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true,
+    );
+  }, [isMotionReduced, drift]);
+  const moves = useAnimatedStyle(() => ({
+    opacity: 0.4 + 0.6 * drift.value,
+    transform: [{ translateX: -storyMotion.hintTravel * drift.value }],
+  }));
+  return (
+    <View style={styles.hint} testID="onboarding-hint">
+      <AppText variant="subheadEmphasized" color="actionTint">
+        {label}
+      </AppText>
+      <Animated.View style={moves}>
+        <Icon symbol={SWIPE_SYMBOL} textStyle="subheadEmphasized" color="actionTint" />
+      </Animated.View>
+    </View>
+  );
+}
+
+export interface StoryWordsLayoutProps extends PageWordsProps {
+  /** Under the words: nothing on the story, a note on a feature page. */
+  children?: ReactNode;
 }
 
 /**
- * A page that shows a scene, then its title and sentence. The page has the whole height of the
- * pager: the scene takes the top of it, from the top edge to the side edges, and the words sit in
- * the lower part of the page, under it, the way the validated mockup has them
- * (layout.md › Visual hierarchy: the most important first, then the words that explain it). At
- * the largest text sizes the scene keeps a minimum height and the page scrolls, so that no word
- * is cut (layout.md › Adaptability). The page paints its own background, the system's, so that
- * nothing changes colour while a neighbouring page slides in.
+ * A page of the story: only its words, resting low on the page above the page dots, under the
+ * scene that stays in place behind the pages (the prototype's `.copy.pin`). At the largest text
+ * sizes the words grow upwards and the page scrolls, so no word is cut (layout.md › Adaptability).
  */
-export function ScenePageLayout({ scene, title, text, bottomInset }: ScenePageLayoutProps) {
-  const colors = useColors();
-  const [pageHeight, setPageHeight] = useState<number | null>(null);
-  const onLayout = (event: LayoutChangeEvent) => setPageHeight(event.nativeEvent.layout.height);
-  // Until the page is measured the scene takes what the words leave.
-  const sceneSize =
-    pageHeight === null
-      ? styles.sceneUnmeasured
-      : { height: Math.max(SCENE_MIN_HEIGHT, pageHeight * SCENE_PAGE_SHARE) };
+export function StoryWordsLayout({ children, ...words }: StoryWordsLayoutProps) {
+  const insets = useSafeInsets();
   return (
     <ScrollView
       alwaysBounceVertical={false}
-      style={{ backgroundColor: colors.background }}
-      contentContainerStyle={[styles.scenePage, { paddingBottom: spacing.md + bottomInset }]}
-      onLayout={onLayout}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={[
+        styles.storyContent,
+        {
+          paddingTop: insets.top + storyLayout.brandBarHeight,
+          paddingBottom: insets.bottom + storyLayout.wordsBottom,
+        },
+      ]}
       testID="onboarding-page"
     >
-      <View style={sceneSize}>{scene}</View>
-      <View style={styles.sceneWords}>
-        <PageText title={title} text={text} />
-      </View>
+      <PageWords {...words} />
+      {children}
     </ScrollView>
   );
 }
 
-export interface SettingsPageLayoutProps extends PageTextProps {
-  /** A `GroupedList`: it scrolls by itself. */
+export interface SettingsLayoutProps extends PageWordsProps {
+  /**
+   * Where the words start: `goal` under the small scene (37 % of the window), `reminders` near
+   * the top, under the previewed notifications.
+   */
+  placement: 'goal' | 'reminders';
+  /** Above the words: the previewed notifications of the reminders page. */
+  above?: ReactNode;
+  /** Under the list: the sentence that announces the system's alert. */
+  below?: ReactNode;
+  /** A `GroupedList` with a clear background: it scrolls by itself. */
   children: ReactNode;
 }
 
+/** The smallest height left to the list of settings: about three rows at the default text size. */
+const LIST_MIN_HEIGHT = layout.touchTarget * 3;
+
 /**
- * A page that shows its title and sentence, then a list of settings. The list scrolls by itself,
- * so it cannot sit in a page that scrolls too: at the largest text sizes the words scroll in the
- * space left above the list, which keeps a minimum height (layout.md › Adaptability). The page
- * paints its own background, the grouped one a grouped list sits on (color.md › Mobile).
+ * A page with settings (the prototype's `.page`): the words, then the list, on the sky of the
+ * story. The list scrolls by itself and cannot sit in a page that scrolls too: at the largest text
+ * sizes the words scroll in the space left above the list, which keeps a minimum height
+ * (layout.md › Adaptability). The bottom stays clear of the page dots, or of the last button.
  */
-export function SettingsPageLayout({
-  title,
-  text,
+export function SettingsLayout({
+  placement,
+  above,
+  below,
   children,
-  bottomInset,
-}: SettingsPageLayoutProps) {
-  const colors = useColors();
+  ...words
+}: SettingsLayoutProps) {
+  const insets = useSafeInsets();
+  const { height } = useWindowDimensions();
+  const top = placement === 'goal' ? height * storyLayout.goalTopShare : storyLayout.remindersTop;
+  // Clear of the dots (goal) or of the last button and its margin (reminders).
+  const bottom =
+    placement === 'goal'
+      ? storyLayout.dotsBottom + layout.touchTarget
+      : storyLayout.finishBottom + pieceSizes.actionHeight + spacing.sm;
   return (
     <View
       style={[
         styles.settingsPage,
-        // The grouped background runs to the bottom edge, behind the page indicator: the list
-        // stops above the indicator, the colour does not.
-        { backgroundColor: colors.groupedBackground, paddingBottom: bottomInset },
+        { paddingTop: insets.top + top, paddingBottom: insets.bottom + bottom },
       ]}
       testID="onboarding-page"
     >
       <ScrollView
         alwaysBounceVertical={false}
-        style={styles.words}
-        contentContainerStyle={styles.wordsContent}
+        style={styles.settingsWords}
+        contentContainerStyle={styles.settingsWordsContent}
       >
-        <PageText title={title} text={text} />
+        {above}
+        <PageWords {...words} />
       </ScrollView>
       <View style={styles.list}>{children}</View>
+      {below === undefined || below === null ? null : <View style={styles.below}>{below}</View>}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  text: { gap: spacing.sm },
-  // The scene runs from the top edge to the side edges; the words follow it.
-  scenePage: { flexGrow: 1, gap: spacing.lg },
-  sceneUnmeasured: { flexGrow: 1, minHeight: SCENE_MIN_HEIGHT },
-  sceneWords: { paddingHorizontal: layout.screenMargin },
+  words: { gap: storyLayout.titleGap },
+  hint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    columnGap: spacing.sm,
+    marginTop: storyLayout.hintGap - storyLayout.titleGap,
+    minHeight: layout.touchTarget / 2,
+  },
+  storyContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-end',
+    paddingHorizontal: storyLayout.margin,
+  },
   settingsPage: { flex: 1 },
   // Takes the height of its words, and gives way to the list when the two do not fit.
-  words: { flexGrow: 0, flexShrink: 1 },
-  wordsContent: { paddingHorizontal: layout.screenMargin, paddingVertical: spacing.md },
+  settingsWords: { flexGrow: 0, flexShrink: 1 },
+  settingsWordsContent: { paddingHorizontal: storyLayout.margin },
   list: { flex: 1, minHeight: LIST_MIN_HEIGHT },
+  below: { paddingHorizontal: storyLayout.margin, paddingTop: spacing.sm },
 });
