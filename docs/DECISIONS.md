@@ -411,44 +411,51 @@ et la formulation de l'écran. Tant que ce n'est pas validé, l'écran garde le 
 _Changerait si_ la personne qualifiée retient une autre règle : seul `letters.ts` change, avec
 ses tests ; les totaux de contrôle sont alors à relire.
 
-## D38 — L'icône de l'appli : un jeune arbre au bord d'un ruisseau, en rendu 3D
+## D38 — L'icône de l'appli : le nom en calligraphie, dont le trait finit en feuille
 
-Proposée le 25 novembre 2026 (développeur d'interface), à la demande du propriétaire, qui veut
-une icône ; jusque-là l'appli portait celle d'Expo. Cinquième version du jour, après trois revues
-de design indépendantes. Écartées : le plan vu d'en haut (une fleur autour de l'étoile générique) ;
-la parcelle en vectoriel (une puce électronique sombre) ; l'arbre sur une île flottante avec un
-bassin (une icône de jeu mobile, et un verre à pied en silhouette). Le propriétaire a choisi un
-jardin rendu en 3D plutôt que dessiné en code (D35) : l'icône est un rendu 3D. **Le choix final
-revient au propriétaire.**
+Proposée le 25 novembre 2026 (développeur d'interface). Version 6. **Le choix final revient au
+propriétaire.**
 
-Ce que montre l'icône : un jeune arbre fruitier enraciné au bord d'un petit ruisseau qui descend
-vers nous sur une pelouse douce, sous une lumière chaude. Lire arrose le jardin ; le jardin « sous
-lequel coulent les ruisseaux » répond au nom, écho à faire confirmer par une personne qualifiée
-comme le nom (D31). Détail, couleurs, couches et pistes écartées : `design/brand-spec.md`,
-« Icône ».
+Historique court : version 1, le plan du jardin (une fleur autour de l'étoile générique) ; 2, la
+parcelle en vectoriel (une puce électronique) ; 3 et 4, l'arbre sur une île en 3D (une icône de jeu
+mobile) ; 5, l'arbre au bord d'un ruisseau en rendu 3D (un brocoli d'un coup d'œil, l'éclairage dans
+l'image). Toutes écartées en revue de design. Pour la version 6, le propriétaire a choisi la
+direction : le mot جنتك en calligraphie, d'où sort une pousse ou de l'eau, propre à l'appli.
+
+Ce que montre l'icône : جنتك en nastaliq (police Gulzar, licence OFL), blanc sur une eau profonde.
+Le long trait du kaf traverse l'icône et finit en feuille verte ; les points des lettres sont de
+l'eau. Le mot fait pousser le jardin. Détail, couleurs, couches, pistes écartées :
+`design/brand-spec.md`, « Icône ».
 
 - **Fichiers** : `assets/expo.icon` (format Icon Composer : fond en dégradé clair et sombre, trois
-  couches PNG, arbre, ruisseau, pelouse ; déjà désigné par `ios.icon`), `assets/images/icon.png`
-  (1024, opaque, coins carrés), les trois couches Android, `favicon.png`, `splash-icon.png`. Tous
-  sortent de `tools/app-icon/make_icon.py` et de la scène `tools/app-icon/scene.html`, rendues avec
-  le three.js de l'outil du jardin dans un navigateur sans écran, à l'identique d'une fois sur
-  l'autre sur la même machine.
-- **Écran de lancement** : inchangé, une couleur unie (blanc, noir en sombre), celle du fond du
-  premier écran ; pas de logo (`launching.md › Launch screens`).
-- **Licences** : toutes les formes sont construites dans la scène (aucun modèle, aucune texture,
-  aucune police de tiers) ; three.js (MIT) a servi au rendu et n'est pas dans l'appli. Les versions
-  3 et 4 utilisaient des modèles CC0 (Kenney, puis Quaternius) ; ils ne sont plus utilisés.
-- **Vérifié** : rendus à 1024, 180, 120, 60 et 29 pixels sur fond clair et sombre, version
-  sombre, écrans d'accueil, masques Android (rond, carré arrondi, monochrome), aperçus teintés
-  relus pour les lectures d'objets ; deux exécutions de l'outil donnent les mêmes fichiers ;
-  `icon.json` valide selon un schéma non officiel du format ; `npx expo config` et
-  `npx expo prebuild` lisent et copient l'icône.
-- **Pas vérifié** : le rendu réel du verre d'iOS 26 sur des couches PNG ombrées (reflets,
-  versions teintée et transparente calculées par le système) ; il faut Icon Composer ou un iPhone,
-  et personne n'a de Mac (D24). À regarder sur la prochaine version TestFlight.
-- **Risques connus** : l'éclairage est dans l'image, alors qu'Apple préfère laisser le système le
-  faire (écart 51 de `design/SKILLS.md`) ; une couronne en bosses sur un tronc court frôle le
-  « brocoli » d'un coup d'œil ; en teinté, le ruisseau peut se lire comme un chemin.
+  couches SVG d'une couleur, feuille, eau, mot ; déjà désigné par `ios.icon`),
+  `assets/images/icon.png` (1024, opaque, coins carrés), les trois couches Android, `favicon.png`,
+  `splash-icon.png`. Tous sortent de `tools/app-icon/make_icon.py`, à l'identique d'une fois sur
+  l'autre, à partir des contours du mot, `tools/app-icon/word.svg` (HarfBuzz et fontTools,
+  `make_icon.py --outline`). La couleur de secours de l'icône Android (`app.json`) devient
+  l'`accent`, `#0E6B78`. La version 5 et sa scène 3D restent dans l'historique git (commit
+  `c3e0467`).
+- **Écran de lancement** : inchangé, une couleur unie, sans logo (`launching.md › Launch screens`).
+- **Licences** : Gulzar, SIL Open Font License 1.1, qui permet tout usage, commercial compris ; la
+  police n'est ni dans le dépôt ni dans l'appli, seuls les contours du mot y sont. Avis complet :
+  `tools/app-icon/NOTICE.txt`. Outils non livrés : uharfbuzz (Apache-2.0), fontTools (MIT),
+  rsvg-convert (LGPL, lancé comme programme à part), Pillow, numpy.
+- **Vérifié** : aperçus à 1024, 180, 60 et 29 pixels, apparences claire et sombre, écrans
+  d'accueil, approximations du teinté et du transparent, masques Android (rond, monochrome) ;
+  silhouettes d'une seule teinte relues pour les lectures parasites (lettre en trop, flamme) ; deux
+  exécutions de l'outil donnent les mêmes fichiers ; `icon.json` valide selon un schéma non
+  officiel du format ; `npx expo config` lit l'icône et `npx expo prebuild` (copie temporaire)
+  copie le paquet `expo.icon` et ses couches SVG dans le projet iOS et produit les icônes Android.
+- **Pas vérifié** : le rendu réel d'iOS 26 (verre, reflets, versions teintée et transparente
+  calculées par le système) et la lecture des couches SVG par Icon Composer et `actool` ; il faut
+  un Mac ou un iPhone (D24). À regarder sur la prochaine version TestFlight.
+- **À faire confirmer par une personne qualifiée** (calligraphe ou lecteur arabe exigeant) : que le
+  mot se lit bien جنتك ; que le kaf final à la manière persane (ک, sans son petit signe intérieur),
+  forme ordinaire du nastaliq, convient pour un mot arabe ; que la feuille sur la fin du trait ne
+  gêne pas. Comme le nom lui-même (D31).
+- **Risques connus** : du texte dans une icône, ce qu'Apple déconseille hors marque
+  (`app-icons.md › Design` ; écart 51 de `design/SKILLS.md`) ; un lecteur non arabophone y voit un
+  signe calligraphique et une feuille, pas un mot.
 
-_Changerait si_ le propriétaire préfère une autre piste, ou si le rendu sur iPhone déçoit : les
-réglages de la scène sont en tête de `make_icon.py`, et on relance l'outil.
+_Changerait si_ le propriétaire préfère une autre écriture ou une autre couleur, ou si le rendu sur
+iPhone déçoit : les réglages sont en tête de `make_icon.py`, et on relance l'outil.

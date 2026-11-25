@@ -1,10 +1,11 @@
 {
+  "color-space-for-untagged-svg-colors": "srgb",
   "fill-specializations": [
     {
       "value": {
         "linear-gradient": [
-          "srgb:0.83922,0.92549,0.88627,1.00000",
-          "srgb:0.49020,0.75294,0.77255,1.00000"
+          "srgb:0.07451,0.50196,0.54902,1.00000",
+          "srgb:0.03922,0.31765,0.35686,1.00000"
         ],
         "orientation": {
           "start": {
@@ -22,8 +23,8 @@
       "appearance": "dark",
       "value": {
         "linear-gradient": [
-          "srgb:0.05490,0.35294,0.38824,1.00000",
-          "srgb:0.02353,0.18039,0.20000,1.00000"
+          "srgb:0.04314,0.23529,0.26667,1.00000",
+          "srgb:0.01961,0.13333,0.16471,1.00000"
         ],
         "orientation": {
           "start": {
@@ -40,11 +41,11 @@
   ],
   "groups": [
     {
-      "name": "Tree",
+      "name": "Leaf",
       "layers": [
         {
-          "image-name": "tree.png",
-          "name": "tree",
+          "image-name": "leaf.svg",
+          "name": "leaf",
           "glass": true
         }
       ],
@@ -62,7 +63,7 @@
       "name": "Water",
       "layers": [
         {
-          "image-name": "water.png",
+          "image-name": "water.svg",
           "name": "water",
           "glass": true
         }
@@ -74,21 +75,21 @@
       "specular": true,
       "translucency": {
         "enabled": true,
-        "value": 0.2
+        "value": 0.3
       },
       "opacity-specializations": [
         {
           "appearance": "tinted",
-          "value": 0.8
+          "value": 0.7
         }
       ]
     },
     {
-      "name": "Ground",
+      "name": "Word",
       "layers": [
         {
-          "image-name": "ground.png",
-          "name": "ground",
+          "image-name": "word.svg",
+          "name": "word",
           "glass": true
         }
       ],
@@ -100,13 +101,7 @@
       "translucency": {
         "enabled": false,
         "value": 0
-      },
-      "opacity-specializations": [
-        {
-          "appearance": "tinted",
-          "value": 0.45
-        }
-      ]
+      }
     }
   ],
   "supported-platforms": {

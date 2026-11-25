@@ -120,7 +120,7 @@ animations » (`motion.md › Best practices`). Rien d'autre que les animations 
 ### Icônes et images
 
 SF Symbols, de la graisse du texte voisin (`sf-symbols.md › Weights and scales`). Pas d'emoji, pas
-d'illustration dessinée en code. Le jardin est la seule image : des rendus de modèles 3D (D35). L'icône de l'appli est aussi un rendu 3D (plus bas, « Icône »). Image manquante = emplacement
+d'illustration dessinée en code. Le jardin est la seule image : des rendus de modèles 3D (D35). L'icône de l'appli est le nom calligraphié (plus bas, « Icône »). Image manquante = emplacement
 neutre et nommé.
 
 ### Voix
@@ -132,57 +132,63 @@ titres, comme le système.
 
 ### Icône
 
-Décision D38. Sources : `app-icons.md` (Apple Design), skill Frontend design (une seule idée
-forte), trois revues de design du 25 novembre 2026, et le choix du propriétaire pour le jardin en
-images 3D (D35). Fichiers produits par `tools/app-icon/make_icon.py` (scène :
-`tools/app-icon/scene.html`).
+Décision D38, version 6. Sources : `app-icons.md` (Apple Design : `› Design`, `› Layer design`,
+`› Icon shape`, `› Visual effects`, `› Appearances`), skill Frontend design (une seule idée forte),
+et le choix du propriétaire du 25 novembre 2026 : le mot جنتك en calligraphie, d'où sort une pousse
+ou de l'eau. Fichiers produits par `tools/app-icon/make_icon.py` (contours du mot :
+`tools/app-icon/word.svg`).
 
-**L'idée.** Un jeune arbre fruitier enraciné au bord d'un petit ruisseau qui descend vers nous sur
-une pelouse douce : lire arrose le jardin, et le jardin « sous lequel coulent les ruisseaux » répond
-au nom (écho à faire confirmer par une personne qualifiée, comme le nom, D31). C'est un rendu 3D,
-comme le jardin de l'appli (D35), mais tout est construit dans la scène : une calotte de sphère pour
-la pelouse, un ruban pour le ruisseau, un tronc et une couronne de cinq masses en facettes à deux
-tons (clair et ombre). Aucun modèle, aucune texture, aucune île ni socle.
+**L'idée.** Le nom, جنتك, en nastaliq. Le long trait montant du kaf traverse l'icône et finit en
+feuille : le mot fait pousser le jardin. Les points des lettres sont de l'eau, de sa couleur. Les
+lettres sont celles de la police Gulzar (licence OFL), mises en forme par HarfBuzz, sans retouche :
+ni redessinées, ni déformées, points gardés, lecture de droite à gauche. La feuille part de
+l'intérieur de la fin du trait, qui s'y prolonge ; elle cache la pointe du trait (le levé de la
+plume), rien d'autre.
 
-**Couleurs, par rôle.**
+Pourquoi le nastaliq : c'est la seule écriture essayée dont un trait de lettre monte comme une tige
+(le trait du kaf), et son mot tient dans un carré, donc reste grand à 29 pixels. Les points de
+Gulzar ont déjà une forme de goutte.
 
-| Rôle              | Où                   | Valeur                                                                                      |
-| ----------------- | -------------------- | ------------------------------------------------------------------------------------------- |
-| Ciel et eau       | Fond, de haut en bas | `#D6ECE2` → `#7DC0C5` ; apparence sombre `#0E5A63` → `#062E33`                              |
-| Eau (`accent`)    | Le ruisseau          | milieu `#2C8FA2`, rives `#86D3DB`, un reflet `#E8FAFB` ; pas plus clair que l'arbre éclairé |
-| Jardin (`growth`) | Pelouse, couronne    | pelouse `#6DBA4E`, feuillage `#7CC95A` (deux tons), tronc `#6E4630`                         |
-| Fruits            | Cinq fruits          | corail `#FF8A70`, de la luminance des feuilles                                              |
+**Couleurs, par rôle** (les mêmes en apparence claire et sombre, sauf le fond).
 
-Lumière : une lumière chaude et nette venue d'en haut à gauche (`#FFE6C2`), un ciel froid en
-complément. Ni or ni papier.
+| Rôle           | Où         | Valeur                                                                                             |
+| -------------- | ---------- | -------------------------------------------------------------------------------------------------- |
+| Eau (fond)     | Fond       | `#13808C` → `#0A515B`, autour de l'`accent` `#0E6B78` ; apparence sombre `#0B3C44` → `#05222A`     |
+| Lettres        | Le mot     | `#F6FBF9`, blanc froid (ni papier, ni crème)                                                       |
+| Eau (`accent`) | Les points | `#8FE0EA`, la valeur de l'`accent` en sombre et contraste élevé                                    |
+| Jardin         | La feuille | `#8FDB6B`, un vert jeune, plus jaune que l'eau pour ne pas se confondre avec les points (écart 51) |
 
-**Couches** (`assets/expo.icon`, format Icon Composer, `app-icons.md › Layer design`) : le fond
-est le dégradé d'Icon Composer lui-même (clair et sombre). Trois groupes, du dessus vers le dessous :
-l'arbre (`tree.png`), le ruisseau (`water.png`, translucidité 0,2), la pelouse (`ground.png`). Des PNG
-à transparence, parce que c'est un rendu (`app-icons.md › Layer design`). Chaque couche est entière
-sous celles du dessus, et coupée seulement par ce qui se tient devant elle. En teinté et en
-transparent, l'ordre de clarté est gardé par l'opacité : arbre, ruisseau (80 %), pelouse (45 %).
+Aucun reflet, aucune ombre, aucun dégradé dans les couches : le système les fait
+(`app-icons.md › Visual effects`).
 
-**Composition** (`app-icons.md › Icon shape` : contenu centré). L'arbre est centré à 2 % près
-(un peu à gauche), 53 % de la largeur, 56 % de la hauteur ; la pelouse et le ruisseau sortent par le
-bas. À 29 pixels : un arbre et un ruban d'eau. Les fruits se voient à partir de 60 pixels ; ils
-ont la luminance des feuilles pour ne pas faire de taches dans les versions d'une seule teinte (en
-rouge, la couronne y devenait un champignon tacheté). Sur Android, l'arbre tient dans le cercle de
-sécurité ; la pelouse passe sous le masque.
+**Couches** (`assets/expo.icon`, format Icon Composer, `app-icons.md › Layer design` : préférer
+le vectoriel, texte converti en contours). Le fond est le dégradé d'Icon Composer lui-même (clair et
+sombre). Trois groupes, chacun une couche SVG d'une seule couleur, du dessus vers le dessous : la
+feuille, l'eau (translucidité 0,3), le mot. En teinté et en transparent, l'eau est à 70 % pour rester
+d'un ton plus clair que le mot et la feuille.
+
+**Composition** (`app-icons.md › Icon shape` : contenu centré). La boîte du mot et de la feuille
+fait 78 % du côté ; centrée, puis déplacée de 2,5 % vers la gauche et 3 % vers le haut, à mi-chemin
+de son centre de masse (le jim et les points pèsent en bas à droite). Le point le plus proche d'un
+coin reste loin du masque. À 29 pixels : la masse du mot, son grand trait et une tache verte au bout.
+Sur Android, tout le mot tient dans le cercle de sécurité de 66 dp (31,7 dp du centre).
 
 **Écran de lancement** : une couleur unie, sans logo (`launching.md › Launch screens`) ;
 `splash-icon.png` existe mais n'est pas affiché.
 
-**Écarté, et pourquoi** (rendus : voir D38) :
+**Écarté, et pourquoi** (aperçus : voir D38) :
 
-- Le plan du jardin vu d'en haut (version 1) : une fleur autour de l'étoile générique.
-- La parcelle vue de trois quarts, en vectoriel (version 2) : une puce électronique, très sombre.
-- L'arbre sur une île flottante avec un bassin rond (versions 3 et 4, modèles Kenney puis
-  Quaternius) : une icône de jeu mobile ou d'appli de concentration ; le socle ovale donnait un verre
-  à pied en silhouette ; des fruits sombres faisaient des bouches.
-- Le même sujet en vectoriel plat : une illustration de banque d'images.
-- Plus tôt : une goutte qui devient feuille, la rosace seule, la calligraphie de جنتك (texte
-  déconseillé par `app-icons.md › Design`).
+- Versions 1 à 5 : le plan du jardin (une fleur autour de l'étoile générique), la parcelle en
+  vectoriel (une puce électronique), l'arbre sur une île (une icône de jeu mobile), l'arbre au
+  ruisseau en rendu 3D (un brocoli d'un coup d'œil, éclairage dans l'image).
+- Pour la version 6, quatre écritures : le roqaa (Aref Ruqaa) avec une pousse sur la hampe du kaf
+  (la boucle du kaf et sa feuille font une pomme) ; le coufique (Reem Kufi), feuille au bout du biseau
+  du kaf (un mot très large : un trait à 29 pixels) ; le naskh (Amiri), l'eau dans la coupe du kaf
+  final (élégant, mais un mot-logo dans un carré, l'eau invisible en petit) ; le nastaliq, retenu.
+- Sur le nastaliq : deux feuilles en V, ou une feuille de plus plus bas (en une seule teinte,
+  elles font une boucle qui se lit comme une lettre de plus, « م ») ; une feuille dressée (une
+  flamme, une torche) ; une feuille posée sur la pointe du trait (en équilibre sur une aiguille,
+  collée).
 
 ## 4. Ce qui manque encore
 
