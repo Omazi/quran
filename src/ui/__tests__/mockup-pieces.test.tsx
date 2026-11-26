@@ -71,6 +71,10 @@ describe('the palette of the validated mockups', () => {
     // The first launch: words over the deep green of the listening page, and over the friends' page.
     listening: ['onAction', 'onActionSecondary'],
     together: ['heading', 'muted'],
+    // The dusk of the first launch's voice and listening pages: light words in both appearances.
+    dusk: ['onAction', 'onActionSecondary'],
+    // The tail of the night curtain carries no words: it only passes over the sky.
+    duskTail: [],
   };
   /** The completed khatma writes its words under the garden: the lower half of its gradient. */
   const FIRST_STOP_UNDER_TEXT: Readonly<Record<keyof typeof backdropGradients, number>> = {
@@ -81,6 +85,8 @@ describe('the palette of the validated mockups', () => {
     // The words of the listening page begin under the scene, from the middle of the screen.
     listening: 0.42,
     together: 0,
+    dusk: 0,
+    duskTail: 0,
   };
 
   it.each(['light', 'dark'] as const)(

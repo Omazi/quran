@@ -237,7 +237,53 @@ export const palette = {
    */
   notificationSurface: { light: 'rgba(255, 255, 255, 0.72)', dark: 'rgba(44, 48, 46, 0.78)' },
   notificationEdge: { light: 'rgba(255, 255, 255, 0.9)', dark: 'rgba(255, 255, 255, 0.12)' },
+
+  // --- The first launch, "voix" direction (docs/design/premier-lancement-voix/index.html) ------
+  /**
+   * The thread of the voice under the garden (the prototype's canvas): water at its centre, gold
+   * at its ends, grey when the garden is dry. A decoration beside the words, never a word.
+   */
+  voiceWater: { light: '#0E6B78', dark: '#5CC8D6' },
+  voiceGold: { light: '#CE9A3C', dark: '#D9A441' },
+  voiceGrey: { light: '#A8A094', dark: '#6E675D' },
+  /** The soft light behind the garden (`.sun`), and the water light of the dusk sky (`.dusk-glow`). */
+  storyGlow: { light: 'rgba(255, 250, 240, 0.75)', dark: 'rgba(255, 236, 210, 0.07)' },
+  duskGlow: { light: 'rgba(92, 200, 214, 0.12)', dark: 'rgba(92, 200, 214, 0.12)' },
+  /**
+   * The mushaf page of the voice page, on the dusk sky in both appearances (`.mushaf`): its two
+   * greys of night paper, its gold rules, the words still to come, read and just read, the word
+   * to read again, and the three pills under a word (just read, to read again, read again).
+   */
+  nightPageTop: { light: '#221E19', dark: '#221E19' },
+  nightPageBottom: { light: '#1B1915', dark: '#1B1915' },
+  nightPageRule: { light: 'rgba(217, 164, 65, 0.5)', dark: 'rgba(217, 164, 65, 0.5)' },
+  nightPageRuleSoft: { light: 'rgba(217, 164, 65, 0.28)', dark: 'rgba(217, 164, 65, 0.28)' },
+  nightPageGold: { light: '#D9A441', dark: '#D9A441' },
+  nightPageInk: { light: '#EFE8D8', dark: '#EFE8D8' },
+  nightPageCurrent: { light: '#F6DFA4', dark: '#F6DFA4' },
+  nightPageReread: { light: '#FF7B72', dark: '#FF7B72' },
+  /** The pill under the word being recited, under the garden (`.pill`). */
+  versePill: { light: 'rgba(206, 154, 60, 0.24)', dark: 'rgba(217, 164, 65, 0.3)' },
+  nightPillRead: { light: 'rgba(217, 164, 65, 0.26)', dark: 'rgba(217, 164, 65, 0.26)' },
+  nightPillReread: { light: 'rgba(255, 95, 85, 0.16)', dark: 'rgba(255, 95, 85, 0.16)' },
+  nightPillRereadEdge: { light: 'rgba(255, 123, 114, 0.9)', dark: 'rgba(255, 123, 114, 0.9)' },
+  nightPillFixed: { light: 'rgba(92, 200, 214, 0.22)', dark: 'rgba(92, 200, 214, 0.22)' },
+  /** The verse inside the card of the passage found (`.found .q`), light on the dusk sky. */
+  foundVerseBack: { light: '#F3EAD5', dark: '#F3EAD5' },
+  /** The encouragement that travels to a thirsty friend (`.heart`) and its word (`.enc`). */
+  heart: { light: '#E0577D', dark: '#E0577D' },
+  encouraged: { light: '#C2456A', dark: '#F08AA8' },
+  /** The drought drawn on the garden: the cracks of the earth, the rings of the water's return. */
+  crack: { light: 'rgba(88, 58, 32, 0.5)', dark: 'rgba(88, 58, 32, 0.5)' },
+  revivalRing: { light: '#DFFBFF', dark: '#DFFBFF' },
+  revivalRingSoft: { light: '#8FE0EA', dark: '#8FE0EA' },
 } as const satisfies Record<string, ColorPair>;
+
+/**
+ * The colours of the leaves that fall from the drying garden on the first launch (the prototype's
+ * `LEAF`): autumn ochres and browns, the same in both appearances. Decoration only.
+ */
+export const droughtLeafColors = ['#C9A13B', '#B5652E', '#9E7A3A', '#D68634', '#8F843E'] as const;
 
 /** High-contrast values of the palette's words and actions (color.md › Best practices). */
 export const highContrastPalette = {
@@ -337,6 +383,42 @@ export const backdropGradients = {
       [0, '#26231E'],
       [0.55, '#1D1C19'],
       [1, '#181817'],
+    ],
+  },
+  /**
+   * The dusk of the voice and listening pages of the first launch (the prototype's `.sky.dusk`, a
+   * radial light centred a third of the way down): its vertical section, the same at night.
+   */
+  dusk: {
+    light: [
+      [0, '#1D1A16'],
+      [0.34, '#2A251F'],
+      [0.7, '#12100D'],
+      [1, '#0A0907'],
+    ],
+    dark: [
+      [0, '#1D1A16'],
+      [0.34, '#2A251F'],
+      [0.7, '#12100D'],
+      [1, '#0A0907'],
+    ],
+  },
+  /**
+   * The tail of the night curtain of the first launch (motion spec §4): under the dusk, half a
+   * screen that fades the night into the sky it uncovers, the same in both appearances.
+   */
+  duskTail: {
+    light: [
+      [0, 'rgba(10, 9, 7, 1)'],
+      [0.3, 'rgba(10, 9, 7, 0.82)'],
+      [0.68, 'rgba(10, 9, 7, 0.35)'],
+      [1, 'rgba(10, 9, 7, 0)'],
+    ],
+    dark: [
+      [0, 'rgba(10, 9, 7, 1)'],
+      [0.3, 'rgba(10, 9, 7, 0.82)'],
+      [0.68, 'rgba(10, 9, 7, 0.35)'],
+      [1, 'rgba(10, 9, 7, 0)'],
     ],
   },
   /** khatm.png: a full sunrise. */
@@ -869,85 +951,262 @@ export const readerShapes = {
   shadowOffsetY: 2,
 } as const;
 
-/**
- * The first launch as the validated prototype lays it out (docs/design/premier-lancement-
- * prototype.html, measured at 393 × 852 points). Distances from the top are counted from the safe
- * area's top, distances from the bottom from its bottom. Owner's rule of 25 November 2026: the
- * prototype is the visual reference of the first launch.
- */
-export const storyLayout = {
-  /** The bar that names the app at the top (`.top`). */
-  brandBarHeight: 52,
-  /** The scene: where it starts, and its height as a share of the window (`.stage`). */
-  stageTop: 56,
-  stageShare: 0.48,
-  /** Above the goal the scene shrinks, from its top edge, and rises a little (`small`). */
-  smallStageScale: 0.64,
-  smallStageLift: 10,
-  /** The caption under the garden ("Hizb 8"): its distance above the scene's bottom (`.cap`). */
-  captionAboveStageBottom: 64,
-  captionHeight: 34,
-  captionPadding: 14,
-  /** The words of a story page rest this far above the bottom (`.texts`). */
-  wordsBottom: 92,
-  /** The page's margin at both sides (`.page`, `.copy`). */
-  margin: spacing.lg,
-  /** Between the title and its sentence, and before the hint to swipe. */
-  titleGap: 12,
-  hintGap: 18,
-  /** The page dots and the last button, from the bottom (`.pc`, `.cta`). */
-  dotsBottom: 26,
-  finishBottom: 22,
-  /** Where the goal page's words start, as a share of the window (`.page` 37dvh). */
-  goalTopShare: 0.37,
-  /** Where the reminders page starts (`.page.last`). */
-  remindersTop: 58,
-  /** The notifications previewed on the reminders page (`.notif`). */
-  notificationRadius: 24,
-  notificationIcon: 40,
-  notificationIconRadius: 9,
-  notificationGap: spacing.sm,
-  /** The card of the passage found: its corners, and how far it rises as it comes. */
-  foundCardRadius: 26,
-  foundCardRise: 26,
-  /**
-   * The listening page shows the app's real listening screen: its rosette on paper, in a panel
-   * of the stage (judgement on the 8-point grid, the rosette's own proportions: the star's radius
-   * is 27 % of the panel's width on the real screen, less here so its petals stay in the panel).
-   * Once the passage is found the panel shortens and the rosette shrinks, as on the result.
-   */
-  rosettePanelHeight: 256,
-  rosettePanelFoundHeight: 128,
-  rosettePanelRadius: 28,
-  rosetteRadius: 76,
-  rosetteFoundScale: 0.5,
-  /** The reading demonstration of the voice page: its text size, lines, and the gap to its bar. */
-  voiceTextSize: 28,
-  voiceLineCount: 3,
-  voiceWordsPerLine: 4,
-  voiceBarGap: 16,
-  /** The friends' gardens (`.fcard`, `.fg`): their card, the garden's height, the middle lift. */
-  friendCardRadius: 22,
-  friendGardenHeight: 86,
-  friendGardenRadius: 15,
-  friendMiddleLift: 18,
+/** The simulated voice of the first launch's listening page (the rest is onboarding's config). */
+export const storyMotion = {
+  /** The simulated voice that moves the listening rosette: a level every this long. */
+  demoLevelMs: 90,
 } as const;
 
 /**
- * The motion of the first launch, from the prototype: how long the listening demonstration
- * listens before it finds the passage, and its whole loop; the hint to swipe; the voice page.
+ * The first launch in the "voix" direction the owner chose (docs/design/premier-lancement-voix/
+ * index.html, its `layout()`), measured at 390 × 844 points. Distances "from the top" are counted
+ * from the safe area's top; shares are of the window's height unless named otherwise. Layout of a
+ * scene that changes under the finger: the screen places each piece from these once, then moves
+ * it with transforms only.
  */
-export const storyMotion = {
-  listenMs: 2300,
-  loopMs: 6600,
-  foundMs: 550,
-  hintMs: 1600,
-  hintTravel: 8,
-  /** The voice page's demonstration: one step every this long, and the pause before it starts again. */
-  voiceStepMs: 850,
-  voiceRestMs: 2200,
-  /** The simulated voice that moves the rosette and the meter: a level every this long. */
-  demoLevelMs: 90,
+export const voiceStoryLayout = {
+  /** The garden: 106 % of the width, at most 36 % of the height, its picture's proportions. */
+  gardenWidthShare: 1.06,
+  gardenHeightShare: 0.36,
+  /** Its top: at least 52 points, or 13 % of the height. */
+  gardenTopMin: 52,
+  gardenTopShare: 0.13,
+  /** The recited line under it: the gap (at least 14 points, or 2.6 %) and the line's height. */
+  verseGapMin: 14,
+  verseGapShare: 0.026,
+  verseLineHeight: 46,
+  verseTextSize: 25,
+  verseMarkSize: 23,
+  verseWordGapEm: 0.3,
+  /** The pill behind the word being recited: its height, corners, and the air on each side. */
+  versePillHeight: 32,
+  versePillRadius: 9,
+  versePillPad: 5,
+  /** A pill is drawn this wide and stretched to its word (`scaleX`, transform only). */
+  pillBaseWidth: 100,
+  /** The thread of the voice under the line: the gap (at least 24 points, or 4 %). */
+  waveGapMin: 24,
+  waveGapShare: 0.04,
+  /** Its bars: how many, the step between two, their longest reach, their width. */
+  waveBars: 36,
+  waveStep: 7,
+  waveReach: 40,
+  waveWidth: 3,
+  /** The words: at least 40 points under the thread, or 246 points above the bottom. */
+  copyBelowWave: 40,
+  copyFromBottom: 246,
+  margin: spacing.lg,
+  copyGap: 10,
+  /** The caption over the garden (`.cap`): from the garden's top, from the start edge. */
+  captionTop: 4,
+  captionStart: 22,
+  captionHeight: 30,
+  captionPadding: 12,
+  captionDot: 6,
+  captionGap: 7,
+  /** The soft light behind the garden (`.sun`). */
+  glowWidth: 560,
+  glowHeight: 420,
+  duskGlowSize: 520,
+  /** The app's name, the page dots on the end edge, and the hint to swipe. */
+  brandTop: 16,
+  dotsAboveCentre: 50,
+  dotsEnd: 9,
+  dot: 4,
+  dotSmall: 3,
+  dotSmaller: 2,
+  dotCurrent: 14,
+  dotGap: 6,
+  dotsTouchWidth: 44,
+  hintFromBottom: 74,
+  hintGap: 4,
+  /** How far each drifting thing travels: the words, the hint's nudge, a rising garden element. */
+  copyTravel: 56,
+  /** The sentence under a title comes from further down, so it follows the title (motion spec §3). */
+  copyTextTravel: 76,
+  /** The first page arrives (motion spec §2): the garden rises 14 points from 97 %, the line 10, the title 16, the sentence 20. */
+  introGardenRise: 14,
+  introGardenScale: 0.97,
+  introLineRise: 10,
+  introTitleRise: 16,
+  introTextRise: 20,
+  hintTravelFrom: 6,
+  hintTravelTo: -8,
+  riseTravel: 26,
+  /** The garden above the settings: its top, its scale (share of the height, at most). */
+  previewTop: 50,
+  goalPreviewShare: 0.27,
+  goalPreviewMax: 0.72,
+  remindersPreviewShare: 0.205,
+  remindersPreviewMax: 0.6,
+  goalPanelGap: 14,
+  remindersPanelGap: 10,
+  /** The settings: choice buttons, their corners and gaps; the result and list cards. */
+  choiceHeight: 54,
+  choiceSmallHeight: 48,
+  choiceRadius: 18,
+  choiceGap: 10,
+  choiceIconGap: 8,
+  choicePadding: 12,
+  cardPadding: 16,
+  rollGap: 4,
+  leadGap: 8,
+  panelGap: 14,
+  notificationGap: 11,
+  notificationPadding: 11,
+  cardRadius: 22,
+  listRadius: 20,
+  rowMinHeight: 50,
+  notificationIcon: 38,
+  notificationIconRadius: 9,
+  notificationRadius: 22,
+  rollHeight: 34,
+  rollTravel: 14,
+  finishHeight: 54,
+  finishGap: 24,
+  /** The mushaf page of the voice page (`.mushaf`). */
+  pageTopMin: 52,
+  pageTopShare: 0.088,
+  pageInset: 18,
+  pageRadius: 20,
+  pageFrameInset: 10,
+  pageFrameRadius: 12,
+  pageFrameGap: 4,
+  pageCorner: 18,
+  pageHeadTop: 30,
+  pageHeadHeight: 46,
+  pageHeadWidthShare: 0.78,
+  pageHeadTextSize: 21,
+  pageTextMax: 24,
+  /** The text size is the page's width less 72 points, over this many em. */
+  pageTextEms: 12.2,
+  pageLineEm: 1.9,
+  pagePadding: 18,
+  pageBottomPad: 44,
+  pagePillHeight: 36,
+  pagePillRadius: 10,
+  pagePillPad: 6,
+  /** The bar under the page (`.follow`): its height, side insets, how far it overlaps the page. */
+  followHeight: 60,
+  followInset: 34,
+  followOverlap: 30,
+  followTextStart: 106,
+  followTextEnd: 20,
+  followWaveStart: 22,
+  followWaveStep: 2.2,
+  followWaveReach: 26,
+  followWaveWidth: 1.7,
+  /** The thread wrapped round the listening rosette (motion spec §7): its bars' width. */
+  ringBarWidth: 2.2,
+  /** The bar's two lines of state slide 6 points as they swap. */
+  subtitleTravel: 6,
+  /** The listening page: the rosette's radius (share of width, of height), its place, the card. */
+  rosetteWidthShare: 0.27,
+  rosetteHeightShare: 0.155,
+  rosetteTopShare: 0.34,
+  rosetteAboveCopy: 2.9,
+  rosetteFoundScale: 0.6,
+  /** The room the small rosette takes above the card: its radius and 8 %. */
+  rosetteFoundRoom: 1.08,
+  rosetteLabelBelow: 1.75,
+  rosetteMinTop: 70,
+  rosetteAboveCard: 26,
+  listenLabelSize: 26,
+  foundInset: 18,
+  foundRadius: 26,
+  foundPadding: 16,
+  foundAboveCopy: 30,
+  foundRise: 46,
+  foundVerseSize: 19,
+  foundVerseLineEm: 2,
+  foundButtonHeight: 46,
+  /** The friends' page (`.friends`). */
+  friendsInset: 20,
+  friendsTopMin: 60,
+  friendCardRadius: 22,
+  friendGardenHeight: 112,
+  friendGardenRadius: 16,
+  friendGardenScale: 1.5,
+  friendMiddleLift: 14,
+  friendsGap: 10,
+  khatmaBarHeight: 6,
+  heartSize: 30,
+  heartArc: 70,
+  /** The heart leaves the reciting friend's garden 50 points down its card, lands on the thirsty one's corner. */
+  heartStartDrop: 50,
+  heartEndInset: 18,
+  heartEndDrop: 16,
+  /** The friends sit a little above the middle between the preview's top and the words. */
+  friendsLift: 10,
+  /** The drought: a falling leaf, and a droplet of the voice rising into the garden. */
+  /** The cracks and the two rings of the returning water, in picture pixels. */
+  crackWidth: 2.8,
+  ringWidth: 7,
+  ringSoftWidth: 4,
+  leafSize: 3.6,
+  leafSizeRange: 2.8,
+  leafSway: 9,
+  dropletSize: 1.1,
+  dropletSizeRange: 1.6,
+  /** Drawn at these sizes and scaled (transform only), and where a droplet leaves the thread. */
+  dropletBox: 6,
+  leafBox: 12,
+  dropletRise: 10,
+} as const;
+
+/**
+ * The small measures of the first launch's demonstrations (the prototype's CSS, at 1 point per
+ * pixel): the friends' cards, the card of the passage found, the night mushaf page and its bar,
+ * and their shadows. Sizes of `voiceStoryLayout`'s pieces, kept apart because they are many.
+ */
+export const voiceStoryDetails = {
+  hairGap: 2,
+  friendCardPadding: 7,
+  friendCardPaddingBottom: 12,
+  friendNameGap: 5,
+  friendNameTop: 9,
+  friendStatusInset: 4,
+  friendStatusMinHeight: 17,
+  friendLiveGap: 6,
+  friendGardenShift: 2,
+  friendGardenOverflow: '-25%',
+  khatmaTop: 6,
+  khatmaPaddingVertical: 14,
+  khatmaGap: 12,
+  avatarOverlap: -8,
+  youHeight: 28,
+  youMinWidth: 32,
+  youPadding: 6,
+  equalizerBar: 2,
+  equalizerHeight: 12,
+  pagePillPaddingH: 9,
+  pagePillPaddingV: 4,
+  verseTop: 8,
+  versePaddingH: 12,
+  versePaddingV: 6,
+  actionsGap: 10,
+  actionsTop: 12,
+  pageHeadBottom: 6,
+  pageLinesTop: 4,
+  pageMarkGap: 4,
+  pageCornerOffset: 2,
+  pageFrameInnerRadius: 9,
+  pageRuleWidth: 1,
+  pageRuleSoftWidth: 0.6,
+  pageStarWidth: 0.9,
+  pageStarHeart: 1.6,
+  pageStarShare: 0.83,
+  pageRereadEdge: 2,
+  followTextTop: 11,
+  followLineHeight: 20,
+  followWordSize: 17,
+} as const;
+
+/** The soft shadows of the first launch's floating pieces on the dusk (`.mushaf`, `.follow`, `.found`). */
+export const voiceStoryShadows = {
+  page: '0px 34px 70px rgba(0, 0, 0, 0.5)',
+  follow: '0px 16px 34px rgba(0, 0, 0, 0.4)',
+  found: '0px 30px 60px rgba(0, 0, 0, 0.45)',
 } as const;
 
 /** Semibold, for a short emphasised phrase inside a text style (the watered pill). */

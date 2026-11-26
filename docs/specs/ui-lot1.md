@@ -82,75 +82,65 @@ userSeed, pauses, reminders }` et journal de lecture (type du domaine). `reminde
    AsyncStorage derrière une interface déclarée côté magasin. Tout ce qui est relu du
    stockage est **validé** (version de schéma, types, bornes) : un contenu corrompu est
    écarté sans plantage. `userSeed` est tiré une fois.
-3. **Premier lancement.** Aspect : celui du prototype validé (voir plus haut).
-   - _Rôle_ : faire comprendre en quelques gestes que lire arrose le jardin, puis prendre
-     deux réglages.
-   - _Signature_ : la scène du jardin, qui change à chaque page **sous le doigt**.
-   - La langue est celle du téléphone (aucune page de langue).
-   - **Composition** (prototype, mesures dans `storyLayout`, `src/ui/tokens.ts`) : le nom de
-     l'appli en haut (serif Fraunces) ; la scène au milieu, sur 48 % de la hauteur ; sous le
-     jardin, une légende courte (« Hizb 8 », « 3 jours sans lecture ») ; le titre (Large Title,
-     Fraunces) et sa phrase en bas ; les points de page centrés tout en bas.
-   - **Le ciel** : le dégradé chaud de `bienvenue.png`, qui pâlit vers le gris puis la
-     poussière pendant la sécheresse, devient lever de soleil au jardin complet, vert profond
-     à étoiles pour l'écoute et ciel pâle pour les proches ; crépuscule la nuit.
-   - **Le geste** (`SwipePager`, `src/ui`) : un geste = une page ; les pages glissent sous le
-     doigt de droite à gauche (de gauche à droite en arabe) ; le ciel, la scène et la légende
-     restent en place et changent avec la position, de sorte que le jardin pousse, sèche et
-     revit à la vitesse où l'on glisse, sans rien attendre. Ni « Continuer » ni « Passer »
-     (décision du propriétaire). Les points de page du prototype, dans une capsule de verre
-     sur iOS 26 (`PageDots`) ; un toucher d'un côté ou de l'autre tourne la page, et VoiceOver
-     les tourne par l'élément réglable. « Réduire les animations » : la page vient sans
-     glissement quand elle est demandée par les points, et toutes les démonstrations
-     s'arrêtent.
-   - **Les pages sont des données** (`pages.ts`) : une liste ordonnée `{ id, scène, titre,
-texte, ciel, couleur des mots, taille de la scène }`. Changer leur nombre ou leur ordre ne
-     touche pas au code du pageur.
-
-   ```
-   ┌──────────────────────┐
-   │       Jannatuk       │  nom de l'appli, Fraunces
-   │                      │
-   │   scène du jardin    │  images des modèles 3D (D35)
-   │      ( Hizb 8 )      │  légende
-   │                      │
-   │ Lis, et l'eau coule. │  Large Title, Fraunces
-   │ Une phrase.          │  Body, gris
-   │      ( ●━ • • • )     │  points de page, capsule de verre
-   └──────────────────────┘
-   ```
-
-   - Pages (16 aujourd'hui) : terre nue (avec l'indication « Glisse ») ; hizb 8, 20, 30, 40,
-     60 (jardin complet, qui ne sèche plus) ; 3, 6, 10 et 14 jours sans lecture, sur un jardin
-     encore en chemin (l'eau s'en va d'abord, puis les feuilles, puis les éléments) ; « une page
-     suffit pour le faire revivre » ; « d'où vient ce passage ? » (démonstration de l'écoute :
-     la vraie rosace de l'écoute (D27, D29) sur son papier, qui bat avec une voix simulée, puis
-     la carte « Passage reconnu » Al-Kahf 18:10 monte sous la rosace réduite, texte tiré des
-     données) ; « lecture à voix haute » (la page du lecteur et la barre verte de `voix.png`,
-     vraies pièces de `features/listening/follow` : les mots récités passent à l'encre, le mot
-     courant sur l'or, un mot oublié en rouge sur rose avec « Relis ce mot » ; mots tirés des
-     données ; « réduire les animations » : état final fixe) ; avec tes proches (Mustapha, Sarah, Taghread, D25) ; ton objectif du jour ; tes
-     rappels. Les pages des fonctions dépendent de `SHIPPED_FEATURES` : retirer une fonction de
-     l'ensemble retire sa page.
-   - _Objectif du jour_ : sous la terre nue, en petit ; liste groupée du système posée sur le
-     ciel, ligne « Pages par jour » avec sa valeur et le sélecteur − / +
-     (`steppers.md › Best practices`), de 1 à 60, valeur par défaut déjà posée. Pas de boutons
-     de repères (le propriétaire ne veut pas de grands boutons de choix sur les dernières
-     pages) : sous la ligne, une note donne l'équivalence et la durée, qui change quand on
-     touche au sélecteur (`onboarding.md › Best practices` : apprendre en faisant).
-   - _Rappels_ : en haut, les notifications que l'appli enverra, chacune montrée ou retirée
-     avec son interrupteur (masquées aux grandes tailles de texte et sur les écrans courts),
-     avec les mots que les rappels envoient vraiment (`notifications.json`, et non ceux du
-     prototype) ;
-     puis la liste groupée du système posée sur le ciel — rappel du jour et son heure,
-     « mon jardin a soif », vendredi : sourate Al-Kahf (activé par défaut depuis le 25 novembre 2026, écart 23). Un seul bouton,
-     « Créer mon jardin », à la place des points ; la demande d'autorisation du système le suit
-     si un rappel est activé, annoncée par la phrase placée juste avant lui
-     (`privacy.md › Pre-alert screens, windows, or views`, écart 120). Les valeurs choisies sont
-     celles que le module des rappels programme.
-   - **Points à trancher par le propriétaire**, inscrits au registre : 16 pages et pas de
-     « Passer » (écart 3) ; le libellé du bouton (écart 120) ; le pageur et les points dessinés
-     (écart 118). Une liste courte est prête dans les données (`ONBOARDING_PAGES_SHORT`).
+3. **Premier lancement** (direction « voix », choisie par le propriétaire le 25 novembre 2026).
+   Référence, pour l'aspect et pour le mouvement : `docs/design/premier-lancement-voix/index.html`
+   (et ses captures `shots/01–17.png`). Elle remplace `premier-lancement-prototype.html` et
+   `bienvenue.png` pour le premier lancement. **Le mouvement suit la spécification revue**
+   `onb-styles/voice-v2/review/MOTION-SPEC.md` (valeurs dans `src/features/onboarding/config.ts`,
+   fonctions pures dans `story-math.ts`, pageur dans `src/ui/components/swipe-paging.ts`) :
+   transformations et opacité seulement, rien en couleur, taille, flou ni découpe animés.
+   - _Rôle_ : faire comprendre en quelques gestes que lire arrose le jardin, montrer la voix et
+     l'écoute, puis prendre l'objectif et les rappels.
+   - _Signature_ : tout est lié au doigt. **Un glissement vertical = une page** (`SwipePager`,
+     `axis="vertical"`, `pageMotion="still"`, `release="projected"`) : le doigt suivi 1:1, élastique
+     aux deux bouts (`x·d·c / (d + c·|x|)`, c = 0,55) ; au relâcher, la page la plus proche du point
+     où le geste s'arrêterait (décélération 0,998), une page au plus, puis un ressort critique
+     (masse 1, raideur 195, amortissement 27,9) lancé à la vitesse du doigt, plafonnée pour ne
+     jamais dépasser la page ; un toucher attrape les pages en route ; la position du pageur
+     (valeur partagée, fil de l'interface) pilote chaque animation, et revenir en arrière la joue à
+     l'envers. Ni « Passer » ni « Suivant » (décision du propriétaire).
+   - **Pages et textes** : ceux du prototype, dans son ordre (`src/features/onboarding/pages.ts`,
+     16 pages) : terre nue ; hizb 8, 20, 30, 40, 60 ; 3, 6, 10, 14 jours sans lecture ; la
+     reprise ; la voix (la page du mushaf) **avant** la reconnaissance ; les proches ; l'objectif ;
+     les rappels et « Créer mon jardin ».
+   - **La scène** : le jardin en images (les images livrées, pas de GL dans le pageur) ; à chaque
+     hizb, ce que l'étape ajoute monte du sol (`rise/new-hNN-f0.webp`, produites par
+     `tools/garden-pictures/rise-layers.py`) avant que l'image entière se pose ; la caméra tourne
+     de quelques degrés par page. Sécheresse : feuilles qui tombent, voix qui se tait et grisonne,
+     terre qui se craquelle. Reprise : l'eau revient de la fontaine en anneaux, le vert la suit.
+   - **Le fil de la voix** : 36 barres sous le verset, qui bougent avec la vitesse du doigt et la
+     voix simulée ; il entre dans la barre « J'écoute » de la page du mushaf, y voyage avec elle,
+     puis les mêmes barres s'enroulent autour de la rosace de l'écoute et s'y fondent.
+   - **La nuit** des deux pages de la voix est un rideau (1,5 écran) qui descend puis remonte comme
+     l'aube, par translation ; le nom et les points changent de couleur en 400 ms à un instant.
+   - **Al-Fâtiha 1:1–7** s'allume mot à mot sous le jardin pendant les cinq pages de croissance :
+     texte uthmani de la page 1 de la couche de données, police KFGQPC Hafs.
+   - **La voix** : la page 1 du mushaf, de nuit ; les mots s'allument, « نَسۡتَعِينُ » passe en rouge
+     avec « Relis ce mot : », puis est relu. **Pas de bouton de lecture** : l'appli n'a pas encore
+     de récitation sous licence, et le propriétaire interdit de livrer une fonction inachevée.
+     **TODO** : quand une récitation audio sous licence permissive existe, ajouter le bouton
+     « Écouter la récitation » du prototype (`.follow .play`) sur la barre, lecture au toucher
+     seulement, et faire suivre les mots par l'audio.
+   - **L'écoute** : la rosace validée (`features/listening/rosette`, valeurs de nuit), puis la
+     carte « Passage reconnu », Al-Kahf 18:10 (texte de la couche de données).
+   - **Les proches** : trois jardins, un cœur qui va du jardin de Taghread à celui, assoiffé, de
+     Sarah, qui devient « Encouragée » ; une khatma en famille.
+   - **L'objectif** : 1 mois, 3 mois, 1 an, À mon rythme ; pages par jour et date de fin calculées
+     en direct par le domaine `goal-plan` (`computeGoalPlan`), aperçu du jardin dans un mois.
+   - **Les rappels** : moment (Après Fajr, À midi, Le soir, Avant de dormir), aperçu de la
+     notification, vendredi Al-Kahf activé par défaut, « Quand mon jardin a soif ».
+   - **« Créer mon jardin »** enregistre l'objectif (`setReadingGoal`), le moment
+     (`setReadingMoment`) et les deux interrupteurs (`updateReminders`), marque le parcours fini,
+     demande l'autorisation des notifications (premier lancement, un rappel actif), puis ouvre
+     l'accueil avec `?welcome=1`. Les six retours haptiques de la spécification (§13) : sélection
+     quand une page se pose et sur une option, avertissement quand le mot passe en rouge, succès
+     quand le passage est reconnu, impact léger quand le cœur arrive, impact moyen sur le bouton.
+   - **Réduire les animations** : fondus seulement (pas de translation, de montée, de rotation, de
+     particules ; la page du mushaf reste sur le mot à relire). **Sombre** : valeurs crépuscule.
+   - **Accessibilité** : chaque page décrit sa scène en mots (élément image), puis son titre
+     (en-tête) et sa phrase ; les points sont un élément réglable qui tourne les pages.
+   - **Contrôle des écrans** : `?page=N` (ou `-screenCheckPage N`) ouvre toujours la page N ; le
+     balayage automatique pilote le pageur vertical par ses propres `begin / move / end`.
 
 4. **Onglets natifs** : Jardin, Coran, Réglages — un mot et un SF Symbol plein chacun,
    jamais masqués (`tab-bars.md › Best practices`). « Coran » : écran d'attente du système

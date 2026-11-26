@@ -6,6 +6,8 @@
  */
 
 export { previewGardenState, type GardenPreview } from './garden-preview';
+export { baseAsset, riseAsset, waterAsset } from './garden-images';
+export { GARDEN_PICTURE_PIXELS } from './garden-images.generated';
 export {
   GARDEN_PICTURE_ASPECT_RATIO,
   GARDEN_STEP_COUNT,

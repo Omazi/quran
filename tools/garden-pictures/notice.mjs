@@ -40,6 +40,12 @@ Download both packs again from their authors' own pages, keep the proof of their
 render the set again from those files. The mirrors above were used because the authors'
 sites could not be reached from the machine that made the pictures.
 
+Cut from these pictures
+-----------------------
+level-1/grow/eNN.webp (tools/garden-pictures/growth-sprites.py) and the first launch's rise
+layers level-1/rise/new-hNN-f0.webp (tools/garden-pictures/rise-layers.py: what hNN-f0 adds to
+the stage before it) are cut from the pictures above and carry the same provenance and licences.
+
 CC0 asks for no credit; this notice is kept for provenance, not because it is required.
 `;
 }

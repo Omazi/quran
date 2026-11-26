@@ -5,6 +5,7 @@
 
 import type { GardenImageNames } from './garden-picture';
 import { GARDEN_BASE_ASSETS, GARDEN_WATER_ASSETS } from './garden-images.generated';
+import { GARDEN_RISE_ASSETS } from './garden-rise.generated';
 
 /** The names of the shipped pictures, for `gardenPicture`. */
 export const SHIPPED_GARDEN_IMAGES: GardenImageNames = {
@@ -20,4 +21,12 @@ export function baseAsset(name: string): number | undefined {
 /** The asset of a water picture, or undefined when the set has no such picture. */
 export function waterAsset(name: string): number | undefined {
   return GARDEN_WATER_ASSETS[name];
+}
+
+/**
+ * What the garden of `hizb` elements adds to the stage of the first launch's story before it,
+ * alone, at the size of the pictures (tools/garden-pictures/rise-layers.py), or undefined.
+ */
+export function riseAsset(hizb: number): number | undefined {
+  return GARDEN_RISE_ASSETS[hizb];
 }

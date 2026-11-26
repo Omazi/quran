@@ -149,6 +149,8 @@ function layOut(element: RenderedElement) {
 
 /** Gives the pager of the introduction its size, as the platform would. */
 async function layOutIntroduction(): Promise<void> {
+  // The stage is laid out from the screen's size, then the pager from its own.
+  await layOut(await screen.findByTestId('onboarding'));
   await layOut(await screen.findByTestId('onboarding-pager-pages'));
 }
 
@@ -229,36 +231,37 @@ describe('first launch', () => {
     expect((await storedSettings()).onboardingCompleted).toBe(false);
   });
 
-  it('shows the garden of each page with the garden scene: it grows, dries, revives', async () => {
+  it('describes the garden of each page as the person turns them: it grows, dries, revives', async () => {
     await openApp();
     await layOutIntroduction();
     expect(screen.getByTestId('onboarding-pager-indicator')).toHaveAccessibilityValue({
       text: 'Page 1 sur 16',
     });
-    // The garden of each page, as the person turns them: only the one shown is described.
+    // Only the page shown is described to screen readers: its scene, then its words.
     const labels: string[] = [];
-    for (let page = 0; page <= 10; page += 1) {
-      const shown = screen.getAllByTestId('garden-scene');
-      expect(shown).toHaveLength(1);
-      labels.push(String(shown[0]?.props.accessibilityLabel));
+    for (let page = 0; page <= 13; page += 1) {
+      const scenes = screen.getAllByRole('image');
+      expect(scenes).toHaveLength(1);
+      labels.push(String(scenes[0]?.props.accessibilityLabel));
       await swipeToPage(1);
     }
-    // The garden grows from the bare earth to hizb 40, then to the complete garden...
-    expect(labels[0]).toMatch(/^Terre nue/);
-    expect(labels[1]).toMatch(/^Jardin, 8 hizb sur 60/);
-    expect(labels[4]).toMatch(/^Jardin, 40 hizb sur 60/);
-    expect(labels[5]).toMatch(/60 hizb sur 60/);
-    // ...and it is a garden in progress that dries, never the complete one.
-    expect(labels[6]).toMatch(/^Jardin assoiffé, 40 hizb sur 60/);
-    expect(labels[7]).toMatch(/^Jardin fané, 40 hizb sur 60/);
-    expect(labels[8]).toMatch(/^Jardin mourant, 40 hizb sur 60/);
-    expect(labels[9]).toMatch(/^Terre morte, 40 hizb sur 60 acquis/);
-    await swipeToPage(1);
-    // Listening, the following of the recitation and friends are presented, in that order.
-    const hidden = { includeHiddenElements: true };
-    expect(screen.getByRole('image', { name: /^Passage reconnu/, ...hidden })).toBeTruthy();
-    expect(screen.getByRole('image', { name: /^Lecture à voix haute/, ...hidden })).toBeTruthy();
-    expect(screen.getByRole('image', { name: /^Jardins de tes proches/, ...hidden })).toBeTruthy();
+    expect(labels.slice(0, 11)).toEqual([
+      'Jardin : terre nue',
+      'Jardin au hizb 8',
+      'Jardin au hizb 20',
+      'Jardin au hizb 30',
+      'Jardin au hizb 40',
+      'Jardin au hizb 60',
+      'Jardin après 3 jours sans lecture',
+      'Jardin après 6 jours sans lecture',
+      'Jardin après 10 jours sans lecture',
+      'Jardin après 14 jours sans lecture',
+      'Jardin qui revit après une page',
+    ]);
+    // The voice page comes before the recognition, then friends (the owner's chosen order).
+    expect(labels[11]).toMatch(/^Lecture à voix haute/);
+    expect(labels[12]).toMatch(/^Passage reconnu/);
+    expect(labels[13]).toMatch(/^Jardins de tes proches/);
   });
 
   it('gives no way out of the introduction but its last page: no header, no back swipe', async () => {
@@ -281,6 +284,8 @@ describe('first launch', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Créer mon jardin' }));
     await waitFor(() => expect(app.getSegments()).toEqual(['(tabs)']));
     expect(requestPermissionsAsync).toHaveBeenCalledTimes(1);
+    // The garden opens with `?welcome=1`: the home may then offer an account.
+    expect(app.getSearchParams()).toMatchObject({ welcome: '1' });
     expect(tabs()).toHaveLength(4);
     expect((await storedSettings()).onboardingCompleted).toBe(true);
     // The reminders chosen in the introduction are scheduled once it is finished and allowed.

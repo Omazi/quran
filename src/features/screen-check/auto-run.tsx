@@ -4,7 +4,8 @@
  * two reports describe, through the code paths the fingers take:
  *
  *  1. swipes through the whole first-launch introduction (`pagerDriver`: it calls the pager's own
- *     begin / move / end, on the UI thread, as the pan gesture does, with the real springs);
+ *     begin / move / end, on the UI thread, as the pan gesture does, with the real springs; the
+ *     introduction's pager is vertical, so the swipes go up);
  *  2. fills the app with the demonstration, opens the demonstration friend's page, pinch-zooms and
  *     turns the 3D garden through its controller, presses "Encourager" and scrolls the page.
  *
@@ -78,7 +79,7 @@ function AutoSwipe({ drive }: { drive: PagerDrive }) {
   );
 
   useEffect(() => {
-    if (hasStarted.current || drive.width <= 0) return;
+    if (hasStarted.current || drive.length <= 0) return;
     hasStarted.current = true;
     let isCancelled = false;
     const run = async () => {
@@ -88,9 +89,12 @@ function AutoSwipe({ drive }: { drive: PagerDrive }) {
       for (const [index, swipe] of plan.entries()) {
         if (isCancelled) return;
         await sleep(swipe.pauseMs);
-        const { width, isRightToLeft } = latest.current;
-        // Forwards: to the left in a left-to-right interface, as a finger turns the page.
-        const reach = (isRightToLeft ? 1 : -1) * 0.45 * width;
+        const { length, isRightToLeft } = latest.current;
+        // Forwards: to the left in a left-to-right interface, or upwards on a vertical pager, as
+        // a finger turns the page. Past half a page, so that the page turns even if a slow frame
+        // of the simulator counts as a rest before the lift (the first launch's pager then drops
+        // the release speed, as for a finger that stopped).
+        const reach = (isRightToLeft ? 1 : -1) * 0.55 * length;
         const velocity = reach / (swipe.dragMs / 1000);
         progress.line(
           `pager: swipe ${index + 1}/${plan.length} from page ${latest.current.page + 1}`,
@@ -121,9 +125,9 @@ function AutoSwipe({ drive }: { drive: PagerDrive }) {
     return () => {
       isCancelled = true;
     };
-    // One run, started when the pager knows its width.
+    // One run, started when the pager knows its size.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [drive.width]);
+  }, [drive.length]);
   return null;
 }
 
