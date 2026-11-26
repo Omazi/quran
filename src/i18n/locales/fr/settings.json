@@ -25,6 +25,15 @@
       "cancel": "Annuler"
     }
   },
+  "gender": {
+    "label": "Je suis",
+    "options": {
+      "male": "Un homme",
+      "female": "Une femme",
+      "unspecified": "Préférer ne pas dire"
+    },
+    "note": "Pour s’adresser à toi correctement. Tes proches le voient aussi."
+  },
   "goal": {
     "title": "Objectif du jour",
     "pagesPerDay": "Pages par jour",

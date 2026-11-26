@@ -87,6 +87,7 @@ export function setDisplayedLanguage(language: AppLanguage): void {
   if (i18n.language !== language) void i18n.changeLanguage(language);
 }
 
+export { genderContext } from './gender';
 export {
   FALLBACK_LANGUAGE,
   RTL_LANGUAGES,

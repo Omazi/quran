@@ -1,4 +1,5 @@
 import type { NotificationPermissions } from '@/data/notifications';
+import type { Gender } from '@/domain/shared/gender';
 import {
   SUPPORTED_LANGUAGES,
   getTranslator,
@@ -55,6 +56,8 @@ export interface SettingsModel {
    */
   readonly dataResetNotice: DataResetNotice | null;
   readonly language: LanguageModel;
+  /** What the person says they are (null: prefer not to say, or not said yet). */
+  readonly gender: Gender | null;
   readonly dailyGoal: DailyGoalModel;
   readonly reminders: RemindersModel;
 }
@@ -63,6 +66,8 @@ export interface SettingsModel {
 export interface SettingsActions {
   dismissDataResetNotice: () => void;
   selectLanguage: (choice: LanguageChoice) => void;
+  /** Records what the person says they are, "prefer not to say" (null) included. */
+  setGender: (gender: Gender | null) => void;
   restartApp: () => void;
   setDailyGoalPages: (pages: number) => void;
   changeReminders: (change: Partial<ReminderSettings>) => void;
@@ -103,6 +108,8 @@ export function useSettings({
   const store = useAppStoreApi();
   const savedLanguage = useAppStore((state) => state.settings.language);
   const saveLanguage = useAppStore((state) => state.setLanguage);
+  const gender = useAppStore((state) => state.settings.gender);
+  const setGender = useAppStore((state) => state.setGender);
   const dataResetNotice = useAppStore((state) => state.dataResetNotice);
   const dismissDataResetNotice = useAppStore((state) => state.dismissDataResetNotice);
   const dailyGoal = useDailyGoal();
@@ -126,11 +133,13 @@ export function useSettings({
         needsRestart: !isLaidOutFor(shown, direction),
         isDeviceLanguageMissing: savedLanguage === null && !hasDeviceLanguage,
       },
+      gender,
       dailyGoal: dailyGoal.model,
       reminders: reminders.model,
     },
     actions: {
       dismissDataResetNotice,
+      setGender,
       selectLanguage: (choice) => {
         const chosen = choice === DEVICE_LANGUAGE ? null : choice;
         const language = resolveLanguage(chosen, getDeviceLanguageCodes());

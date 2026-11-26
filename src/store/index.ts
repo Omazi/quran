@@ -13,6 +13,7 @@ export {
   AppStoreProvider,
   useAppStore,
   useAppStoreApi,
+  useOptionalAppStore,
   type AppStoreProviderProps,
 } from './app-store-context';
 export {

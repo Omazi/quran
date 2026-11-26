@@ -25,6 +25,15 @@
       "cancel": "Cancel"
     }
   },
+  "gender": {
+    "label": "I am",
+    "options": {
+      "male": "A man",
+      "female": "A woman",
+      "unspecified": "Prefer not to say"
+    },
+    "note": "So the app speaks to you properly. Your friends see it too."
+  },
   "goal": {
     "title": "Daily Goal",
     "pagesPerDay": "Pages per Day",

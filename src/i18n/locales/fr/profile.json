@@ -99,5 +99,12 @@
     "minutes_other": "{{count}} minutes",
     "join": "{{hours}} {{minutes}}",
     "lessThanMinute": "moins d’une minute"
+  },
+  "genderQuestion": {
+    "title": "Pour s’adresser à toi correctement",
+    "text": "Tu es un homme ou une femme ? C’est facultatif, et tu pourras le changer dans les réglages. Tes proches le voient aussi.",
+    "male": "Un homme",
+    "female": "Une femme",
+    "unspecified": "Préférer ne pas dire"
   }
 }

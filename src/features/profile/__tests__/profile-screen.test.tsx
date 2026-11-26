@@ -111,6 +111,26 @@ afterEach(async () => {
   read.mockClear();
 });
 
+describe('ProfileScreen › the question about the gender', () => {
+  it('is the first card, until it is answered, and asks without blocking anything', async () => {
+    await renderProfile();
+
+    expect(screen.getByTestId('gender-question')).toBeOnTheScreen();
+    // The rest of the tab is there, whatever the answer.
+    expect(screen.getByTestId('profile-hero')).toBeOnTheScreen();
+    expect(screen.getByTestId('profile-settings')).toBeOnTheScreen();
+  });
+
+  it('goes away for good once answered, and what was said is kept', async () => {
+    const store = await renderProfile();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Une femme' }));
+
+    expect(store.getState().settings).toMatchObject({ gender: 'female', genderAsked: true });
+    expect(screen.queryByTestId('gender-question')).toBeNull();
+  });
+});
+
 describe('ProfileScreen › statistics', () => {
   it('opens on the week: the hasanat written large, with its source in the same card', async () => {
     await renderProfile();

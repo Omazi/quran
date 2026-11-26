@@ -3,6 +3,7 @@ import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { GardenPhase, GardenState } from '@/domain/garden';
 import type { Progression } from '@/domain/levels';
+import { GenderQuestionCard } from '@/features/gender';
 import {
   BadgeShelf,
   CurrentGardenCard,
@@ -71,7 +72,8 @@ const BACKDROP_OF_PHASE: Readonly<Record<GardenPhase, BackdropName>> = {
  * The "Profil" tab (docs/design/maquettes-2026-11-26/profile-*.png): the title in the serif of the
  * mockups and the level under it ("Niveau 2 · Oasis") on the gradient of the garden's state, then
  * white cards that rise over the end of the gradient, in the order of the mockup (layout.md ›
- * Visual hierarchy): the garden in progress (it opens "Mes jardins"), the badges, "Montrer mon
+ * Visual hierarchy), after the one-time question about the person's gender ("Pour s'adresser à
+ * toi correctement", until it is answered): the garden in progress (it opens "Mes jardins"), the badges, "Montrer mon
  * niveau", the reading statistics, and one card that opens the settings (settings.md › General
  * settings). A notice about lost data, when there is one, comes first: the tab's badge points to
  * it (tab-bars.md › Best practices). One scroll view, so nothing is cut at the largest text sizes
@@ -126,6 +128,8 @@ export function ProfileScreen({
         </View>
         <View style={styles.cards}>
           <DataResetNoticeCard model={settings} actions={settingsActions} />
+          {/* Asked once, optional, and gone once answered (owner, 26 November 2026). */}
+          <GenderQuestionCard />
           {progression === null ? null : (
             <>
               <CurrentGardenCard
