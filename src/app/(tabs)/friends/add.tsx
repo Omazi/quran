@@ -1,19 +1,41 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { Platform } from 'react-native';
 
 import { AddFriendPage } from '@/features/friends';
 
 /**
- * Adding a friend: once a code is accepted, the new friend's page replaces this one. The scanner
- * opens on top of it, once the person has answered the system's camera question. A link of
- * invitation (src/app/invite) arrives with its code, which fills the code field.
+ * "Ajouter un proche", presented as a sheet over the tab (./_layout.tsx; maquettes 2026-11-26,
+ * 5b), closed by the system button at the leading end of its bar (sheets.md › Best practices).
+ * The sheet closes before anything else opens: the friend whose code was accepted, or the
+ * scanner, are pages of the tab, under the tab bar, not more sheets. A link of invitation
+ * (src/app/invite) arrives with its code, which fills the code field.
  */
 export default function AddFriendRoute() {
+  const { t } = useTranslation('friends');
   const { code } = useLocalSearchParams<{ code?: string }>();
   return (
-    <AddFriendPage
-      linkedCode={code}
-      openFriend={(userId) => router.replace({ pathname: '/friends/[id]', params: { id: userId } })}
-      openScanner={() => router.push('/friends/scan')}
-    />
+    <>
+      {Platform.OS === 'web' ? null : (
+        <Stack.Toolbar placement="left">
+          <Stack.Toolbar.Button
+            icon="xmark"
+            accessibilityLabel={t('add.close')}
+            onPress={() => router.dismiss()}
+          />
+        </Stack.Toolbar>
+      )}
+      <AddFriendPage
+        linkedCode={code}
+        openFriend={(userId) => {
+          router.dismiss();
+          router.push({ pathname: '/friends/[id]', params: { id: userId } });
+        }}
+        openScanner={() => {
+          router.dismiss();
+          router.push('/friends/scan');
+        }}
+      />
+    </>
   );
 }

@@ -21,10 +21,12 @@ import { AppText } from './app-text';
  * ("Continuer avec Google"). `contrast`: black by day, white at night ("Continuer avec Apple").
  * `plain`: green words ("Tout voir", "Ajouter"). `destructive`: red words (removing, blocking).
  * `onAction`: a white capsule with deep green words, on the green of the listening page
- * ("Reconnaître" in the card "Quel est ce passage ?", maquettes 2026-11-26, 3A).
+ * ("Reconnaître" in the card "Quel est ce passage ?", maquettes 2026-11-26, 3A). `surface`: a
+ * white capsule with a green symbol, on the cream of a field inside a card ("Partager" beside
+ * "Mon code", maquettes 2026-11-26, "friends").
  */
 export type ActionButtonVariant =
-  'filled' | 'tonal' | 'outline' | 'contrast' | 'plain' | 'destructive' | 'onAction';
+  'filled' | 'tonal' | 'outline' | 'contrast' | 'plain' | 'destructive' | 'onAction' | 'surface';
 
 export interface ActionButtonProps {
   /** Says what the button does, starting with a verb. Omit only for a button with a symbol. */
@@ -73,6 +75,7 @@ const LOOK: Readonly<
   plain: { foreground: 'actionTint' },
   destructive: { foreground: 'destructiveText' },
   onAction: { background: 'actionCapsule', foreground: 'onActionCapsule' },
+  surface: { background: 'surface', foreground: 'actionTint' },
 };
 
 /**
@@ -124,6 +127,7 @@ export function ActionButton({
           grows && !isWords ? styles.capsuleInRow : null,
           isCompact && !isWords ? styles.compact : null,
           label === undefined ? styles.iconOnly : null,
+          isCompact && label === undefined ? styles.compactIconOnly : null,
           look.background === undefined ? null : { backgroundColor: colors[look.background] },
           look.border === undefined
             ? null
@@ -192,6 +196,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
   },
   iconOnly: { paddingHorizontal: spacing.none },
+  compactIconOnly: { minWidth: layout.touchTarget },
   label: { flexShrink: 1 },
   pressed: { opacity: stateOpacity.pressed },
   disabled: { opacity: stateOpacity.disabled },

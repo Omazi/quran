@@ -18,6 +18,7 @@ import {
   useGroup,
   useNewGroup,
   useScanInvite,
+  type FriendsListDependencies,
   type FriendsListNavigation,
 } from './use-friends';
 import { useSignIn, useTabSession } from './use-session';
@@ -44,12 +45,12 @@ function Failed() {
  * The root of the tab: the list. Sign-in comes first only in a build that shows it (the
  * `friendsSignIn` flag); otherwise the demonstration opens by itself (`useTabSession`).
  */
-export function FriendsHome(navigation: FriendsListNavigation) {
+export function FriendsHome(props: FriendsListNavigation & FriendsListDependencies) {
   const session = useTabSession();
   if (session.status === 'loading') return <FriendsLoading testID="friends-loading" />;
   if (session.status === 'failed') return <Failed />;
   if (session.status === 'signed-out') return <SignInPage />;
-  return <FriendsListPage {...navigation} />;
+  return <FriendsListPage {...props} />;
 }
 
 /**
@@ -70,11 +71,16 @@ function SignInPage() {
   return <SignInScreen model={model} actions={actions} />;
 }
 
-function FriendsListPage(navigation: FriendsListNavigation) {
-  const { state, refusal, actions } = useFriendsList(navigation);
+function FriendsListPage({
+  share,
+  ...navigation
+}: FriendsListNavigation & FriendsListDependencies) {
+  const { state, refusal, invite, actions } = useFriendsList(navigation, { share });
   if (state.status === 'loading') return <FriendsLoading testID="friends-loading" />;
   if (state.status === 'failed') return <Failed />;
-  return <FriendsListScreen model={state.value} refusal={refusal} actions={actions} />;
+  return (
+    <FriendsListScreen model={state.value} refusal={refusal} actions={actions} invite={invite} />
+  );
 }
 
 /** Gives the title of the page to the navigation bar, once it is known. */

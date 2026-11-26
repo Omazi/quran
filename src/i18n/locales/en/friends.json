@@ -1,6 +1,6 @@
 {
   "title": "Friends",
-  "demoNote": "Demo: these people are made up, and nothing leaves your phone.",
+  "demoNote": "Demo: codes don’t connect two phones yet, and nothing leaves yours.",
   "loading": "Loading your friends",
   "failed": {
     "title": "Your Friends Can’t Be Shown",
@@ -30,14 +30,18 @@
     "declineShort": "Decline",
     "gardensTitle": "Their Gardens",
     "noFriends": "No friends yet",
-    "noFriendsNote": "Add someone by name, or with your code.",
-    "add": "Add a Friend",
+    "noFriendsNote": "Add someone with your code, or by scanning theirs.",
     "groupsTitle": "Groups",
     "members_one": "{{count}} member",
     "members_other": "{{count}} members",
     "noGroups": "No groups yet",
     "createGroup": "Create a Group",
-    "seeAll": "See All"
+    "seeAll": "See All",
+    "addTitle": "Add Your Friends",
+    "addText": "Watch their gardens grow and encourage each other.",
+    "scan": "Scan",
+    "myQr": "My QR Code",
+    "examples": "Examples, to show what it looks like. They go away with your first friend."
   },
   "card": {
     "hizb_one": "{{count}} hizb",
@@ -52,7 +56,9 @@
     "hiddenLabel": "{{name}}, garden not shared",
     "wateredSince_one": "watered for {{count}} day",
     "wateredSince_other": "watered for {{count}} days",
-    "details": "{{hizb}}, {{water}}"
+    "details": "{{hizb}}, {{water}}",
+    "example": "Example",
+    "exampleLabel": "Example: {{label}}"
   },
   "friend": {
     "gardenTitle": "{{name}}’s garden",
@@ -98,19 +104,6 @@
   },
   "add": {
     "title": "Add a Friend",
-    "searchTitle": "By Name",
-    "searchField": "Name to search",
-    "searchPlaceholder": "Search for a name",
-    "clear": "Clear",
-    "noResults": "No one has that name.",
-    "searchNote": "Results show the name only, never the garden.",
-    "relationFriend": "Already your friend",
-    "relationSent": "Request sent",
-    "relationReceived": "Sent you a request",
-    "relationNone": "Not your friend yet",
-    "send": "Send a Request to {{name}}",
-    "accept": "Accept {{name}}",
-    "myCodeTitle": "With My Code",
     "myCode": "My code",
     "myCodeNote": "Valid until {{date}}. Whoever types it becomes your friend.",
     "share": "Share My Code",
@@ -119,11 +112,13 @@
     "enterField": "Invitation code",
     "enterPlaceholder": "ABCD EFGH",
     "enterSubmit": "Add This Friend",
-    "qrTitle": "With a QR Code",
     "qrLabel": "QR code of my invitation",
     "qrLoading": "Preparing the QR code",
     "scan": "Scan a QR Code",
-    "qrNote": "Have your friend scan this code in Jannatuk, or scan theirs."
+    "qrCaption": "Your friend scans it from Jannatuk.",
+    "shareShort": "Share",
+    "scanShort": "Scan",
+    "close": "Close"
   },
   "scan": {
     "title": "Scan a QR Code",

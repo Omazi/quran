@@ -41,6 +41,12 @@ export interface GroupLine {
 export interface FriendsModel {
   /** True while the data is invented: the screen says so (docs/specs/social.md, section 4). */
   readonly isDemonstration: boolean;
+  /**
+   * The gardens shown are examples, each marked "Exemple" (maquettes 2026-11-26, "friends"):
+   * those of the demonstration, invented. Real friends, from the server, are never marked; the
+   * examples are gone once the gardens are real ones.
+   */
+  readonly gardensAreExamples: boolean;
   /** Requests sent to me, which I can accept or decline. */
   readonly requests: readonly PendingRequest[];
   readonly friends: readonly FriendCard[];
@@ -70,6 +76,7 @@ export function friendCardOf(friend: FriendView, today: LocalDate): FriendCard {
 export function buildFriendsModel(input: FriendsModelInput): FriendsModel {
   return {
     isDemonstration: input.isDemonstration,
+    gardensAreExamples: input.isDemonstration,
     // Only what was sent to me: my own requests wait on the other side, and a search shows them.
     requests: input.requests.incoming.map(({ person }) => ({
       userId: person.userId,

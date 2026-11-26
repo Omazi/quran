@@ -20,6 +20,7 @@ import {
 } from '@/ui/test-support/environment';
 
 import { inviteLink, parseInviteLink } from '@/domain/social';
+import { deviceLocalDate } from '@/features/home';
 import { qrCodeModules } from '@/ui';
 
 import {
@@ -31,6 +32,7 @@ import {
   ScanInvitePage,
   type FriendOptionsMenu,
 } from '../friends-pages';
+import { buildFriendsModel } from '../friends-model';
 import { cameraQuestionsShown, setCamera, type FakeCameraViewProps } from '../test-support/camera';
 import { demoForTest, signedInDemoForTest, withStore } from '../test-support/demo';
 
@@ -73,6 +75,7 @@ const NAVIGATION = {
   openGroup: jest.fn(),
   addFriend: jest.fn(),
   createGroup: jest.fn(),
+  openScanner: jest.fn(),
 };
 
 /** A text as a pattern that finds it anywhere, spaces of every kind included. */
@@ -128,6 +131,15 @@ describe.each(SCREEN_CONDITIONS)('Proches tab ($scheme, $language)', ({ language
       expect.stringContaining(t('card.notWatered', { count: 6 })),
     );
     expect(screen.getByTestId(`group-${DEMO_GROUP_ID}`)).toBeOnTheScreen();
+    // The gardens of the demonstration are examples, each marked, in words for VoiceOver too.
+    expect(screen.getByText(t('list.examples'))).toBeOnTheScreen();
+    expect(screen.getByTestId(`friend-card-${DEMO_USERS.mustapha}-example`)).toHaveTextContent(
+      t('card.example'),
+    );
+    expect(screen.getByTestId(`friend-card-${DEMO_USERS.mustapha}`)).toHaveProp(
+      'accessibilityLabel',
+      expect.stringMatching(new RegExp(`^${escaped(t('card.example'))}`)),
+    );
     expectSoundLayout();
 
     await fireEvent.press(screen.getByTestId(`friend-card-${DEMO_USERS.mustapha}`));
@@ -415,18 +427,122 @@ describe('the list', () => {
   });
 });
 
+describe('the list without an account: adding at the top (maquettes 2026-11-26, "friends")', () => {
+  beforeEach(() => {
+    NAVIGATION.addFriend.mockClear();
+    NAVIGATION.openScanner.mockClear();
+  });
+
+  it('opens on "Ajoute tes proches", before the gardens, and says the codes are a demonstration', async () => {
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    await render(withStore(store, <FriendsHome {...NAVIGATION} />));
+    const card = await screen.findByTestId('friends-add-card');
+    expect(within(card).getByRole('header', { name: 'Ajoute tes proches' })).toBeOnTheScreen();
+    expect(
+      within(card).getByText('Vois leurs jardins pousser et encouragez-vous.'),
+    ).toBeOnTheScreen();
+    // Honest while the server is not there: the code does not reach another phone yet.
+    expect(within(card).getByTestId('friends-demo-note')).toHaveTextContent(
+      'Démonstration : les codes ne relient pas encore deux téléphones, et rien ne quitte le tien.',
+    );
+    expect(screen.queryByText(/Pas besoin de compte/)).toBeNull();
+    const list = screen.getByTestId('friends-list');
+    const order = list.queryAll(
+      ({ props }) => props.testID === 'friends-add-card' || props.testID === 'friends-grid',
+    );
+    expect(order.map(({ props }) => props.testID)).toEqual(['friends-add-card', 'friends-grid']);
+  });
+
+  it('offers two ways, Scanner and Mon QR code, and no search by name (owner decision)', async () => {
+    setDeviceConditions({ fontScale: 1 });
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    await render(withStore(store, <FriendsHome {...NAVIGATION} />));
+    const card = await screen.findByTestId('friends-add-card');
+    const scan = within(card).getByRole('button', { name: 'Scanner un QR code' });
+    const myQr = within(card).getByRole('button', { name: 'Mon QR code' });
+    expect(scan).toHaveTextContent('Scanner');
+    expect(touchTargetHeight(scan)).toBeGreaterThanOrEqual(44);
+    expect(touchTargetHeight(myQr)).toBeGreaterThanOrEqual(44);
+    expect(within(card).queryByText(/Par nom/)).toBeNull();
+    expect(screen.queryByLabelText('Nom à chercher')).toBeNull();
+
+    await fireEvent.press(myQr);
+    expect(NAVIGATION.addFriend).toHaveBeenCalledTimes(1);
+    expect(cameraQuestionsShown()).toBe(0);
+    await fireEvent.press(scan);
+    await waitFor(() => expect(NAVIGATION.openScanner).toHaveBeenCalledTimes(1));
+    expect(cameraQuestionsShown()).toBe(1);
+  });
+
+  it('shows my code in two groups and shares it, with its link, from the card', async () => {
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    const share = jest.fn(async () => undefined);
+    await render(withStore(store, <FriendsHome {...NAVIGATION} share={share} />));
+    const code = await screen.findByTestId('friends-my-code');
+    await waitFor(() => expect(code).toHaveTextContent(/^Mon code[A-Z0-9]{4} [A-Z0-9]{4}$/));
+    await fireEvent.press(screen.getByRole('button', { name: 'Partager mon code' }));
+    expect(share).toHaveBeenCalledWith(expect.stringMatching(/quranapp:\/\/invite\/[A-Z0-9]{8}/));
+    // The same code as the sheet will show: one invitation, kept by the tab.
+    const kept = store.invite()?.code;
+    if (kept === undefined) throw new Error('No invitation was made.');
+    expect(code).toHaveTextContent(`Mon code${kept.slice(0, 4)} ${kept.slice(4)}`);
+  });
+
+  it('without the demonstration, shows real friends without the Exemple mark', async () => {
+    await showLanguage('fr');
+    const { demo } = await signedInDemoForTest();
+    const friends = await demo.repository.listFriends();
+    const model = buildFriendsModel({
+      isDemonstration: false,
+      friends,
+      requests: { incoming: [], outgoing: [] },
+      groups: [],
+      today: deviceLocalDate(new Date()),
+    });
+    expect(model.gardensAreExamples).toBe(false);
+    const examples = buildFriendsModel({
+      isDemonstration: true,
+      friends,
+      requests: { incoming: [], outgoing: [] },
+      groups: [],
+      today: deviceLocalDate(new Date()),
+    });
+    expect(examples.gardensAreExamples).toBe(true);
+  });
+});
+
 describe('adding a friend', () => {
-  it('finds a name as the person types and shows only the name and the relation', async () => {
+  it('has no search by name: only codes and QR codes (owner decision)', async () => {
     await showLanguage('fr');
     const { store } = await signedInDemoForTest();
     await render(withStore(store, addFriendPage()));
-    await fireEvent.changeText(await screen.findByLabelText('Nom à chercher'), 'ya');
-    expect(await screen.findByTestId(`add-result-${DEMO_USERS.yacine}`)).toHaveTextContent(
-      /Yacine.*T’a envoyé une demande/,
+    await screen.findByTestId('add-qr-code');
+    expect(screen.queryByLabelText('Nom à chercher')).toBeNull();
+    expect(screen.queryByText(/Par son nom/)).toBeNull();
+  });
+
+  it('shows my QR code, then my code, then their code with the scanner beside it (5b)', async () => {
+    setDeviceConditions({ fontScale: 1 });
+    await showLanguage('fr');
+    const { store } = await signedInDemoForTest();
+    await render(withStore(store, addFriendPage()));
+    await screen.findByTestId('add-qr-code');
+    expect(screen.getByText('Ton proche le scanne depuis Jannatuk.')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Avec son code' })).toBeOnTheScreen();
+    const field = screen.getByLabelText('Code d’invitation');
+    const scan = screen.getByRole('button', { name: 'Scanner un QR code' });
+    let row = field.parent;
+    while (row !== null && !row.queryAll(() => true).includes(scan)) row = row.parent;
+    expect(row).toHaveStyle({ flexDirection: 'row' });
+    const page = screen.getByTestId('add-friend');
+    const order = page.queryAll(
+      ({ props }) =>
+        props.testID === 'add-qr' || props.testID === 'add-my-code' || props.testID === 'add-code',
     );
-    expect(screen.getByRole('button', { name: 'Accepter Yacine' })).toBeOnTheScreen();
-    await fireEvent.changeText(screen.getByLabelText('Nom à chercher'), 'zz');
-    expect(await screen.findByText('Personne ne porte ce nom.')).toBeOnTheScreen();
+    expect(order.map(({ props }) => props.testID)).toEqual(['add-qr', 'add-my-code', 'add-code']);
   });
 
   it('shows my code in two groups and shares it through the system share sheet', async () => {

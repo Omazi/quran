@@ -9,11 +9,13 @@ import {
   AppText,
   Avatar,
   Card,
+  emphasisWeight,
   GradientBackdrop,
   layout,
   Placeholder,
   radius,
   spacing,
+  useColors,
 } from '@/ui';
 
 import { avatarIndexOf, initialOf } from './friend-avatar';
@@ -36,6 +38,8 @@ const WELL: ReadonlySet<GardenPhase> = new Set(['bare', 'thriving']);
 
 export interface FriendCardGridProps {
   cards: readonly FriendCard[];
+  /** The gardens are the demonstration's: each card says "Exemple", on its garden and aloud. */
+  areExamples?: boolean;
   onOpen: (userId: UserId) => void;
 }
 
@@ -46,7 +50,7 @@ export interface FriendCardGridProps {
  * "38 hizb, arrosé depuis 21 jours". Laid out as a grid, because the tab shows every friend
  * (collections.md › Best practices: the standard grid); two columns, one at large text sizes.
  */
-export function FriendCardGrid({ cards, onOpen }: FriendCardGridProps) {
+export function FriendCardGrid({ cards, areExamples = false, onOpen }: FriendCardGridProps) {
   const { fontScale } = useWindowDimensions();
   const [width, setWidth] = useState(0);
   const columns = fontScale > ONE_COLUMN_FONT_SCALE ? 1 : COLUMNS;
@@ -58,7 +62,13 @@ export function FriendCardGrid({ cards, onOpen }: FriendCardGridProps) {
       testID="friends-grid"
     >
       {cards.map((card) => (
-        <FriendGardenCard key={card.userId} card={card} width={cardWidth} onOpen={onOpen} />
+        <FriendGardenCard
+          key={card.userId}
+          card={card}
+          width={cardWidth}
+          isExample={areExamples}
+          onOpen={onOpen}
+        />
       ))}
     </View>
   );
@@ -67,20 +77,24 @@ export function FriendCardGrid({ cards, onOpen }: FriendCardGridProps) {
 function FriendGardenCard({
   card,
   width,
+  isExample,
   onOpen,
 }: {
   card: FriendCard;
   width: number | undefined;
+  isExample: boolean;
   onOpen: (userId: UserId) => void;
 }) {
   const { t } = useTranslation('friends');
+  const colors = useColors();
   const isWell = card.garden === null || WELL.has(card.garden.phase);
+  const label = cardLabel(card, t);
   return (
     <Card
       tone="raised"
       padding="sm"
       contentGap="sm"
-      accessibilityLabel={cardLabel(card, t)}
+      accessibilityLabel={isExample ? t('card.exampleLabel', { label }) : label}
       onPress={() => onOpen(card.userId)}
       style={{ width }}
       testID={`friend-card-${card.userId}`}
@@ -95,6 +109,18 @@ function FriendGardenCard({
             <GardenScene state={card.garden} size="band" />
           </View>
         )}
+        {isExample ? (
+          // The mark of the demonstration (maquettes 2026-11-26, "friends"), at the leading top
+          // corner of the garden; VoiceOver hears it in the card's label.
+          <View
+            style={[styles.example, { backgroundColor: colors.exampleChip }]}
+            testID={`friend-card-${card.userId}-example`}
+          >
+            <AppText variant="footnote" color="dateLabel" style={styles.exampleWord}>
+              {t('card.example')}
+            </AppText>
+          </View>
+        ) : null}
       </View>
       <View style={styles.words}>
         <View style={styles.nameRow}>
@@ -121,6 +147,15 @@ const styles = StyleSheet.create({
   tile: { borderRadius: radius.md, overflow: 'hidden', paddingTop: spacing.xs },
   zoomed: { transform: [{ scale: TILE_ZOOM }] },
   hidden: { aspectRatio: GARDEN_PICTURE_ASPECT_RATIO },
+  example: {
+    position: 'absolute',
+    top: spacing.sm,
+    start: spacing.sm,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs / 2,
+  },
+  exampleWord: { fontWeight: emphasisWeight },
   words: { paddingHorizontal: spacing.xs, paddingBottom: spacing.xs, gap: spacing.xs },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   name: { flexShrink: 1 },

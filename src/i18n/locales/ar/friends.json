@@ -1,6 +1,6 @@
 {
   "title": "الأحبّة",
-  "demoNote": "عرض تجريبي: هؤلاء الأشخاص من الخيال، ولا يخرج شيء من هاتفك.",
+  "demoNote": "عرض تجريبي: الرموز لا تربط هاتفين بعدُ، ولا شيء يغادر هاتفك.",
   "loading": "جارٍ تحميل أحبّتك",
   "failed": {
     "title": "تعذّر عرض أحبّتك",
@@ -30,8 +30,7 @@
     "declineShort": "رفض",
     "gardensTitle": "حدائقهم",
     "noFriends": "لا أحبّة لديك بعد",
-    "noFriendsNote": "أضف شخصًا باسمه، أو برمزك.",
-    "add": "إضافة حبيب",
+    "noFriendsNote": "أضف أحدًا برمزك، أو بمسح رمزه.",
     "groupsTitle": "المجموعات",
     "members_zero": "لا أعضاء",
     "members_one": "عضو واحد",
@@ -41,7 +40,12 @@
     "members_other": "{{count}} عضو",
     "noGroups": "لا مجموعات بعد",
     "createGroup": "إنشاء مجموعة",
-    "seeAll": "عرض الكل"
+    "seeAll": "عرض الكل",
+    "addTitle": "أضف أحبّتك",
+    "addText": "شاهد حدائقهم تنمو وشجّعوا بعضكم.",
+    "scan": "امسح",
+    "myQr": "رمز QR الخاص بي",
+    "examples": "أمثلة لترى كيف يبدو الأمر. تختفي مع أول حبيب تضيفه."
   },
   "card": {
     "hizb_zero": "{{count}} حزب",
@@ -68,7 +72,9 @@
     "wateredSince_few": "تُسقى منذ {{count}} أيام",
     "wateredSince_many": "تُسقى منذ {{count}} يومًا",
     "wateredSince_other": "تُسقى منذ {{count}} يوم",
-    "details": "{{hizb}}، {{water}}"
+    "details": "{{hizb}}، {{water}}",
+    "example": "مثال",
+    "exampleLabel": "مثال: {{label}}"
   },
   "friend": {
     "gardenTitle": "حديقة {{name}}",
@@ -126,19 +132,6 @@
   },
   "add": {
     "title": "إضافة حبيب",
-    "searchTitle": "باسمه",
-    "searchField": "الاسم المبحوث عنه",
-    "searchPlaceholder": "البحث عن اسم",
-    "clear": "مسح",
-    "noResults": "لا أحد يحمل هذا الاسم.",
-    "searchNote": "لا تُظهر النتائج إلا الاسم، ولا تُظهر الحديقة أبدًا.",
-    "relationFriend": "من أحبّتك",
-    "relationSent": "أُرسل الطلب",
-    "relationReceived": "أرسل إليك طلبًا",
-    "relationNone": "ليس من أحبّتك بعد",
-    "send": "إرسال طلب إلى {{name}}",
-    "accept": "قبول {{name}}",
-    "myCodeTitle": "برمزي",
     "myCode": "رمزي",
     "myCodeNote": "صالح حتى {{date}}. من يكتبه يصبح من أحبّتك.",
     "share": "مشاركة رمزي",
@@ -147,11 +140,13 @@
     "enterField": "رمز الدعوة",
     "enterPlaceholder": "ABCD EFGH",
     "enterSubmit": "إضافة هذا الحبيب",
-    "qrTitle": "برمز QR",
     "qrLabel": "رمز QR لدعوتي",
     "qrLoading": "جارٍ تحضير رمز QR",
     "scan": "مسح رمز QR",
-    "qrNote": "اطلب من حبيبك مسح هذا الرمز من جنتك، أو امسح رمزه."
+    "qrCaption": "يمسحه حبيبك من Jannatuk.",
+    "shareShort": "شارك",
+    "scanShort": "امسح",
+    "close": "إغلاق"
   },
   "scan": {
     "title": "مسح رمز QR",

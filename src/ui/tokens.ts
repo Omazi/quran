@@ -233,6 +233,11 @@ export const palette = {
   /** The white capsule itself, the same in both appearances: it sits on the dark green. */
   actionCapsule: { light: '#FFFFFF', dark: '#FFFFFF' },
   /**
+   * The mark "Exemple" on a garden of the demonstration (maquettes 2026-11-26, "friends"): a
+   * veil over the garden's sky, and its word in `dateLabel`.
+   */
+  exampleChip: { light: 'rgba(255, 255, 255, 0.88)', dark: 'rgba(21, 23, 22, 0.78)' },
+  /**
    * The golden microphone of the listening page (shazam.png): its light, middle and deep gold,
    * and its rays. A shape beside the words that name it.
    */
@@ -867,6 +872,8 @@ export const pieceSizes = {
    * The card "Quel est ce passage ?" of the Quran tab (maquettes 2026-11-26, 3A): its rosette,
    * the faint stars behind it, and how far they reach past the card's top and trailing edges.
    */
+  /** A tile that names one way to add a friend, symbol above word (maquettes, "friends": 68). */
+  wayTile: 68,
   recognizeRosette: 100,
   recognizeHalo: 230,
   recognizeHaloTop: -40,

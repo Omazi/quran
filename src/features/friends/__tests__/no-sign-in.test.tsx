@@ -19,6 +19,7 @@ const NAVIGATION = {
   openGroup: jest.fn(),
   addFriend: jest.fn(),
   createGroup: jest.fn(),
+  openScanner: jest.fn(),
 };
 
 describe('the friendsSignIn feature flag', () => {
@@ -45,7 +46,9 @@ describe('the tab with the flag off', () => {
     expect(await screen.findByTestId('friends-list')).toBeOnTheScreen();
     expect(screen.queryByTestId('friends-sign-in')).toBeNull();
     expect(screen.getByTestId('friends-demo-note')).toHaveTextContent(/^Démonstration/);
-    expect(screen.getByRole('button', { name: 'Ajouter un proche' })).toBeOnTheScreen();
+    // The ways to add someone come first, without an account (maquettes 2026-11-26, "friends").
+    expect(screen.getByRole('button', { name: 'Mon QR code' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Scanner un QR code' })).toBeOnTheScreen();
   });
 
   it('opens a page reached by a link straight away too', async () => {

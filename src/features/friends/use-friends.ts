@@ -6,11 +6,9 @@ import { compareLocalDates, type LocalDate } from '@/domain/shared/local-date';
 import {
   inviteLink,
   parseInviteLink,
-  SOCIAL_CONFIG,
   type GroupId,
   type Invite,
   type LeaderboardPeriod,
-  type PersonSearchResult,
   type UserId,
 } from '@/domain/social';
 import { useToday } from '@/features/home';
@@ -56,15 +54,63 @@ function useAction(store: SocialStore) {
   return { run, refusal, setRefusal, isBusy };
 }
 
+// --- My invitation -----------------------------------------------------------------------------
+
+const systemShare = (message: string) => Share.share({ message });
+
+/**
+ * My invitation code (D36), made once and kept by the tab while it is valid: the list and the
+ * sheet "Ajouter un proche" show the same code.
+ */
+function useMyInvite(store: SocialStore, today: LocalDate): Invite | null {
+  const { repository } = store.client;
+  const invite = useAsync(async () => {
+    const kept = store.invite();
+    if (kept !== null && compareLocalDates(kept.expiresOn, today) >= 0) return kept;
+    const made = await repository.createInvite();
+    store.keepInvite(made);
+    return made;
+  }, [repository, store, today]);
+  return invite.status === 'ready' ? invite.value : null;
+}
+
+/** Shares my code and its link through the system's share sheet (activity-views.md). */
+function shareInviteWith(
+  invite: Invite | null,
+  share: (message: string) => Promise<unknown>,
+  message: (link: string, code: string) => string,
+): void {
+  if (invite === null) return;
+  void share(message(inviteLink(invite.code), invite.code));
+}
+
+/**
+ * Asks for the camera if it was never asked, then opens the scanner, whatever the answer: a
+ * permission already given or refused returns at once, without asking again, and the scanner then
+ * shows the camera, or how to turn it on in Settings (privacy.md › Requesting permission: only at
+ * the tap that needs it).
+ */
+function useScanButton(openScanner: () => void): () => void {
+  // Nothing is read on arrival: the camera is asked about only when the person taps "Scanner".
+  const [, requestCamera] = useCameraPermissions({ get: false });
+  return useCallback(() => {
+    requestCamera().then(openScanner, openScanner);
+  }, [requestCamera, openScanner]);
+}
+
 // --- The list ----------------------------------------------------------------------------------
 
 export interface FriendsListActions {
   openFriend(userId: UserId): void;
   openGroup(groupId: GroupId): void;
+  /** "Mon QR code": the sheet "Ajouter un proche", my QR code and their code. */
   addFriend(): void;
   createGroup(): void;
   accept(userId: UserId): void;
   decline(userId: UserId): void;
+  /** "Scanner": asks for the camera at this tap, then opens the scanner. */
+  scan(): void;
+  shareInvite(message: (link: string, code: string) => string): void;
 }
 
 export interface FriendsListNavigation {
@@ -72,18 +118,33 @@ export interface FriendsListNavigation {
   openGroup(groupId: GroupId): void;
   addFriend(): void;
   createGroup(): void;
+  openScanner(): void;
 }
 
-/** The Proches tab once signed in: requests, friends' gardens, groups. */
-export function useFriendsList(navigation: FriendsListNavigation): {
+export interface FriendsListDependencies {
+  /** The system's share sheet; injected for tests. */
+  share?: (message: string) => Promise<unknown>;
+}
+
+/**
+ * The Proches tab once signed in: the ways to add a friend and my code, requests, friends'
+ * gardens, groups.
+ */
+export function useFriendsList(
+  navigation: FriendsListNavigation,
+  { share = systemShare }: FriendsListDependencies = {},
+): {
   state: AsyncState<FriendsModel>;
   refusal: ShownRefusal | null;
+  invite: Invite | null;
   actions: FriendsListActions;
 } {
   const store = useSocialStore();
   const version = useSocialVersion(store);
   const today = useToday();
   const { repository, isDemonstration } = store.client;
+  const invite = useMyInvite(store, today);
+  const scan = useScanButton(navigation.openScanner);
   const state = useAsync(async () => {
     const [friends, requests, groups] = await Promise.all([
       repository.listFriends(),
@@ -102,10 +163,16 @@ export function useFriendsList(navigation: FriendsListNavigation): {
   return {
     state,
     refusal,
+    invite,
     actions: {
-      ...navigation,
+      openFriend: navigation.openFriend,
+      openGroup: navigation.openGroup,
+      addFriend: navigation.addFriend,
+      createGroup: navigation.createGroup,
       accept: (userId) => run(() => repository.acceptFriendRequest(userId)),
       decline: (userId) => run(() => repository.declineFriendRequest(userId)),
+      scan,
+      shareInvite: (message) => shareInviteWith(invite, share, message),
     },
   };
 }
@@ -202,10 +269,6 @@ export function useFriendPage(
 
 export interface AddFriendModel {
   readonly isDemonstration: boolean;
-  readonly query: string;
-  /** Null before a search can start (fewer than 2 characters). */
-  readonly results: readonly PersonSearchResult[] | null;
-  readonly searchRefusal: ShownRefusal | null;
   /** Null while it is being made. */
   readonly invite: Invite | null;
   readonly code: string;
@@ -214,9 +277,6 @@ export interface AddFriendModel {
 }
 
 export interface AddFriendActions {
-  changeQuery(text: string): void;
-  sendRequest(userId: UserId): void;
-  acceptRequest(userId: UserId): void;
   openFriend(userId: UserId): void;
   shareInvite(message: (link: string, code: string) => string): void;
   changeCode(text: string): void;
@@ -237,8 +297,6 @@ export interface AddFriendDependencies {
   share?: (message: string) => Promise<unknown>;
 }
 
-const systemShare = (message: string) => Share.share({ message });
-
 function wellFormedCodeOrEmpty(text: string | undefined): string {
   if (text === undefined) return '';
   try {
@@ -249,8 +307,9 @@ function wellFormedCodeOrEmpty(text: string | undefined): string {
 }
 
 /**
- * The three ways to add a friend (D36): a search by name, my code to share and someone's code to
- * type, and the QR code: mine to show, theirs to scan.
+ * The sheet "Ajouter un proche" (maquettes 2026-11-26, 5b): my QR code and my code to share,
+ * their code to type, and their QR code to scan (D36). No search by name: the owner chose to add
+ * by code and QR code only, so that no one's name can be found by anyone.
  */
 export function useAddFriend({
   openFriend,
@@ -262,53 +321,24 @@ export function useAddFriend({
   actions: AddFriendActions;
 } {
   const store = useSocialStore();
-  const version = useSocialVersion(store);
   const today = useToday();
   const { repository, isDemonstration } = store.client;
-  const [query, setQuery] = useState('');
   const [code, setCode] = useState(() => wellFormedCodeOrEmpty(linkedCode));
-
-  // Search as the person types (search-fields.md › Best practices). Too short is not an error.
-  const search = useAsync(async () => {
-    if (query.trim().length < SOCIAL_CONFIG.searchMinLength) return null;
-    return repository.searchPeople(query);
-  }, [repository, query, version]);
-
-  const invite = useAsync(async () => {
-    const kept = store.invite();
-    if (kept !== null && compareLocalDates(kept.expiresOn, today) >= 0) return kept;
-    const made = await repository.createInvite();
-    store.keepInvite(made);
-    return made;
-  }, [repository, store, today]);
-
-  const action = useAction(store);
+  const invite = useMyInvite(store, today);
   const codeAction = useAction(store);
-  // Nothing is read on arrival: the camera is asked about only when the person taps "Scanner"
-  // (privacy.md › Requesting permission).
-  const [, requestCamera] = useCameraPermissions({ get: false });
+  const scan = useScanButton(openScanner);
 
   return {
     model: {
       isDemonstration,
-      query,
-      results: search.status === 'ready' ? search.value : null,
-      searchRefusal: search.status === 'failed' ? refusalOf(search.error) : action.refusal,
-      invite: invite.status === 'ready' ? invite.value : null,
+      invite,
       code,
       codeRefusal: codeAction.refusal,
-      isBusy: action.isBusy || codeAction.isBusy,
+      isBusy: codeAction.isBusy,
     },
     actions: {
-      changeQuery: setQuery,
-      sendRequest: (userId) => action.run(() => repository.sendFriendRequest(userId)),
-      acceptRequest: (userId) => action.run(() => repository.acceptFriendRequest(userId)),
       openFriend,
-      shareInvite: (message) => {
-        if (invite.status !== 'ready') return;
-        const { code: myCode } = invite.value;
-        void share(message(inviteLink(myCode), myCode));
-      },
+      shareInvite: (message) => shareInviteWith(invite, share, message),
       changeCode: (text) => {
         setCode(text);
         codeAction.setRefusal(null);
@@ -325,11 +355,7 @@ export function useAddFriend({
           },
         );
       },
-      scan: () => {
-        // A permission already given or refused returns at once, without asking again: the
-        // scanner then shows the camera, or how to turn it on in Settings.
-        requestCamera().then(openScanner, openScanner);
-      },
+      scan,
     },
   };
 }

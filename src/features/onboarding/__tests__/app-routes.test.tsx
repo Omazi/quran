@@ -422,11 +422,12 @@ describe('returning person', () => {
     expect(await screen.findByTestId('friends-list')).toBeOnTheScreen();
     expect(screen.getByRole('header', { name: 'Proches' })).toBeOnTheScreen();
     expect(screen.queryByTestId('friends-sign-in')).toBeNull();
-    await fireEvent.press(screen.getByRole('button', { name: 'Ajouter un proche' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Mon QR code' }));
     await waitFor(() => expect(app.getPathname()).toBe('/friends/add'));
-    expect(await screen.findByLabelText('Nom à chercher')).toBeOnTheScreen();
-    // The page is pushed inside the tab: the tab bar is still there, nothing hides it
-    // (tab-bars.md › Best practices), and the page has the system bar with its title.
+    expect(await screen.findByLabelText('Code d’invitation')).toBeOnTheScreen();
+    // "Ajouter un proche" is a sheet of the tab (maquettes 2026-11-26, 5b; `presentation:
+    // 'modal'` in its layout, which this renderer does not show): over the list, with the
+    // system bar and its title; the tab bar is not hidden.
     expect(app.getSegments()).toEqual(['(tabs)', 'friends', 'add']);
     expect(tabs()).toHaveLength(4);
     expect(tabsHost()).toHaveProp('tabBarHidden', undefined);
@@ -441,7 +442,9 @@ describe('returning person', () => {
     const invite = await demo.repositoryAs(DEMO_USERS.yacine).createInvite();
     setCamera('undetermined', 'granted');
     const app = await openApp('/friends');
-    await fireEvent.press(await screen.findByRole('button', { name: 'Ajouter un proche' }));
+    // From the sheet: it closes, then the scanner opens as a page of the tab.
+    await fireEvent.press(await screen.findByRole('button', { name: 'Mon QR code' }));
+    await waitFor(() => expect(app.getPathname()).toBe('/friends/add'));
     await fireEvent.press(await screen.findByRole('button', { name: 'Scanner un QR code' }));
     await waitFor(() => expect(app.getPathname()).toBe('/friends/scan'));
     expect(tabs()).toHaveLength(4);
@@ -649,7 +652,7 @@ describe('isolation between tests', () => {
 
   it('ends on a page pushed inside a tab', async () => {
     const app = await openApp('/friends');
-    await fireEvent.press(await screen.findByRole('button', { name: 'Ajouter un proche' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Mon QR code' }));
     await waitFor(() => expect(app.getPathname()).toBe('/friends/add'));
   });
 

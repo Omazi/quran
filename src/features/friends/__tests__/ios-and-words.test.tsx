@@ -91,7 +91,10 @@ describe.each(['fr', 'ar'] as const)('on iOS (%s)', (language) => {
           createGroup: noop,
           accept: noop,
           decline: noop,
+          scan: noop,
+          shareInvite: noop,
         }}
+        invite={await repository.createInvite()}
       />,
     );
     expect(reactNativeViewsInsideSwiftUI()).toEqual([]);
@@ -114,18 +117,12 @@ describe.each(['fr', 'ar'] as const)('on iOS (%s)', (language) => {
       <AddFriendScreen
         model={{
           isDemonstration: true,
-          query: 'ya',
-          results: await repository.searchPeople('ya'),
-          searchRefusal: null,
           invite: await repository.createInvite(),
           code: 'abcd',
           codeRefusal: 'invite-not-found',
           isBusy: false,
         }}
         actions={{
-          changeQuery: noop,
-          sendRequest: noop,
-          acceptRequest: noop,
           openFriend: noop,
           shareInvite: noop,
           changeCode: noop,

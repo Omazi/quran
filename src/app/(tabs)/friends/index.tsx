@@ -15,6 +15,7 @@ export default function FriendsRoute() {
       }
       addFriend={() => router.push('/friends/add')}
       createGroup={() => router.push('/friends/new-group')}
+      openScanner={() => router.push('/friends/scan')}
     />
   );
 }

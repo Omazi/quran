@@ -8,6 +8,12 @@ import { useColorValues } from '@/ui';
 export { ErrorBoundary } from '@/features/diagnostics';
 
 /**
+ * The list stays under every page of the tab, even one opened by a link (the sheet "Ajouter un
+ * proche" from `quranapp://invite/<CODE>`): closing it, or going back, lands on the list.
+ */
+export const unstable_settings = { initialRouteName: 'index' };
+
+/**
  * The navigation of the Proches tab: its pages are pushed inside the tab, so the tab bar stays on
  * screen while people move through them (tab-bars.md › Best practices: "Make sure the tab bar is
  * visible when people navigate to different sections of your app").
@@ -35,7 +41,8 @@ export default function FriendsLayout() {
       <Stack screenOptions={page}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="[id]" options={{ title: '' }} />
-        <Stack.Screen name="add" options={{ title: t('add.title') }} />
+        {/* A sheet: a focused task over the list, closed by its own button (sheets.md). */}
+        <Stack.Screen name="add" options={{ title: t('add.title'), presentation: 'modal' }} />
         <Stack.Screen name="scan" options={{ title: t('scan.title') }} />
         <Stack.Screen name="new-group" options={{ title: t('newGroup.title') }} />
         <Stack.Screen name="group/[id]" options={{ title: '' }} />

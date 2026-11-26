@@ -20,9 +20,11 @@ import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import {
   AppText,
+  emphasisWeight,
   getWritingDirection,
   Icon,
   layout,
+  pieceSizes,
   radius,
   spacing,
   stateOpacity,
@@ -115,6 +117,46 @@ export function FriendsButtonPair({ children }: { children: ReactNode }) {
   const { fontScale } = useWindowDimensions();
   const isSideBySide = fontScale <= layout.sideBySideMaxFontScale;
   return <View style={isSideBySide ? styles.pairRow : styles.pairColumn}>{children}</View>;
+}
+
+/**
+ * A square button that names one way of doing something, its symbol above its word, on the pale
+ * green of a quieter action ("Scanner", "Mon QR code"; maquettes 2026-11-26, "friends"). Tiles
+ * share a row at the same size, as a set of choices (buttons.md › Style), and keep at least 44
+ * points (› Best practices) and a press state. The word wraps rather than shrinks.
+ */
+export function FriendsTile({
+  label,
+  symbol,
+  onPress,
+  accessibilityLabel,
+  testID,
+}: {
+  label: string;
+  symbol: IconSymbol;
+  onPress: () => void;
+  accessibilityLabel?: string;
+  testID?: string;
+}) {
+  const colors = useColors();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      onPress={onPress}
+      testID={testID}
+      style={({ pressed }) => [
+        styles.tile,
+        { backgroundColor: colors.actionTonal },
+        pressed && styles.pressed,
+      ]}
+    >
+      <Icon symbol={symbol} textStyle="title2" color="actionTint" />
+      <AppText variant="footnote" color="actionTint" align="center" style={styles.tileLabel}>
+        {label}
+      </AppText>
+    </Pressable>
+  );
 }
 
 // --- Rows ------------------------------------------------------------------------------------
@@ -241,12 +283,16 @@ export function FriendsTextField({
   maxLength,
   onSubmit,
   clearLabel,
+  ground = 'field',
   testID,
-}: TextFieldRowProps) {
+}: TextFieldRowProps & {
+  /** `field`: the cream inside a white card. `surface`: white, on the page itself (5b). */
+  ground?: 'field' | 'surface';
+}) {
   const colors = useColors();
   const behaviour = TEXT_FIELD_BEHAVIOURS[kind];
   return (
-    <View style={[styles.field, { backgroundColor: colors.field }]}>
+    <View style={[styles.field, { backgroundColor: colors[ground] }]}>
       {kind === 'search' ? <Icon symbol={SEARCH_SYMBOL} color="muted" /> : null}
       <TextInput
         accessibilityLabel={label}
@@ -306,6 +352,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     marginHorizontal: -spacing.sm,
   },
+  tile: {
+    flex: 1,
+    minHeight: pieceSizes.wayTile,
+    borderRadius: radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    padding: spacing.sm,
+  },
+  tileLabel: { fontWeight: emphasisWeight },
   rowWords: { flex: 1, gap: spacing.xs / 2 },
   rowValue: { flexShrink: 1 },
   field: {

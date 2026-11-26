@@ -1,6 +1,6 @@
 {
   "title": "Proches",
-  "demoNote": "Démonstration : ces personnes sont inventées, et rien ne quitte ton téléphone.",
+  "demoNote": "Démonstration : les codes ne relient pas encore deux téléphones, et rien ne quitte le tien.",
   "loading": "Chargement de tes proches",
   "failed": {
     "title": "Tes proches ne s’affichent pas",
@@ -30,14 +30,18 @@
     "declineShort": "Refuser",
     "gardensTitle": "Leurs jardins",
     "noFriends": "Tu n’as pas encore de proches",
-    "noFriendsNote": "Ajoute quelqu’un par son nom, ou avec ton code.",
-    "add": "Ajouter un proche",
+    "noFriendsNote": "Ajoute quelqu’un avec ton code, ou en scannant le sien.",
     "groupsTitle": "Groupes",
     "members_one": "{{count}} membre",
     "members_other": "{{count}} membres",
     "noGroups": "Aucun groupe pour l’instant",
     "createGroup": "Créer un groupe",
-    "seeAll": "Tout voir"
+    "seeAll": "Tout voir",
+    "addTitle": "Ajoute tes proches",
+    "addText": "Vois leurs jardins pousser et encouragez-vous.",
+    "scan": "Scanner",
+    "myQr": "Mon QR code",
+    "examples": "Des exemples, pour voir à quoi ça ressemble. Ils disparaissent dès ton premier proche."
   },
   "card": {
     "hizb_one": "{{count}} hizb",
@@ -52,7 +56,9 @@
     "hiddenLabel": "{{name}}, jardin non partagé",
     "wateredSince_one": "arrosé depuis {{count}} jour",
     "wateredSince_other": "arrosé depuis {{count}} jours",
-    "details": "{{hizb}}, {{water}}"
+    "details": "{{hizb}}, {{water}}",
+    "example": "Exemple",
+    "exampleLabel": "Exemple : {{label}}"
   },
   "friend": {
     "gardenTitle": "Le jardin de {{name}}",
@@ -98,19 +104,6 @@
   },
   "add": {
     "title": "Ajouter un proche",
-    "searchTitle": "Par son nom",
-    "searchField": "Nom à chercher",
-    "searchPlaceholder": "Rechercher un nom",
-    "clear": "Effacer",
-    "noResults": "Personne ne porte ce nom.",
-    "searchNote": "Les résultats ne montrent que le nom, jamais le jardin.",
-    "relationFriend": "Déjà ton proche",
-    "relationSent": "Demande envoyée",
-    "relationReceived": "T’a envoyé une demande",
-    "relationNone": "Pas encore ton proche",
-    "send": "Envoyer une demande à {{name}}",
-    "accept": "Accepter {{name}}",
-    "myCodeTitle": "Avec mon code",
     "myCode": "Mon code",
     "myCodeNote": "Valable jusqu’au {{date}}. Qui le tape devient ton proche.",
     "share": "Partager mon code",
@@ -119,11 +112,13 @@
     "enterField": "Code d’invitation",
     "enterPlaceholder": "ABCD EFGH",
     "enterSubmit": "Ajouter ce proche",
-    "qrTitle": "Avec un QR code",
     "qrLabel": "QR code de mon invitation",
     "qrLoading": "Préparation du QR code",
     "scan": "Scanner un QR code",
-    "qrNote": "Fais scanner ce code à ton proche depuis Jannatuk, ou scanne le sien."
+    "qrCaption": "Ton proche le scanne depuis Jannatuk.",
+    "shareShort": "Partager",
+    "scanShort": "Scanner",
+    "close": "Fermer"
   },
   "scan": {
     "title": "Scanner un QR code",
