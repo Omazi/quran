@@ -3,7 +3,11 @@
 Connexion, proches et leurs jardins, page d'un proche, ajout d'un proche (D36) par le nom, par
 un code ou par un QR code, groupes et classements. Sur les fausses données de `src/data/social`
 (D33) : la liste le dit une fois, sous le titre de l'onglet, tant que `isDemonstration` est vrai
-(et l'écran de connexion dit que la connexion est une démonstration). Spécification : `docs/specs/social.md` ; décisions D23, D33, D36, D37.
+(et l'écran de connexion dit que la connexion est une démonstration). **Pas d'écran de connexion
+pour l'instant** (décision du propriétaire) : le drapeau `friendsSignIn` d'`app.json`
+(`expo.extra.features`, `sign-in-flag.ts`) reste à `false` tant que les vrais comptes ne sont pas
+configurés ; l'onglet ouvre alors seul la session de la démonstration (`useTabSession`) et va droit
+aux proches. À passer à `true` avec `accountInvitation`, dont la feuille mène à cette connexion. Spécification : `docs/specs/social.md` ; décisions D23, D33, D36, D37.
 
 ## Pièces
 

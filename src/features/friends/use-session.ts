@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 
 import { parseEmail, signInProvidersFor, type Session, type SignInProvider } from '@/domain/social';
@@ -21,6 +21,39 @@ export function useSession(): SessionState {
   // A session that cannot be read is no session: the sign-in screen offers to sign in again.
   if (state.status === 'failed' || state.value === null) return { status: 'signed-out' };
   return { status: 'signed-in', session: state.value };
+}
+
+/** The session of a page of the tab: also 'failed' when the local session could not open. */
+export type TabSessionState = SessionState | { readonly status: 'failed' };
+
+/**
+ * The session the pages of the tab work with. Where the build shows no sign-in screen (the
+ * `friendsSignIn` flag, off until real accounts exist), a person signed out of the demonstration
+ * is signed in at once, without a screen: the tab opens on the friends, whose list says they are
+ * a demonstration. A real client always keeps its sign-in.
+ */
+export function useTabSession(): TabSessionState {
+  const store = useSocialStore();
+  const session = useSession();
+  const opensByItself = !store.showsSignIn && store.client.auth.isDemonstration;
+  const isSignedOut = session.status === 'signed-out';
+  const [hasFailed, setHasFailed] = useState(false);
+  useEffect(() => {
+    if (!isSignedOut || !opensByItself) return;
+    let isCurrent = true;
+    store.client.auth.signInWithApple().then(
+      () => store.changed(),
+      (error: unknown) => {
+        console.warn('The local session of the Proches tab could not open.', error);
+        if (isCurrent) setHasFailed(true);
+      },
+    );
+    return () => {
+      isCurrent = false;
+    };
+  }, [isSignedOut, opensByItself, store]);
+  if (isSignedOut && opensByItself) return { status: hasFailed ? 'failed' : 'loading' };
+  return session;
 }
 
 /** Where the e-mail way stands: not started, asking for the address, then for the code. */

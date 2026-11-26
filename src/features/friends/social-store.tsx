@@ -5,6 +5,8 @@ import type { LocalDate } from '@/domain/shared/local-date';
 import type { AuthGateway, Invite, SocialRepository, UserId } from '@/domain/social';
 import { deviceLocalDate } from '@/features/home';
 
+import { isFriendsSignInEnabled } from './sign-in-flag';
+
 /**
  * Where the Proches tab gets its accounts and friends. Today a demonstration (D33); the day the
  * server exists, a second implementation of the same two interfaces takes its place here and no
@@ -23,6 +25,12 @@ export interface SocialClient {
  */
 export interface SocialStore {
   readonly client: SocialClient;
+  /**
+   * Whether the tab shows its sign-in screen to a person signed out (the `friendsSignIn` flag).
+   * When it does not, the demonstration's session opens by itself and the tab goes straight to
+   * the friends.
+   */
+  readonly showsSignIn: boolean;
   subscribe(listener: () => void): () => void;
   version(): number;
   /** Tells every screen that something changed (a request accepted, a group created). */
@@ -37,12 +45,21 @@ export interface SocialStore {
   readonly encouraged: Map<UserId, LocalDate>;
 }
 
-export function createSocialStore(client: SocialClient): SocialStore {
+export interface SocialStoreOptions {
+  /** Defaults to this build's `friendsSignIn` flag. */
+  readonly showsSignIn?: boolean;
+}
+
+export function createSocialStore(
+  client: SocialClient,
+  { showsSignIn = isFriendsSignInEnabled() }: SocialStoreOptions = {},
+): SocialStore {
   const listeners = new Set<() => void>();
   let version = 0;
   let invite: Invite | null = null;
   return {
     client,
+    showsSignIn,
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);

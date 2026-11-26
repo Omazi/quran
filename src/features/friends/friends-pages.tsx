@@ -20,7 +20,7 @@ import {
   useScanInvite,
   type FriendsListNavigation,
 } from './use-friends';
-import { useSession, useSignIn } from './use-session';
+import { useSignIn, useTabSession } from './use-session';
 
 export type { FriendOptionsItem, FriendOptionsMenu } from './friend-screen';
 
@@ -40,21 +40,27 @@ function Failed() {
   );
 }
 
-/** The root of the tab: sign-in on the first visit, the list once signed in. */
+/**
+ * The root of the tab: the list. Sign-in comes first only in a build that shows it (the
+ * `friendsSignIn` flag); otherwise the demonstration opens by itself (`useTabSession`).
+ */
 export function FriendsHome(navigation: FriendsListNavigation) {
-  const session = useSession();
+  const session = useTabSession();
   if (session.status === 'loading') return <FriendsLoading testID="friends-loading" />;
+  if (session.status === 'failed') return <Failed />;
   if (session.status === 'signed-out') return <SignInPage />;
   return <FriendsListPage {...navigation} />;
 }
 
 /**
  * Every page but the root needs a session: a link that opens one directly, before sign-in (or
- * after the demonstration was reset), gets the sign-in screen instead of an error.
+ * after the demonstration was reset), gets the sign-in screen instead of an error, or, in a build
+ * without sign-in, the demonstration's session.
  */
 function SignedIn({ children }: { children: ReactNode }) {
-  const session = useSession();
+  const session = useTabSession();
   if (session.status === 'loading') return <FriendsLoading testID="friends-loading" />;
+  if (session.status === 'failed') return <Failed />;
   if (session.status === 'signed-out') return <SignInPage />;
   return <>{children}</>;
 }

@@ -87,10 +87,10 @@ function expectSoundLayout() {
 }
 
 describe.each(SCREEN_CONDITIONS)('Proches tab ($scheme, $language)', ({ language, ...device }) => {
-  it('asks to sign in first, Apple first, and says it is a demonstration', async () => {
+  it('with the friendsSignIn flag on: asks to sign in first, Apple first, says it is a demonstration', async () => {
     setDeviceConditions({ ...device, os: 'ios' });
     const t = (await showLanguage(language)).getFixedT(language, 'friends');
-    const { store } = demoForTest();
+    const { store } = demoForTest({ showsSignIn: true });
     await render(withStore(store, <FriendsHome {...NAVIGATION} />));
 
     expect(await screen.findByRole('header', { name: t('title') })).toBeOnTheScreen();
@@ -287,9 +287,9 @@ describe("a friend's page", () => {
     expect(screen.queryByTestId('friend-encourage')).toBeNull();
   });
 
-  it('shows the sign-in screen when opened before signing in', async () => {
+  it('with the friendsSignIn flag on: shows the sign-in screen when opened before signing in', async () => {
     await showLanguage('fr');
-    const { store } = demoForTest();
+    const { store } = demoForTest({ showsSignIn: true });
     await render(withStore(store, <FriendPage userId={DEMO_USERS.sarah} goBack={jest.fn()} />));
     expect(await screen.findByTestId('friends-sign-in')).toBeOnTheScreen();
   });

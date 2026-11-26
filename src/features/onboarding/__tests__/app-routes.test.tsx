@@ -412,11 +412,11 @@ describe('returning person', () => {
     expect(reloadAppAsync).not.toHaveBeenCalled();
   });
 
-  it('finds the Proches tab: sign-in first, then the friends, and their pages under the tab bar', async () => {
+  it('finds the Proches tab: the friends at once (no sign-in, flag off), and their pages under the tab bar', async () => {
     const app = await openApp('/friends');
-    expect(await screen.findByRole('header', { name: 'Proches' })).toBeOnTheScreen();
-    await fireEvent.press(screen.getByRole('button', { name: 'Continuer avec Apple' }));
     expect(await screen.findByTestId('friends-list')).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Proches' })).toBeOnTheScreen();
+    expect(screen.queryByTestId('friends-sign-in')).toBeNull();
     await fireEvent.press(screen.getByRole('button', { name: 'Ajouter un proche' }));
     await waitFor(() => expect(app.getPathname()).toBe('/friends/add'));
     expect(await screen.findByLabelText('Nom à chercher')).toBeOnTheScreen();
@@ -436,7 +436,6 @@ describe('returning person', () => {
     const invite = await demo.repositoryAs(DEMO_USERS.yacine).createInvite();
     setCamera('undetermined', 'granted');
     const app = await openApp('/friends');
-    await fireEvent.press(await screen.findByRole('button', { name: 'Continuer avec Apple' }));
     await fireEvent.press(await screen.findByRole('button', { name: 'Ajouter un proche' }));
     await fireEvent.press(await screen.findByRole('button', { name: 'Scanner un QR code' }));
     await waitFor(() => expect(app.getPathname()).toBe('/friends/scan'));
@@ -457,7 +456,6 @@ describe('returning person', () => {
   it('opens a link of invitation on "Ajouter un proche", its code in the field', async () => {
     const app = await openApp('/invite/ABCDEFGH');
     await waitFor(() => expect(app.getPathname()).toBe('/friends/add'));
-    await fireEvent.press(await screen.findByRole('button', { name: 'Continuer avec Apple' }));
     expect(await screen.findByLabelText('Code d’invitation')).toHaveDisplayValue('ABCD EFGH');
     expect(tabs()).toHaveLength(4);
   });
@@ -646,7 +644,6 @@ describe('isolation between tests', () => {
 
   it('ends on a page pushed inside a tab', async () => {
     const app = await openApp('/friends');
-    await fireEvent.press(await screen.findByRole('button', { name: 'Continuer avec Apple' }));
     await fireEvent.press(await screen.findByRole('button', { name: 'Ajouter un proche' }));
     await waitFor(() => expect(app.getPathname()).toBe('/friends/add'));
   });
