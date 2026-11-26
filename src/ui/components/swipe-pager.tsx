@@ -20,6 +20,22 @@ import { useReducedMotion } from '../device-settings';
 import { getWritingDirection } from '../direction';
 import { SWIPE_PAGING, draggedPosition, settledPage } from './swipe-paging';
 
+/** The direction the pages turn in: sideways (the default) or up and down. */
+export type PagerAxis = 'horizontal' | 'vertical';
+
+/**
+ * How a page moves as the position changes. `slide`: the page slides with the finger, one page
+ * length per page (a carousel). `still`: the pages stay in place and fade or move by themselves
+ * from the position they receive (a scene that changes under the finger, as the first launch).
+ */
+export type PageMotion = 'slide' | 'still';
+
+/** A spring as Reanimated takes it: how long it takes to settle, and how much it bounces. */
+export interface SettleSpring {
+  readonly duration: number;
+  readonly dampingRatio: number;
+}
+
 export interface SwipePagerProps {
   pageCount: number;
   /** Zero-based index of the page shown. */
@@ -32,8 +48,22 @@ export interface SwipePagerProps {
    * shows: 2.4 is 40 % of the way from the third page to the fourth.
    */
   renderBackground?: (position: SharedValue<number>) => ReactNode;
-  /** Draws a page. Every page has the width and the height of the pager. */
-  renderPage: (page: number) => ReactNode;
+  /**
+   * Draws a page. Every page has the width and the height of the pager. It receives the position
+   * too, for a page that animates itself (`pageMotion="still"`).
+   */
+  renderPage: (page: number, position: SharedValue<number>) => ReactNode;
+  /** Defaults to `horizontal`. A vertical pager turns forwards when the finger goes up. */
+  axis?: PagerAxis;
+  /** Defaults to `slide`. */
+  pageMotion?: PageMotion;
+  /**
+   * The spring every settle takes, after a drag (seeded with the finger's speed) and after a page
+   * asked from outside: for a pager that must always settle the same way (the first launch takes
+   * a critically damped one, `dampingRatio: 1`). Defaults to the release spring after a drag and
+   * the sheet curve after a step (`SWIPE_PAGING`).
+   */
+  settleSpring?: SettleSpring;
   /** What stays in place over the pages: the page dots, a button. Receives the position too. */
   renderOverlay?: (position: SharedValue<number>) => ReactNode;
   /**
@@ -58,14 +88,23 @@ export interface SwipePagerProps {
 export interface PagerDrive {
   /** The finger comes down and the pages are taken (a slide in progress is caught). */
   begin: () => void;
-  /** The finger has moved sideways by this many points since it came down. */
-  move: (translationX: number) => void;
-  /** The finger leaves, at this speed (points per second); `canceled` for a gesture cut short. */
-  end: (velocityX: number, canceled: boolean) => void;
-  readonly width: number;
+  /** The finger has moved along the pager's axis by this many points since it came down. */
+  move: (translation: number) => void;
+  /**
+   * The finger leaves, at this speed along the axis (points per second); `canceled` for a gesture
+   * cut short.
+   */
+  end: (velocity: number, canceled: boolean) => void;
+  /** The size of a page along the axis: its width, or its height for a vertical pager. */
+  readonly length: number;
   readonly page: number;
   readonly pageCount: number;
+  /**
+   * True when a positive translation turns forwards (a sideways pager in a right-to-left
+   * interface). A vertical pager turns forwards upwards: always false.
+   */
   readonly isRightToLeft: boolean;
+  readonly axis: PagerAxis;
 }
 
 /**
@@ -80,7 +119,10 @@ export interface PagerDrive {
  *   with a spring seeded with its speed; a page is turned past 16 % of its width or by a quick
  *   flick, and it can be caught while it still slides (gestures skill);
  * - in a right-to-left interface the next page comes from the left (right-to-left.md);
- * - a vertical move goes to what scrolls inside a page;
+ * - a move across the axis goes to what scrolls inside a page;
+ * - turned on its side (`axis="vertical"`), one swipe up is one page forwards, and with
+ *   `pageMotion="still"` the pages do not slide: they draw themselves from the position (the
+ *   first launch, whose scene changes under the finger: SKILLS.md, deviation 127);
  * - with "reduce motion", a page changed from outside comes at once and a drag ends without a
  *   spring (motion.md › Best practices: make motion optional);
  * - only the page shown is read by screen readers and can be touched: the page dots, in the
@@ -95,14 +137,20 @@ export function SwipePager({
   renderOverlay,
   onTouchStart,
   renderDriver,
+  axis = 'horizontal',
+  pageMotion = 'slide',
+  settleSpring,
   testID,
 }: SwipePagerProps) {
   if (!Number.isInteger(page) || page < 0 || page >= pageCount) {
     throw new RangeError(`There is no page ${page} in a pager of ${pageCount} pages.`);
   }
   const isMotionReduced = useReducedMotion();
-  const isRightToLeft = getWritingDirection() === 'rtl';
-  const [width, setWidth] = useState(0);
+  const isVertical = axis === 'vertical';
+  // Upwards is forwards on a vertical pager, whatever the writing direction.
+  const isRightToLeft = !isVertical && getWritingDirection() === 'rtl';
+  /** The size of a page along the axis (`width` in the arithmetic of swipe-paging.ts). */
+  const [length, setLength] = useState(0);
   const position = useSharedValue(page);
   /** The page the pager rests on or slides to: the anchor of the next drag. */
   const target = useSharedValue(page);
@@ -118,14 +166,16 @@ export function SwipePager({
     position.set(
       isMotionReduced
         ? page
-        : withTiming(page, {
-            duration: SWIPE_PAGING.stepDurationMs,
-            // Built here, not when the module loads: importing the design system stays free of
-            // Reanimated work.
-            easing: Easing.bezier(...SWIPE_PAGING.stepCurve),
-          }),
+        : settleSpring !== undefined
+          ? withSpring(page, settleSpring)
+          : withTiming(page, {
+              duration: SWIPE_PAGING.stepDurationMs,
+              // Built here, not when the module loads: importing the design system stays free of
+              // Reanimated work.
+              easing: Easing.bezier(...SWIPE_PAGING.stepCurve),
+            }),
     );
-  }, [page, isMotionReduced, position, target]);
+  }, [page, isMotionReduced, position, target, settleSpring]);
 
   const report = (next: number) => {
     reported.current = next;
@@ -139,34 +189,37 @@ export function SwipePager({
     cancelAnimation(position);
     dragStart.set(position.get());
   };
-  const move = (translationX: number) => {
+  const move = (translation: number) => {
     'worklet';
     position.set(
       draggedPosition({
         anchor: target.get(),
         start: dragStart.get(),
-        translation: translationX,
-        width,
+        translation,
+        width: length,
         isRightToLeft,
         pageCount,
       }),
     );
   };
-  const end = (velocityX: number, canceled: boolean) => {
+  const end = (velocity: number, canceled: boolean) => {
     'worklet';
     const next = settledPage({
       anchor: target.get(),
       position: position.get(),
-      velocity: canceled ? 0 : velocityX,
-      width,
+      velocity: canceled ? 0 : velocity,
+      width: length,
       isRightToLeft,
       pageCount,
     });
-    const forwardsSpeed = (isRightToLeft ? velocityX : -velocityX) / width;
+    const forwardsSpeed = (isRightToLeft ? velocity : -velocity) / length;
     position.set(
       isMotionReduced
         ? withTiming(next, { duration: SWIPE_PAGING.reducedSettleMs })
-        : withSpring(next, { ...SWIPE_PAGING.releaseSpring, velocity: forwardsSpeed }),
+        : withSpring(next, {
+            ...(settleSpring ?? SWIPE_PAGING.releaseSpring),
+            velocity: forwardsSpeed,
+          }),
     );
     if (next !== target.get()) {
       target.set(next);
@@ -174,18 +227,32 @@ export function SwipePager({
     }
   };
 
+  const activation: [number, number] = [
+    -SWIPE_PAGING.activationDistance,
+    SWIPE_PAGING.activationDistance,
+  ];
+  const crossFail: [number, number] = [
+    -SWIPE_PAGING.verticalFailDistance,
+    SWIPE_PAGING.verticalFailDistance,
+  ];
   const gesture = usePanGesture({
     testID: testID === undefined ? undefined : `${testID}-pan`,
-    enabled: width > 0 && pageCount > 1,
+    enabled: length > 0 && pageCount > 1,
     maxPointers: 1,
-    activeOffsetX: [-SWIPE_PAGING.activationDistance, SWIPE_PAGING.activationDistance],
-    failOffsetY: [-SWIPE_PAGING.verticalFailDistance, SWIPE_PAGING.verticalFailDistance],
+    // The pages take a move along their axis; a move across it first goes to what is inside.
+    activeOffsetX: isVertical ? undefined : activation,
+    failOffsetY: isVertical ? undefined : crossFail,
+    activeOffsetY: isVertical ? activation : undefined,
+    failOffsetX: isVertical ? crossFail : undefined,
     onActivate: () => begin(),
-    onUpdate: (event) => move(event.translationX),
-    onDeactivate: (event) => end(event.velocityX, event.canceled),
+    onUpdate: (event) => move(isVertical ? event.translationY : event.translationX),
+    onDeactivate: (event) => end(isVertical ? event.velocityY : event.velocityX, event.canceled),
   });
 
-  const onLayout = (event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width);
+  const onLayout = (event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    setLength(isVertical ? height : width);
+  };
   // The page shown and its two neighbours: the ones a gesture can bring.
   const mounted = [page - 1, page, page + 1].filter((index) => index >= 0 && index < pageCount);
 
@@ -200,7 +267,7 @@ export function SwipePager({
           onTouchStart={onTouchStart}
           testID={testIdOf(testID, 'pages')}
         >
-          {width === 0
+          {length === 0
             ? null
             : mounted.map((index) => (
                 <PageSlot
@@ -208,10 +275,11 @@ export function SwipePager({
                   index={index}
                   isCurrent={index === page}
                   position={position}
-                  width={width}
+                  length={pageMotion === 'slide' ? length : 0}
+                  isVertical={isVertical}
                   isRightToLeft={isRightToLeft}
                 >
-                  {renderPage(index)}
+                  {renderPage(index, position)}
                 </PageSlot>
               ))}
         </View>
@@ -220,7 +288,7 @@ export function SwipePager({
       {renderDriver === undefined ? null : (
         <DriverSlot
           render={renderDriver}
-          drive={{ begin, move, end, width, page, pageCount, isRightToLeft }}
+          drive={{ begin, move, end, length, page, pageCount, isRightToLeft, axis }}
         />
       )}
     </GestureHandlerRootView>
@@ -246,16 +314,29 @@ interface PageSlotProps {
   index: number;
   isCurrent: boolean;
   position: SharedValue<number>;
-  width: number;
+  /** How far the page moves for one page of position: 0 for pages that stay in place. */
+  length: number;
+  isVertical: boolean;
   isRightToLeft: boolean;
   children: ReactNode;
 }
 
-/** One page, as wide and high as the pager, moved sideways by the position. */
-function PageSlot({ index, isCurrent, position, width, isRightToLeft, children }: PageSlotProps) {
+/** One page, as wide and high as the pager, moved along the axis by the position. */
+function PageSlot({
+  index,
+  isCurrent,
+  position,
+  length,
+  isVertical,
+  isRightToLeft,
+  children,
+}: PageSlotProps) {
   const slide = useAnimatedStyle(() => {
-    const offset = (index - position.get()) * width;
-    return { transform: [{ translateX: isRightToLeft ? -offset : offset }] };
+    // A page that stays in place: exactly 0, not -0 (which a still page would get on one side).
+    const offset = length === 0 ? 0 : (index - position.get()) * length;
+    return isVertical
+      ? { transform: [{ translateY: offset }] }
+      : { transform: [{ translateX: isRightToLeft ? -offset : offset }] };
   });
   return (
     <Animated.View

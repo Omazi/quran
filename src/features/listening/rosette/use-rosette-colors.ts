@@ -1,6 +1,6 @@
 import { useColorScheme, type ColorValue } from 'react-native';
 
-import { useColors } from '@/ui';
+import { useColorValues, useColors } from '@/ui';
 
 import type { Appearance } from './rosette-motion';
 
@@ -24,11 +24,15 @@ export interface RosetteColors {
  * The heart star takes `accentStrong`, the high-contrast water in every mode: #8FE0EA at night,
  * as D29 decided, and #0A4F59 by day, the closest charter colour to the validated #0C5056.
  */
-export function useRosetteColors(): RosetteColors {
-  const colors = useColors();
-  const appearance: Appearance = useColorScheme() === 'dark' ? 'dark' : 'light';
+export function useRosetteColors(fixed?: Appearance): RosetteColors {
+  const dynamic = useColors();
+  // A rosette always drawn on a dark sky (the first launch's dusk) takes its night values in
+  // both appearances, as plain values; the contrast setting is still the device's.
+  const fixedValues = useColorValues(fixed ?? 'dark');
+  const colors = fixed === undefined ? dynamic : fixedValues;
+  const scheme: Appearance = useColorScheme() === 'dark' ? 'dark' : 'light';
   return {
-    appearance,
+    appearance: fixed ?? scheme,
     heart: colors.accentStrong,
     water: colors.accent,
     gold: colors.ornamentLine,

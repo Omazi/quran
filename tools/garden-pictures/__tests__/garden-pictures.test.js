@@ -208,7 +208,8 @@ describe('garden-pictures tool', () => {
       const run = spawnSync('node', [BUILD, '--source', empty], { encoding: 'utf8' });
       expect(run.status).toBe(1);
       expect(run.stderr).toMatch(/incomplete picture set/);
-      expect(readdirSync(SHIPPED)).toEqual(['base', 'water']);
+      // The pictures, and the layers other tools cut from them (growth-sprites.py, rise-layers.py).
+      expect(readdirSync(SHIPPED)).toEqual(['base', 'grow', 'rise', 'water']);
       expect(readdirSync(join(SHIPPED, 'base'))).toHaveLength(244);
     } finally {
       rmSync(empty, { recursive: true, force: true });

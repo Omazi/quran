@@ -5,110 +5,158 @@
   },
   "replayTitle": "Introduction",
   "finish": {
-    "ask-permission": "Create My Garden",
-    "start": "Create My Garden",
+    "start": "Create my garden",
     "done": "Done"
   },
-  "permissionNotice": "Your phone will then ask you to allow notifications.",
+  "permissionHint": "Your phone will then ask you to allow notifications.",
   "scenes": {
     "bareEarth": "Garden: bare earth",
     "garden": "Garden at hizb {{hizb}}",
     "drought_one": "Garden after {{count}} day without reading",
     "drought_other": "Garden after {{count}} days without reading",
     "revival": "Garden coming back to life after one page",
-    "voice": "Reading aloud: the words recited light up, and a word to read again is marked in red",
-    "recognition": "A passage recognized by listening",
-    "friends": "Your loved ones’ gardens"
+    "voice": "Reading aloud: a page of the mushaf, Al-Fatiha, whose words light up one by one; a word read wrong turns red, then it is read again",
+    "recognition": "Passage recognised by listening: Al-Kahf, verse 10, page 294",
+    "friends": "Your loved ones' gardens: Mustapha, 38 hizb; Taghread is reciting; Sarah, 14 hizb, her garden is thirsty and gets encouragement. A family khatma, juz 18 of 30",
+    "preview": "Your garden in a month, at hizb {{hizb}}"
   },
   "pages": {
     "bareEarth": {
       "title": "Bare earth.",
-      "text": "Sixty hizb to turn it into a garden."
+      "text": "Sixty hizb to turn it into a garden."
     },
     "hizb8": {
       "title": "Read, and the water flows.",
-      "text": "Every new page you read waters your garden. The channels fill up and the first trees arrive."
+      "text": "Every new page you read waters your garden. The channels fill, the first trees arrive."
     },
     "hizb20": {
-      "title": "One hizb, one new element.",
-      "text": "A tree, flowers, a fountain: each hizb you finish adds something."
+      "title": "One hizb, one new feature.",
+      "text": "A tree, flowers, a fountain: every hizb you finish adds something."
     },
     "hizb30": {
-      "title": "Halfway there, the walls rise.",
-      "text": "Your garden takes shape, hizb after hizb."
+      "title": "Halfway, the walls rise.",
+      "text": "Your garden takes shape, hizb after hizb."
     },
     "hizb40": {
       "title": "The gates open.",
-      "text": "The further you go, the more beautiful it becomes."
+      "text": "The further you go, the more beautiful it grows."
     },
     "hizb60": {
       "title": "Your garden is complete.",
-      "text": "Sixty hizb: you have read the whole Quran. This garden no longer dries."
+      "text": "Sixty hizb: you have read the whole Quran."
     },
     "thirsty": {
-      "title": "Stop on the way, and it gets thirsty.",
-      "text": "The water stops flowing and the grass turns pale."
+      "title": "If you stop reading, it gets thirsty.",
+      "text": "The water stops flowing, the grass grows pale."
     },
     "wilting": {
       "title": "Then it wilts.",
-      "text": "The grass yellows, the leaves fall, the channels run dry."
+      "text": "The grass yellows, the trees take on their autumn colours, the channels run dry."
     },
     "dying": {
       "title": "The trees go bare.",
-      "text": "The flowers are gone and the earth cracks."
+      "text": "The flowers are gone, the earth cracks."
     },
     "dead": {
-      "title": "And it turns back into dead earth.",
-      "text": "Two weeks without reading, and nothing is left."
+      "title": "And it becomes dead earth again.",
+      "text": "Two weeks without reading, and nothing is left."
     },
     "revival": {
-      "title": "One page is enough to revive it.",
-      "text": "The hizb you have read stay yours. Start again, and the water returns."
+      "title": "One page is enough to bring it back.",
+      "text": "The hizb you read stay yours. Start again, and the water returns."
     },
     "voice": {
-      "title": "Recite, it follows you.",
-      "text": "The word you read lights up; if you skip one, it shows you."
+      "title": "Read aloud, the app follows you.",
+      "text": "Each word lights up as you recite it. A word read wrong turns red, so you can read it again."
     },
     "recognition": {
       "title": "Where is this passage from?",
-      "text": "Hearing a recitation? Let the app listen: it tells you the surah and the verse."
+      "text": "Hearing a recitation? Let the app listen: it tells you the surah and the verse."
     },
     "friends": {
       "title": "With your loved ones.",
-      "text": "Visit their gardens, encourage each other, and read a khatma together."
+      "text": "Visit their gardens, encourage each other, and read a khatma together."
     },
     "goal": {
       "title": "Your daily goal.",
-      "text": "It is up to you. You can change it whenever you like."
+      "text": "It's up to you. You can change it whenever you like."
     },
     "reminders": {
       "title": "Your reminders.",
-      "text": "So your garden never runs out of water."
+      "text": "So your garden never runs out of water."
     }
   },
-  "hint": "Swipe",
+  "hint": "Swipe up",
   "captions": {
     "hizb": "Hizb {{hizb}}",
     "drought_one": "{{count}} day without reading",
     "drought_other": "{{count}} days without reading",
-    "revival": "You start reading again"
+    "revival": "You start reading again",
+    "preview": "In a month: {{hizb}} hizb"
+  },
+  "recitation": {
+    "listening": "Listening",
+    "verse": "{{surah}}, verse {{verse}}",
+    "reread": "Read this word again:"
   },
   "recognition": {
-    "found": "Passage found",
+    "listening": "Listening…",
+    "found": "Passage recognised",
     "page": "Page {{page}}",
-    "where": "{{surah}}, verse {{verse}}"
+    "where": "{{surah}}, verse {{verse}}",
+    "open": "Open in the mushaf"
   },
   "friends": {
-    "hizb_one": "{{count}} hizb",
-    "hizb_other": "{{count}} hizb",
     "names": {
       "first": "Mustapha",
-      "second": "Sarah",
-      "third": "Taghread"
-    }
+      "second": "Taghread",
+      "third": "Sarah"
+    },
+    "hizb_one": "{{count}} hizb",
+    "hizb_other": "{{count}} hizb",
+    "reciting": "Reciting",
+    "thirsty_one": "{{count}} hizb, thirsty",
+    "thirsty_other": "{{count}} hizb, thirsty",
+    "encouraged": "Encouraged",
+    "khatma": "Family khatma",
+    "juz": "Juz {{juz}} of {{total}}",
+    "you": "You"
   },
-  "notifications": {
-    "label": "Preview of your reminders",
-    "now": "now"
+  "goal": {
+    "label": "Finish the Quran in",
+    "options": {
+      "1-month": "1 month",
+      "3-months": "3 months",
+      "1-year": "1 year",
+      "own-pace": "At my own pace"
+    },
+    "perDay": "Each day",
+    "pagesUnit_one": "page",
+    "pagesUnit_other": "pages",
+    "end": "Your khatma ends",
+    "whenever": "Whenever you like"
+  },
+  "reminders": {
+    "momentLabel": "Reading time",
+    "moments": {
+      "after-fajr": "After Fajr",
+      "midday": "At noon",
+      "evening": "In the evening",
+      "before-sleep": "Before bed"
+    },
+    "inSentence": {
+      "after-fajr": "after Fajr",
+      "midday": "at noon",
+      "evening": "this evening",
+      "before-sleep": "before bed"
+    },
+    "previewLabel": "Reminder preview",
+    "notificationTitle": "Today's reading",
+    "now": "now",
+    "body_one": "{{count}} page {{moment}}, to finish on {{date}}.",
+    "body_other": "{{count}} pages {{moment}}, to finish on {{date}}.",
+    "bodyOwnPace": "One page {{moment}} is enough to water it.",
+    "fridayKahf": "On Fridays, Surah Al-Kahf",
+    "thirsty": "When my garden is thirsty"
   }
 }

@@ -64,6 +64,11 @@ export interface RosetteProps {
    * in points of the box above). The first launch shows the rosette in a smaller box.
    */
   readonly frame?: { readonly cx: number; readonly cy: number; readonly radius: number };
+  /**
+   * Draws the rosette with the values of one appearance whatever the device's: the first launch
+   * shows it on its dusk sky, dark in both, so it takes its night values there (D27, D29).
+   */
+  readonly appearance?: Appearance;
   readonly testID?: string;
 }
 
@@ -83,9 +88,10 @@ export function Rosette({
   reducedMotion,
   isLive = true,
   frame,
+  appearance,
   testID,
 }: RosetteProps) {
-  const colors = useRosetteColors();
+  const colors = useRosetteColors(appearance);
   const [initialMotion] = useState(createRosetteMotion);
   const motion = useSharedValue<RosetteMotion>(initialMotion);
   const inbox = useSharedValue<number[]>([]);
