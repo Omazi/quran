@@ -1,6 +1,7 @@
 import arCommon from './locales/ar/common.json';
 import arFriends from './locales/ar/friends.json';
 import arGarden from './locales/ar/garden.json';
+import arGardens from './locales/ar/gardens.json';
 import arHome from './locales/ar/home.json';
 import arListening from './locales/ar/listening.json';
 import arNotifications from './locales/ar/notifications.json';
@@ -12,6 +13,7 @@ import arSync from './locales/ar/sync.json';
 import enCommon from './locales/en/common.json';
 import enFriends from './locales/en/friends.json';
 import enGarden from './locales/en/garden.json';
+import enGardens from './locales/en/gardens.json';
 import enHome from './locales/en/home.json';
 import enListening from './locales/en/listening.json';
 import enNotifications from './locales/en/notifications.json';
@@ -23,6 +25,7 @@ import enSync from './locales/en/sync.json';
 import frCommon from './locales/fr/common.json';
 import frFriends from './locales/fr/friends.json';
 import frGarden from './locales/fr/garden.json';
+import frGardens from './locales/fr/gardens.json';
 import frHome from './locales/fr/home.json';
 import frListening from './locales/fr/listening.json';
 import frNotifications from './locales/fr/notifications.json';
@@ -46,6 +49,7 @@ export const NAMESPACES = [
   'onboarding',
   'home',
   'garden',
+  'gardens',
   'reader',
   'listening',
   'settings',
@@ -61,6 +65,7 @@ export const resources = {
     onboarding: frOnboarding,
     home: frHome,
     garden: frGarden,
+    gardens: frGardens,
     reader: frReader,
     profile: frProfile,
     listening: frListening,
@@ -74,6 +79,7 @@ export const resources = {
     onboarding: enOnboarding,
     home: enHome,
     garden: enGarden,
+    gardens: enGardens,
     reader: enReader,
     profile: enProfile,
     listening: enListening,
@@ -87,6 +93,7 @@ export const resources = {
     onboarding: arOnboarding,
     home: arHome,
     garden: arGarden,
+    gardens: arGardens,
     reader: arReader,
     profile: arProfile,
     listening: arListening,

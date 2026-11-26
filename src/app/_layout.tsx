@@ -1,6 +1,6 @@
 import { useFonts } from 'expo-font';
 import { getLocales } from 'expo-localization';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -15,6 +15,7 @@ import {
   startDiagnostics,
   useRouteBreadcrumbs,
 } from '@/features/diagnostics';
+import { CELEBRATION_PATH, useKhatmaCelebration } from '@/features/gardens';
 import { useForegroundTimeRecording } from '@/features/profile';
 import { useNotificationTaps, useReminderSync } from '@/features/reminders';
 import {
@@ -64,6 +65,10 @@ const STARTUP: StartupDependencies = {
  * progress is saved on the phone (and in its iCloud or Google backup), and the settings say so.
  */
 const SYNC: AppSyncDependencies = { clock: SYNC_CLOCK, session: null };
+
+/** The celebration of a completed khatma, over whatever screen the person is on (D46). */
+const openKhatmaCelebration = (khatm: number) =>
+  router.push({ pathname: CELEBRATION_PATH, params: { khatm: String(khatm) } });
 
 /**
  * Root of the app. It starts everything the first screen needs (the Quran fonts, the saved
@@ -124,6 +129,11 @@ function RootStack() {
   useNotificationTaps();
   // Each screen opened goes in the trail kept for the diagnostics.
   useRouteBreadcrumbs();
+  // A completed khatma is celebrated once, as soon as it is (D46). The iOS check opens its own.
+  useKhatmaCelebration({
+    open: openKhatmaCelebration,
+    isEnabled: screenCheckLaunch === null,
+  });
   const { t } = useTranslation('onboarding');
   const { t: tSettings } = useTranslation('settings');
   const colors = useColorValues();
@@ -140,6 +150,15 @@ function RootStack() {
         {/* Opened from the last row of the profile, with the system bar, its title and its back
             button, (deviation 52). */}
         <Stack.Screen name="settings" options={{ ...pushedPage, title: tSettings('title') }} />
+        {/* "Mes jardins", opened from the profile: the system bar and back button, the large
+            title in the page (path.png). */}
+        <Stack.Screen name="my-gardens" options={{ ...pushedPage, title: '' }} />
+        {/* The celebration of a completed khatma covers everything; its close button and its
+            one action lead out (khatm.png). */}
+        <Stack.Screen
+          name="khatma-complete"
+          options={{ presentation: 'fullScreenModal', animation: 'fade', gestureEnabled: false }}
+        />
         {/* The reader: the system navigation bar floats over the page (the reader hides and shows
             it), with the system's back button, a chevron alone (toolbars.md › Navigation). */}
         <Stack.Screen

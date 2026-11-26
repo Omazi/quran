@@ -22,11 +22,13 @@ import {
   DEFAULT_READER_SCRIPT,
   DEFAULT_READER_TEXT_SIZE,
   DEFAULT_REMINDERS,
+  DEFAULT_SHOW_LEVEL,
   EMPTY_TIME_SPENT,
   LAST_HOUR,
   LAST_MINUTE,
   MAX_PAUSES,
   MAX_TIME_DAYS,
+  NO_KHATMA_CELEBRATED,
   READER_SCRIPTS,
   READER_TEXT_SIZE_RANGE,
   STORED_DATA_VERSION,
@@ -117,6 +119,11 @@ export function isReaderTextSize(value: unknown): value is number {
 /** How the goal was chosen: one of the kinds of the goal plan. */
 export function isGoalKind(value: unknown): value is GoalKind {
   return typeof value === 'string' && (GOAL_KINDS as readonly string[]).includes(value);
+}
+
+/** The last khatma celebrated: a whole number from 0 (none yet). */
+export function isCelebratedKhatm(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
 
 /** A seed the garden module accepts: a whole number from 0 to 2^53 - 1. */
@@ -216,6 +223,8 @@ function readSettings(value: unknown): AppSettings | null {
     readerScript,
     readerTextSize,
     goalKind,
+    showLevel,
+    celebratedKhatm,
   } = value;
   const reminders = readReminders(value.reminders);
   const pauses = readPauses(value.pauses);
@@ -227,6 +236,7 @@ function readSettings(value: unknown): AppSettings | null {
   if (!isLastOpenedPage(lastOpenedPage) || !isBookmarkList(bookmarks)) return null;
   if (!isReaderScript(readerScript) || !isReaderTextSize(readerTextSize)) return null;
   if (!isGoalKind(goalKind)) return null;
+  if (typeof showLevel !== 'boolean' || !isCelebratedKhatm(celebratedKhatm)) return null;
   return {
     language,
     dailyGoalPages,
@@ -237,6 +247,8 @@ function readSettings(value: unknown): AppSettings | null {
     bookmarks: [...bookmarks],
     readerScript,
     readerTextSize,
+    showLevel,
+    celebratedKhatm,
     pauses,
     reminders,
   };
@@ -306,6 +318,8 @@ const VERSION_WITHOUT_BOOKMARKS = 4;
 const VERSION_WITHOUT_READER_CHOICES = 5;
 /** The version that had no goal kind. */
 const VERSION_WITHOUT_GOAL_KIND = 6;
+/** The version that had no level setting and no celebrated khatma. */
+const VERSION_WITHOUT_LEVEL_SETTINGS = 7;
 
 /** Version 1 to 2: the reminders get the Friday time and the quiet hours of the defaults. */
 function upgradeFromVersion1(document: UnknownRecord): UnknownRecord {
@@ -379,9 +393,29 @@ function upgradeFromVersion5(document: UnknownRecord): UnknownRecord {
  */
 function upgradeFromVersion6(document: UnknownRecord): UnknownRecord {
   const { settings } = document;
-  const next: UnknownRecord = { ...document, version: STORED_DATA_VERSION };
+  const next: UnknownRecord = { ...document, version: VERSION_WITHOUT_LEVEL_SETTINGS };
   if (!isRecord(settings) || settings.goalKind !== undefined) return next;
   return { ...next, settings: { ...settings, goalKind: DEFAULT_GOAL_KIND } };
+}
+
+/**
+ * Version 7 to 8: the level is shown to friends (the default) and no khatma has been celebrated.
+ * The journal is untouched: the level is derived from it, so an existing user keeps theirs. A
+ * field already there is left untouched, so that the checks that follow decide about it.
+ */
+function upgradeFromVersion7(document: UnknownRecord): UnknownRecord {
+  const { settings } = document;
+  const next: UnknownRecord = { ...document, version: STORED_DATA_VERSION };
+  if (!isRecord(settings)) return next;
+  return {
+    ...next,
+    settings: {
+      ...settings,
+      showLevel: settings.showLevel === undefined ? DEFAULT_SHOW_LEVEL : settings.showLevel,
+      celebratedKhatm:
+        settings.celebratedKhatm === undefined ? NO_KHATMA_CELEBRATED : settings.celebratedKhatm,
+    },
+  };
 }
 
 /**
@@ -406,6 +440,7 @@ function upgradeDocument(document: UnknownRecord, acceptNewer: boolean): Unknown
   if (current.version === VERSION_WITHOUT_BOOKMARKS) current = upgradeFromVersion4(current);
   if (current.version === VERSION_WITHOUT_READER_CHOICES) current = upgradeFromVersion5(current);
   if (current.version === VERSION_WITHOUT_GOAL_KIND) current = upgradeFromVersion6(current);
+  if (current.version === VERSION_WITHOUT_LEVEL_SETTINGS) current = upgradeFromVersion7(current);
   return current.version === STORED_DATA_VERSION ? current : null;
 }
 

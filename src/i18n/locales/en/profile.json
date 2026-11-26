@@ -1,8 +1,5 @@
 {
   "title": "Profile",
-  "garden": {
-    "title": "Garden {{number}}"
-  },
   "periods": {
     "label": "Period",
     "today": "Day",

@@ -1,0 +1,74 @@
+{
+  "styles": {
+    "fountain-courtyard": "Fountain Courtyard",
+    "oasis": "Oasis",
+    "waterside-orchard": "Waterside Orchard",
+    "mountain-garden": "Mountain Garden",
+    "cherry-blossoms": "Cherry Blossoms",
+    "pine-clearing": "Pine Clearing",
+    "night-garden": "Night Garden"
+  },
+  "level": {
+    "value": "Level {{level}}",
+    "chip": "Level {{level}} · {{garden}}",
+    "chipLabel": "Level {{level}}, {{garden}}"
+  },
+  "current": {
+    "title": "Current garden",
+    "progress_one": "{{count}} hizb of 60",
+    "progress_other": "{{count}} hizb of 60",
+    "notStarted": "Your next page starts it growing",
+    "hint": "Opens your gardens"
+  },
+  "badges": {
+    "title": "Badges",
+    "seeAll": "My gardens",
+    "inProgress": "In progress",
+    "locked": "Coming up",
+    "lockedName": "Level {{level}}",
+    "earnedLabel": "Khatma {{khatm}} badge, {{garden}}, earned on {{date}}",
+    "inProgressLabel": "{{garden}}, in progress, {{progress}}",
+    "lockedLabel": "Level {{level}}, coming up",
+    "count_one": "{{count}} khatma",
+    "count_other": "{{count}} khatmas"
+  },
+  "showLevel": {
+    "title": "Show my level",
+    "on": "Your friends see your level and your badges.",
+    "off": "Your level and badges stay private."
+  },
+  "path": {
+    "title": "My gardens",
+    "subtitle": "Every khatma grows a new garden.",
+    "completed": "Khatma {{khatm}} · {{date}}",
+    "current_one": "In progress · {{count}} hizb of 60",
+    "current_other": "In progress · {{count}} hizb of 60",
+    "currentNotStarted": "It starts growing with your next page",
+    "locked": "Coming up",
+    "lockedLabel": "Level {{level}}, coming up, still a secret",
+    "doneLabel": "Completed",
+    "lastLevel": "More gardens will come with future versions. Until then, every khatma grows this one again."
+  },
+  "celebration": {
+    "badge": "Badge earned · {{garden}}",
+    "title": "Khatma complete",
+    "dua": "تقبّل الله منك",
+    "duaMeaning": "May Allah accept it from you.",
+    "hizb": "hizb",
+    "pages": "pages",
+    "days_one": "day",
+    "days_other": "days",
+    "statsLabel": "{{hizb}} hizb, {{pages}} pages, {{days}}",
+    "daysSpoken_one": "{{count}} day",
+    "daysSpoken_other": "{{count}} days",
+    "next": "Your new garden is waiting",
+    "nextDetail": "Level {{level}} · {{garden}}, on bare earth",
+    "nextSame": "A new {{garden}}, on bare earth",
+    "button": "See my new garden",
+    "close": "Close",
+    "badgeLabel": "Khatma {{khatm}} badge, {{garden}}"
+  },
+  "friend": {
+    "title": "Their badges"
+  }
+}

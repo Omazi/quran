@@ -16,6 +16,9 @@ import {
   swiftUIViewsWithoutHost,
 } from '@/ui/test-support/environment';
 
+import { useProgression } from '@/features/gardens';
+import { useAppStore } from '@/store';
+
 import { ProfileScreen } from '../profile-screen';
 import { buildFixtureTable, day, FIXTURE_PAGE, journalOf } from '../test-support/stats-fixtures';
 import { useProfileGarden } from '../use-profile-garden';
@@ -39,11 +42,15 @@ const clock = () => new Date('2026-11-25T15:00:00');
 
 const openSettings = jest.fn();
 const read = jest.fn();
+const openGardens = jest.fn();
 
 /** The profile tab as its route composes it, with a table and a clock the test controls. */
 function ProfileHarness() {
   const { model: stats, actions: statsActions } = useProfileStats({ clock, loadTable });
   const garden = useProfileGarden({ clock });
+  const progression = useProgression();
+  const showLevel = useAppStore((state) => state.settings.showLevel);
+  const setShowLevel = useAppStore((state) => state.setShowLevel);
   const { model: settings, actions: settingsActions } = useSettings({
     notifications: createInertNotificationPermissions({ status: 'granted' }),
     direction: createFixedDirection(false).platform,
@@ -58,7 +65,9 @@ function ProfileHarness() {
       settings={settings}
       settingsActions={settingsActions}
       garden={garden}
-      actions={{ openSettings, read }}
+      progression={progression}
+      showLevel={showLevel}
+      actions={{ openSettings, read, openGardens, setShowLevel }}
     />
   );
 }
@@ -205,11 +214,42 @@ describe('ProfileScreen › statistics', () => {
     expect(screen.getAllByText(/Tirmidhî/)).toHaveLength(1);
   });
 
-  it('shows the person’s garden above the figures, named after the khatma it grows with', async () => {
+  it('shows the level under the title and the garden in progress, named after its style (D46)', async () => {
     await renderProfile();
+    expect(screen.getByLabelText('Niveau 2, Oasis')).toBeOnTheScreen();
     const garden = screen.getByTestId('profile-garden');
-    expect(within(garden).getByTestId('garden-scene')).toBeOnTheScreen();
-    expect(within(garden).getByText('Jardin 2')).toBeOnTheScreen();
+    // The picture is described by the card around it, not by itself.
+    expect(
+      within(garden).getByTestId('garden-scene', { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
+    expect(within(garden).getByText('Oasis')).toBeOnTheScreen();
+    expect(within(garden).getByText('Jardin en cours')).toBeOnTheScreen();
+  });
+
+  it('opens "Mes jardins" from the garden in progress and from the badges', async () => {
+    await renderProfile();
+    openGardens.mockClear();
+    await fireEvent.press(screen.getByTestId('profile-garden'));
+    await fireEvent.press(screen.getByRole('button', { name: 'Mes jardins' }));
+    expect(openGardens).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows the badge earned, the garden in progress and the next level kept a surprise', async () => {
+    await renderProfile();
+    expect(
+      screen.getByLabelText('Badge de la khatma 1, Cour à fontaine, obtenu le 1 septembre 2026'),
+    ).toBeOnTheScreen();
+    expect(screen.getByLabelText(/^Oasis, en cours, /)).toBeOnTheScreen();
+    expect(screen.getByLabelText('Niveau 3, à venir')).toBeOnTheScreen();
+    // The garden to come is never named.
+    expect(screen.queryByText('Verger au bord de l’eau')).toBeNull();
+  });
+
+  it('lets the person hide their level from friends, and says what they see', async () => {
+    await renderProfile();
+    expect(screen.getByText('Tes proches voient ton niveau et tes badges.')).toBeOnTheScreen();
+    await fireEvent(screen.getByTestId('profile-show-level-switch'), 'valueChange', false);
+    expect(screen.getByText('Ton niveau et tes badges restent pour toi.')).toBeOnTheScreen();
   });
 
   it('says what will be counted, without a zero, before anything is read', async () => {
@@ -219,7 +259,9 @@ describe('ProfileScreen › statistics', () => {
     expect(screen.queryByTestId('profile-period')).toBeNull();
     // The bare garden, with no zero written under it.
     expect(
-      within(screen.getByTestId('profile-garden')).getByTestId('garden-scene'),
+      within(screen.getByTestId('profile-garden')).getByTestId('garden-scene', {
+        includeHiddenElements: true,
+      }),
     ).toBeOnTheScreen();
     expect(screen.queryByText(/hizb/)).toBeNull();
   });

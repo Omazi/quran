@@ -11,7 +11,7 @@ import { useSocialStore } from '@/features/friends';
 import { deviceLocalDate } from '@/features/home';
 import { useAppStore, useAppStoreApi } from '@/store';
 
-import { seedDemo } from './demo-seed';
+import { seedDemo, seedGardens } from './demo-seed';
 import { checkAddress, isPushedOverTabs, type CheckLaunch } from './parse';
 
 export function ScreenCheckLauncher({ launch }: { launch: CheckLaunch }) {
@@ -30,7 +30,8 @@ export function ScreenCheckLauncher({ launch }: { launch: CheckLaunch }) {
         if (launch.script !== null) setReaderScript(launch.script);
         if (launch.seedsDemo) {
           // One change, on the device before the picture: every launch starts from the same state.
-          await seedDemo(store, deviceLocalDate(new Date()), quranStructure.hizbPageRanges());
+          const seed = launch.seedsGardens ? seedGardens : seedDemo;
+          await seed(store, deviceLocalDate(new Date()), quranStructure.hizbPageRanges());
           // The friends of the demonstration, signed in as the demonstration does.
           await social.client.auth.signInWithApple();
           social.changed();

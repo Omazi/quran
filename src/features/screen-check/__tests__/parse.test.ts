@@ -50,6 +50,7 @@ describe('parseCheckLaunch', () => {
       page: 9,
       script: 'imlaei',
       seedsDemo: true,
+      seedsGardens: false,
       autoSwipe: true,
       voiceProof: true,
     });
@@ -98,9 +99,18 @@ describe('parseCheckLaunch', () => {
       page: null,
       script: null,
       seedsDemo: false,
+      seedsGardens: false,
       autoSwipe: false,
       voiceProof: false,
     });
+  });
+
+  it('fills the app with the gardens history when asked with gardens (D46)', () => {
+    const launch = parseCheckLaunch(
+      reading({ screenCheckGo: 'profile', screenCheckSeed: 'gardens' }),
+      true,
+    );
+    expect(launch).toMatchObject({ seedsDemo: true, seedsGardens: true });
   });
 });
 
@@ -110,6 +120,7 @@ describe('checkAddress and isPushedOverTabs', () => {
     page,
     script: null,
     seedsDemo: false,
+    seedsGardens: false,
     autoSwipe: false,
     voiceProof: false,
   });
@@ -126,11 +137,15 @@ describe('checkAddress and isPushedOverTabs', () => {
     expect(checkAddress(launch('friend'))).toBe(`/(tabs)/friends/${CHECK_FRIEND_ID}`);
     expect(checkAddress(launch('profile'))).toBe('/(tabs)/profile');
     expect(checkAddress(launch('settings'))).toBe('/settings');
+    expect(checkAddress(launch('gardens'))).toBe('/my-gardens');
+    expect(checkAddress(launch('khatma'))).toBe('/khatma-complete?khatm=1');
   });
 
   it('puts the tabs behind the screens that are pushed over them', () => {
     expect(isPushedOverTabs(launch('reader'))).toBe(true);
     expect(isPushedOverTabs(launch('friend'))).toBe(true);
+    expect(isPushedOverTabs(launch('gardens'))).toBe(true);
+    expect(isPushedOverTabs(launch('khatma'))).toBe(true);
     expect(isPushedOverTabs(launch('garden'))).toBe(false);
     expect(isPushedOverTabs(launch('onboarding'))).toBe(false);
   });

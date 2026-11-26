@@ -25,16 +25,17 @@ src/domain     règles métier en TypeScript pur : aucun import React, Expo, sto
 
 ## Modules du domaine
 
-| Module               | Rôle                                                                                  | Spécification                          |
-| -------------------- | ------------------------------------------------------------------------------------- | -------------------------------------- |
-| `domain/shared`      | Dates locales (`LocalDate`)                                                           | —                                      |
-| `domain/quran`       | Vocabulaire commun, structure du mushaf (sourates, pages, hizb), intégrité du texte   | [quran.md](specs/quran.md)             |
-| `domain/khatm`       | Journal de lecture, progression, objectif du jour, série                              | [khatm.md](specs/khatm.md)             |
-| `domain/garden`      | État du jardin : 60 étapes, santé, dégradation, renaissance                           | [garden.md](specs/garden.md)           |
-| `domain/reminders`   | Plan des rappels à venir, déduit de l'état du jardin                                  | [reminders.md](specs/reminders.md)     |
-| `domain/recognition` | Normalisation de l'arabe, recherche de versets tolérante, suivi mot à mot             | [recognition.md](specs/recognition.md) |
-| `domain/sync`        | Événements de synchronisation, fusion déterministe, horloge, métadonnées du téléphone | [sync.md](specs/sync.md)               |
-| `domain/goal-plan`   | Objectif du premier lancement (pages par jour, date de fin), moment de lecture        | [goal-plan.md](specs/goal-plan.md)     |
+| Module               | Rôle                                                                                  | Spécification                            |
+| -------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `domain/shared`      | Dates locales (`LocalDate`)                                                           | —                                        |
+| `domain/quran`       | Vocabulaire commun, structure du mushaf (sourates, pages, hizb), intégrité du texte   | [quran.md](specs/quran.md)               |
+| `domain/khatm`       | Journal de lecture, progression, objectif du jour, série                              | [khatm.md](specs/khatm.md)               |
+| `domain/garden`      | État du jardin : 60 étapes, santé, dégradation, renaissance                           | [garden.md](specs/garden.md)             |
+| `domain/reminders`   | Plan des rappels à venir, déduit de l'état du jardin                                  | [reminders.md](specs/reminders.md)       |
+| `domain/recognition` | Normalisation de l'arabe, recherche de versets tolérante, suivi mot à mot             | [recognition.md](specs/recognition.md)   |
+| `domain/sync`        | Événements de synchronisation, fusion déterministe, horloge, métadonnées du téléphone | [sync.md](specs/sync.md)                 |
+| `domain/levels`      | Niveaux, style du jardin de chaque niveau, badges, célébration d'une khatma           | [README](../src/domain/levels/README.md) |
+| `domain/goal-plan`   | Objectif du premier lancement (pages par jour, date de fin), moment de lecture        | [goal-plan.md](specs/goal-plan.md)       |
 
 Les modules communiquent par des valeurs simples passées en paramètre. Exemple : le jardin
 ne lit pas le journal de lecture, il reçoit « nombre de hizb terminés » et « jours arrosés ».

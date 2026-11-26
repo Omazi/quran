@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { HIZB_COUNT } from '@/domain/quran';
 import { publishHandle } from '@/features/screen-check/handles';
 import { GARDEN_PICTURE_ASPECT_RATIO, GardenView3D } from '@/features/garden';
+import { FriendLevelSection } from '@/features/gardens';
 import {
   ActionButton,
   AppText,
@@ -241,19 +242,17 @@ export function FriendScreen({
           </Card>
         </View>
 
+        {/* Their level and badges (D46, friendProfile.png); nothing when they hide them. */}
+        {level === null ? null : (
+          <View style={styles.more}>
+            <FriendLevelSection level={level} hizbCompleted={card.hizbCompleted} />
+          </View>
+        )}
+
         <Card contentGap="md" style={styles.more}>
           <AppText variant="title2" color="heading">
             {t('friend.readingTitle')}
           </AppText>
-          {level === null ? null : (
-            <View style={styles.tiles}>
-              <FriendsStat
-                value={number(level.badgeCount)}
-                label={t('friend.badges')}
-                testID="friend-badges"
-              />
-            </View>
-          )}
           {level === null ? (
             <AppText variant="subhead" color="muted" testID="friend-level-hidden">
               {t('friend.levelHidden', { name })}
@@ -383,29 +382,6 @@ function FriendStats({
   );
 }
 
-/**
- * One figure the friend shares, on a tile of the page's cream: the value large, its name under
- * it (the "24 hizb sur 60" of the home screen, accueil.png). VoiceOver reads it as one element.
- */
-function FriendsStat({ value, label, testID }: { value: string; label: string; testID: string }) {
-  const colors = useColors();
-  return (
-    <View
-      accessible
-      accessibilityLabel={`${label}, ${value}`}
-      style={[styles.tile, { backgroundColor: colors.field }]}
-      testID={testID}
-    >
-      <AppText variant="headline" color="heading">
-        {value}
-      </AppText>
-      <AppText variant="footnote" color="muted">
-        {label}
-      </AppText>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { flexGrow: 1, paddingBottom: spacing.xl, gap: spacing.md },
@@ -431,7 +407,6 @@ const styles = StyleSheet.create({
   whoWords: { flex: 1, gap: spacing.xs / 2 },
   more: { marginHorizontal: layout.screenMargin },
   manage: { gap: spacing.none, paddingVertical: spacing.sm },
-  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   tile: {
     flexGrow: 1,
     flexBasis: 0,

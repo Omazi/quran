@@ -122,9 +122,11 @@ export interface SyncMeta {
 /**
  * How two choices of one setting are settled: the newest (`latest`), the oldest (`earliest`:
  * the seed of the gardens, so that an account keeps its look), or `true` over `false`
- * (`true-wins`: an introduction once finished stays finished).
+ * (`true-wins`: an introduction once finished stays finished), or the highest number (`highest`:
+ * a count that only goes up, such as the last khatma celebrated, so that a phone that is behind
+ * never takes it back).
  */
-export type RegisterRule = 'latest' | 'earliest' | 'true-wins';
+export type RegisterRule = 'latest' | 'earliest' | 'true-wins' | 'highest';
 
 export interface SettingRule {
   readonly rule: RegisterRule;

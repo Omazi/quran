@@ -21,7 +21,12 @@ export {
   GardenWaterRow,
   type GardenReadoutProps,
 } from './garden-readout';
-export { GardenScene, type GardenSceneProps, type GardenSceneSize } from './garden-scene';
+export {
+  GardenScene,
+  type GardenSceneProps,
+  type GardenSceneSize,
+  type GardenSceneTint,
+} from './garden-scene';
 export {
   GardenView3D,
   type GardenHintPlacement,

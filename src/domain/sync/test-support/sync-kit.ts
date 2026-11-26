@@ -37,6 +37,10 @@ export const RULES: SyncRules = {
     dailyGoalPages: { rule: 'latest', isValid: (value) => isWhole(value, 1, 60) },
     onboardingCompleted: { rule: 'true-wins', isValid: (value) => typeof value === 'boolean' },
     userSeed: { rule: 'earliest', isValid: (value) => isWhole(value, 0, Number.MAX_SAFE_INTEGER) },
+    celebratedKhatm: {
+      rule: 'highest',
+      isValid: (value) => isWhole(value, 0, Number.MAX_SAFE_INTEGER),
+    },
   },
   maxPauses: 3,
   maxTimeDays: 5,
@@ -51,7 +55,13 @@ export function values(change: Partial<SyncedValues> = {}): SyncedValues {
   return {
     journal: [],
     timeSpent: NO_TIME,
-    settings: { language: null, dailyGoalPages: 5, onboardingCompleted: false, userSeed: 7 },
+    settings: {
+      language: null,
+      dailyGoalPages: 5,
+      onboardingCompleted: false,
+      userSeed: 7,
+      celebratedKhatm: 0,
+    },
     bookmarks: [],
     pauses: [],
     ...change,

@@ -911,3 +911,35 @@ Swift (`startFile`) et la preuve elle-même, qui attendent la prochaine vérific
 
 _Changerait si_ un iPhone montre que `base` tient le rythme (le prendre), ou que `tiny` est trop
 lent même sans repli (relire moins souvent : `passEveryMs`).
+
+## D46 — Niveaux, jardins et badges
+
+Décisions du propriétaire (rappelées le 26 novembre 2026, maquettes `design/maquettes-2026-11-26/`).
+Chaque khatma terminée donne un **badge** : l'étoile dorée à huit branches, le jardin complet
+dedans, le numéro de la khatma. La khatma suivante fait pousser un **nouveau jardin**, lancé par
+la première page lue (D20). **Niveau = khatmas terminées + 1** ; chaque niveau a son style, le même
+pour tout le monde (D23). Sept jardins dans la première version, dans cet ordre : cour à fontaine,
+oasis, verger au bord de l'eau, jardin de montagne, cerisiers en fleurs, pinède et clairière,
+jardin de nuit (l'île sur un lac attend). **Au-delà du septième, on reste sur le dernier style**
+jusqu'à ce qu'une mise à jour en ajoute (remplace « les jardins reviennent » de D23). Le niveau
+est visible par défaut ; « Montrer mon niveau » (dans le Profil) le cache aux proches. Le profil
+montre aux autres les badges et le jardin en cours. Les jardins à venir restent une **surprise** :
+« À venir », ni nom ni image, sur le profil comme dans « Mes jardins ».
+
+Choix de mise en œuvre (développeur, 26 novembre 2026) :
+
+- Rien de nouveau n'est enregistré pour l'historique : il se déduit du journal (`domain/levels`),
+  qui se fusionne déjà page par page entre téléphones. Deux réglages s'ajoutent (document v8) :
+  `showLevel` (le plus récent gagne) et `celebratedKhatm` (nouvelle règle de synchro `highest`).
+- La célébration s'ouvre une fois, dès la dernière page comptée (par-dessus le lecteur), ou à
+  l'ouverture si la khatma vient d'un autre téléphone ; elle est marquée vue dès qu'elle s'affiche.
+  Une khatma de plus de 7 jours (copie restaurée, vieux journal) n'est pas fêtée.
+- **Images des niveaux 2 à 7 : provisoires.** Aucun jardin n'est dessiné en code (D12) : ils
+  reprennent les images du niveau 1 avec une teinte légère propre à chaque style
+  (`src/features/gardens/garden-style-art.ts`, registre des styles, TODO). Personne ne les voit
+  avant une khatma complète. Les rendre avec l'outil de D22, puis remplacer l'entrée du registre.
+- Le thème de `gardenVariant` (`theme-1` à `theme-4`, graine propre à l'utilisateur) n'est lu par
+  aucun rendu ; le style vient du niveau. L'aligner sur D23 touche l'accueil (autre chantier).
+
+_Changerait si_ le propriétaire voit les images provisoires et préfère une autre solution, ou
+change l'ordre des jardins avant que des badges existent.

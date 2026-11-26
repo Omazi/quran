@@ -52,6 +52,16 @@ export interface AppSettings {
   readonly readerScript: ReaderScript;
   /** The step of the reader's text size control, within `READER_TEXT_SIZE_RANGE`. */
   readonly readerTextSize: number;
+  /**
+   * Whether friends see the person's level, garden style and badges (D46): on by default, switched
+   * off in the profile ("Montrer mon niveau").
+   */
+  readonly showLevel: boolean;
+  /**
+   * The last khatma whose celebration was shown (0: none yet). It only goes up, on every phone
+   * (sync rule `highest`): a khatma is celebrated once, wherever it was completed.
+   */
+  readonly celebratedKhatm: number;
   /** Periods during which the garden is frozen. */
   readonly pauses: readonly Pause[];
   readonly reminders: ReminderSettings;
@@ -156,6 +166,14 @@ export interface AppState extends AppData, SyncActions {
   setReaderScript: (script: ReaderScript) => void;
   /** Remembers the reader's text size step. Throws a `RangeError` outside its range. */
   setReaderTextSize: (step: number) => void;
+  /** Shows or hides the person's level, garden style and badges to their friends (D46). */
+  setShowLevel: (showLevel: boolean) => void;
+  /**
+   * Remembers that the celebration of khatma `khatm` was shown, so it is not shown again. A number
+   * lower than the one remembered changes nothing. Throws a `RangeError` for anything but a whole
+   * number from 1.
+   */
+  markKhatmaCelebrated: (khatm: number) => void;
   /**
    * Adds a page to the journal through the khatm module. A page read again changes nothing.
    * Throws a `RangeError` for a day outside `STORED_DATE_RANGE`: a phone whose clock is that far
