@@ -4,6 +4,7 @@ import {
   INITIAL_LISTENING_STATE,
   failureOf,
   searchHeardWords,
+  searchWithPartialWords,
   transition,
   type ListeningEvent,
   type ListeningState,
@@ -67,8 +68,8 @@ function isActive(state: ListeningState): boolean {
 /**
  * Drives one listening screen: asks for the microphone when needed, starts the engine, searches
  * the passage for every word heard (with the domain's search, never redone here: all the words,
- * then the latest ones alone, `searchHeardWords`), and stops the engine as soon as the screen has
- * its answer. The rules of the states are the domain's (`transition`); this hook only tells it
+ * then the latest ones alone, `searchHeardWords`; and with the words not final yet,
+ * `searchWithPartialWords`), and stops the engine as soon as the screen has its answer. The rules of the states are the domain's (`transition`); this hook only tells it
  * what happened, in the order it happened.
  *
  * The level of the voice does not pass through here: the rosette subscribes to it directly.
@@ -122,10 +123,23 @@ export function useListening({
         if (isCurrent()) dispatch({ type: 'engine-ended', reason, failure });
       });
     });
-    // What the engine does, at once: it is what tells the person the phone hears them.
+    // What the engine does, at once: it is what tells the person the phone hears them. The
+    // words of the latest reading that are not final yet are searched too, after the final ones
+    // (D45): only a passage found counts, and it closes the listening as any answer does.
     const unsubscribeActivity =
       engine.onActivity?.((activity) => {
-        if (isCurrent()) dispatch({ type: 'activity', activity });
+        if (!isCurrent()) return;
+        dispatch({ type: 'activity', activity });
+        if (activity.partial.length === 0) return;
+        const final = [...heardWords];
+        const partial = [...activity.partial];
+        enqueue(async () => {
+          const result = searchWithPartialWords(await index, final, partial);
+          if (result !== null && isCurrent()) {
+            const words = [...final, ...partial];
+            dispatch({ type: 'words-heard', heardWordCount: words.length, result, words });
+          }
+        });
       }) ?? (() => undefined);
 
     dispatch({ type: 'opened' });

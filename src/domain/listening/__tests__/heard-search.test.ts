@@ -1,6 +1,6 @@
 import { createVerseIndex } from '../../recognition';
 import { UTHMANI_SAMPLE } from '../../recognition/__fixtures__/uthmani-sample';
-import { HEARD_SEARCH, searchHeardWords } from '../heard-search';
+import { HEARD_SEARCH, searchHeardWords, searchWithPartialWords } from '../heard-search';
 
 const index = createVerseIndex(UTHMANI_SAMPLE);
 
@@ -34,5 +34,22 @@ describe('searchHeardWords', () => {
   it('gives the answer for all the words when the latest ones find nothing either', () => {
     const heard = [...NOISE, ...NOISE];
     expect(searchHeardWords(index, heard)).toEqual(index.search(heard));
+  });
+});
+
+describe('searchWithPartialWords', () => {
+  it('finds the passage once the words not final yet complete it', () => {
+    const final = SURAH_112.slice(0, 2);
+    expect(searchHeardWords(index, final).status).not.toBe('found');
+    const result = searchWithPartialWords(index, final, SURAH_112.slice(2, 6));
+    expect(result?.status).toBe('found');
+    expect(result?.candidates[0]?.start).toMatchObject({ surah: 112, verse: 1 });
+  });
+
+  it('answers only a found: anything else leaves the answer of the final words', () => {
+    expect(searchWithPartialWords(index, SURAH_112, [])).toBeNull();
+    expect(searchWithPartialWords(index, [], NOISE.slice(0, 5))).toBeNull();
+    // A tie is not an answer either.
+    expect(searchWithPartialWords(index, ['قُلْ'], ['أَعُوذُ', 'بِرَبِّ'])).toBeNull();
   });
 });

@@ -1,0 +1,40 @@
+{
+  "about": "Recitations the iOS check plays to the real speech engine in the simulator (step 'Voice proof' of .github/workflows/ios-check.yml, docs/voice-test-clips.md). Nothing here is committed audio: each clip is fetched at run time from its own source and checked against its size and SHA-256. A clip's name says what it holds: <id>__<surah>-<first verse>-<last verse>.wav.",
+  "clips": [
+    {
+      "name": "faraj-2__83-1-3.wav",
+      "url": "https://media.githubusercontent.com/media/faraj-elahjal/quran-recitation-dataset/main/quran-recitation-datase%20-w/2-1.wav",
+      "bytes": 636524,
+      "sha256": "edd4edb903ca5f83aaa50f574f2ee3209063a9840029a26574913e85c0972bbe",
+      "source": "Faraj Elahjal, Quran Recitation Dataset (Surah Al-Mutaffifin 1-3, Qalun), reader 2, take 1. Licence: the repository's LICENSE (use, copy, modify, publish, distribute; as is)."
+    },
+    {
+      "name": "faraj-15__83-1-3.wav",
+      "url": "https://media.githubusercontent.com/media/faraj-elahjal/quran-recitation-dataset/main/quran-recitation-datase%20-w/15-1.wav",
+      "bytes": 346844,
+      "sha256": "8c44b7bcdc97fe0f559a8ea4dbeaf0f1fc440c27ea0951e5aa6cc0d9948286a1",
+      "source": "Faraj Elahjal, Quran Recitation Dataset, reader 15, take 1. Same licence."
+    },
+    {
+      "name": "faraj-27__83-1-3.wav",
+      "url": "https://media.githubusercontent.com/media/faraj-elahjal/quran-recitation-dataset/main/quran-recitation-datase%20-w/27-1.wav",
+      "bytes": 390364,
+      "sha256": "52a22e0c56bf075f2daf9f7c3a5c7af46400b6169f3d7e3a9f79afe4c9dcf67f",
+      "source": "Faraj Elahjal, Quran Recitation Dataset, reader 27, take 1. Same licence."
+    },
+    {
+      "name": "faraj-39__83-1-3.wav",
+      "url": "https://media.githubusercontent.com/media/faraj-elahjal/quran-recitation-dataset/main/quran-recitation-datase%20-w/39-1.wav",
+      "bytes": 397844,
+      "sha256": "45fb1e485bcfbfd83ef356783927485964d60a9aee25bcd087354ba23238634d",
+      "source": "Faraj Elahjal, Quran Recitation Dataset, reader 39, take 1. Same licence."
+    },
+    {
+      "name": "faraj-51__83-1-3.wav",
+      "url": "https://media.githubusercontent.com/media/faraj-elahjal/quran-recitation-dataset/main/quran-recitation-datase%20-w/51-1.wav",
+      "bytes": 438644,
+      "sha256": "db54187be56f8600a549680833a319c160d94021446ff07d477a291739c42d22",
+      "source": "Faraj Elahjal, Quran Recitation Dataset, reader 51, take 1. Same licence."
+    }
+  ]
+}

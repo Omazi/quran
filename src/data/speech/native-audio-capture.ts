@@ -26,6 +26,12 @@ export interface NativeVoiceCapture {
   getPermission(): Promise<string>;
   requestPermission(): Promise<string>;
   start(sampleRate: number, chunkMs: number): Promise<void>;
+  /**
+   * CHECK BUILD ONLY (`createFileSpeechEngine`): reads a WAV file of the app's `voice-proof`
+   * folder instead of the microphone, through the same converter, chunks and events, in real
+   * time, then sends silence. Absent from a build made before it existed.
+   */
+  startFile?(path: string, sampleRate: number, chunkMs: number): Promise<void>;
   stop(): Promise<void>;
   /**
    * Whether `modelFile` is in the app and its size, the microphone's format and counters. Absent

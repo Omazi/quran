@@ -125,6 +125,37 @@ class VerdictTest(unittest.TestCase):
         self.assertNotIn("\x1b", text)
 
 
+class VoiceProofTest(unittest.TestCase):
+    PROOF = (
+        "2026-11-25T18:01:00.000Z voice-proof: start, 2 clips\n"
+        "2026-11-25T18:01:20.000Z voice-proof: faraj-2__83-1-3.wav expected 83:1-3 | found 83:1-83:3 at 6.1 s"
+        " after 6 words | 7 readings, median 420 ms, max 610 ms | stopped at the answer | OK\n"
+        "2026-11-25T18:01:40.000Z voice-proof: DONE right 1/1, wrong 0\n"
+    )
+
+    def build(self, voice):
+        return report.build_report(PROGRESS + DONE, None, [], None, True, voice)
+
+    def test_carries_the_passage_found_and_the_timings(self):
+        verdict, text = self.build(self.PROOF)
+        self.assertEqual(verdict, "OK")
+        self.assertIn("  voice-proof: faraj-2__83-1-3.wav expected 83:1-3 | found 83:1-83:3 at 6.1 s", text)
+        self.assertIn("voice-proof: DONE right 1/1", text)
+        self.assertNotIn("NOT FINISHED", text)
+        # Near the top: the step summary shows the first 40 lines.
+        self.assertLess(text.splitlines().index("  voice-proof: DONE right 1/1, wrong 0"), 40)
+
+    def test_says_when_it_did_not_run_or_did_not_finish(self):
+        self.assertIn("Voice proof: not run", self.build(None)[1])
+        self.assertIn("NOT FINISHED", self.build("voice-proof: start, 2 clips\n")[1])
+
+    def test_keeps_only_its_own_lines_short_and_printable(self):
+        _, text = self.build("other line\nvoice-proof: x\x1b[31m" + "y" * 1000 + "\n")
+        self.assertNotIn("other line", text)
+        self.assertNotIn("\x1b", text)
+        self.assertNotIn("y" * 500, text)
+
+
 class CommandLineTest(unittest.TestCase):
     def test_prints_the_verdict_and_writes_the_report(self):
         with tempfile.TemporaryDirectory() as tmp:

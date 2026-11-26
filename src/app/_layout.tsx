@@ -22,7 +22,11 @@ import {
   useAppStartup,
   type StartupDependencies,
 } from '@/features/settings';
-import { ScreenCheckAutoRun, screenCheckLaunch } from '@/features/screen-check';
+import {
+  ScreenCheckAutoRun,
+  ScreenCheckVoiceProof,
+  screenCheckLaunch,
+} from '@/features/screen-check';
 import { SyncProvider, useAppSync, type AppSyncDependencies } from '@/features/sync';
 import { AppStoreProvider } from '@/store';
 import { appFonts, pushedPageOptions, useColorValues } from '@/ui';
@@ -92,6 +96,8 @@ export default function RootLayout() {
               <RootStack />
               {/* The iOS check's automatic swipe and garden run (null in every build a person uses). */}
               {ScreenCheckAutoRun === null ? null : <ScreenCheckAutoRun />}
+              {/* The iOS check's voice proof: recordings played to the real engine (same rule). */}
+              {ScreenCheckVoiceProof === null ? null : <ScreenCheckVoiceProof />}
               {/* "L'app s'est fermée la dernière fois", once, when the app saw why. */}
               {launch.isShown ? null : <ClosureSheet />}
             </DiagnosticsProvider>

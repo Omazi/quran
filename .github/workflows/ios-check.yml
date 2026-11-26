@@ -12,7 +12,9 @@ name: iOS check
 #    "iOS screens" then puts them on the branch `ci-screens`. It ends with the "crash hunt": on a
 #    fresh install the app swipes through the whole introduction by itself, then works the 3D
 #    garden of a friend's page; if its process dies, the step summary says CRASH and the crash
-#    reports and logs are in the artifact (docs/BUILD.md, "Diagnostic d'une fermeture").
+#    reports and logs are in the artifact (docs/BUILD.md, "Diagnostic d'une fermeture"). Before it,
+#    the "voice proof" plays a few real recitations to the real speech engine and writes the
+#    passage found and the timings into the same published report (docs/voice-test-clips.md).
 #
 # There is deliberately no `pull_request` trigger: the repository is public, and a pull request
 # from a stranger must not start Mac jobs here.
@@ -34,6 +36,8 @@ on:
       - 'tools/ci/pick-simulator.py'
       - 'tools/ci/screens.py'
       - 'tools/ci/crash-report.py'
+      - 'tools/ci/voice-clips.py'
+      - 'tools/ci/voice-clips.json'
       - '.github/workflows/ios-check.yml'
   workflow_dispatch:
 
@@ -183,6 +187,47 @@ jobs:
             shot "$name" "$look" "$lang" "$locale" "$screen" "$page" "$script" "$seed" "$wait"
           done < build/screens-plan.tsv
           ls -la build/screens | tail -n +2 | wc -l
+      - name: Voice proof (real recitations played to the real speech engine)
+        # Reported, never blocking.
+        continue-on-error: true
+        run: |
+          # Recitations of a permissively licensed dataset, fetched now from their own source and
+          # checked against their size and SHA-256 (tools/ci/voice-clips.json, docs/voice-test-clips.md;
+          # no audio is in the repository), are put in the app's folder. The check build, asked with
+          # -screenCheckVoiceProof 1, plays each one to the real speech engine instead of the
+          # microphone (the native module reads the file through the microphone's own converter and
+          # chunks, in real time) and the real passage search, then writes the passage found, when,
+          # and how long each Whisper reading took (src/features/screen-check/voice-proof.tsx).
+          # The lines go into crash-report.txt, which the workflow "iOS screens" publishes.
+          APPID=com.omazi.quran
+          mkdir -p build/voice
+          python3 -I tools/ci/voice-clips.py tools/ci/voice-clips.json build/voice/clips || true
+          xcrun simctl terminate "$SIM_UDID" "$APPID" || true
+          DATA=$(xcrun simctl get_app_container "$SIM_UDID" "$APPID" data 2>/dev/null || true)
+          if [ -z "$DATA" ] || ! ls build/voice/clips/*.wav > /dev/null 2>&1; then
+            echo "voice-proof: nothing to play" | tee build/voice/voice-proof.txt
+            exit 0
+          fi
+          rm -rf "$DATA/Documents/voice-proof" "$DATA/Documents/voice-proof.txt"
+          mkdir -p "$DATA/Documents/voice-proof"
+          cp build/voice/clips/*.wav "$DATA/Documents/voice-proof/"
+          xcrun simctl launch "$SIM_UDID" "$APPID" -AppleLanguages "(fr)" -AppleLocale fr_FR \
+            -screenCheckGo quran -screenCheckVoiceProof 1 || true
+          # Loading the model, then each clip in real time (10 to 25 s) plus its readings: up to 8 minutes.
+          for i in $(seq 1 96); do
+            sleep 5
+            if grep -q -E "voice-proof: (DONE|FAILED)" "$DATA/Documents/voice-proof.txt" 2>/dev/null; then break; fi
+          done
+          cp "$DATA/Documents/voice-proof.txt" build/voice/voice-proof.txt 2>/dev/null || echo "voice-proof: no result written" > build/voice/voice-proof.txt
+          xcrun simctl terminate "$SIM_UDID" "$APPID" || true
+          {
+            echo "### Voice proof"
+            echo
+            echo '```'
+            grep "voice-proof" build/voice/voice-proof.txt | cut -c1-400 | head -n 20
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat build/voice/voice-proof.txt
       - name: Crash hunt (the app swipes the introduction and works a friend's garden by itself)
         run: |
           # The owner's phone closes the app (1) swiping through the first launch, (2) on a friend's
@@ -230,7 +275,7 @@ jobs:
           tail -n 300 "$HOME/Library/Logs/CoreSimulator/$SIM_UDID/system.log" > build/crash/coresimulator-log.txt 2>/dev/null || true
           VERDICT=$(python3 -I tools/ci/crash-report.py --progress build/crash/auto-run-progress.txt \
             --closure build/crash/last-closure.json --ips-dir build/crash --log build/crash/simulator-log.txt \
-            --alive "$ALIVE" --out build/crash/crash-report.txt)
+            --alive "$ALIVE" --voice build/voice/voice-proof.txt --out build/crash/crash-report.txt)
           xcrun simctl terminate "$SIM_UDID" "$APPID" || true
           {
             echo "### Crash hunt: $VERDICT"
@@ -254,5 +299,6 @@ jobs:
             build/crash/*.json
             build/crash/*.ips
             build/crash/last-screen.png
+            build/voice/voice-proof.txt
           if-no-files-found: warn
           retention-days: 14

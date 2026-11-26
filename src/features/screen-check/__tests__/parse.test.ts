@@ -37,6 +37,7 @@ describe('parseCheckLaunch', () => {
     screenCheckScript: 'imlaei',
     screenCheckSeed: 'demo',
     screenCheckAutoSwipe: '1',
+    screenCheckVoiceProof: '1',
   });
 
   it('is off by default: nothing is asked when the flag is off', () => {
@@ -50,7 +51,17 @@ describe('parseCheckLaunch', () => {
       script: 'imlaei',
       seedsDemo: true,
       autoSwipe: true,
+      voiceProof: true,
     });
+  });
+
+  it('plays the voice proof only when asked with 1, and never by default', () => {
+    const proof = (value?: string) =>
+      parseCheckLaunch(reading({ screenCheckGo: 'quran', screenCheckVoiceProof: value }), true)
+        ?.voiceProof;
+    expect(proof(undefined)).toBe(false);
+    expect(proof('true')).toBe(false);
+    expect(proof('1')).toBe(true);
   });
 
   it('swipes by itself only when asked with 1, and never by default', () => {
@@ -88,6 +99,7 @@ describe('parseCheckLaunch', () => {
       script: null,
       seedsDemo: false,
       autoSwipe: false,
+      voiceProof: false,
     });
   });
 });
@@ -99,6 +111,7 @@ describe('checkAddress and isPushedOverTabs', () => {
     script: null,
     seedsDemo: false,
     autoSwipe: false,
+    voiceProof: false,
   });
 
   it('gives an address inside the app for every screen', () => {

@@ -11,7 +11,7 @@ export type {
   NothingFoundReason,
   TiedPassages,
 } from './listening-machine';
-export { HEARD_SEARCH, searchHeardWords } from './heard-search';
+export { HEARD_SEARCH, searchHeardWords, searchWithPartialWords } from './heard-search';
 export { locatePassage } from './passage-location';
 export { followRecitation, startFollowing } from './recitation-follow';
 export type { FollowState } from './recitation-follow';

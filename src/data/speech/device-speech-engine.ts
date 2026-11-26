@@ -105,3 +105,65 @@ export function createDeviceSpeechEngine(
     record: voiceDiagnostics.record,
   });
 }
+
+export interface FileSpeechEngineOptions extends DeviceSpeechEngineOptions {
+  /** Told how long each reading by Whisper took, in milliseconds (the clock of the phone). */
+  readonly onReading?: (ms: number, text: string) => void;
+  readonly now?: () => number;
+}
+
+/**
+ * CHECK BUILD ONLY (the voice proof of `src/features/screen-check`, never called elsewhere): the
+ * engine of the listening screen, with a recording of the app's `voice-proof` folder played
+ * instead of the microphone (`startFile` of the native module: same converter, same chunks, real
+ * time). Same Whisper context, same settings, same passes. Null without the native module or in a
+ * build whose module cannot read a file.
+ */
+export function createFileSpeechEngine(
+  path: string,
+  {
+    findNative = findLinkedNative,
+    loadWhisper,
+    onReading,
+    now = Date.now,
+  }: FileSpeechEngineOptions = {},
+): SpeechEngine | null {
+  let native: NativeVoiceCapture | null = null;
+  try {
+    native = findNative();
+  } catch {
+    // Not there.
+  }
+  if (native === null || native.startFile === undefined) return null;
+  const linked = native;
+  const readFile = native.startFile.bind(native);
+  // The file needs no microphone: nothing is asked of the person.
+  const fromFile: NativeVoiceCapture = {
+    getPermission: async () => 'granted',
+    requestPermission: async () => 'granted',
+    start: (sampleRate, chunkMs) => readFile(path, sampleRate, chunkMs),
+    stop: () => linked.stop(),
+    addListener: ((event: 'onAudio', listener: (event: { pcm: string }) => void) =>
+      linked.addListener(event, listener)) as NativeVoiceCapture['addListener'],
+  };
+  const checkModel = () => checkModelFile(linked);
+  const whisper =
+    loadWhisper === undefined
+      ? (sharedTranscriber ??= createWhisperTranscriber(loadWhisperRn, { checkModel }))
+      : createWhisperTranscriber(loadWhisper, { checkModel });
+  const timed: Transcriber = {
+    prepare: () => whisper.prepare(),
+    async transcribe(samples) {
+      const started = now();
+      const text = await whisper.transcribe(samples);
+      onReading?.(now() - started, text);
+      return text;
+    },
+  };
+  return createWhisperSpeechEngine({
+    capture: createNativeAudioCapture(fromFile),
+    transcriber: timed,
+    mode: 'search',
+    record: voiceDiagnostics.record,
+  });
+}

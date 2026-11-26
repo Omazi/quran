@@ -41,6 +41,11 @@ export interface CheckLaunch {
    * page and works its garden (auto-run.tsx). Off unless the argument says 1.
    */
   readonly autoSwipe: boolean;
+  /**
+   * True: the app plays the recordings of its `voice-proof` folder to the real speech engine and
+   * writes what it recognised (voice-proof.tsx). Off unless the argument says 1.
+   */
+  readonly voiceProof: boolean;
 }
 
 /** The names of the launch arguments, `-screenCheckGo garden` and so on. */
@@ -50,6 +55,7 @@ export const CHECK_ARGUMENTS = {
   script: 'screenCheckScript',
   seed: 'screenCheckSeed',
   autoSwipe: 'screenCheckAutoSwipe',
+  voiceProof: 'screenCheckVoiceProof',
 } as const;
 
 function firstText(raw: unknown): string | null {
@@ -91,6 +97,7 @@ export function parseCheckLaunch(
       : null,
     seedsDemo: firstText(read(CHECK_ARGUMENTS.seed)) === 'demo',
     autoSwipe: firstText(read(CHECK_ARGUMENTS.autoSwipe)) === '1',
+    voiceProof: firstText(read(CHECK_ARGUMENTS.voiceProof)) === '1',
   };
 }
 

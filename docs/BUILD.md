@@ -104,6 +104,14 @@ Trois outils, dans `src/features/diagnostics` :
   `ios-first-screen` (`build/crash/`). Le rapport texte `crash-report.txt` (`tools/ci/crash-report.py`)
   est aussi publié sur la branche `ci-screens`, sous un nom de la liste fixe de `tools/ci/screens.py`.
   Le code de la chasse n'existe que dans la version de contrôle (`door.ts`).
+- **La preuve de la voix** (étape « Voice proof », juste avant la chasse) : quelques vraies
+  récitations, téléchargées pendant la tâche depuis leur source et vérifiées par leur empreinte
+  (`tools/ci/voice-clips.json`), sont copiées dans `Documents/voice-proof` de l'appli ; lancée avec
+  `-screenCheckVoiceProof 1`, la version de contrôle les fait lire par le module natif à la place
+  du micro (même convertisseur, mêmes morceaux, temps réel), puis par le vrai Whisper et la vraie
+  recherche, et écrit le passage trouvé, quand, et la durée de chaque lecture. Ces lignes vont dans
+  le résumé de l'étape et en tête de `crash-report.txt` (donc sur `ci-screens`). Détail et place
+  pour les enregistrements du propriétaire : `docs/voice-test-clips.md`.
 
 Un push ne lance les Mac que s'il touche à ce dont l'appli est faite (`src/`, `assets/`,
 `modules/`, `app.json`, les dépendances, le script lui-même). La documentation seule ne
