@@ -17,7 +17,7 @@
     "revival": "Jardin qui revit après une page",
     "voice": "Lecture à voix haute : une page du mushaf, Al-Fâtiha, dont les mots s’allument un à un ; un mot mal lu passe en rouge, puis il est relu",
     "recognition": "Passage reconnu à l’écoute : Al-Kahf, verset 10, page 294",
-    "friends": "Jardins de tes proches : Mustapha, 38 hizb ; Taghread récite ; Sarah, 14 hizb, son jardin a soif et reçoit un encouragement. Une khatma en famille, juz 18 sur 30",
+    "friends": "Jardins de tes proches : Mostapha, 38 hizb ; Taghread récite ; Sarah, 14 hizb, son jardin a soif et reçoit un encouragement. Une khatma en famille, juz 18 sur 30",
     "preview": "Ton jardin dans un mois, au hizb {{hizb}}"
   },
   "pages": {
@@ -108,7 +108,7 @@
   },
   "friends": {
     "names": {
-      "first": "Mustapha",
+      "first": "Mostapha",
       "second": "Taghread",
       "third": "Sarah"
     },

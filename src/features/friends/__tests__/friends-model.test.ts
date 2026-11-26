@@ -57,7 +57,7 @@ describe('buildFriendPageModel', () => {
       today: TODAY,
     });
     if (model.status !== 'friend') throw new Error(`expected a friend, got ${model.status}`);
-    expect(model.card.name).toBe('Mustapha');
+    expect(model.card.name).toBe('Mostapha');
     expect(model.streakDays).toBe(21);
     expect(model.level).toMatchObject({ level: 3, badgeCount: 2 });
     expect(model.level?.wordsRead).toEqual(expect.any(Number));

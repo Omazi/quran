@@ -31,7 +31,7 @@ change.
 - **Les entrées venues d'ailleurs** (code d'invitation, nom saisi, données du serveur) sont
   validées avant usage.
 - **Le temps est injecté** ; les jours sont des `LocalDate` (`docs/ARCHITECTURE.md`).
-- Prénoms des fausses données : Omar, Mustapha, Sarah, Taghread (D25).
+- Prénoms des fausses données : Omar, Mostapha, Sarah, Taghread (D25).
 
 ## 2. Le modèle
 

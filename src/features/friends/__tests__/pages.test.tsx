@@ -152,7 +152,7 @@ describe.each(SCREEN_CONDITIONS)('Proches tab ($scheme, $language)', ({ language
     const { store, demo } = await signedInDemoForTest();
     const view = await demo.repository.getPersonView(DEMO_USERS.mustapha);
     if (view?.kind !== 'friend' || view.level === null)
-      throw new Error('Mustapha shares his level');
+      throw new Error('Mostapha shares his level');
     await render(withStore(store, <FriendPage userId={DEMO_USERS.mustapha} goBack={jest.fn()} />));
 
     expect(await screen.findByTestId('friend')).toBeOnTheScreen();
@@ -264,7 +264,7 @@ describe("a friend's page", () => {
     const { store, demo } = await signedInDemoForTest();
     const view = await demo.repository.getPersonView(DEMO_USERS.mustapha);
     if (view?.kind !== 'friend' || view.level === null || view.garden === null) {
-      throw new Error('Mustapha shares his garden and his level');
+      throw new Error('Mostapha shares his garden and his level');
     }
     await render(withStore(store, <FriendPage userId={DEMO_USERS.mustapha} goBack={jest.fn()} />));
     const card = await screen.findByTestId('friend-card');
@@ -286,9 +286,9 @@ describe("a friend's page", () => {
       `${view.level.level}Niveau`,
     );
     // The two buttons of the visit, the soft one first (maquettes 2026-11-26, "friend").
-    expect(within(card).getByRole('button', { name: 'Encourager Mustapha' })).toBeOnTheScreen();
-    expect(within(card).getByRole('button', { name: 'Lire avec Mustapha' })).toHaveTextContent(
-      'Lire avec Mustapha',
+    expect(within(card).getByRole('button', { name: 'Encourager Mostapha' })).toBeOnTheScreen();
+    expect(within(card).getByRole('button', { name: 'Lire avec Mostapha' })).toHaveTextContent(
+      'Lire avec Mostapha',
     );
   });
 

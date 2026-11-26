@@ -77,7 +77,7 @@ const PEOPLE: readonly DemoPerson[] = [
   {
     // A flourishing garden: watered every day for weeks.
     id: mustapha,
-    name: 'Mustapha',
+    name: 'Mostapha',
     joinedDaysAgo: 110,
     garden: {
       khatmNumber: 3,

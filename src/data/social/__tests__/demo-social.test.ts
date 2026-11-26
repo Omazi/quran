@@ -242,7 +242,7 @@ describe('Demonstration of accounts and friends', () => {
       const friends = await demo.repository.listFriends();
 
       expect(friends.map((friend) => friend.displayName)).toEqual([
-        'Mustapha',
+        'Mostapha',
         'Sarah',
         'Taghread',
       ]);
@@ -263,7 +263,7 @@ describe('Demonstration of accounts and friends', () => {
       expect((await demo.repository.listFriendRequests()).incoming).toEqual([]);
     });
 
-    it('a request is answered by the other side: Mustapha asks Yacine, Yacine accepts, only he can', async () => {
+    it('a request is answered by the other side: Mostapha asks Yacine, Yacine accepts, only he can', async () => {
       const { demo } = await signedIn();
       await demo.repositoryAs(mustapha).sendFriendRequest(yacine);
 
@@ -323,7 +323,7 @@ describe('Demonstration of accounts and friends', () => {
       await demo.repositoryAs(sarah).removeFriend(omar);
 
       expect((await demo.repository.listFriends()).map((friend) => friend.displayName)).toEqual([
-        'Mustapha',
+        'Mostapha',
         'Taghread',
       ]);
       await demo.repository.sendFriendRequest(sarah);
@@ -464,7 +464,7 @@ describe('Demonstration of accounts and friends', () => {
       const { demo } = await signedIn();
 
       expect(await demo.repository.listReceivedNudges()).toEqual([
-        { fromId: mustapha, fromName: 'Mustapha', kind: 'encourage', sentOn: addDays(START, -1) },
+        { fromId: mustapha, fromName: 'Mostapha', kind: 'encourage', sentOn: addDays(START, -1) },
       ]);
     });
 
@@ -489,12 +489,12 @@ describe('Demonstration of accounts and friends', () => {
       expect(groups.map((group) => group.name)).toEqual(['Famille']);
       expect(members.map((member) => [member.displayName, member.role])).toEqual([
         ['Omar', 'owner'],
-        ['Mustapha', 'member'],
+        ['Mostapha', 'member'],
         ['Sarah', 'member'],
         ['Taghread', 'member'],
       ]);
       expect(board.map((entry) => entry.displayName).sort()).toEqual([
-        'Mustapha',
+        'Mostapha',
         'Omar',
         'Sarah',
         'Taghread',
