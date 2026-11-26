@@ -85,12 +85,11 @@ export type ReadingReminderKind = 'daily-goal' | GardenReminderKind;
 export type ReminderKind = ReadingReminderKind | 'friday-kahf';
 
 /**
- * Values the text of a reminder may use. Empty on purpose, for every kind.
- *
- * A notification is read on a locked screen, by whoever holds the phone. Anything placed
- * here ends up in that text, so nothing here may say how much the user reads (pages,
- * hizb, goal) or for how long they have not read (days, drought). The kind alone is
- * enough to choose a warm, short sentence.
+ * Values of the plan for the text of a reminder. Empty, for every kind: the plan only says which
+ * reminder, which day, at what time. The words are chosen on the app side
+ * (docs/specs/reminders-copy.md): a variant by the day (`copyVariantIndex`), the pages left of
+ * that day's goal (`readingGoalOn`) and the place to resume. They never say for how long the
+ * person has not read.
  */
 export type ReminderParams = Readonly<Record<string, never>>;
 

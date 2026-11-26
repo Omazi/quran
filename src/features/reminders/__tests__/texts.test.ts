@@ -1,7 +1,8 @@
 /**
- * The words of the notifications (docs/specs/reminders.md, "Texte des notifications"): every
- * kind has them in the three languages, short, in the voice of the garden, and nothing on the
- * lock screen says how much the person reads.
+ * The example words of each kind (`kinds.<kind>`), shown by the previews of the first launch: in
+ * the three languages, short, in the spiritual voice of the reminders, and without data (the
+ * notifications themselves are `variants.<kind>`, see reminder-copy.test.ts and
+ * docs/specs/reminders-copy.md).
  */
 import { REMINDER_PRIORITY } from '@/domain/reminders';
 import ar from '@/i18n/locales/ar/notifications.json';
@@ -10,6 +11,11 @@ import fr from '@/i18n/locales/fr/notifications.json';
 
 const KINDS = [...REMINDER_PRIORITY, 'friday-kahf'] as const;
 const LANGUAGES = { fr, en, ar } as const;
+
+/** Letters only: the vowel marks of the Arabic take no width on a lock screen. */
+function visibleLength(text: string): number {
+  return [...text.normalize('NFC').replace(/\p{M}/gu, '')].length;
+}
 
 describe.each(Object.entries(LANGUAGES))('%s', (_language, texts) => {
   it.each(KINDS)('has a title and a body for %s', (kind) => {
@@ -24,12 +30,12 @@ describe.each(Object.entries(LANGUAGES))('%s', (_language, texts) => {
 
   it('keeps every text short enough for a lock screen', () => {
     for (const { title, body } of Object.values(texts.kinds)) {
-      expect(title.length).toBeLessThanOrEqual(40);
-      expect(body.length).toBeLessThanOrEqual(90);
+      expect(visibleLength(title)).toBeLessThanOrEqual(35);
+      expect(visibleLength(body)).toBeLessThanOrEqual(90);
     }
   });
 
-  it('says no number: not the pages read, not the days without reading', () => {
+  it('says no number in the examples: they show no one’s reading', () => {
     const all = Object.values(texts.kinds).flatMap(({ title, body }) => [title, body]);
     expect(all.filter((text) => /[0-9٠-٩]/.test(text))).toEqual([]);
   });
@@ -50,7 +56,7 @@ it('Arabic is written in Arabic letters', () => {
   expect(all.every((text) => /[؀-ۿ]/.test(text))).toBe(true);
 });
 
-it('only the Friday reminder names a sourate, and the others stay about the garden', () => {
+it('among the examples, only the Friday reminder names a sourate', () => {
   for (const [kind, { title, body }] of Object.entries(fr.kinds)) {
     const mentionsSurah = /Al-Kahf|sourate/i.test(`${title} ${body}`);
     expect(mentionsSurah).toBe(kind === 'friday-kahf');

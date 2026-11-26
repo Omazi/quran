@@ -7,6 +7,10 @@ import {
   type ReadingJournal,
 } from '@/domain/khatm';
 import type { LocalMoment, ReminderSettings, RemindersInput } from '@/domain/reminders';
+import { quranStructure } from '@/data/quran';
+import { pageSurah, resolveResumePage } from '@/features/reader';
+
+import type { ReminderResume } from './reminder-copy';
 
 /** What the plan needs from the store of the app. */
 export interface ReminderSource {
@@ -15,6 +19,8 @@ export interface ReminderSource {
   readonly userSeed: number;
   readonly pauses: readonly Pause[];
   readonly reminders: ReminderSettings;
+  /** The last page opened in the reader, or null: where the reminders say to resume. */
+  readonly lastOpenedPage: number | null;
 }
 
 /**
@@ -45,4 +51,19 @@ export function buildReminderInput(
     pagesReadToday: getTodayProgress(journal, now.date, dailyGoalPages).pagesRead,
     settings: reminders,
   };
+}
+
+/**
+ * Where the reminders say to resume: the page the reader opens when a reminder is tapped (the same
+ * `resolveResumePage`, read again at the moment of the tap) and the surah it is named after. Null
+ * while there is no place to resume yet (the reader was never opened and nothing was read): the
+ * text then says the first page, which is where the reader opens.
+ */
+export function buildReminderResume(
+  { journal, lastOpenedPage }: Pick<ReminderSource, 'journal' | 'lastOpenedPage'>,
+  hizbPageRanges: readonly HizbPageRange[],
+): ReminderResume | null {
+  if (lastOpenedPage === null && journal.length === 0) return null;
+  const page = resolveResumePage({ lastOpenedPage, journal, hizbPageRanges });
+  return { page, surah: pageSurah(quranStructure, page) };
 }

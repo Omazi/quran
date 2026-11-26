@@ -15,7 +15,7 @@ import { getDisplayedLanguage } from '@/i18n';
 import { useAppStore } from '@/store';
 
 import { CLOCK_CHECK_INTERVAL_MS } from './config';
-import { buildReminderInput } from './reminder-input';
+import { buildReminderInput, buildReminderResume } from './reminder-input';
 import { buildWantedNotifications, notificationLabels } from './wanted-notifications';
 
 /** Gives the present instant. Injected so that tests choose the time. */
@@ -62,6 +62,7 @@ export function momentOf(instant: Date): LocalMoment {
  * D13). It plans again, and only changes what differs, when:
  * - a setting changes (the reminders, the goal, the pauses, the language);
  * - a page is read (the day's reminder goes away once the goal is met, the garden's move back);
+ * - the reader opens another page (the texts say where to resume; sync merges quick changes);
  * - the app comes back to the foreground;
  * - the person answers the system's alert;
  * - the day or the time zone changes while the app is open.
@@ -80,6 +81,7 @@ export function useReminderSync({
   const userSeed = useAppStore((state) => state.settings.userSeed);
   const pauses = useAppStore((state) => state.settings.pauses);
   const journal = useAppStore((state) => state.journal);
+  const lastOpenedPage = useAppStore((state) => state.settings.lastOpenedPage);
   const savedLanguage = useAppStore((state) => state.settings.language);
   const hizbPageRanges = useMemo(() => quranStructure.hizbPageRanges(), []);
   // Bumped by what the store does not tell: the foreground, the system's answer, a new day.
@@ -114,12 +116,13 @@ export function useReminderSync({
     const language = getDisplayedLanguage();
     let notifications;
     try {
-      const input = buildReminderInput(
-        { journal, dailyGoalPages, userSeed, pauses, reminders },
-        momentOf(clock()),
-        hizbPageRanges,
+      const source = { journal, dailyGoalPages, userSeed, pauses, reminders, lastOpenedPage };
+      const input = buildReminderInput(source, momentOf(clock()), hizbPageRanges);
+      notifications = buildWantedNotifications(
+        input,
+        language,
+        buildReminderResume(source, hizbPageRanges),
       );
-      notifications = buildWantedNotifications(input, language);
     } catch (error) {
       // A journal that cannot be read must not wipe the reminders the person already has.
       console.warn('The reminders could not be planned.', error);
@@ -137,6 +140,7 @@ export function useReminderSync({
     userSeed,
     pauses,
     journal,
+    lastOpenedPage,
     savedLanguage,
     wakeUps,
     clock,

@@ -88,7 +88,7 @@ describe('what starts the planning', () => {
     await renderWithStore(<Probe />, { settings: finished });
     expect(sync).toHaveBeenCalledTimes(1);
     expect(lastRequest().labels.channelName).toBe('Rappels');
-    expect(lastRequest().notifications[0]?.title).toBe('Ton jardin t’attend');
+    expect(lastRequest().notifications[0]?.title).toBe('Chaque lettre lue, dix hasanat');
   });
 
   it('plans again, with nothing, when the person switches every reminder off', async () => {
@@ -139,13 +139,22 @@ describe('what starts the planning', () => {
     expect(ids()).toContain('reminder.2026-11-25.reading');
   });
 
+  it('plans again with the new place to resume when the reader moves to another page', async () => {
+    const store = await renderWithStore(<Probe />, { settings: finished });
+    expect(lastRequest().notifications[0]?.body).toContain('Commence à la première page.');
+    await act(async () => {
+      store.getState().setLastOpenedPage(40);
+    });
+    expect(lastRequest().notifications[0]?.body).toContain('Reprends Al-Baqarah, page 40.');
+  });
+
   it('plans again with the texts of the new language', async () => {
     const store = await renderWithStore(<Probe />, { settings: finished });
     await act(async () => {
       store.getState().setLanguage('en');
       setDisplayedLanguage('en');
     });
-    expect(lastRequest().notifications[0]?.title).toBe('Your garden is waiting');
+    expect(lastRequest().notifications[0]?.title).toBe('Every letter read: ten hasanat');
   });
 
   it('plans again when the app comes back to the foreground, not when it leaves', async () => {

@@ -69,19 +69,22 @@ Rappel du calendrier, envoyé à `fridayTime` (par défaut 9 h) :
 ## Sortie
 
 `ReminderPlan` : liste ordonnée de `{ date, time, kind, params }`. Les textes ne sont pas
-dans le domaine : `kind` sert de clé de traduction, et `params` reste vide.
+dans le domaine : `kind` sert de clé de traduction, et `params` reste vide. Les données du texte
+(variante du jour, pages restantes, point de reprise) sont ajoutées côté appli :
+[reminders-copy.md](reminders-copy.md).
 
 ## Texte des notifications
 
-Règles d'Apple (`notifications.md`, `managing-notifications.md`) :
+Détail, variantes et sources : [reminders-copy.md](reminders-copy.md) (décision du propriétaire
+du 25 novembre 2026 : ton spirituel, données utiles). Règles :
 
-- **Informer, pas ordonner.** Le texte dit l'état du jardin (« L'eau de ton jardin s'est
-  arrêtée. »), il ne dit pas quoi faire dans l'appli.
-- **Rien de sensible sur un écran verrouillé.** Le texte parle du jardin, jamais de la
-  pratique religieuse de la personne, du nombre de pages lues ni du nombre de jours sans
-  lecture. C'est pour cela que `params` est vide. Le rappel du vendredi, que la personne a
-  elle-même activé, nomme la sourate ; un texte générique est prévu quand les aperçus sont
-  masqués.
+- **Spirituel et utile.** Le titre porte un verset (sens) ou un hadith authentique (paraphrase) ;
+  le corps dit l'état du jardin quand il y en a un, où reprendre (sourate, page) et, pour le
+  rappel du jour, ce qui reste de l'objectif. Plusieurs variantes par type, choisies par la date.
+- **Écran verrouillé.** Le propriétaire a choisi d'y montrer la sourate, la page et le nombre de
+  pages du jour (écart 127 de `docs/design/SKILLS.md`, qui remplace l'ancienne règle « rien de
+  sensible »). Chaque rappel a un texte générique quand les aperçus sont masqués. Jamais le
+  nombre de jours sans lecture.
 - Jamais deux notifications pour la même chose : chaque rappel de jardin marque un
   changement d'état différent.
 - Phrases complètes et courtes, majuscule en début de phrase, sans le nom de l'appli.
@@ -96,11 +99,11 @@ Le plan devient des notifications locales (`expo-notifications`, aucun serveur) 
   ou `reminder.<date>.friday` : reprogrammer remplace, ne double jamais. Au plus 60
   notifications en attente (iOS en garde 64) ; on garde les plus proches.
 - **Idempotent.** La couche de données compare ce que le téléphone détient (identifiant +
-  signature `type@heure@langue`) à ce que le plan demande, annule l'obsolète, programme le
+  signature `type@heure@langue#empreinte-du-texte`) à ce que le plan demande, annule l'obsolète, programme le
   manquant. Seules les notifications dont l'identifiant commence par `reminder.` sont touchées.
 - **On recalcule** : réglage modifié (rappels, heure, objectif, pauses, langue) ; page lue
   (le rappel du jour disparaît dès que l'objectif est atteint, ceux du jardin reculent) ;
-  retour de l'appli au premier plan ; réponse à la demande d'autorisation ; changement de
+  page ouverte dans le lecteur (le texte dit où reprendre) ; retour de l'appli au premier plan ; réponse à la demande d'autorisation ; changement de
   jour ou de fuseau appli ouverte (contrôle chaque minute). Rien avant la fin de la
   présentation.
 - **Sans autorisation**, ou tous rappels coupés : tout est annulé ; les rappels reviennent
@@ -114,8 +117,10 @@ Le plan devient des notifications locales (`expo-notifications`, aucun serveur) 
   `dying`, `last-chance` ouvrent le lecteur à la page de reprise (lue au moment du toucher) ;
   `friday-kahf` ouvre la page 293 (Al-Kahf) ; `dead` et `come-back` ouvrent l'accueil.
 - **Premier plan** : une notification reçue appli ouverte n'est pas affichée.
-- **Textes** : espace de noms `notifications` (fr, en, ar), voix du jardin, sans nombre ni
-  reproche ; le rappel du vendredi a un texte de remplacement pour les aperçus masqués (iOS).
+- **Textes** : espace de noms `notifications` (fr, en, ar), `variants.<type>.<n>`, voix
+  spirituelle, sans reproche ([reminders-copy.md](reminders-copy.md)) ; tous les rappels ont un
+  texte de remplacement pour les aperçus masqués (catégories iOS `reading-reminder` et
+  `friday-kahf`).
 - **Android** : canal `reminders`, icône `assets/images/notification-icon.png`, couleur
   d'action `#1F5C45` (plugin `expo-notifications` dans `app.json`).
 

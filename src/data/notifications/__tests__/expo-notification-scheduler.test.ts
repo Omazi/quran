@@ -17,6 +17,7 @@ import { expoNotificationPermissions } from '../expo-notification-permissions';
 import {
   expoNotificationScheduler,
   FRIDAY_CATEGORY_ID,
+  READING_CATEGORY_ID,
   REMINDERS_CHANNEL_ID,
 } from '../expo-notification-scheduler';
 import { subscribeToExpoNotificationTaps, tapOf } from '../expo-notification-taps';
@@ -61,7 +62,7 @@ describe('the scheduler of the phone', () => {
         body: 'Ses plantes attendent un peu d’eau.',
         data: { target: 'resume', signature: 'thirsty@09:00@fr' },
         interruptionLevel: 'active',
-        categoryIdentifier: undefined,
+        categoryIdentifier: READING_CATEGORY_ID,
       },
       trigger: { type: 'date', date: DATE, channelId: REMINDERS_CHANNEL_ID },
     });
@@ -105,9 +106,12 @@ describe('the scheduler of the phone', () => {
       REMINDERS_CHANNEL_ID,
       expect.objectContaining({ name: 'Rappels' }),
     );
-    expect(setNotificationCategoryAsync).toHaveBeenCalledWith(FRIDAY_CATEGORY_ID, [], {
-      previewPlaceholder: 'Un rappel',
-    });
+    // Every reminder names a sourate: each kind has the hidden-preview text.
+    for (const category of [FRIDAY_CATEGORY_ID, READING_CATEGORY_ID]) {
+      expect(setNotificationCategoryAsync).toHaveBeenCalledWith(category, [], {
+        previewPlaceholder: 'Un rappel',
+      });
+    }
     expect(setNotificationHandler).toHaveBeenCalledTimes(1);
     const handler = jest.mocked(setNotificationHandler).mock.calls[0]?.[0];
     await expect(handler?.handleNotification({} as never)).resolves.toMatchObject({

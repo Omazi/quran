@@ -3,6 +3,7 @@
  * See README.md for the model and the decisions taken on the specification.
  */
 export { planReminders } from './plan-reminders';
+export { copyVariantIndex, readingGoalOn, type ReadingGoalOfDay } from './reminder-copy';
 export {
   buildNotificationSlots,
   diffNotifications,

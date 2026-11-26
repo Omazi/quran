@@ -14,8 +14,13 @@ import type { NotificationScheduler } from './types';
 /** The channel of the reminders on Android (the system lists notifications by channel). */
 export const REMINDERS_CHANNEL_ID = 'reminders';
 
-/** iOS category of the Friday reminder: it names a sourate, so it has its own hidden-preview text. */
+/**
+ * iOS categories of the reminders. Each names a sourate (Al-Kahf on Friday, the page to resume on
+ * the others: docs/specs/reminders-copy.md), so each has a hidden-preview text, shown instead of
+ * the words when the person hides previews on the lock screen.
+ */
 export const FRIDAY_CATEGORY_ID = 'friday-kahf';
+export const READING_CATEGORY_ID = 'reading-reminder';
 
 let isHandlerSet = false;
 
@@ -51,6 +56,7 @@ export const expoNotificationScheduler: NotificationScheduler = {
         importance: AndroidImportance.DEFAULT,
       }),
       setNotificationCategoryAsync(FRIDAY_CATEGORY_ID, [], { previewPlaceholder: hiddenPreview }),
+      setNotificationCategoryAsync(READING_CATEGORY_ID, [], { previewPlaceholder: hiddenPreview }),
     ]);
   },
   getPending: async () =>
@@ -67,7 +73,7 @@ export const expoNotificationScheduler: NotificationScheduler = {
         data: { target, signature },
         // The reminders are normal, never urgent (docs/specs/reminders.md).
         interruptionLevel: 'active',
-        categoryIdentifier: target === 'al-kahf' ? FRIDAY_CATEGORY_ID : undefined,
+        categoryIdentifier: target === 'al-kahf' ? FRIDAY_CATEGORY_ID : READING_CATEGORY_ID,
       },
       trigger: {
         type: SchedulableTriggerInputTypes.DATE,

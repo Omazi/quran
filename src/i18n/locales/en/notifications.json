@@ -3,40 +3,150 @@
   "hiddenPreview": "A reminder for you",
   "kinds": {
     "daily-goal": {
-      "title": "Your garden is waiting",
-      "body": "A few pages, and its water keeps flowing."
+      "title": "Every letter read: ten hasanat",
+      "body": "A few pages, right where you left off."
     },
     "water-stopped": {
-      "title": "The water has stopped",
-      "body": "The water in your garden has stopped flowing. One page starts it again."
+      "title": "“Recite what is easy for you”",
+      "body": "Your garden’s water has stopped. One page starts it again."
     },
     "thirsty": {
-      "title": "Your garden is thirsty",
-      "body": "Its plants are waiting for a little water."
+      "title": "The Quran: healing and mercy",
+      "body": "Your garden is thirsty. One page is enough."
     },
     "wilting": {
-      "title": "Your garden is wilting",
-      "body": "It is holding on: a few pages will lift it back up."
+      "title": "Even when it’s hard: two rewards",
+      "body": "Your garden is wilting, but holding on."
     },
     "dying": {
-      "title": "Your garden needs you",
-      "body": "Its elements are starting to fade. Nothing is lost."
+      "title": "One letter, already ten hasanat",
+      "body": "Your garden is starting to fade. Nothing is lost."
     },
     "last-chance": {
-      "title": "Your garden is still holding on",
-      "body": "It can come back to life today."
+      "title": "The Quran, an intercessor for you",
+      "body": "Your garden can still revive today."
     },
     "dead": {
-      "title": "Your garden has dried out",
-      "body": "The soil remembers everything. One page, and the water returns."
+      "title": "Allah gives life to the dead earth",
+      "body": "Your garden has dried out. One page, and the water returns."
     },
     "come-back": {
-      "title": "Your garden is still here",
-      "body": "It will wait for you. One page is enough for the water to return."
+      "title": "“I am near,” says Allah",
+      "body": "Your garden is still here, whenever you’re ready."
     },
     "friday-kahf": {
-      "title": "It’s Friday",
+      "title": "A light from one Friday to the next",
       "body": "A moment for Surah Al-Kahf?"
+    }
+  },
+  "goal": {
+    "today_one": "One page today.",
+    "today_other": "{{count}} pages today.",
+    "left_one": "One more page today.",
+    "left_other": "{{count}} more pages today."
+  },
+  "where": {
+    "at": "Continue {{surah}}, page {{page}}.",
+    "start": "Start from the first page."
+  },
+  "variants": {
+    "daily-goal": {
+      "1": { "title": "Every letter read: ten hasanat", "body": "{{goal}} {{where}}" },
+      "2": { "title": "Read it: it will intercede for you", "body": "{{goal}} {{where}}" },
+      "3": { "title": "The Quran, made easy to remember", "body": "{{goal}} {{where}}" },
+      "4": { "title": "Dear to Allah: little, but steady", "body": "{{goal}} {{where}}" },
+      "5": { "title": "Allah’s remembrance calms the heart", "body": "{{goal}} {{where}}" },
+      "6": { "title": "Reading with effort: two rewards", "body": "{{goal}} {{where}}" },
+      "7": { "title": "Remember Me; I will remember you", "body": "{{goal}} {{where}}" },
+      "8": { "title": "A blessed Book, to reflect upon", "body": "{{goal}} {{where}}" }
+    },
+    "water-stopped": {
+      "1": {
+        "title": "“Recite what is easy for you”",
+        "body": "Your garden’s water has stopped. {{where}}"
+      },
+      "2": {
+        "title": "Most beloved: the steady deed",
+        "body": "One page gets your garden’s water flowing. {{where}}"
+      }
+    },
+    "thirsty": {
+      "1": {
+        "title": "A believer who reads, like a citron",
+        "body": "Fine scent, fine taste. Your garden is thirsty. {{where}}"
+      },
+      "2": {
+        "title": "The Quran: healing and mercy",
+        "body": "Your garden’s plants are waiting for water. {{where}}"
+      }
+    },
+    "wilting": {
+      "1": {
+        "title": "Even when it’s hard: two rewards",
+        "body": "Your garden is wilting, but holding on. {{where}}"
+      },
+      "2": {
+        "title": "Allah made the Quran easy",
+        "body": "A few pages lift your garden again. {{where}}"
+      }
+    },
+    "dying": {
+      "1": {
+        "title": "One letter, already ten hasanat",
+        "body": "Your garden is fading, but nothing is lost. {{where}}"
+      },
+      "2": {
+        "title": "“Recite what is easy for you”",
+        "body": "Your garden is starting to fade. {{where}}"
+      }
+    },
+    "last-chance": {
+      "1": {
+        "title": "The Quran, an intercessor for you",
+        "body": "Your garden can still revive today. {{where}}"
+      },
+      "2": {
+        "title": "Allah’s remembrance calms the heart",
+        "body": "One page today, and your garden holds on. {{where}}"
+      }
+    },
+    "dead": {
+      "1": {
+        "title": "Allah gives life to the dead earth",
+        "body": "Your garden has dried out. One page, and the water returns."
+      },
+      "2": {
+        "title": "Remember Me; I will remember you",
+        "body": "The soil remembers everything. One page, and the water returns."
+      }
+    },
+    "come-back": {
+      "1": {
+        "title": "“I am near,” says Allah",
+        "body": "Your garden is still here, whenever you’re ready."
+      },
+      "2": {
+        "title": "Reading with effort: two rewards",
+        "body": "Coming back counts, even with one page. Your garden is waiting."
+      },
+      "3": {
+        "title": "The Quran, made easy to remember",
+        "body": "One page, and the water returns to your garden."
+      }
+    },
+    "friday-kahf": {
+      "1": {
+        "title": "A light from one Friday to the next",
+        "body": "For whoever reads Al-Kahf on Friday. It begins on page {{page}}."
+      },
+      "2": {
+        "title": "Our Lord, grant us Your mercy",
+        "body": "The prayer of the youths of the cave (18:10). Al-Kahf, page {{page}}."
+      },
+      "3": {
+        "title": "Ten verses that protect",
+        "body": "Memorizing Al-Kahf’s first ten verses shields from the Dajjal. Page {{page}}."
+      }
     }
   }
 }
