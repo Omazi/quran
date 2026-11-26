@@ -12,7 +12,7 @@ const { resolve } = jest.requireActual<{ resolve: (...segments: string[]) => str
 /** The repository's root: tests run from it. */
 const ROOT = resolve('.');
 
-function loadDoor(flag: string | undefined, autoSwipe?: string) {
+function loadDoor(flag: string | undefined, autoSwipe?: string, voiceProof?: string) {
   const before = process.env.EXPO_PUBLIC_SCREEN_CHECK;
   if (flag === undefined) delete process.env.EXPO_PUBLIC_SCREEN_CHECK;
   else process.env.EXPO_PUBLIC_SCREEN_CHECK = flag;
@@ -27,7 +27,9 @@ function loadDoor(flag: string | undefined, autoSwipe?: string) {
               ? 'onboarding'
               : key === 'screenCheckAutoSwipe'
                 ? autoSwipe
-                : undefined,
+                : key === 'screenCheckVoiceProof'
+                  ? voiceProof
+                  : undefined,
         },
       }));
       jest.doMock('../launcher', () => ({ ScreenCheckLauncher: () => null }));
@@ -35,6 +37,7 @@ function loadDoor(flag: string | undefined, autoSwipe?: string) {
         pagerDriver: () => null,
         ScreenCheckAutoRun: () => null,
       }));
+      jest.doMock('../voice-proof', () => ({ ScreenCheckVoiceProof: () => null }));
       door = jest.requireActual('../door');
     });
     return door as typeof import('../door');
@@ -57,6 +60,10 @@ describe.each([undefined, '', '0', 'true', 'yes'])('with EXPO_PUBLIC_SCREEN_CHEC
     expect(door.screenCheckPagerDriver).toBeNull();
     expect(door.ScreenCheckAutoRun).toBeNull();
   });
+
+  it('never plays the voice proof, even when the launch argument is there', () => {
+    expect(loadDoor(flag, undefined, '1').ScreenCheckVoiceProof).toBeNull();
+  });
 });
 
 describe('with EXPO_PUBLIC_SCREEN_CHECK=1', () => {
@@ -78,6 +85,11 @@ describe('with EXPO_PUBLIC_SCREEN_CHECK=1', () => {
     const door = loadDoor('1', '1');
     expect(door.screenCheckPagerDriver).not.toBeNull();
     expect(door.ScreenCheckAutoRun).not.toBeNull();
+  });
+
+  it('plays the voice proof only when the launch asks with -screenCheckVoiceProof 1', () => {
+    expect(loadDoor('1').ScreenCheckVoiceProof).toBeNull();
+    expect(loadDoor('1', undefined, '1').ScreenCheckVoiceProof).not.toBeNull();
   });
 });
 

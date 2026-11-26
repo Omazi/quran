@@ -1,6 +1,7 @@
 export {
   ScreenCheckAutoRun,
   ScreenCheckLauncher,
+  ScreenCheckVoiceProof,
   screenCheckLaunch,
   screenCheckPage,
   screenCheckPagerDriver,

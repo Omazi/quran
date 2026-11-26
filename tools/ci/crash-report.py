@@ -1,6 +1,7 @@
 """Turns what the iOS check's crash hunt collected into one short text report.
 
-    python3 tools/ci/crash-report.py --progress P --closure C --ips-dir D --log L --alive 0|1 --out R
+    python3 tools/ci/crash-report.py --progress P --closure C --ips-dir D --log L --alive 0|1 --out R \
+        [--voice V]
 
 The crash hunt (`.github/workflows/ios-check.yml`, step "Crash hunt") starts the check build on a
 fresh install with `-screenCheckAutoSwipe 1`: the app swipes through the whole introduction by
@@ -11,6 +12,11 @@ of the app's own error recorder, the crash reports and the simulator's log) and 
     OK          the app lived to the end of the run
     CRASH       the app's process died (or a crash report or a JavaScript record exists)
     INCOMPLETE  the app is alive but the run did not end in time (a hang?)
+
+With `--voice`, the report also carries the voice proof (step "Voice proof" of the same job):
+the lines `voice-proof: ...` that the check build wrote after playing recitations to its real
+speech engine (src/features/screen-check/voice-proof.tsx): the passage found for each clip, how
+long after the start, and how long each reading by Whisper took in the simulator.
 
 The report is plain text, made of printable characters and capped in size: it is the one file of
 the hunt that `publish-screens.py` may put on the branch `ci-screens` (docs/SECURITY.md).
@@ -28,6 +34,7 @@ PROGRESS_LINES = 60
 LOG_LINES = 150
 FRAMES = 40
 NO_PROGRESS = "(no progress file: the app never started the run)"
+VOICE_LINES = 20
 
 _CONTROL = re.compile(r"[^\n\t\x20-\x7e -\U0010ffff]")
 
@@ -140,7 +147,19 @@ def _closure_lines(closure: str | None) -> list[str]:
     return lines
 
 
-def build_report(progress, closure, ips, log, alive) -> tuple[str, str]:
+def voice_lines(text: str | None) -> list[str]:
+    """The voice proof's own lines (`voice-proof: ...`), at most VOICE_LINES, each cut short."""
+    if text is None:
+        return ["Voice proof: not run (no voice-proof.txt)"]
+    kept = [line[line.index("voice-proof:"):][:400] for line in text.splitlines() if "voice-proof:" in line]
+    finished = any(line.startswith("voice-proof: DONE") for line in kept)
+    head = "Voice proof (recitations played to the real speech engine in the simulator):"
+    if not finished:
+        head += " NOT FINISHED"
+    return [head] + [f"  {line}" for line in kept[-VOICE_LINES:]] + ([] if kept else ["  (empty)"])
+
+
+def build_report(progress, closure, ips, log, alive, voice=None) -> tuple[str, str]:
     steps = parse_progress(progress)
     has_javascript_record = closure is not None
     if not alive or ips or has_javascript_record:
@@ -156,6 +175,7 @@ def build_report(progress, closure, ips, log, alive) -> tuple[str, str]:
         f"Last step reached: {steps['last']}",
         "",
     ]
+    lines += voice_lines(voice) + [""]
     lines += _closure_lines(closure)
     lines += ["", f"Crash reports (.ips): {len(ips)}"]
     for number, text in enumerate(ips, 1):
@@ -178,6 +198,7 @@ def main() -> int:
     parser.add_argument("--log", type=pathlib.Path)
     parser.add_argument("--alive", choices=["0", "1"], required=True)
     parser.add_argument("--out", type=pathlib.Path, required=True)
+    parser.add_argument("--voice", type=pathlib.Path)
     args = parser.parse_args()
     ips = []
     if args.ips_dir is not None and args.ips_dir.is_dir():
@@ -191,6 +212,7 @@ def main() -> int:
         ips,
         read_text(args.log),
         args.alive == "1",
+        read_text(args.voice),
     )
     args.out.write_text(text, encoding="utf-8")
     print(verdict)

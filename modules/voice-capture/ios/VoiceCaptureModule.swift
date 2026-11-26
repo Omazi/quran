@@ -51,6 +51,16 @@ public class VoiceCaptureModule: Module {
   /// Restarts after a change of audio route run here, one at a time, never on the audio thread.
   private let controlQueue = DispatchQueue(label: "voice-capture.control")
 
+  // A file read instead of the microphone (`startFile`, check build only): its timer and the
+  // quiet still to send after its end.
+  private var fileTimer: DispatchSourceTimer?
+  private let fileQueue = DispatchQueue(label: "voice-capture.file")
+  /// After the end of a file, this much silence is sent, as a room after the reciter stops, so the
+  /// speech engine closes the phrase and ends by itself (its own limit is 4 s of silence).
+  private static let fileTailSeconds = 8.0
+  /// The file is read in pieces of this many frames, one piece per piece's duration (real time).
+  private static let fileFrames: AVAudioFrameCount = 4096
+
   /// A conversion failing this many times in a row ends the recording.
   private static let maxConsecutiveConversionErrors = 5
   /// The engine is restarted at most this many times per recording after a change of route.
@@ -86,6 +96,15 @@ public class VoiceCaptureModule: Module {
 
     AsyncFunction("stop") {
       self.stop(reason: nil)
+    }
+
+    // CHECK BUILD ONLY: the app's JavaScript calls it from `src/features/screen-check` alone, a
+    // folder that a published bundle does not contain (EXPO_PUBLIC_SCREEN_CHECK). Reads a WAV file
+    // of the app's own `Documents/voice-proof` folder instead of the microphone, through the same
+    // converter to 16 kHz and the same chunks and level events, at the pace of real time, then
+    // sends silence. Any other path is refused.
+    AsyncFunction("startFile") { (path: String, sampleRate: Double, chunkMs: Int) in
+      try self.startFile(path: path, sampleRate: sampleRate, chunkMs: chunkMs)
     }
 
     // Whether the model file is in the app and its size, the audio session and the microphone,
@@ -209,6 +228,101 @@ public class VoiceCaptureModule: Module {
       stop(reason: nil)
       throw error
     }
+  }
+
+  /// The voice proof of the iOS check (`startFile` above): a recording played to the speech engine
+  /// as if it came from the microphone. `process` is the microphone's own path from here on.
+  private func startFile(path: String, sampleRate: Double, chunkMs: Int) throws {
+    stop(reason: nil)
+    let folder = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+      .appendingPathComponent("voice-proof", isDirectory: true)
+      .standardizedFileURL.resolvingSymlinksInPath()
+    let given = path.hasPrefix("file://") ? URL(string: path) : URL(fileURLWithPath: path)
+    guard
+      let url = given?.standardizedFileURL.resolvingSymlinksInPath(),
+      url.path.hasPrefix(folder.path + "/"),
+      url.pathExtension.lowercased() == "wav"
+    else {
+      throw FileOutsideProofFolderException()
+    }
+    let file: AVAudioFile
+    do {
+      file = try AVAudioFile(forReading: url)
+    } catch {
+      remember(error: "file: \(error.localizedDescription)")
+      throw error
+    }
+    // AVAudioFile always reads float32, not interleaved, at the file's own rate and channels.
+    let inputFormat = file.processingFormat
+    guard
+      inputFormat.sampleRate > 0, inputFormat.channelCount > 0,
+      let target = AVAudioFormat(
+        commonFormat: .pcmFormatFloat32, sampleRate: sampleRate, channels: 1, interleaved: false),
+      let converter = AVAudioConverter(from: inputFormat, to: target)
+    else {
+      remember(error: "no converter from \(inputFormat)")
+      throw AudioFormatException()
+    }
+
+    lock.lock()
+    self.engine = nil
+    self.converter = converter
+    self.targetFormat = target
+    self.pending = []
+    self.chunkSamples = max(1, Int(sampleRate) * chunkMs / 1000)
+    self.levelSamples = max(1, Int(sampleRate / VoiceCaptureModule.levelsPerSecond))
+    self.levelSum = 0
+    self.levelPeak = 0
+    self.levelCount = 0
+    self.buffersReceived = 0
+    self.chunksSent = 0
+    self.conversionErrors = 0
+    self.consecutiveConversionErrors = 0
+    self.restarts = 0
+    self.inputDescription =
+      "file \(Int(inputFormat.sampleRate)) Hz, \(inputFormat.channelCount) ch"
+    self.isRecording = true
+    lock.unlock()
+
+    let frames = VoiceCaptureModule.fileFrames
+    let interval = Double(frames) / inputFormat.sampleRate
+    var tailLeft = Int((VoiceCaptureModule.fileTailSeconds / interval).rounded(.up))
+    let timer = DispatchSource.makeTimerSource(queue: fileQueue)
+    timer.schedule(
+      deadline: .now() + interval, repeating: interval, leeway: .milliseconds(5))
+    timer.setEventHandler { [weak self] in
+      guard let self = self,
+        let buffer = AVAudioPCMBuffer(pcmFormat: inputFormat, frameCapacity: frames)
+      else { return }
+      var read = false
+      if file.framePosition < file.length {
+        do {
+          try file.read(into: buffer, frameCount: frames)
+          read = buffer.frameLength > 0
+        } catch {
+          self.remember(error: "file read: \(error.localizedDescription)")
+        }
+      }
+      if !read {
+        // The end of the file: the quiet of a room, then the end.
+        guard tailLeft > 0 else {
+          self.stop(reason: "finished", message: "end of the file")
+          return
+        }
+        tailLeft -= 1
+        buffer.frameLength = frames
+        if let channels = buffer.floatChannelData {
+          for channel in 0..<Int(inputFormat.channelCount) {
+            channels[channel].initialize(repeating: 0, count: Int(frames))
+          }
+        }
+      }
+      self.process(buffer)
+    }
+    lock.lock()
+    fileTimer = timer
+    lock.unlock()
+    timer.resume()
   }
 
   private func remember(error: String) {
@@ -372,12 +486,16 @@ public class VoiceCaptureModule: Module {
   /// stopped by itself.
   private func stop(reason: String?, message: String? = nil) {
     lock.lock()
-    guard isRecording, let engine = engine else {
+    guard isRecording else {
       lock.unlock()
       return
     }
     isRecording = false
+    // No engine when a file was read instead of the microphone (`startFile`).
+    let engine = self.engine
+    let timer = fileTimer
     self.engine = nil
+    self.fileTimer = nil
     self.converter = nil
     self.targetFormat = nil
     pending = []
@@ -388,10 +506,13 @@ public class VoiceCaptureModule: Module {
     for observer in toRemove {
       NotificationCenter.default.removeObserver(observer)
     }
-    // Outside the lock: removing the tap may wait for a running callback, which needs it.
-    engine.inputNode.removeTap(onBus: 0)
-    engine.stop()
-    try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    timer?.cancel()
+    if let engine = engine {
+      // Outside the lock: removing the tap may wait for a running callback, which needs it.
+      engine.inputNode.removeTap(onBus: 0)
+      engine.stop()
+      try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
 
     if let reason = reason {
       if let message = message { remember(error: message) }
@@ -410,4 +531,8 @@ final class NoMicrophoneInputException: Exception {
 
 final class AudioFormatException: Exception {
   override var reason: String { "Could not convert the microphone to 16 kHz mono" }
+}
+
+final class FileOutsideProofFolderException: Exception {
+  override var reason: String { "Only a WAV file of the app's voice-proof folder can be read" }
 }

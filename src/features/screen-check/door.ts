@@ -35,6 +35,15 @@ const autoRun: AutoRun | null =
       (require('./auto-run') as AutoRun)
     : null;
 
+type VoiceProof = typeof import('./voice-proof');
+
+const voiceProof: VoiceProof | null =
+  process.env.EXPO_PUBLIC_SCREEN_CHECK === '1'
+    ? // Same rule as above: the bundler can only leave out a conditional `require`.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      (require('./voice-proof') as VoiceProof)
+    : null;
+
 /** Opens the screen the check asked for; null in every build but the check's. */
 export const ScreenCheckLauncher: ComponentType<{ launch: CheckLaunch }> | null =
   launcher?.ScreenCheckLauncher ?? null;
@@ -52,6 +61,16 @@ export const screenCheckPagerDriver: ((drive: PagerDrive) => ReactNode) | null =
 /** The whole automatic run (swipe, friend page, garden), mounted once at the root; same rule. */
 export const ScreenCheckAutoRun: ComponentType | null =
   autoRun !== null && screenCheckLaunch?.autoSwipe === true ? autoRun.ScreenCheckAutoRun : null;
+
+/**
+ * The voice proof (`-screenCheckVoiceProof 1`): recordings played to the real speech engine, what
+ * it recognised written to a file. Null in every build but the check's, and in the check's own
+ * unless asked.
+ */
+export const ScreenCheckVoiceProof: ComponentType | null =
+  voiceProof !== null && screenCheckLaunch?.voiceProof === true
+    ? voiceProof.ScreenCheckVoiceProof
+    : null;
 
 function readLaunch(): CheckLaunch | null {
   if (launcher === null || Platform.OS !== 'ios') return null;

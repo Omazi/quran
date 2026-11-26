@@ -51,6 +51,7 @@ const FRIEND_LAUNCH: CheckLaunch = {
   script: null,
   seedsDemo: true,
   autoSwipe: false,
+  voiceProof: false,
 };
 
 /** The pager's driver: what `SwipePager` renders inside itself when it is given this. */

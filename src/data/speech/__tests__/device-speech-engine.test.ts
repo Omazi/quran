@@ -1,4 +1,8 @@
-import { checkModelFile, createDeviceSpeechEngine } from '../device-speech-engine';
+import {
+  checkModelFile,
+  createDeviceSpeechEngine,
+  createFileSpeechEngine,
+} from '../device-speech-engine';
 import { voiceDiagnostics } from '../diagnostics';
 import { VOICE_MODEL } from '../voice-model';
 import type { NativeVoiceCapture } from '../native-audio-capture';
@@ -46,6 +50,54 @@ describe('createDeviceSpeechEngine', () => {
     expect(native.start).toHaveBeenCalledTimes(1);
     await engine?.stop();
     expect(native.stop).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('createFileSpeechEngine (the voice proof of the check build)', () => {
+  it('is null without the native module, or when the module cannot read a file', () => {
+    expect(createFileSpeechEngine('/x.wav', { findNative: () => null })).toBeNull();
+    expect(createFileSpeechEngine('/x.wav', { findNative: () => native })).toBeNull();
+  });
+
+  it('reads the file instead of the microphone, asks no permission, and times each reading', async () => {
+    const startFile = jest.fn(async () => undefined);
+    const requestPermission = jest.fn(async () => 'denied');
+    let sendAudio: (event: { pcm: string }) => void = () => undefined;
+    const fileNative = {
+      ...native,
+      getPermission: async () => 'undetermined',
+      requestPermission,
+      startFile,
+      addListener: (event: string, listener: (event: { pcm: string }) => void) => {
+        if (event === 'onAudio') sendAudio = listener;
+        return { remove: () => undefined };
+      },
+    } as unknown as NativeVoiceCapture;
+    const context = {
+      transcribeData: jest.fn(() => ({ promise: Promise.resolve({ result: 'قل هو الله احد' }) })),
+    };
+    const readings: [number, string][] = [];
+    let clock = 0;
+    const engine = createFileSpeechEngine('file:///docs/voice-proof/a.wav', {
+      findNative: () => fileNative,
+      loadWhisper: () => ({ initWhisper: async () => context }) as unknown as WhisperBinding,
+      onReading: (ms, text) => readings.push([ms, text]),
+      now: () => (clock += 250),
+    });
+    await engine?.start();
+    expect(startFile).toHaveBeenCalledWith('file:///docs/voice-proof/a.wav', 16000, 100);
+    expect(requestPermission).not.toHaveBeenCalled();
+    // One second of a loud tone (a voice), then silence: one reading at the pause.
+    const loud = new Int16Array(1600).map((_, i) => (i % 2 === 0 ? 8000 : -8000));
+    const toBase64 = (samples: Int16Array) =>
+      btoa(String.fromCharCode(...new Uint8Array(samples.buffer)));
+    for (let i = 0; i < 10; i += 1) sendAudio({ pcm: toBase64(loud) });
+    for (let i = 0; i < 8; i += 1) sendAudio({ pcm: toBase64(new Int16Array(1600)) });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(context.transcribeData).toHaveBeenCalled();
+    expect(readings[0]).toEqual([250, 'قل هو الله احد']);
+    await engine?.stop();
   });
 });
 
