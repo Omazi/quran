@@ -108,8 +108,8 @@ export function useOnboarding({
   const finish = async () => {
     if (isFinishing) return;
     setFinishing(true);
-    // On the same frame as the press: the garden is created (playing-haptics.md › Notification).
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
+    // On the same frame as the press: a medium impact (motion spec §13, playing-haptics.md › Impact).
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
     setReadingGoal(chosen);
     setReadingMoment(moment);
     const reminders = remindersForReadingMoment(moment, { fridayKahf, thirstyGarden });

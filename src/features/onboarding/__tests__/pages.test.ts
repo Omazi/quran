@@ -97,9 +97,10 @@ describe('the pages of the first launch (owner’s chosen "voix" prototype)', ()
       'voice',
       'recognition',
     ]);
-    // The camera walks around the garden, a few degrees a page (`TURN`).
+    // The camera walks around the garden, a few degrees a page (motion spec §5), and is straight
+    // from the dead page on: the revival masks the garden.
     expect(ONBOARDING_PAGES.map((page) => page.turn)).toEqual([
-      -5, -3, -1, 1, 3, 5, 4, 3, 2, 1, 0, 0, 0, 0, 0, 0,
+      -5, -3, -1, 1, 3, 5, 4, 3, 1.5, 0, 0, 0, 0, 0, 0, 0,
     ]);
   });
 });

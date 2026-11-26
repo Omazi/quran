@@ -2,21 +2,27 @@ import { STORY_MOTION } from '../config';
 import { ONBOARDING_PAGES } from '../pages';
 import {
   captionOpacity,
+  copyBlockLook,
   copyLook,
-  crackGroupOpacity,
+  crackLayerOpacity,
   crackLook,
   dotShape,
   easeOut,
   gardenLayerLook,
   gardenLook,
   gardenPresence,
+  followBarOffset,
   heartProgress,
+  introArrival,
   litWords,
+  nightLook,
   presence,
+  recognitionLook,
   revivalLook,
   segmentAt,
   skyAt,
   smooth,
+  springT,
   storyMarks,
   threadLook,
   verseLineLook,
@@ -108,10 +114,17 @@ describe('from the finger’s position to what the stage shows', () => {
     expect(crackLook(7)).toEqual({ progress: 0, opacity: 1 });
     expect(crackLook(8.9).progress).toBe(1);
     expect(crackLook(9.6).opacity).toBe(0);
-    expect(crackGroupOpacity(0.2, 0.1, false)).toBe(0);
-    expect(crackGroupOpacity(0.2, 0.4, false)).toBe(1);
-    expect(crackGroupOpacity(0.2, 0.4, true)).toBe(0);
-    expect(crackGroupOpacity(0.2, 0.6, true)).toBe(1);
+    // Eight layers, each over its own part of the cracking (cp = ramp(p, 7.35, 8.9)).
+    const cpAt = (cp: number) => 7.35 + cp * 1.55;
+    expect(crackLayerOpacity(0, cpAt(0), false)).toBeCloseTo(0.125);
+    expect(crackLayerOpacity(0, cpAt(0.14), false)).toBeCloseTo(1);
+    expect(crackLayerOpacity(7, cpAt(0.8), false)).toBe(0);
+    expect(crackLayerOpacity(7, cpAt(0.99), false)).toBeCloseTo(1);
+    // All of them leave after the dead page.
+    expect(crackLayerOpacity(0, 9.6, false)).toBe(0);
+    // Reduce motion: one crossfade at the middle of the cracking.
+    expect(crackLayerOpacity(7, cpAt(0.3), true)).toBe(0);
+    expect(crackLayerOpacity(7, cpAt(0.7), true)).toBe(1);
   });
 
   it('hides the garden over the voice pages and friends, and shows it smaller above the settings', () => {
@@ -131,6 +144,8 @@ describe('from the finger’s position to what the stage shows', () => {
     expect(gardenLook(0, pages, marks, preview, false).turn).toBe(-5);
     expect(gardenLook(5, pages, marks, preview, false).turn).toBe(5);
     expect(gardenLook(2.5, pages, marks, preview, false).turn).toBeCloseTo(0);
+    // Straight from the dead page on: the revival masks the garden.
+    expect(gardenLook(9.5, pages, marks, preview, false).turn).toBe(0);
   });
 
   it('never shows two captions at once', () => {
@@ -143,9 +158,11 @@ describe('from the finger’s position to what the stage shows', () => {
     expect(captionOpacity([14, 15], 16, 14.5)).toBe(1);
   });
 
-  it('lights Al-Fatiha word by word over the five growing pages', () => {
-    expect(litWords(0, 29)).toBe(0);
-    expect(litWords(2.5, 29)).toBe(14.5);
+  it('lights Al-Fatiha word by word over the five growing pages, each page resting mid-line', () => {
+    [0, 5.8, 11.5, 15, 22.2, 29].forEach((words, page) => {
+      expect(litWords(page, 29)).toBeCloseTo(words);
+    });
+    expect(litWords(2.5, 29)).toBeCloseTo(13.25);
     expect(litWords(7, 29)).toBe(29);
     // The first line is there from the start; a later line comes as the voice reaches it.
     expect(verseLineLook(0, 0, 4, true, false, false).opacity).toBe(1);
@@ -161,12 +178,66 @@ describe('from the finger’s position to what the stage shows', () => {
     expect(versePillLook(1, 0, boxes, 1, 5).x).toBeCloseTo(135);
   });
 
-  it('slides the thread of the voice into the bar under the mushaf page, then lets it go', () => {
-    expect(threadLook(5, marks, false)).toEqual({ inBar: 0, opacity: 1 });
-    expect(threadLook(10.5, marks, false).inBar).toBe(0.5);
-    expect(threadLook(11, marks, false)).toEqual({ inBar: 1, opacity: 1 });
-    expect(threadLook(11.6, marks, false).opacity).toBe(0);
+  it('slides the thread of the voice into the bar under the mushaf page, then round the rosette', () => {
+    expect(threadLook(5, marks, false)).toEqual({ inBar: 0, inRing: 0, shrink: 1, opacity: 1 });
+    // 10 → 11: inOutCubic over [0.08, 0.85] of the way.
+    expect(threadLook(10.08, marks, false).inBar).toBeCloseTo(0);
+    expect(threadLook(10.465, marks, false).inBar).toBeCloseTo(0.5);
+    expect(threadLook(10.85, marks, false).inBar).toBeCloseTo(1);
+    expect(threadLook(11, marks, false)).toEqual({ inBar: 1, inRing: 0, shrink: 1, opacity: 1 });
+    // 11 → 12: the same bars wrap the rosette over [0.04, 0.72], shrink and fade into it.
+    expect(threadLook(11.38, marks, false).inRing).toBeCloseTo(0.5);
+    expect(threadLook(11.72, marks, false).inRing).toBeCloseTo(1);
+    expect(threadLook(11.5, marks, false).opacity).toBe(1);
+    expect(threadLook(11.92, marks, false)).toMatchObject({ opacity: 0 });
+    expect(threadLook(11.92, marks, false).shrink).toBeCloseTo(0.15);
+    expect(threadLook(12.5, marks, false).opacity).toBe(0);
+    // Reduce motion: crossfades at the middle of the way, no morph.
     expect(threadLook(10.4, marks, true).inBar).toBe(0);
+    expect(threadLook(11.3, marks, true).inRing).toBe(0);
+    // The bar under the mushaf page trails its page in and leaves upwards.
+    expect(followBarOffset(10.5, marks.voice, false)).toBe(55);
+    expect(followBarOffset(11.5, marks.voice, false)).toBe(-30);
+    expect(followBarOffset(10.5, marks.voice, true)).toBe(0);
+  });
+
+  it('brings the night down as a curtain and takes it up like dawn', () => {
+    expect(nightLook(10, marks).visible).toBe(false);
+    expect(nightLook(10.5, marks)).toEqual({ offset: -0.25, night: 0.5, visible: true });
+    expect(nightLook(11.5, marks)).toEqual({ offset: 0, night: 1, visible: true });
+    expect(nightLook(12.5, marks)).toEqual({ offset: -0.75, night: 0.5, visible: true });
+    expect(nightLook(13, marks).visible).toBe(false);
+  });
+
+  it('leads with the title and lets the sentence follow, then they leave as one', () => {
+    const travel = { title: 56, text: 76 };
+    const title = copyBlockLook(2.7, 3, 'title', travel, false);
+    const text = copyBlockLook(2.7, 3, 'text', travel, false);
+    expect(title.opacity).toBeGreaterThan(text.opacity);
+    expect(title.translateY).toBeCloseTo(56 * 0.3);
+    expect(text.translateY).toBeCloseTo(76 * 0.3);
+    expect(copyBlockLook(3, 3, 'title', travel, false)).toEqual({ opacity: 1, translateY: -0 });
+    expect(copyBlockLook(3.2, 3, 'text', travel, false)).toEqual(
+      copyBlockLook(3.2, 3, 'title', travel, false),
+    );
+    expect(copyBlockLook(3.6, 3, 'title', travel, false).opacity).toBe(0);
+    expect(copyBlockLook(2.7, 3, 'text', travel, true).translateY).toBe(0);
+  });
+
+  it('springs the first page in, then finds the passage rosette first and the card 80 ms later', () => {
+    expect(springT(0, 0.9)).toBe(0);
+    expect(springT(3, 0.9)).toBeCloseTo(1, 4);
+    expect(introArrival(320, 320, false)).toBe(0);
+    expect(introArrival(0, 320, true)).toBe(1);
+    expect(recognitionLook(2000, false)).toEqual({ rosette: 0, card: 0 });
+    const early = recognitionLook(2760, false);
+    expect(early.rosette).toBeGreaterThan(0);
+    expect(early.card).toBe(0);
+    const found = recognitionLook(5000, false);
+    expect(found.rosette).toBeCloseTo(1, 3);
+    expect(found.card).toBeCloseTo(1, 3);
+    expect(recognitionLook(8750, false).card).toBeCloseTo(0, 5);
+    expect(recognitionLook(100, true)).toEqual({ rosette: 1, card: 1 });
   });
 
   it('gives the voice a still level with reduce motion, and silence on a dry page', () => {
@@ -176,9 +247,10 @@ describe('from the finger’s position to what the stage shows', () => {
     expect(voiceLevel(0, 0, 0, 1, 1, false)).toBeCloseTo(STORY_MOTION.idleLevel);
   });
 
-  it('flies the heart over the second half of the way to the friends’ page', () => {
+  it('flies the heart over [12.4, 12.88]: it lands at 88 % of the way', () => {
     expect(heartProgress(12.4, marks.friends)).toBe(-1);
-    expect(heartProgress(12.5 + 0.24, marks.friends)).toBeCloseTo(0.5);
+    expect(heartProgress(12.64, marks.friends)).toBeCloseTo(0.5);
+    expect(heartProgress(12.88, marks.friends)).toBeCloseTo(1);
     expect(heartProgress(13, marks.friends)).toBe(1);
   });
 

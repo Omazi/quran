@@ -1,17 +1,16 @@
 import { Image } from 'expo-image';
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
-  useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
-import Svg, { ClipPath, Defs, Ellipse, G, Image as SvgImage, Path } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 import { GARDEN_PICTURE_PIXELS, baseAsset, riseAsset, waterAsset } from '@/features/garden';
 import {
@@ -29,19 +28,16 @@ import type { PreviewStage } from '../preview-stage';
 import type { StageCaption, StageGarden } from '../pages';
 import {
   captionOpacity,
-  crackGroupOpacity,
-  crackLook,
-  easeOut,
+  crackLayerOpacity,
   gardenLayerLook,
   gardenLook,
   gardenPresence,
   revivalLook,
+  springT,
   waterFlow,
 } from '../story-math';
 import { isNear, type StageProps } from './stage-props';
 
-const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
-const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 /** The pictures of each garden of the story (the prototype's `GS`): dry, still water, flowing. */
 interface StagePictures {
@@ -140,12 +136,22 @@ export function GardenStage(props: GardenStageProps) {
   const box = layout.garden;
   const look = useAnimatedStyle(() => {
     const garden = gardenLook(position.get(), pages, marks, preview, reducedMotion);
-    const arrival = reducedMotion ? 1 : easeOut(engine.introMs.get() / STORY_MOTION.introMs);
+    // The first page arrives on the 0.9 s spring (motion spec §2): opacity, 14 points, 97 %.
+    const arrival = reducedMotion
+      ? 1
+      : springT(engine.introMs.get() / 1000, STORY_MOTION.introResponseS);
+    const translateY = garden.translateY + (1 - arrival) * L.introGardenRise;
+    const scale = garden.scale * (L.introGardenScale + (1 - L.introGardenScale) * arrival);
+    // A 3D transform makes the picture's mask expensive: dropped when the camera is straight
+    // (the revival, the only page that masks the garden, is straight; motion spec §0.7).
+    if (Math.abs(garden.turn) < 0.01) {
+      return { opacity: garden.opacity * arrival, transform: [{ translateY }, { scale }] };
+    }
     return {
       opacity: garden.opacity * arrival,
       transform: [
-        { translateY: garden.translateY },
-        { scale: garden.scale },
+        { translateY },
+        { scale },
         { perspective: STORY_MOTION.perspective },
         { rotateY: `${garden.turn}deg` },
       ],
@@ -168,6 +174,7 @@ export function GardenStage(props: GardenStageProps) {
         <GardenLayer
           key={key}
           layer={key}
+          box={box}
           gardens={gardens}
           position={position}
           level={engine.level}
@@ -176,8 +183,9 @@ export function GardenStage(props: GardenStageProps) {
           showPreview={pageIndex >= marks.friends - 1}
         />
       ))}
-      {crackPages || near.has('revival') ? (
-        <EarthMarks gardens={gardens} position={position} reducedMotion={reducedMotion} />
+      {crackPages ? <Cracks position={position} reducedMotion={reducedMotion} /> : null}
+      {near.has('revival') && !reducedMotion ? (
+        <RevivalRings gardens={gardens} position={position} box={box} />
       ) : null}
     </Animated.View>
   );
@@ -185,6 +193,7 @@ export function GardenStage(props: GardenStageProps) {
 
 interface GardenLayerProps {
   readonly layer: LayerKey;
+  readonly box: { readonly width: number; readonly height: number };
   readonly gardens: readonly (StageGarden | null)[];
   readonly position: SharedValue<number>;
   readonly level: SharedValue<number>;
@@ -195,6 +204,7 @@ interface GardenLayerProps {
 
 function GardenLayer({
   layer,
+  box,
   gardens,
   position,
   level,
@@ -220,6 +230,7 @@ function GardenLayer({
         position={position}
         level={level}
         reducedMotion={reducedMotion}
+        box={box}
       />
     );
   } else if (isRise) {
@@ -322,174 +333,210 @@ function FadingIn({ isNew, children }: { isNew: boolean; children: React.ReactNo
   return <Animated.View style={[StyleSheet.absoluteFill, style]}>{children}</Animated.View>;
 }
 
+/** The revival's ellipse in the garden's box: its centre and its radii once it covers everything. */
+function revivalEllipse(box: { width: number; height: number }) {
+  const reach = STORY_MOTION.revivalReach * STORY_MOTION.revivalOvershoot;
+  return {
+    cx: box.width * REVIVAL_ELLIPSE.cxShare,
+    cy: box.height * REVIVAL_ELLIPSE.cyShare,
+    rx: box.width * REVIVAL_ELLIPSE.rxShare * reach,
+    ry: box.height * REVIVAL_ELLIPSE.ryShare * reach,
+  };
+}
+
 /**
- * The revival: the complete garden, cut to an ellipse that grows from the fountain, over the dead
- * earth (`clip-path: ellipse(…)`). An SVG clip, since a view cannot be cut to an ellipse.
+ * The revival: the complete garden seen through an ellipse that grows from the fountain, over the
+ * dead earth (motion spec §5). Transforms only: the mask is a round view squashed to the ellipse
+ * and scaled up, and the picture inside it is scaled by the inverse, so it stays in place.
  */
 function RevivalPictures({
   gardens,
   position,
   level,
   reducedMotion,
+  box,
 }: {
   gardens: readonly (StageGarden | null)[];
   position: SharedValue<number>;
   level: SharedValue<number>;
   reducedMotion: boolean;
+  box: { width: number; height: number };
 }) {
-  const id = `revival-${useId().replace(/[^a-zA-Z0-9-]/g, '')}`;
-  const { width, height } = GARDEN_PICTURE_PIXELS;
-  const clip = useAnimatedProps(() => {
-    const look = revivalLook(gardens, position.get(), reducedMotion);
-    const reach = look === null ? 4 : look.reach;
-    return {
-      rx: width * REVIVAL_ELLIPSE.rxShare * reach,
-      ry: height * REVIVAL_ELLIPSE.ryShare * reach,
-    };
+  const { cx, cy, rx, ry } = revivalEllipse(box);
+  const squash = ry / rx;
+  const reachOf = (pos: number) => {
+    'worklet';
+    const look = revivalLook(gardens, pos, reducedMotion);
+    if (look === null) return null;
+    return Math.max(0.02, look.reach / (STORY_MOTION.revivalReach * STORY_MOTION.revivalOvershoot));
+  };
+  const mask = useAnimatedStyle(() => {
+    const scale = reachOf(position.get());
+    if (scale === null) return { opacity: 0, transform: [{ scaleX: 1 }, { scaleY: squash }] };
+    return { opacity: 1, transform: [{ scaleX: scale }, { scaleY: scale * squash }] };
   });
-  const flow = useAnimatedProps(() => ({ opacity: waterFlow(level.get()) }));
-  const pictures = STORY_PICTURES.g60;
-  const asset = (name: string | undefined, water: boolean) =>
-    name === undefined ? undefined : water ? waterAsset(name) : baseAsset(name);
-  const base = asset(pictures.base, false);
-  const still = asset(pictures.still, true);
-  const flowing = asset(pictures.flowing, true);
+  const inner = useAnimatedStyle(() => {
+    const scale = reachOf(position.get()) ?? 1;
+    return { transform: [{ scaleX: 1 / scale }, { scaleY: 1 / (scale * squash) }] };
+  });
   return (
-    <Svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-      <Defs>
-        <ClipPath id={id}>
-          <AnimatedEllipse
-            cx={width * REVIVAL_ELLIPSE.cxShare}
-            cy={height * REVIVAL_ELLIPSE.cyShare}
-            animatedProps={clip}
-          />
-        </ClipPath>
-      </Defs>
-      <G clipPath={`url(#${id})`}>
-        {base === undefined ? null : <SvgImage href={base} width={width} height={height} />}
-        {still === undefined ? null : <SvgImage href={still} width={width} height={height} />}
-        {flowing === undefined ? null : (
-          <AnimatedG animatedProps={flow}>
-            <SvgImage href={flowing} width={width} height={height} />
-          </AnimatedG>
-        )}
-      </G>
-    </Svg>
+    <Animated.View
+      style={[
+        styles.revivalMask,
+        { left: cx - rx, top: cy - rx, width: 2 * rx, height: 2 * rx, borderRadius: rx },
+        mask,
+      ]}
+    >
+      <Animated.View
+        style={[
+          {
+            position: 'absolute',
+            left: rx - cx,
+            top: rx - cy,
+            width: box.width,
+            height: box.height,
+            transformOrigin: [cx, cy, 0],
+          },
+          inner,
+        ]}
+      >
+        <Pictures pictures={STORY_PICTURES.g60} level={level} />
+      </Animated.View>
+    </Animated.View>
   );
 }
 
-const AnimatedG = Animated.createAnimatedComponent(G);
-
-/** The cracks of the drying earth and the two rings of the water's return, on the picture. */
-function EarthMarks({
-  gardens,
+/**
+ * The cracks of the drying earth, in the motion spec's eight layers (§5): each layer is drawn
+ * once, on the picture so that it turns with it, and shown by its own opacity.
+ */
+function Cracks({
   position,
   reducedMotion,
 }: {
-  gardens: readonly (StageGarden | null)[];
   position: SharedValue<number>;
   reducedMotion: boolean;
 }) {
   const colors = useColorValues();
   const groups = useMemo(() => crackGroups(), []);
-  const { width, height } = GARDEN_PICTURE_PIXELS;
   return (
-    <Svg
-      width="100%"
-      height="100%"
-      viewBox={`0 0 ${width} ${height}`}
-      preserveAspectRatio="none"
-      style={StyleSheet.absoluteFill}
-    >
+    <>
       {groups.map((group) => (
-        <Crack
-          key={group.at}
-          at={group.at}
+        <CrackLayer
+          key={group.layer}
+          layer={group.layer}
           path={group.path}
           position={position}
           color={colors.crack}
           reducedMotion={reducedMotion}
         />
       ))}
-      <Ring
-        gardens={gardens}
-        position={position}
-        reducedMotion={reducedMotion}
-        color={colors.revivalRing}
-        which={1}
-      />
-      <Ring
-        gardens={gardens}
-        position={position}
-        reducedMotion={reducedMotion}
-        color={colors.revivalRingSoft}
-        which={2}
-      />
-    </Svg>
+    </>
   );
 }
 
-function Crack({
-  at,
+function CrackLayer({
+  layer,
   path,
   position,
   color,
   reducedMotion,
 }: {
-  at: number;
+  layer: number;
   path: string;
   position: SharedValue<number>;
   color: string;
   reducedMotion: boolean;
 }) {
-  const props = useAnimatedProps(() => {
-    const look = crackLook(position.get());
-    return { strokeOpacity: look.opacity * crackGroupOpacity(at, look.progress, reducedMotion) };
-  });
+  const { width, height } = GARDEN_PICTURE_PIXELS;
+  const style = useAnimatedStyle(() => ({
+    opacity: crackLayerOpacity(layer, position.get(), reducedMotion),
+  }));
   return (
-    <AnimatedPath
-      d={path}
-      fill="none"
-      stroke={color}
-      strokeWidth={L.crackWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      animatedProps={props}
-    />
+    <Animated.View style={[StyleSheet.absoluteFill, style]}>
+      <Svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+        <Path
+          d={path}
+          fill="none"
+          stroke={color}
+          strokeWidth={L.crackWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </Svg>
+    </Animated.View>
+  );
+}
+
+/**
+ * The two rings of water that leave the fountain ahead of the green (motion spec §5): round views
+ * squashed to the fountain's ellipse and scaled up, transform and opacity only.
+ */
+function RevivalRings({
+  gardens,
+  position,
+  box,
+}: {
+  gardens: readonly (StageGarden | null)[];
+  position: SharedValue<number>;
+  box: { width: number; height: number };
+}) {
+  const colors = useColorValues();
+  return (
+    <>
+      <Ring gardens={gardens} position={position} box={box} color={colors.revivalRing} which={1} />
+      <Ring
+        gardens={gardens}
+        position={position}
+        box={box}
+        color={colors.revivalRingSoft}
+        which={2}
+      />
+    </>
   );
 }
 
 function Ring({
   gardens,
   position,
-  reducedMotion,
+  box,
   color,
   which,
 }: {
   gardens: readonly (StageGarden | null)[];
   position: SharedValue<number>;
-  reducedMotion: boolean;
+  box: { width: number; height: number };
   color: string;
   which: 1 | 2;
 }) {
-  const props = useAnimatedProps(() => {
-    const look = revivalLook(gardens, position.get(), reducedMotion);
-    if (look === null) return { rx: 0, ry: 0, strokeOpacity: 0 };
+  const kx = box.width / GARDEN_PICTURE_PIXELS.width;
+  const ky = box.height / GARDEN_PICTURE_PIXELS.height;
+  const rx = FOUNTAIN.rx * kx;
+  const squash = (FOUNTAIN.ry * ky) / rx;
+  const style = useAnimatedStyle(() => {
+    const look = revivalLook(gardens, position.get(), false);
+    if (look === null) return { opacity: 0, transform: [{ scaleX: 0 }, { scaleY: 0 }] };
     const scale = which === 1 ? look.ring : look.ring2;
     return {
-      rx: FOUNTAIN.rx * scale,
-      ry: FOUNTAIN.ry * scale,
-      strokeOpacity: which === 1 ? look.ringOpacity : look.ring2Opacity,
+      opacity: which === 1 ? look.ringOpacity : look.ring2Opacity,
+      transform: [{ scaleX: scale }, { scaleY: scale * squash }],
     };
   });
   return (
-    <AnimatedEllipse
-      cx={FOUNTAIN.cx}
-      cy={FOUNTAIN.cy}
-      fill="none"
-      stroke={color}
-      strokeWidth={which === 1 ? L.ringWidth : L.ringSoftWidth}
-      animatedProps={props}
+    <Animated.View
+      style={[
+        styles.ring,
+        {
+          left: FOUNTAIN.cx * kx - rx,
+          top: FOUNTAIN.cy * ky - rx,
+          width: 2 * rx,
+          height: 2 * rx,
+          borderRadius: rx,
+          borderWidth: (which === 1 ? L.ringWidth : L.ringSoftWidth) * kx,
+          borderColor: color,
+        },
+        style,
+      ]}
     />
   );
 }
@@ -604,6 +651,8 @@ function Caption({
 const styles = StyleSheet.create({
   garden: { position: 'absolute', transformOrigin: 'top' },
   fromGround: { transformOrigin: 'bottom' },
+  revivalMask: { position: 'absolute', overflow: 'hidden' },
+  ring: { position: 'absolute' },
   caption: {
     position: 'absolute',
     start: L.captionStart,

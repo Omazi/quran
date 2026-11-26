@@ -1,8 +1,35 @@
+import * as Haptics from 'expo-haptics';
 import { useFrameCallback, useSharedValue, type SharedValue } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { STORY_MOTION } from './config';
-import type { Recitation } from './recitation';
-import { clamp, mix, pageValue, voiceLevel, type StoryMarks } from './story-math';
+import { turnsRed, type Recitation } from './recitation';
+import {
+  clamp,
+  heartProgress,
+  isFoundBetween,
+  mix,
+  pageValue,
+  voiceLevel,
+  type StoryMarks,
+} from './story-math';
+
+/** The three haptics of the demonstrations (motion spec §13), played on the JavaScript side. */
+export type StageHaptic = 'wrong-word' | 'found' | 'heart';
+
+export function playStageHaptic(kind: StageHaptic): void {
+  const done = () => undefined;
+  switch (kind) {
+    case 'wrong-word':
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(done);
+      return;
+    case 'found':
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(done);
+      return;
+    case 'heart':
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(done);
+  }
+}
 
 /**
  * What the stage reads at each frame besides the position, all kept on the UI thread (no React
@@ -61,6 +88,7 @@ export function useRunStageEngine(
   const recitationStart = useSharedValue(-1);
   const recognitionStart = useSharedValue(-1);
   const lastWord = useSharedValue(-1);
+  const lastHeart = useSharedValue(-1);
 
   useFrameCallback((frame) => {
     'worklet';
@@ -85,6 +113,10 @@ export function useRunStageEngine(
       if (recitationStart.get() < 0) recitationStart.set(now);
       const loop = recitation?.duration ?? 1;
       const t = (now - recitationStart.get()) % loop;
+      // The word read wrong turns red: a warning, on the frame it shakes (each loop).
+      if (recitation !== null && !reducedMotion && turnsRed(recitation, recitationMs.get(), t)) {
+        scheduleOnRN(playStageHaptic, 'wrong-word');
+      }
       recitationMs.set(t);
       if (recitation !== null && !reducedMotion) {
         // A breath of voice at each new word (the prototype's `pulse(.16 + …)` while not playing).
@@ -106,6 +138,10 @@ export function useRunStageEngine(
     if (Math.abs(pos - marks.recognition) < DEMO_RANGE) {
       if (recognitionStart.get() < 0) recognitionStart.set(now);
       const t = (now - recognitionStart.get()) % m.recognitionLoopMs;
+      // The passage is recognised: a success, as the card starts to rise (each loop).
+      if (!reducedMotion && isFoundBetween(recognitionMs.get(), t)) {
+        scheduleOnRN(playStageHaptic, 'found');
+      }
       recognitionMs.set(t);
       // While it listens, the reciter's voice comes in bursts (`pulse(.5 + …)`, 3.6 a second).
       if (
@@ -119,6 +155,13 @@ export function useRunStageEngine(
       recognitionStart.set(-1);
       recognitionMs.set(-1);
     }
+
+    // The heart lands on the thirsty friend's card, going forwards (motion spec §10).
+    const heart = heartProgress(pos, marks.friends);
+    if (heart >= m.encouragedAt && lastHeart.get() < m.encouragedAt && lastHeart.get() >= 0) {
+      scheduleOnRN(playStageHaptic, 'heart');
+    }
+    lastHeart.set(heart);
 
     // The pulse decays, the level follows it: quick up, slower down (`vTarget`, `vLevel`).
     pulse.set(pulse.get() * Math.pow(m.pulseDecayPerFrame, dt * 60));

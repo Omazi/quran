@@ -13,7 +13,7 @@ import { fontFamily, useColors, useColorValues, voiceStoryLayout as L } from '@/
 import { STORY_MOTION } from '../config';
 import { recitedLines, surahWords, type RecitedLine } from '../recitation';
 import {
-  easeOut,
+  introArrival,
   litWords,
   pageValue,
   smooth,
@@ -39,14 +39,16 @@ export function RecitedVerse({ fatiha, ...stage }: StageProps & { fatiha: Mushaf
     const pos = position.get();
     const after = pos - marks.revival;
     const leaving = after <= 0 ? 1 : 1 - smooth(after * STORY_MOTION.presenceRate);
-    const arrival = reducedMotion
-      ? 1
-      : easeOut((engine.introMs.get() - STORY_MOTION.introLineDelayMs) / STORY_MOTION.introMs);
+    // Arrives 160 ms after the first frame, rising 10 points (motion spec §2).
+    const arrival = introArrival(
+      engine.introMs.get(),
+      STORY_MOTION.introLineDelayMs,
+      reducedMotion,
+    );
+    const leave = after > 0 && !reducedMotion ? -after * STORY_MOTION.lineLeaveTravel : 0;
     return {
       opacity: leaving * arrival,
-      transform: [
-        { translateY: after > 0 && !reducedMotion ? -after * STORY_MOTION.lineLeaveTravel : 0 },
-      ],
+      transform: [{ translateY: leave + (1 - arrival) * L.introLineRise }],
     };
   });
   if (lines.length === 0) return null;

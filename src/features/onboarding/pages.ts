@@ -127,8 +127,9 @@ export const ONBOARDING_PAGES: readonly OnboardingPage[] = [
   // The drought dries the complete garden, as the prototype does; the voice fades with it.
   dry('thirsty', 'd3', 3, 0.4, 0.5, 4),
   dry('wilting', 'd6', 6, 0.65, 0.22, 3),
-  dry('dying', 'd10', 10, 0.85, 0.06, 2),
-  dry('dead', 'd14', 14, 1, 0, 1),
+  dry('dying', 'd10', 10, 0.85, 0.06, 1.5),
+  // Straight on the dead page: the revival that follows masks the garden (motion spec §0.7).
+  dry('dead', 'd14', 14, 1, 0, 0),
   page('revival', 'story', {
     garden: 'g60',
     caption: { kind: 'revival' },

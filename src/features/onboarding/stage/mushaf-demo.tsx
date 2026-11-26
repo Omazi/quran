@@ -2,7 +2,6 @@ import { useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
-  interpolateColor,
   useAnimatedStyle,
   useSharedValue,
   type SharedValue,
@@ -30,12 +29,13 @@ import {
   pageLines,
   readPillLook,
   rereadAmount,
+  shakeOffset,
   stillMoment,
   wordLook,
   type Recitation,
   type WordBox,
 } from '../recitation';
-import { presence } from '../story-math';
+import { followBarOffset, presence } from '../story-math';
 import type { StageProps } from './stage-props';
 
 /**
@@ -114,18 +114,11 @@ export function MushafDemo({
           : [{ translateY: -d * m.pageLeaveTravel }, { scale: 1 - d * m.pageLeaveScale }],
     };
   });
-  const bar = useAnimatedStyle(() => {
-    const d = position.get() - marks.voice;
-    const m = STORY_MOTION;
-    return {
-      opacity: presence(position.get(), marks.voice),
-      transform: [
-        {
-          translateY: reducedMotion ? 0 : -d * (d < 0 ? m.followEnterTravel : m.followLeaveTravel),
-        },
-      ],
-    };
-  });
+  // The bar trails the page in and lands with it; the thread of the voice rides inside it.
+  const bar = useAnimatedStyle(() => ({
+    opacity: presence(position.get(), marks.voice),
+    transform: [{ translateY: followBarOffset(position.get(), marks.voice, reducedMotion) }],
+  }));
   if (recitation === null) return null;
   const surah = quranStructure.surah(RECITED_SURAH);
   const textStyle = {
@@ -387,27 +380,43 @@ function MushafWord({
   colors: ColorValues;
   onLayout: (event: LayoutChangeEvent) => void;
 }) {
+  // Opacity only (no colour animated per frame): the gold word is a second layer over the ink.
   const base = useAnimatedStyle(() => {
     const look = wordLook(recitation, index, toClock(clock.get()));
-    return {
-      opacity: look.ink,
-      color: interpolateColor(look.gold, [0, 1], [colors.nightPageInk, colors.nightPageCurrent]),
-    };
+    return { opacity: look.ink * (1 - look.gold) };
+  });
+  const gold = useAnimatedStyle(() => {
+    const look = wordLook(recitation, index, toClock(clock.get()));
+    return { opacity: look.ink * look.gold };
   });
   const red = useAnimatedStyle(() => ({
     opacity: wordLook(recitation, index, toClock(clock.get())).red,
   }));
+  const isReread = index === recitation.reread;
+  // The word read wrong shakes as it turns red (motion spec §8); "reduce motion" stops the clock.
+  const shake = useAnimatedStyle(() => ({
+    transform: [{ translateX: isReread ? shakeOffset(recitation, toClock(clock.get())) : 0 }],
+  }));
   return (
-    <View onLayout={onLayout}>
-      <Animated.Text style={[textStyle, base]} accessibilityLanguage="ar">
+    <Animated.View onLayout={onLayout} style={isReread ? shake : undefined}>
+      <Animated.Text
+        style={[textStyle, { color: colors.nightPageInk }, base]}
+        accessibilityLanguage="ar"
+      >
         {text}
       </Animated.Text>
-      {index === recitation.reread ? (
+      {isReread ? (
         <Animated.Text style={[textStyle, styles.overlay, { color: colors.nightPageReread }, red]}>
           {text}
         </Animated.Text>
-      ) : null}
-    </View>
+      ) : (
+        <Animated.Text
+          style={[textStyle, styles.overlay, { color: colors.nightPageCurrent }, gold]}
+        >
+          {text}
+        </Animated.Text>
+      )}
+    </Animated.View>
   );
 }
 

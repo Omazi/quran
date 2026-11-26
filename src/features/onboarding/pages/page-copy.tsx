@@ -13,12 +13,12 @@ import { AppText, Icon, voiceStoryLayout as L } from '@/ui';
 
 import { STORY_MOTION } from '../config';
 import type { OnboardingPage } from '../pages';
-import { copyLook, easeOut, smooth } from '../story-math';
+import { copyBlockLook, introArrival, smooth } from '../story-math';
 import type { PageProps } from './page-props';
 
 /**
  * The words of a story or feature page (`.copy`): the title and its sentence, pinned low on the
- * screen; they fade in place and drift 56 points as the page passes (the prototype's pins), light
+ * screen; the title leads and the sentence follows it in, then they leave as one (motion spec §3), light
  * on the dusk of the two voice pages. First comes the scene, described in words for screen
  * readers: the pictures themselves are decoration.
  */
@@ -33,32 +33,46 @@ export function PageCopy({
 }: PageProps) {
   const { t } = useTranslation('onboarding');
   const isDusk = page.sky.dusk > 0.5;
-  const style = useAnimatedStyle(() => {
-    const look = copyLook(position.get(), index, L.copyTravel, reducedMotion);
+  // The title leads, the sentence follows (motion spec §3); on the first page they arrive at
+  // 320 and 420 ms, rising 16 and 20 points (§2).
+  const travel = { title: L.copyTravel, text: L.copyTextTravel };
+  const title = useAnimatedStyle(() => {
+    const look = copyBlockLook(position.get(), index, 'title', travel, reducedMotion);
     const arrival =
-      index === 0 && !reducedMotion
-        ? easeOut((introMs.get() - STORY_MOTION.introCopyDelayMs) / STORY_MOTION.introMs)
-        : 1;
+      index === 0 ? introArrival(introMs.get(), STORY_MOTION.introCopyDelayMs, reducedMotion) : 1;
     return {
       opacity: look.opacity * arrival,
-      transform: [{ translateY: look.translateY + (1 - arrival) * STORY_MOTION.introCopyRise }],
+      transform: [{ translateY: look.translateY + (1 - arrival) * L.introTitleRise }],
+    };
+  });
+  const text = useAnimatedStyle(() => {
+    const look = copyBlockLook(position.get(), index, 'text', travel, reducedMotion);
+    const arrival =
+      index === 0 ? introArrival(introMs.get(), STORY_MOTION.introTextDelayMs, reducedMotion) : 1;
+    return {
+      opacity: look.opacity * arrival,
+      transform: [{ translateY: look.translateY + (1 - arrival) * L.introTextRise }],
     };
   });
   return (
     <>
       <SceneDescription layout={layout} label={sceneLabel} />
-      <Animated.View style={[styles.copy, { top: layout.copyTop }, style]}>
-        <AppText
-          variant="title1"
-          color={isDusk ? 'onAction' : 'heading'}
-          accessibilityRole="header"
-        >
-          {t(page.title)}
-        </AppText>
-        <AppText variant="body" color={isDusk ? 'onActionSecondary' : 'muted'} style={styles.text}>
-          {t(page.text)}
-        </AppText>
-      </Animated.View>
+      <View style={[styles.copy, { top: layout.copyTop }]}>
+        <Animated.View style={title}>
+          <AppText
+            variant="title1"
+            color={isDusk ? 'onAction' : 'heading'}
+            accessibilityRole="header"
+          >
+            {t(page.title)}
+          </AppText>
+        </Animated.View>
+        <Animated.View style={[styles.text, text]}>
+          <AppText variant="body" color={isDusk ? 'onActionSecondary' : 'muted'}>
+            {t(page.text)}
+          </AppText>
+        </Animated.View>
+      </View>
       {index === 0 ? (
         <SwipeHint
           position={position}
@@ -114,9 +128,7 @@ function SwipeHint({
   const whole = useAnimatedStyle(() => ({
     opacity:
       smooth(1 - position.get() * STORY_MOTION.hintRate) *
-      (reducedMotion
-        ? 1
-        : easeOut((introMs.get() - STORY_MOTION.introHintDelayMs) / STORY_MOTION.introMs)),
+      (reducedMotion ? 1 : introArrival(introMs.get(), STORY_MOTION.introHintDelayMs, false)),
   }));
   const chevron = useAnimatedStyle(() => {
     if (reducedMotion) return { opacity: 1, transform: [{ translateY: 0 }] };

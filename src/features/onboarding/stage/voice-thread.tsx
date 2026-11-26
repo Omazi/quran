@@ -16,8 +16,10 @@ import {
   barEnvelope,
   clamp,
   easeOut,
+  followBarOffset,
   mix,
   pageValue,
+  presence,
   threadLook,
   type StoryMarks,
 } from '../story-math';
@@ -49,7 +51,9 @@ function barSwings(count: number): BarSwing {
  * The thread of the voice (`canvas.voice`): 36 bars under the recited line that move with the
  * voice (the finger's speed, the simulated reciter, a breath at rest), water at the centre and
  * gold at the ends, grey and still as the garden dries. On the voice page it slides into the bar
- * under the mushaf page and leaves with it. One path per colour, redrawn on the UI thread.
+ * under the mushaf page, rides in it, then wraps round the listening rosette and dissolves into
+ * it (motion spec §7): the same 36 bars throughout. One path per colour, redrawn on the UI thread
+ * (the spec's Skia canvas; react-native-svg, already in the app, draws it here).
  */
 export function VoiceThread({
   followY,
@@ -68,37 +72,71 @@ export function VoiceThread({
   const right = layout.width / 2 + middle * L.waveStep;
   const build = (pos: number, t: number, level: number, fy: number, introMs: number) => {
     'worklet';
+    const m = STORY_MOTION;
     const thread = threadLook(pos, marks, reducedMotion);
-    let d = '';
+    // The bar under the mushaf page moves with its page: the bars ride inside it (§7).
+    const followCentre = fy + followBarOffset(pos, marks.voice, reducedMotion);
+    // The ring round the rosette, which rises with its page.
+    const ringRadius =
+      layout.rosetteRadius * m.ringRadius * (0.86 + 0.14 * presence(pos, marks.recognition));
+    const ringX = layout.width / 2;
+    const ringY = layout.rosetteY - (reducedMotion ? 0 : m.ringRise * (pos - marks.recognition));
+    let all = '';
+    let even = '';
+    let odd = '';
     for (let k = 0; k < L.waveBars; k += 1) {
       const envelope = barEnvelope(k, L.waveBars);
-      const x = mix(
+      // The line under the garden, then the bar under the mushaf page: vertical bars.
+      let x = mix(
         layout.width / 2 + (k - middle) * L.waveStep,
         L.followInset + L.followWaveStart + k * L.followWaveStep,
         thread.inBar,
       );
-      const y = mix(layout.waveY, fy, thread.inBar);
-      const reach = mix(L.waveReach, L.followWaveReach, thread.inBar) * envelope;
+      let y = mix(layout.waveY, followCentre, thread.inBar);
+      let angle = Math.PI / 2;
+      let reach = mix(L.waveReach, L.followWaveReach, thread.inBar) * envelope;
+      if (thread.inRing > 0) {
+        // Round the rosette: the left half of the line goes up its left side; each bar lies along
+        // the radius, and turns the short way (a bar is a line: modulo π).
+        const theta = Math.PI / 2 + ((k + 0.5) / L.waveBars) * Math.PI * 2;
+        let turn = (theta - Math.PI / 2) % Math.PI;
+        if (turn > Math.PI / 2) turn -= Math.PI;
+        x = mix(x, ringX + ringRadius * Math.cos(theta), thread.inRing);
+        y = mix(y, ringY + ringRadius * Math.sin(theta), thread.inRing);
+        angle = Math.PI / 2 + turn * thread.inRing;
+        reach = mix(reach, m.ringReach, thread.inRing);
+      }
       const swingNow = reducedMotion
         ? 0.6
-        : STORY_MOTION.barRest +
-          STORY_MOTION.barSwing *
+        : m.barRest +
+          m.barSwing *
             Math.sin(t * (swing.speed1[k] ?? 0) + (swing.phase1[k] ?? 0)) *
             Math.sin(t * (swing.speed2[k] ?? 0) + (swing.phase2[k] ?? 0));
-      const length = STORY_MOTION.barMin + reach * level * swingNow;
-      d += `M${x.toFixed(1)} ${(y - length / 2).toFixed(1)}L${x.toFixed(1)} ${(y + length / 2).toFixed(1)}`;
+      const length = (m.barMin + reach * level * swingNow) * thread.shrink;
+      const dx = (Math.cos(angle) * length) / 2;
+      const dy = (Math.sin(angle) * length) / 2;
+      const bar = `M${(x - dx).toFixed(1)} ${(y - dy).toFixed(1)}L${(x + dx).toFixed(1)} ${(y + dy).toFixed(1)}`;
+      all += bar;
+      if (k % 2 === 0) even += bar;
+      else odd += bar;
     }
-    const arrival = reducedMotion
-      ? 1
-      : easeOut((introMs - STORY_MOTION.introWaveDelayMs) / STORY_MOTION.introWaveMs);
-    const alpha = thread.opacity * arrival * STORY_MOTION.barOpacity;
+    const arrival = reducedMotion ? 1 : easeOut((introMs - m.introWaveDelayMs) / m.introWaveMs);
+    const alpha = thread.opacity * arrival * m.barOpacity;
     const alive = pageValue(voices, pos);
+    const inFollow = thread.inBar * (1 - thread.inRing);
     return {
-      d: d === '' ? 'M0 0' : d,
-      strokeWidth: mix(L.waveWidth, L.followWaveWidth, thread.inBar),
+      d: all === '' ? 'M0 0' : all,
+      even: even === '' ? 'M0 0' : even,
+      odd: odd === '' ? 'M0 0' : odd,
+      strokeWidth: mix(
+        mix(L.waveWidth, L.followWaveWidth, thread.inBar),
+        L.ringBarWidth,
+        thread.inRing,
+      ),
       grey: alpha * (1 - thread.inBar),
       alive: alpha * alive * (1 - thread.inBar),
-      white: alpha * thread.inBar,
+      white: alpha * inFollow,
+      ring: alpha * thread.inRing,
     };
   };
   const shape = () => {
@@ -122,6 +160,15 @@ export function VoiceThread({
   const whiteProps = useAnimatedProps(() => {
     const s = shape();
     return { d: s.d, strokeWidth: s.strokeWidth, strokeOpacity: s.white };
+  });
+  // Round the rosette the bars alternate water and gold.
+  const ringWaterProps = useAnimatedProps(() => {
+    const s = shape();
+    return { d: s.even, strokeWidth: s.strokeWidth, strokeOpacity: s.ring };
+  });
+  const ringGoldProps = useAnimatedProps(() => {
+    const s = shape();
+    return { d: s.odd, strokeWidth: s.strokeWidth, strokeOpacity: s.ring };
   });
   // The whole thread also fades as a view: its opacity reaches every platform, the paths' own
   // props only where the platform redraws them on the UI thread.
@@ -188,6 +235,22 @@ export function VoiceThread({
             strokeLinecap="round"
             fill="none"
             animatedProps={whiteProps}
+          />
+          <AnimatedPath
+            d={initial.even}
+            strokeOpacity={initial.ring}
+            stroke={colors.voiceWater}
+            strokeLinecap="round"
+            fill="none"
+            animatedProps={ringWaterProps}
+          />
+          <AnimatedPath
+            d={initial.odd}
+            strokeOpacity={initial.ring}
+            stroke={colors.voiceGold}
+            strokeLinecap="round"
+            fill="none"
+            animatedProps={ringGoldProps}
           />
         </Svg>
       </Animated.View>

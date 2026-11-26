@@ -300,3 +300,24 @@ export function fixedAmount(recitation: Recitation, t: number): number {
 export function stillMoment(recitation: Recitation): number {
   return (recitation.rereadAt + recitation.fixedAt) / 2;
 }
+
+/**
+ * How far the word read wrong is shaken sideways at `t` (motion spec §8): 0, −3, 3, −2, 1, 0
+ * points over the 360 ms after it turns red, each step on the strong ease-out. 0 otherwise.
+ */
+export function shakeOffset(recitation: Recitation, t: number): number {
+  'worklet';
+  const { shakeMs, shakeOffsets } = STORY_MOTION;
+  const along = (t - recitation.rereadAt) / shakeMs;
+  if (along <= 0 || along >= 1) return 0;
+  const steps = shakeOffsets.length - 1;
+  const at = along * steps;
+  const step = Math.min(steps - 1, Math.floor(at));
+  return mix(shakeOffsets[step] ?? 0, shakeOffsets[step + 1] ?? 0, easeOut(at - step));
+}
+
+/** True when the word turns red between two moments of the clock (for the warning haptic). */
+export function turnsRed(recitation: Recitation, before: number, now: number): boolean {
+  'worklet';
+  return before < recitation.rereadAt && now >= recitation.rereadAt;
+}

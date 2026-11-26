@@ -28,6 +28,8 @@ export const STORY_MOTION = {
   introMs: 800,
   introLineDelayMs: 160,
   introCopyDelayMs: 320,
+  introTextDelayMs: 420,
+  introDotsDelayMs: 600,
   introCopyRise: 16,
   introHintDelayMs: 900,
   introWaveDelayMs: 250,
@@ -72,10 +74,28 @@ export const STORY_MOTION = {
   barMin: 3,
   goldCurve: 1.4,
   barOpacity: 0.95,
-  /** The thread slides into the bar under the mushaf page and leaves with it (2.4 × faster). */
-  threadLeaveRate: 2.4,
-  /** The recited line advances with the finger over the five growing pages. */
-  lineOverPages: 5,
+  /**
+   * The thread of the voice (motion spec §7): into the bar over `[0.08, 0.85]` of the way to the
+   * voice page, then round the rosette over `[0.04, 0.72]` of the way to the listening page,
+   * shrinking over `[0.55, 0.92]` (to 15 %) and fading over `[0.6, 0.92]` as the rosette lights.
+   */
+  threadIntoBar: [0.08, 0.85] as const,
+  threadIntoRing: [0.04, 0.72] as const,
+  threadShrink: [0.55, 0.92] as const,
+  threadShrinkTo: 0.15,
+  threadFade: [0.6, 0.92] as const,
+  /** The ring round the rosette: 1.38 radii, from 86 % as the rosette arrives; 18 pt bars. */
+  ringRadius: 1.38,
+  ringReach: 18,
+  ringRise: 50,
+  /** The bar under the mushaf page trails the page in (110 pt a page) and leaves at 60 pt a page. */
+  followArriveTravel: 110,
+  /**
+   * The recited line advances with the finger over the five growing pages, through these words
+   * (of Al-Fatiha's 29) on pages 0 to 5: each page rests on a word in the middle of a line, never
+   * on two lines crossfading (motion spec §6).
+   */
+  lineStops: [0, 5.8, 11.5, 15, 22.2, 29] as const,
   lineFadeIn: 0.7,
   lineDrift: 12,
   wordFloor: 0.26,
@@ -117,13 +137,19 @@ export const STORY_MOTION = {
   /** A leaf starts this far above the earth's top, in picture pixels, and up to 150 more. */
   leafStartAbove: 60,
   leafStartRange: 150,
-  /** The earth cracks from page 7.35 over 1.55 pages, and the cracks leave after the dead page. */
+  /**
+   * The earth cracks from page 7.35 over 1.55 pages in eight layers (motion spec §5: layer b shows
+   * over `[b·0.11875 − 0.02, b·0.11875 + 0.14]` of the cracking), and the cracks leave after the
+   * dead page.
+   */
   crackFrom: 7.35,
   crackSpan: 1.55,
   crackLeaveFrom: 9,
   crackLeaveRate: 1.7,
-  crackSharpness: 9,
-  crackGroups: 12,
+  crackLayers: 8,
+  crackLayerStep: 0.11875,
+  crackLayerLead: 0.02,
+  crackLayerSpan: 0.16,
   /** The revival: two rings of water leave the fountain, the green follows (`ring1`, `ring2`). */
   ringSecondDelay: 0.12,
   ringStart: 0.04,
@@ -138,7 +164,6 @@ export const STORY_MOTION = {
   pageEnterScale: 0.04,
   pageLeaveTravel: 30,
   pageLeaveScale: 0.1,
-  followEnterTravel: 40,
   followLeaveTravel: 60,
   /** The demonstration of the voice page: a word every 300 ms plus 26 ms per letter pair. */
   recitationStartMs: 500,
@@ -150,22 +175,50 @@ export const STORY_MOTION = {
   recitationRestMs: 1900,
   wordFadeMs: 280,
   pillSlideMs: 320,
+  /**
+   * The night of the two voice pages is a curtain 1.5 screens high (the dusk, then a 0.5 screen
+   * tail) that comes down over `[10, 11]` and leaves upwards over `[12, 13]` (motion spec §4).
+   */
+  curtainHeight: 1.5,
+  /** The name at the top is light from 10.1 to 12.75 (the night reaches it first, leaves it last). */
+  nameNightFrom: 10.1,
+  nameNightTo: 12.75,
+  nameColorMs: 400,
+  /** The red word shakes 0, −3, 3, −2, 1, 0 points over 360 ms (motion spec §8). */
+  shakeMs: 360,
+  shakeOffsets: [0, -3, 3, -2, 1, 0] as const,
+  /** Springs of the listening page (motion spec §0): rosette 0.55 s, card 0.5 s 80 ms after it. */
+  foundRosetteResponseS: 0.55,
+  foundCardResponseS: 0.5,
+  foundCardDelayMs: 80,
+  /** The first page arrives on a 0.9 s spring (motion spec §2). */
+  introResponseS: 0.9,
+  /** The thirsty friend's words change in 250 ms once the heart has landed. */
+  encouragedFadeMs: 250,
   /** The listening demonstration loops every 9 s: it listens 2.7 s, the card comes in 0.7 s. */
   recognitionLoopMs: 9000,
   recognitionListenMs: 2700,
   recognitionCardMs: 700,
   recognitionLeaveAtMs: 8300,
-  recognitionLeaveMs: 600,
+  /** It leaves faster than it came (motion spec §9: 0.45 s). */
+  recognitionLeaveMs: 450,
   rosetteTravel: 50,
   labelTravel: 40,
-  labelLift: 10,
+  labelLift: 14,
+  /** The words « À l’écoute… » are gone before the card covers them (`1 − 2.5·r`). */
+  labelFadeRate: 2.5,
+  /** The card: opacity `1.4·c`. */
+  cardFadeRate: 1.4,
   cardScaleFrom: 0.96,
   /** Friends: each card arrives at its own speed, the heart flies over the second half of 12–13. */
   cardTravel: 60,
   cardTravelStep: 34,
   cardTilt: 3,
-  /** The heart leaves half a page before the friends' page (`pos − 12.5`). */
-  heartLead: 0.5,
+  /**
+   * The heart flies over `[12.4, 12.88]` (motion spec §10): it lands at 88 % of the way, before the
+   * settle's slow tail.
+   */
+  heartLead: 0.6,
   heartSpan: 0.48,
   heartPop: 0.35,
   heartTilt: 18,

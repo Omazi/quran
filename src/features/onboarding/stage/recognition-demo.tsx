@@ -17,7 +17,7 @@ import {
 } from '@/ui';
 
 import { STORY_MOTION } from '../config';
-import { easeOut, mix, presence } from '../story-math';
+import { clamp, mix, presence, recognitionLook } from '../story-math';
 import { useDemoVoice } from '../use-demo-voice';
 import { useSamplePassage } from '../use-sample-passage';
 import { isNear, type StageProps } from './stage-props';
@@ -43,42 +43,36 @@ export function RecognitionDemo(stage: StageProps) {
     layout.top + L.rosetteMinTop,
     cardTop - L.rosetteAboveCard - layout.rosetteRadius * L.rosetteFoundScale * L.rosetteFoundRoom,
   );
-  const found = (ms: number) => {
-    'worklet';
-    if (reducedMotion) return 1;
-    if (ms < 0) return 0;
-    const listen = m.recognitionListenMs;
-    if (ms < listen) return 0;
-    if (ms < listen + m.recognitionCardMs) return easeOut((ms - listen) / m.recognitionCardMs);
-    if (ms < m.recognitionLeaveAtMs) return 1;
-    return 1 - easeOut((ms - m.recognitionLeaveAtMs) / m.recognitionLeaveMs);
-  };
+  // The rosette first (0.55 s spring), the card 80 ms after it (0.5 s): motion spec §9.
   const rosette = useAnimatedStyle(() => {
     const d = position.get() - marks.recognition;
     const shown = presence(position.get(), marks.recognition);
-    const f = found(engine.recognitionMs.get());
-    const y = mix(layout.rosetteY, foundY, f) - (reducedMotion ? 0 : d * m.rosetteTravel);
-    const scale = mix(1, L.rosetteFoundScale, f) * (reducedMotion ? 1 : 0.86 + 0.14 * shown);
+    const r = recognitionLook(engine.recognitionMs.get(), reducedMotion).rosette;
+    const y = mix(layout.rosetteY, foundY, r) - (reducedMotion ? 0 : d * m.rosetteTravel);
+    const scale = mix(1, L.rosetteFoundScale, r) * (reducedMotion ? 1 : 0.86 + 0.14 * shown);
     return { opacity: shown, transform: [{ translateY: y - layout.rosetteY }, { scale }] };
   });
   const label = useAnimatedStyle(() => {
     const d = position.get() - marks.recognition;
-    const f = found(engine.recognitionMs.get());
+    const r = recognitionLook(engine.recognitionMs.get(), reducedMotion).rosette;
     return {
-      opacity: presence(position.get(), marks.recognition) * (1 - f),
-      transform: [{ translateY: reducedMotion ? 0 : -d * m.labelTravel - f * m.labelLift }],
+      opacity: presence(position.get(), marks.recognition) * (1 - clamp(m.labelFadeRate * r)),
+      transform: [{ translateY: reducedMotion ? 0 : -d * m.labelTravel - r * m.labelLift }],
     };
   });
   const card = useAnimatedStyle(() => {
     const d = position.get() - marks.recognition;
-    const f = found(engine.recognitionMs.get());
+    const c = recognitionLook(engine.recognitionMs.get(), reducedMotion).card;
     return {
-      opacity: cardHeight === 0 ? 0 : presence(position.get(), marks.recognition) * f,
+      opacity:
+        cardHeight === 0
+          ? 0
+          : presence(position.get(), marks.recognition) * clamp(m.cardFadeRate * c),
       transform: reducedMotion
         ? []
         : [
-            { translateY: (1 - f) * L.foundRise - d * m.rosetteTravel },
-            { scale: m.cardScaleFrom + (1 - m.cardScaleFrom) * f },
+            { translateY: (1 - c) * L.foundRise - d * m.rosetteTravel },
+            { scale: m.cardScaleFrom + (1 - m.cardScaleFrom) * c },
           ],
     };
   });

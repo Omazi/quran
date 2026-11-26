@@ -3,8 +3,8 @@
  * in its own pixels so that they turn with it. Generated, never drawn by hand: random walks over
  * the five planting beds of the earth's top, with the prototype's seeded sequence, so every
  * launch cracks the same way. Each piece of crack appears once the earth has cracked past its
- * moment (`at`); pieces are grouped by moment into a few paths, so that the stage animates a
- * dozen paths instead of a hundred lines.
+ * moment; pieces are bucketed by moment into the motion spec's eight layers (§5), each drawn once
+ * and shown by its own opacity, so that the stage fades eight pictures instead of a hundred lines.
  */
 
 import { CRACK_SEED, EARTH_TOP, STORY_MOTION } from './config';
@@ -27,9 +27,9 @@ export function earthPoint(u: number, v: number): readonly [number, number] {
   ];
 }
 
-/** A group of crack pieces: the moment they appear (0 to 1 of the cracking), and their path. */
+/** A layer of crack pieces: its index (0 to 7, the order they appear in), and its path. */
 export interface CrackGroup {
-  readonly at: number;
+  readonly layer: number;
   readonly path: string;
 }
 
@@ -45,7 +45,7 @@ const BEDS = [
 const clampSide = (value: number) => Math.max(0.03, Math.min(0.97, value));
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 
-export function crackGroups(groups: number = STORY_MOTION.crackGroups): readonly CrackGroup[] {
+export function crackGroups(): readonly CrackGroup[] {
   const random = seededRandom(CRACK_SEED);
   const pieces: { at: number; points: (readonly [number, number])[] }[] = [];
   const walk = (
@@ -92,7 +92,10 @@ export function crackGroups(groups: number = STORY_MOTION.crackGroups): readonly
   });
   const byGroup = new Map<number, string[]>();
   for (const piece of pieces) {
-    const group = Math.round(piece.at * groups) / groups;
+    const group = Math.min(
+      STORY_MOTION.crackLayers - 1,
+      Math.floor(piece.at / STORY_MOTION.crackLayerStep),
+    );
     const path = piece.points
       .map(([x, y], k) => `${k === 0 ? 'M' : 'L'}${x.toFixed(1)} ${y.toFixed(1)}`)
       .join(' ');
@@ -100,5 +103,5 @@ export function crackGroups(groups: number = STORY_MOTION.crackGroups): readonly
   }
   return [...byGroup.entries()]
     .sort(([a], [b]) => a - b)
-    .map(([at, paths]) => ({ at, path: paths.join(' ') }));
+    .map(([layer, paths]) => ({ layer, path: paths.join(' ') }));
 }

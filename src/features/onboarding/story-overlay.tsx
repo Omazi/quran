@@ -2,8 +2,12 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  Easing,
   interpolateColor,
+  useAnimatedReaction,
   useAnimatedStyle,
+  useSharedValue,
+  withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 
@@ -11,7 +15,8 @@ import { AppText, useColorValues, voiceStoryLayout as L } from '@/ui';
 
 import type { OnboardingPage } from './pages';
 import type { StageLayout } from './stage-layout';
-import { dotShape, skyAt } from './story-math';
+import { STORY_MOTION } from './config';
+import { dotShape, isNameOnNight, nightLook, storyMarks } from './story-math';
 
 export interface StoryOverlayProps {
   readonly pages: readonly OnboardingPage[];
@@ -38,9 +43,26 @@ export function StoryOverlay({
   showPage,
 }: StoryOverlayProps) {
   const { t } = useTranslation(['onboarding', 'common']);
-  const skies = useMemo(() => pages.map((page) => page.sky), [pages]);
-  const dark = useAnimatedStyle(() => ({ opacity: 1 - skyAt(skies, position.get()).dusk }));
-  const light = useAnimatedStyle(() => ({ opacity: skyAt(skies, position.get()).dusk }));
+  const marks = useMemo(() => storyMarks(pages), [pages]);
+  // The name and the dots change colour at a moment, in 400 ms (motion spec §4), not with every
+  // frame of the finger: the name when the night reaches the top, the dots past half the night.
+  const nameNight = useSharedValue(0);
+  const dotsNight = useSharedValue(0);
+  const timing = { duration: STORY_MOTION.nameColorMs, easing: Easing.inOut(Easing.ease) };
+  useAnimatedReaction(
+    () => isNameOnNight(position.get()),
+    (isNight, was) => {
+      if (isNight !== was) nameNight.set(withTiming(isNight ? 1 : 0, timing));
+    },
+  );
+  useAnimatedReaction(
+    () => nightLook(position.get(), marks).night > 0.5,
+    (isNight, was) => {
+      if (isNight !== was) dotsNight.set(withTiming(isNight ? 1 : 0, timing));
+    },
+  );
+  const dark = useAnimatedStyle(() => ({ opacity: 1 - nameNight.get() }));
+  const light = useAnimatedStyle(() => ({ opacity: nameNight.get() }));
   return (
     <>
       {isReplay ? null : (
@@ -79,7 +101,13 @@ export function StoryOverlay({
         testID="onboarding-pager-indicator"
       >
         {pages.map((page, index) => (
-          <Dot key={page.id} index={index} count={pages.length} position={position} skies={skies} />
+          <Dot
+            key={page.id}
+            index={index}
+            count={pages.length}
+            position={position}
+            night={dotsNight}
+          />
         ))}
       </View>
     </>
@@ -94,38 +122,50 @@ const DOT_SIZES = {
   gap: L.dotGap,
 };
 
+/**
+ * One dot: its shape and place from the position (transforms only), the current dot's colour as
+ * a layer over the plain one (opacity, not a colour per frame), both tinted for the night.
+ */
 function Dot({
   index,
   count,
   position,
-  skies,
+  night,
 }: {
   index: number;
   count: number;
   position: SharedValue<number>;
-  skies: readonly OnboardingPage['sky'][];
+  night: SharedValue<number>;
 }) {
   const day = useColorValues();
-  const night = useColorValues('dark');
-  const style = useAnimatedStyle(() => {
+  const dark = useColorValues('dark');
+  const shape = useAnimatedStyle(() => {
     const pos = position.get();
     let offset = 0;
     for (let k = 0; k < index && k < count; k += 1) offset += dotShape(k, pos, DOT_SIZES).room;
-    const shape = dotShape(index, pos, DOT_SIZES);
-    const dusk = skyAt(skies, pos).dusk;
-    const other = interpolateColor(dusk, [0, 1], [day.pageDot, night.pageDot]);
-    const current = interpolateColor(dusk, [0, 1], [day.pageDotCurrent, night.nightPageInk]);
+    const dot = dotShape(index, pos, DOT_SIZES);
     return {
-      backgroundColor: interpolateColor(shape.current, [0, 1], [other, current]),
-      opacity: shape.width > 0 ? 1 : 0,
+      opacity: dot.width > 0 ? 1 : 0,
       transform: [
         { translateY: offset },
-        { scaleX: shape.width / L.dot },
-        { scaleY: shape.length / L.dotCurrent },
+        { scaleX: dot.width / L.dot },
+        { scaleY: dot.length / L.dotCurrent },
       ],
     };
   });
-  return <Animated.View style={[styles.dot, style]} />;
+  const plain = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(night.get(), [0, 1], [day.pageDot, dark.pageDot]),
+  }));
+  const current = useAnimatedStyle(() => ({
+    opacity: dotShape(index, position.get(), DOT_SIZES).current,
+    backgroundColor: interpolateColor(night.get(), [0, 1], [day.pageDotCurrent, dark.nightPageInk]),
+  }));
+  return (
+    <Animated.View style={[styles.dot, shape]}>
+      <Animated.View style={[StyleSheet.absoluteFill, styles.dotFill, plain]} />
+      <Animated.View style={[StyleSheet.absoluteFill, styles.dotFill, current]} />
+    </Animated.View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -142,7 +182,7 @@ const styles = StyleSheet.create({
     top: 0,
     width: L.dot,
     height: L.dotCurrent,
-    borderRadius: L.dot / 2,
     transformOrigin: 'top',
   },
+  dotFill: { borderRadius: L.dot / 2 },
 });

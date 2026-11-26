@@ -403,6 +403,24 @@ export const backdropGradients = {
       [1, '#0A0907'],
     ],
   },
+  /**
+   * The tail of the night curtain of the first launch (motion spec §4): under the dusk, half a
+   * screen that fades the night into the sky it uncovers, the same in both appearances.
+   */
+  duskTail: {
+    light: [
+      [0, 'rgba(16, 14, 11, 1)'],
+      [0.3, 'rgba(16, 14, 11, 0.82)'],
+      [0.68, 'rgba(16, 14, 11, 0.35)'],
+      [1, 'rgba(16, 14, 11, 0)'],
+    ],
+    dark: [
+      [0, 'rgba(16, 14, 11, 1)'],
+      [0.3, 'rgba(16, 14, 11, 0.82)'],
+      [0.68, 'rgba(16, 14, 11, 0.35)'],
+      [1, 'rgba(16, 14, 11, 0)'],
+    ],
+  },
   /** khatm.png: a full sunrise. */
   complete: {
     light: [
@@ -1004,6 +1022,14 @@ export const voiceStoryLayout = {
   hintGap: 4,
   /** How far each drifting thing travels: the words, the hint's nudge, a rising garden element. */
   copyTravel: 56,
+  /** The sentence under a title comes from further down, so it follows the title (motion spec §3). */
+  copyTextTravel: 76,
+  /** The first page arrives (motion spec §2): the garden rises 14 points from 97 %, the line 10, the title 16, the sentence 20. */
+  introGardenRise: 14,
+  introGardenScale: 0.97,
+  introLineRise: 10,
+  introTitleRise: 16,
+  introTextRise: 20,
   hintTravelFrom: 6,
   hintTravelTo: -8,
   riseTravel: 26,
@@ -1070,6 +1096,8 @@ export const voiceStoryLayout = {
   followWaveStep: 2.2,
   followWaveReach: 26,
   followWaveWidth: 1.7,
+  /** The thread wrapped round the listening rosette (motion spec §7): its bars' width. */
+  ringBarWidth: 2.2,
   /** The bar's two lines of state slide 6 points as they swap. */
   subtitleTravel: 6,
   /** The listening page: the rosette's radius (share of width, of height), its place, the card. */

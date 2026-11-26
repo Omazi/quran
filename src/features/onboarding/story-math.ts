@@ -35,6 +35,38 @@ export function easeOut(value: number): number {
   return 1 - Math.pow(1 - clamp(value), EASE_OUT_POWER);
 }
 
+/** `v` from `a` to `b` as 0 to 1, clamped (the motion spec's `ramp`). */
+export function ramp(value: number, from: number, to: number): number {
+  'worklet';
+  return clamp((value - from) / (to - from));
+}
+
+/** Slow, fast, slow (`Easing.inOut(Easing.cubic)`). */
+export function inOutCubic(value: number): number {
+  'worklet';
+  const t = clamp(value);
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+/** `Easing.out(Easing.quad)`. */
+export function easeOutQuad(value: number): number {
+  'worklet';
+  const t = clamp(value);
+  return 1 - (1 - t) * (1 - t);
+}
+
+/**
+ * A critically damped spring released from rest, as a function of time (seconds), for a response
+ * of `response` seconds: what `withSpring({ dampingRatio: 1 })` does, computed from a clock so the
+ * demonstrations stay pure functions of their time (motion spec §0).
+ */
+export function springT(seconds: number, response: number): number {
+  'worklet';
+  if (seconds <= 0) return 0;
+  const w = (2 * Math.PI) / response;
+  return 1 - (1 + w * seconds) * Math.exp(-w * seconds);
+}
+
 /** The two pages around a position, how far along (`f`), and the eased amount (`s`). */
 export interface Segment {
   readonly from: number;
@@ -57,6 +89,32 @@ export function segmentAt(position: number, pageCount: number): Segment {
 export function presence(position: number, page: number): number {
   'worklet';
   return smooth(1 - Math.abs(position - page) * STORY_MOTION.presenceRate);
+}
+
+/**
+ * A page's title and its sentence (motion spec §3): the title leads, the sentence follows it in
+ * (later, from further down: 76 points a page against 56), and the block leaves as one. Hidden
+ * beyond 0.6 of a page. With "reduce motion", they only fade.
+ */
+export function copyBlockLook(
+  position: number,
+  page: number,
+  part: 'title' | 'text',
+  travel: { title: number; text: number },
+  reducedMotion: boolean,
+): { opacity: number; translateY: number } {
+  'worklet';
+  const d = position - page;
+  if (Math.abs(d) >= 0.6) return { opacity: 0, translateY: 0 };
+  if (d <= 0) {
+    const opacity = part === 'title' ? smooth(ramp(d, -0.5, -0.08)) : smooth(ramp(d, -0.42, 0));
+    const lift = part === 'title' ? travel.title : travel.text;
+    return { opacity, translateY: reducedMotion ? 0 : -lift * d };
+  }
+  return {
+    opacity: 1 - smooth(ramp(d, 0, 0.42)),
+    translateY: reducedMotion ? 0 : -travel.title * d,
+  };
 }
 
 /** How visible a page's words are, and how far they have drifted (`pins`). */
@@ -311,11 +369,18 @@ export function crackLook(position: number): { progress: number; opacity: number
   return { progress, opacity };
 }
 
-/** A group of cracks, which appear together once the earth has cracked past `at`. */
-export function crackGroupOpacity(at: number, progress: number, reducedMotion: boolean): number {
+/**
+ * One of the eight layers of cracks (`b`, 0 to 7), at a position: it shows over its own part of
+ * the cracking, and every layer leaves after the dead page. With "reduce motion", all the layers
+ * crossfade in together at the middle of the cracking.
+ */
+export function crackLayerOpacity(layer: number, position: number, reducedMotion: boolean): number {
   'worklet';
-  if (reducedMotion) return progress > 0.5 ? 1 : 0;
-  return clamp((progress - at) * STORY_MOTION.crackSharpness);
+  const m = STORY_MOTION;
+  const { progress, opacity } = crackLook(position);
+  if (reducedMotion) return smooth(ramp(progress, 0.4, 0.6)) * opacity;
+  const from = layer * m.crackLayerStep - m.crackLayerLead;
+  return ramp(progress, from, from + m.crackLayerSpan) * opacity;
 }
 
 /**
@@ -338,10 +403,19 @@ export function captionOpacity(
   return 0;
 }
 
-/** How many words of Al-Fatiha are lit at a position: all 29 over the five growing pages. */
+/**
+ * How many words of Al-Fatiha are lit at a position: piecewise linear through the spec's stops
+ * over the five growing pages (each page rests in the middle of a line), all of them from page 5.
+ */
 export function litWords(position: number, total: number): number {
   'worklet';
-  return clamp(position / STORY_MOTION.lineOverPages) * total;
+  const stops = STORY_MOTION.lineStops;
+  const last = stops.length - 1;
+  const full = stops[last] ?? 1;
+  const at = clamp(position, 0, last);
+  const from = Math.min(Math.floor(at), last - 1);
+  const value = mix(stops[from] ?? 0, stops[from + 1] ?? full, at - from);
+  return (value / full) * total;
 }
 
 /**
@@ -430,25 +504,83 @@ export function waterFlow(level: number): number {
 }
 
 /**
- * Where the thread of the voice is: 0 under the garden, 1 inside the bar under the mushaf page,
- * and how visible it is (it leaves with the bar).
+ * Where the thread of the voice is (motion spec §7), one object from page 0 to page 12: `inBar`
+ * from the line under the garden (0) into the bar under the mushaf page (1); `inRing` from that bar
+ * to the ring round the rosette (1); `shrink`, its bars' length; `opacity`, gone as the rosette
+ * lights. With "reduce motion", the morphs are crossfades at the middle of the way.
  */
 export function threadLook(
   position: number,
   marks: StoryMarks,
   reducedMotion: boolean,
-): { inBar: number; opacity: number } {
+): { inBar: number; inRing: number; shrink: number; opacity: number } {
   'worklet';
-  const { revival, voice } = marks;
-  const page = Math.floor(clamp(position, 0, voice + 1));
-  const along = position - page;
-  let inBar = 0;
-  if (page >= voice) inBar = 1;
-  else if (page === revival) inBar = reducedMotion ? (along < 0.5 ? 0 : 1) : smooth(along);
-  let opacity = 1;
-  if (page === voice) opacity = 1 - smooth(along * STORY_MOTION.threadLeaveRate);
-  else if (page > voice) opacity = 0;
-  return { inBar, opacity };
+  const m = STORY_MOTION;
+  const { revival, voice, recognition } = marks;
+  if (position <= revival) return { inBar: 0, inRing: 0, shrink: 1, opacity: 1 };
+  if (position < voice) {
+    const f = position - revival;
+    const inBar = reducedMotion
+      ? f < 0.5
+        ? 0
+        : 1
+      : inOutCubic(ramp(f, m.threadIntoBar[0], m.threadIntoBar[1]));
+    const opacity = reducedMotion ? Math.abs(1 - 2 * f) : 1;
+    return { inBar, inRing: 0, shrink: 1, opacity };
+  }
+  if (position < recognition) {
+    const f = position - voice;
+    if (reducedMotion) return { inBar: 1, inRing: 0, shrink: 1, opacity: f < 0.5 ? 1 - 2 * f : 0 };
+    return {
+      inBar: 1,
+      inRing: inOutCubic(ramp(f, m.threadIntoRing[0], m.threadIntoRing[1])),
+      shrink: 1 - (1 - m.threadShrinkTo) * smooth(ramp(f, m.threadShrink[0], m.threadShrink[1])),
+      opacity: 1 - smooth(ramp(f, m.threadFade[0], m.threadFade[1])),
+    };
+  }
+  return { inBar: 1, inRing: 1, shrink: m.threadShrinkTo, opacity: 0 };
+}
+
+/**
+ * The bar under the mushaf page, where the thread rests: how far it is from its place (it trails
+ * the page in, 110 points a page, and leaves upwards, 60 a page).
+ */
+export function followBarOffset(
+  position: number,
+  voicePage: number,
+  reducedMotion: boolean,
+): number {
+  'worklet';
+  if (reducedMotion) return 0;
+  const d = position - voicePage;
+  return d < 0 ? -d * STORY_MOTION.followArriveTravel : -d * STORY_MOTION.followLeaveTravel;
+}
+
+/**
+ * The night of the two voice pages (motion spec §4): `offset` is the curtain's translation as a
+ * share of its own height (−1 hidden above, 0 down), `night` how dark the sky is (0 to 1), and
+ * whether the curtain is drawn at all. It comes down from the top and leaves upwards like dawn.
+ */
+export function nightLook(
+  position: number,
+  marks: StoryMarks,
+): { offset: number; night: number; visible: boolean } {
+  'worklet';
+  const { revival, voice, recognition, friends } = marks;
+  if (position <= revival || position >= friends) return { offset: -1, night: 0, visible: false };
+  if (position < voice) {
+    const f = position - revival;
+    return { offset: -(1 - easeOutQuad(f)), night: f, visible: true };
+  }
+  if (position <= recognition) return { offset: 0, night: 1, visible: true };
+  const f = position - recognition;
+  return { offset: -easeOutQuad(f), night: 1 - f, visible: true };
+}
+
+/** The name at the top is light while the night is over it (it reaches the top first). */
+export function isNameOnNight(position: number): boolean {
+  'worklet';
+  return position > STORY_MOTION.nameNightFrom && position < STORY_MOTION.nameNightTo;
 }
 
 /** The envelope of the thread: tall in the middle, low at its ends. */
@@ -516,4 +648,46 @@ export function dotShape(
   const length = width + (sizes.current - sizes.dot) * current;
   const visible = clamp(near + 3 - distance);
   return { length, width, room: length + sizes.gap * visible, current };
+}
+
+/**
+ * The listening page's demonstration at `ms` of its 9 s loop (motion spec §9): `rosette`, how far
+ * the rosette has moved up and shrunk (its 0.55 s spring from 2.7 s), and `card`, how far the card
+ * "Passage reconnu" has risen (its 0.5 s spring, 80 ms later); both leave from 8.3 s, faster than
+ * they came. With "reduce motion", found at once and still.
+ */
+export function recognitionLook(
+  ms: number,
+  reducedMotion: boolean,
+): { rosette: number; card: number } {
+  'worklet';
+  if (reducedMotion) return { rosette: 1, card: 1 };
+  if (ms < 0) return { rosette: 0, card: 0 };
+  const m = STORY_MOTION;
+  const at = m.recognitionListenMs;
+  const leave =
+    ms < m.recognitionLeaveAtMs
+      ? 1
+      : 1 - easeOut((ms - m.recognitionLeaveAtMs) / m.recognitionLeaveMs);
+  return {
+    rosette: springT((ms - at) / 1000, m.foundRosetteResponseS) * leave,
+    card: springT((ms - at - m.foundCardDelayMs) / 1000, m.foundCardResponseS) * leave,
+  };
+}
+
+/** True when the passage is recognised between two moments of the loop (the success haptic). */
+export function isFoundBetween(before: number, now: number): boolean {
+  'worklet';
+  const at = STORY_MOTION.recognitionListenMs;
+  return before >= 0 && before < at && now >= at;
+}
+
+/**
+ * How far a piece of the first page has arrived (motion spec §2): the 0.9 s critically damped
+ * spring, started `delayMs` after the first frame. 1 with "reduce motion".
+ */
+export function introArrival(introMs: number, delayMs: number, reducedMotion: boolean): number {
+  'worklet';
+  if (reducedMotion) return 1;
+  return springT((introMs - delayMs) / 1000, STORY_MOTION.introResponseS);
 }

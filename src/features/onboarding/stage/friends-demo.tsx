@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   Easing,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -269,13 +270,26 @@ function Encouragement({
   thirsty,
   encouraged,
 }: Pick<StageProps, 'position' | 'marks'> & { thirsty: string; encouraged: string }) {
-  const amount = (pos: number) => {
-    'worklet';
-    const progress = heartProgress(pos, marks.friends);
-    return progress >= STORY_MOTION.encouragedAt && presence(pos, marks.friends) > 0.3 ? 1 : 0;
-  };
-  const before = useAnimatedStyle(() => ({ opacity: 1 - amount(position.get()) }));
-  const after = useAnimatedStyle(() => ({ opacity: amount(position.get()) }));
+  // Once the heart has landed, the words change in a 250 ms crossfade (motion spec §10).
+  const amount = useSharedValue(0);
+  useAnimatedReaction(
+    () => {
+      const pos = position.get();
+      const progress = heartProgress(pos, marks.friends);
+      return progress >= STORY_MOTION.encouragedAt && presence(pos, marks.friends) > 0.3;
+    },
+    (landed, was) => {
+      if (landed === was) return;
+      amount.set(
+        withTiming(landed ? 1 : 0, {
+          duration: STORY_MOTION.encouragedFadeMs,
+          easing: Easing.inOut(Easing.ease),
+        }),
+      );
+    },
+  );
+  const before = useAnimatedStyle(() => ({ opacity: 1 - amount.get() }));
+  const after = useAnimatedStyle(() => ({ opacity: amount.get() }));
   return (
     <View style={styles.status}>
       <Animated.View style={before}>

@@ -17,8 +17,8 @@ jest.mock('expo-haptics', () => ({
   selectionAsync: jest.fn(async () => {}),
   notificationAsync: jest.fn(async () => {}),
   impactAsync: jest.fn(async () => {}),
-  NotificationFeedbackType: { Success: 'success' },
-  ImpactFeedbackStyle: { Light: 'light' },
+  NotificationFeedbackType: { Success: 'success', Warning: 'warning' },
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium' },
 }));
 
 const TODAY = parseLocalDate('2026-11-25');
@@ -148,7 +148,8 @@ describe('the first launch, "voix" direction', () => {
     });
     expect(settings.onboardingCompleted).toBe(true);
     expect(notifications.request).toHaveBeenCalledTimes(1);
-    expect(Haptics.notificationAsync).toHaveBeenCalledWith('success');
+    // A medium impact on the press (motion spec §13).
+    expect(Haptics.impactAsync).toHaveBeenCalledWith('medium');
     expect(onFinished).toHaveBeenCalledWith({ isReplay: false });
   });
 
@@ -177,15 +178,18 @@ describe('the first launch, "voix" direction', () => {
     await act(async () => {});
     const copy = screen.getByRole('header', { name: 'Une terre nue.' }).parent;
     expect(copy).toHaveStyle({ transform: [{ translateY: 0 }] });
+    // Straight and still: no 3D transform at all, no arrival.
     expect(screen.getByTestId('onboarding-garden', { includeHiddenElements: true })).toHaveStyle({
-      transform: [{ translateY: 0 }, { scale: 1 }, { perspective: 1400 }, { rotateY: '0deg' }],
+      transform: [{ translateY: 0 }, { scale: 1 }],
     });
   });
 
   it('turns the garden a few degrees per page without reduce motion', async () => {
     await open({ page: 0 });
+    // At the first frame (the frame clock does not run here) the garden is at the start of its
+    // arrival: 14 points low, at 97 % (motion spec §2), and already turned -5°.
     expect(screen.getByTestId('onboarding-garden', { includeHiddenElements: true })).toHaveStyle({
-      transform: [{ translateY: 0 }, { scale: 1 }, { perspective: 1400 }, { rotateY: '-5deg' }],
+      transform: [{ translateY: 14 }, { scale: 0.97 }, { perspective: 1400 }, { rotateY: '-5deg' }],
     });
   });
 });

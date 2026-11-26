@@ -10,8 +10,10 @@ import {
   readPillLook,
   recitedLines,
   rereadAmount,
+  shakeOffset,
   stillMoment,
   surahWords,
+  turnsRed,
   wordLook,
 } from '../recitation';
 import { stageLayout } from '../stage-layout';
@@ -119,6 +121,22 @@ describe('the demonstration of the voice page', () => {
     expect(wordLook(recitation, recitation.reread - 1, still).ink).toBe(1);
   });
 
+  it('shakes the wrong word 0, −3, 3, −2, 1, 0 points over 360 ms as it turns red', () => {
+    const recitation = buildRecitation(page);
+    const at = recitation.rereadAt;
+    expect(shakeOffset(recitation, at - 10)).toBe(0);
+    expect(shakeOffset(recitation, at + 72)).toBeCloseTo(-3);
+    expect(shakeOffset(recitation, at + 144)).toBeCloseTo(3);
+    expect(shakeOffset(recitation, at + 216)).toBeCloseTo(-2);
+    expect(shakeOffset(recitation, at + 288)).toBeCloseTo(1);
+    expect(shakeOffset(recitation, at + 360)).toBe(0);
+    for (let t = at; t < at + 360; t += 7) {
+      expect(Math.abs(shakeOffset(recitation, t))).toBeLessThanOrEqual(3);
+    }
+    expect(turnsRed(recitation, at - 1, at)).toBe(true);
+    expect(turnsRed(recitation, at, at + 16)).toBe(false);
+  });
+
   it('loops after a rest', () => {
     const recitation = buildRecitation(page);
     expect(recitation.duration).toBe(
@@ -128,14 +146,13 @@ describe('the demonstration of the voice page', () => {
 });
 
 describe('the drought’s cracks and the stage’s layout', () => {
-  it('cracks the earth the same way at every launch, inside its top', () => {
+  it('cracks the earth the same way at every launch, in eight layers', () => {
     const groups = crackGroups();
     expect(groups).toEqual(crackGroups());
     expect(groups.length).toBeGreaterThan(5);
-    expect(groups.length).toBeLessThanOrEqual(STORY_MOTION.crackGroups + 1);
-    expect(groups.map((group) => group.at)).toEqual(
-      [...groups.map((group) => group.at)].sort((a, b) => a - b),
-    );
+    // The motion spec's eight layers, in the order they appear.
+    expect(groups.map((group) => group.layer)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+    expect(STORY_MOTION.crackLayers).toBe(8);
     expect(earthPoint(0, 0)).toEqual([584, 85]);
   });
 
