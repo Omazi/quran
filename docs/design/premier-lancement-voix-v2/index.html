@@ -1,0 +1,1323 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F7EBDD">
+<title>Jannatuk — premier lancement (style « voix »)</title>
+<style>
+@font-face{font-family:"Fraunces";src:url(fonts/Fraunces-SemiBold.ttf) format("truetype");font-weight:600;font-display:block}
+@font-face{font-family:"Amiri Quran";src:url(fonts/amiri-quran.woff2) format("woff2");font-display:block}   /* Amiri Quran, OFL */
+:root{
+  --ink:#1D2A23;--mut:#58625C;--action:#1F5C45;--action-n:#2E7A5B;--tint-n:#7FCCA6;
+  --water:#0E6B78;--gold:#CE9A3C;--paper:#FBF7EC;--dink:#EFE8D8;--red:#D93A3A;
+  --ease-out:cubic-bezier(.23,1,.32,1);--ease-drawer:cubic-bezier(.32,.72,0,1);
+  --ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Inter",system-ui,sans-serif;
+  --h:100dvh;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#0f0d0b;overscroll-behavior:none}
+body{font-family:var(--ui);color:var(--ink);-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;-webkit-user-select:none;user-select:none}
+.app{position:relative;width:100%;max-width:430px;height:100dvh;margin:0 auto;overflow:hidden;background:#F6EBDD;isolation:isolate}
+@media (min-width:600px) and (min-height:700px){
+  body{display:flex;align-items:center;justify-content:center;background:radial-gradient(80% 60% at 50% 40%,#2a2520,#0f0d0b)}
+  .app{width:390px;height:min(844px,calc(100dvh - 40px));border-radius:48px;box-shadow:0 0 0 11px #0b0a09,0 0 0 12px #2b2722,0 40px 90px rgba(0,0,0,.55)}
+}
+.probe{position:absolute;top:0;height:env(safe-area-inset-top,0px);width:1px;visibility:hidden;pointer-events:none}
+.probe.b{top:auto;bottom:0;height:env(safe-area-inset-bottom,0px)}
+
+/* the scroller: native momentum, one page per gesture */
+.scroller{position:absolute;inset:0;overflow:hidden;outline:none;touch-action:none;overscroll-behavior:none}
+.stage{position:absolute;inset:0;z-index:1;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.hide{visibility:hidden}
+.abs{position:absolute;left:0;top:0}
+.wc{will-change:transform,opacity}
+
+/* skies */
+.sky{position:absolute;inset:0}
+.sky.warm{background:linear-gradient(180deg,#FBE3C6 0%,#F7EADB 40%,#F2F0EA 100%)}
+.sky.grey{background:linear-gradient(180deg,#DCD7CE 0%,#E6E2DA 45%,#ECEAE5 100%);opacity:0}
+.night{position:absolute;left:0;right:0;top:0;height:calc(var(--h) * 1.5);will-change:transform;visibility:hidden}
+.sky.dusk{position:absolute;left:0;right:0;top:0;bottom:auto;height:var(--h);background:radial-gradient(105% 70% at 50% 34%,#2A251F 0%,#1D1A16 34%,#12100D 70%,#0A0907 100%)}
+.night .tail{position:absolute;left:0;right:0;top:calc(var(--h) - 1px);height:calc(var(--h) * .5 + 1px);background:linear-gradient(180deg,#100E0B 0%,rgba(16,14,11,.82) 30%,rgba(16,14,11,.35) 68%,rgba(16,14,11,0) 100%)}
+.sky.plain{background:linear-gradient(180deg,#F5EDE0 0%,#F5F1EA 55%,#F4F3EF 100%);opacity:0}
+.sky.grey,.sky.plain,.dusk-glow,.sun{will-change:opacity}
+.sun{position:absolute;left:50%;width:560px;height:420px;margin-left:-280px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,250,240,.75),rgba(255,250,240,.28) 55%,rgba(255,250,240,0));pointer-events:none}
+.dusk-glow{position:absolute;left:50%;top:0;width:520px;height:520px;margin-left:-260px;border-radius:50%;background:radial-gradient(circle,rgba(92,200,214,.12) 0%,rgba(92,200,214,.05) 40%,rgba(92,200,214,0) 70%);opacity:0;pointer-events:none}
+
+/* garden */
+.garden{position:absolute;transform-origin:50% 0;pointer-events:none}
+.gs{position:absolute;inset:0;opacity:0;visibility:hidden;will-change:opacity}
+.gs img{position:absolute;inset:0;width:100%;height:100%;display:block}
+.gs img.w2{will-change:opacity}
+.garden img.rise{position:absolute;inset:0;width:100%;height:100%;opacity:0;visibility:hidden;will-change:transform,opacity;transform-origin:50% 100%}
+.gfx{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:6;opacity:0;visibility:hidden;will-change:opacity}
+.gfx polyline{fill:none;stroke:rgba(88,58,32,.5);stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+.reveal{position:absolute;border-radius:50%;overflow:hidden;z-index:4;visibility:hidden;will-change:transform}
+.reveal>div{position:absolute;will-change:transform}
+.reveal img{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ring{position:absolute;border-radius:50%;border:2.5px solid #DFFBFF;opacity:0;visibility:hidden;z-index:7;will-change:transform,opacity}
+.ring.r2{border-width:1.5px;border-color:#8FE0EA}
+.cap{position:absolute;left:22px;height:30px;padding:0 12px;border-radius:15px;background:rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(29,42,35,.08);display:flex;align-items:center;gap:7px;font-size:14px;font-weight:600;letter-spacing:-.1px;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums;opacity:0}
+.cap i{width:6px;height:6px;border-radius:3px;background:var(--water)}
+.cap.dry i{background:#C9822E}
+
+/* the recited line under the garden */
+.fline{position:absolute;left:0;right:0;height:46px;pointer-events:none}
+.vl{position:absolute;left:0;right:0;top:0;height:46px;display:flex;justify-content:center;opacity:0}
+.vrow{position:relative;display:flex;direction:rtl;gap:.3em;align-items:center;font-family:"Amiri Quran",serif;font-size:25px;line-height:46px;color:var(--ink);white-space:nowrap}
+.vrow .w{position:relative;z-index:1}
+.vrow .mk{color:#A9823F;font-size:23px}
+.pill{position:absolute;left:0;top:7px;width:100px;height:32px;border-radius:9px;background:rgba(206,154,60,.24);transform-origin:0 50%;opacity:0;z-index:0}
+
+/* voice-follow page: the mushaf */
+.mushaf{position:absolute;border-radius:20px;background:linear-gradient(180deg,#221E19 0%,#1B1915 100%);box-shadow:0 1px 0 rgba(239,232,216,.08) inset,0 34px 70px rgba(0,0,0,.5),0 6px 16px rgba(0,0,0,.3);opacity:0;pointer-events:none;transform-origin:50% 40%}
+.mframe{position:absolute;inset:10px;border:1px solid rgba(217,164,65,.5);border-radius:12px}
+.mframe::after{content:"";position:absolute;inset:4px;border:.5px solid rgba(217,164,65,.28);border-radius:9px}
+.mcorner{position:absolute;width:18px;height:18px}
+.mhead{position:relative;margin:30px auto 6px;width:78%;height:46px;display:flex;align-items:center;justify-content:center}
+.mhead svg{position:absolute;inset:0;width:100%;height:100%}
+.mhead span{position:relative;font-family:"Amiri Quran",serif;font-size:21px;color:var(--dink);line-height:1;margin-top:2px}
+.mlines{position:relative;padding:4px 18px 0}
+.ml{display:flex;direction:rtl;justify-content:center;gap:.3em;font-family:"Amiri Quran",serif;font-size:23px;line-height:44px;color:var(--dink);white-space:nowrap}
+.mw{position:relative;z-index:1;display:inline-grid}
+.mw>span{grid-area:1/1;transition:opacity .28s var(--ease-out)}
+.mw .b{opacity:.3}
+.mw .r{color:#FF7B72;opacity:0}
+.mw.read .b,.mw.cur .b{opacity:1}
+.mw.cur .b{color:#F6DFA4}
+.mw.err .b{opacity:0}.mw.err .r{opacity:1}
+.ml .mk{color:#D9A441;font-size:21px}
+.mpill{position:absolute;left:0;top:0;width:100px;height:36px;border-radius:10px;transform-origin:0 50%;opacity:0;z-index:0;transition:transform .32s var(--ease-out),opacity .25s ease-out}
+.mpill.g{background:rgba(217,164,65,.26);box-shadow:0 0 18px rgba(217,164,65,.18)}
+.mpill.e{background:rgba(255,95,85,.16);box-shadow:inset 0 -2px 0 rgba(255,123,114,.9)}
+.mpill.f{background:rgba(92,200,214,.22)}
+.follow{position:absolute;height:60px;border-radius:30px;background:linear-gradient(160deg,#338565,#22654A);box-shadow:0 1px 0 rgba(255,255,255,.18) inset,0 16px 34px rgba(0,0,0,.4);opacity:0;pointer-events:none;color:#fff}
+.follow .ft{position:absolute;left:106px;right:18px;top:11px}
+.follow b{display:block;font-size:16px;font-weight:600;letter-spacing:-.2px;line-height:20px}
+.follow .sub{position:relative;height:20px;font-size:14px;color:rgba(255,255,255,.78)}
+.follow .sub>span{position:absolute;left:0;top:0;white-space:nowrap;transition:opacity .25s var(--ease-out),transform .3s var(--ease-out)}
+.follow .sub .ar{display:inline-block;vertical-align:top;font-family:"Amiri Quran",serif;font-size:17px;line-height:20px;height:20px;color:#fff;margin-left:2px}
+
+/* recognition */
+.lbl{position:absolute;left:0;right:0;text-align:center;font-family:"Fraunces",serif;font-weight:600;font-size:26px;letter-spacing:-.01em;color:var(--dink);opacity:0;pointer-events:none}
+.found{position:absolute;border-radius:26px;background:var(--paper);padding:16px 16px 14px;box-shadow:0 30px 60px rgba(0,0,0,.45),0 2px 0 rgba(255,255,255,.6) inset;opacity:0;pointer-events:none}
+.found .top{display:flex;justify-content:space-between;align-items:center}
+.found .k{font-size:13px;font-weight:600;color:var(--action)}
+.found .pg{font-size:12.5px;font-weight:700;color:var(--action);background:#E3ECE5;padding:4px 9px;border-radius:10px;font-variant-numeric:tabular-nums}
+.found h3{margin:2px 0 0;font-size:20px;font-weight:700;letter-spacing:-.35px;color:var(--ink)}
+.found .q{margin:10px 0 0;padding:6px 12px;border-radius:16px;background:#F3EAD5;text-align:center;font-family:"Amiri Quran",serif;font-size:19px;line-height:2;color:#1C1A15;direction:rtl}
+.found .acts{display:flex;gap:10px;margin-top:12px}
+.found .open{flex:1;height:46px;border-radius:23px;background:var(--action);color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;letter-spacing:-.2px}
+.found .hp{width:46px;height:46px;border-radius:23px;background:#E3ECE5;display:flex;align-items:center;justify-content:center}
+
+/* friends */
+.friends{position:absolute;left:20px;right:20px;display:flex;flex-wrap:wrap;gap:10px;opacity:0;pointer-events:none}
+.kh{flex:0 0 100%;margin-top:6px;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:12px;row-gap:10px;align-items:center;background:#fff;border-radius:22px;padding:14px 16px;box-shadow:0 16px 36px rgba(29,42,35,.10),0 1px 2px rgba(29,42,35,.05)}
+.avs{display:flex}.avs .av{width:28px;height:28px;border-radius:14px;font-size:12px;box-shadow:0 0 0 2px #fff}.avs .av+.av{margin-left:-8px}
+.avs .me{background:#E3ECE5;color:var(--action);font-size:10px;width:32px}
+.kt{display:flex;flex-direction:column;gap:1px}.kt b{font-size:15px;font-weight:600;letter-spacing:-.2px}.kt span{font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums}
+.kbar{grid-column:1/3;height:6px;border-radius:3px;background:#ECE7DD;overflow:hidden}.kbar i{display:block;height:100%;width:100%;border-radius:3px;background:linear-gradient(90deg,#1F5C45,#2E7A5B);transform-origin:0 50%;transform:scaleX(.6)}
+.fc{flex:1;min-width:0;background:#fff;border-radius:22px;padding:7px 7px 12px;box-shadow:0 16px 36px rgba(29,42,35,.10),0 1px 2px rgba(29,42,35,.05)}
+.fg{position:relative;height:112px;border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#FBE3C6,#EDEFEA)}
+.fg.dry{background:linear-gradient(180deg,#E7E1D7,#ECEAE5)}
+.fg img{position:absolute;left:50%;top:52%;width:150%;transform:translate(-50%,-50%)}
+.fn{margin:9px 2px 0;display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;letter-spacing:-.2px}
+.av{width:22px;height:22px;border-radius:11px;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fs{margin:2px 4px 0;font-size:13px;line-height:17px;color:var(--mut)}
+.fs.sw2{position:relative;height:17px}.fs.sw2 span{position:absolute;left:0;top:0;white-space:nowrap;transition:opacity .25s ease}
+.fs .enc{color:#C2456A;font-weight:600;opacity:0}
+.heart{position:absolute;left:0;top:0;width:30px;height:30px;margin:-15px 0 0 -15px;opacity:0;pointer-events:none;z-index:4;filter:drop-shadow(0 6px 10px rgba(194,69,106,.35))}
+.fs.live{display:flex;align-items:center;gap:6px;color:var(--water);font-weight:600}
+.mini{display:flex;align-items:center;gap:2px;height:12px}
+.mini i{width:2px;height:12px;border-radius:1px;background:var(--water);transform:scaleY(.35);animation:mini 0.9s ease-in-out infinite}
+.mini i:nth-child(2){animation-delay:-.3s}.mini i:nth-child(3){animation-delay:-.6s}.mini i:nth-child(4){animation-delay:-.15s}
+@keyframes mini{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+
+/* copy */
+.copy{position:absolute;left:24px;right:24px;pointer-events:none;visibility:hidden}
+.copy h1,.copy p{will-change:transform,opacity;opacity:0}
+.copy h1{margin:0;font-family:"Fraunces",serif;font-weight:600;font-size:31px;line-height:1.13;letter-spacing:-.02em;text-wrap:balance}
+.copy p{margin:10px 0 0;font-size:17px;line-height:1.45;letter-spacing:-.012em;color:var(--mut);text-wrap:pretty}
+.copy.lt h1{color:#F4EEE2}.copy.lt p{color:rgba(239,232,216,.7)}
+.hint{position:absolute;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:15px;font-weight:600;color:var(--action);opacity:0;pointer-events:none}
+.hint svg{animation:nudge 1.8s var(--ease-out) infinite}
+@keyframes nudge{0%{transform:translateY(6px);opacity:0}35%{opacity:1}100%{transform:translateY(-8px);opacity:0}}
+
+/* personalisation */
+.panel{position:absolute;left:24px;right:24px;opacity:0;pointer-events:none}
+.panel.on{pointer-events:auto}
+.panel h1{margin:0;font-family:"Fraunces",serif;font-weight:600;font-size:29px;line-height:1.13;letter-spacing:-.02em}
+.panel .lead{margin:8px 0 0;font-size:16px;line-height:1.4;letter-spacing:-.012em;color:var(--mut)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.opt{position:relative;height:54px;border:0;border-radius:18px;background:#fff;box-shadow:0 1px 2px rgba(29,42,35,.05),0 8px 22px rgba(29,42,35,.06);font-size:16px;font-weight:600;letter-spacing:-.2px;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:transform .14s var(--ease-out),background-color .2s ease,color .2s ease,box-shadow .2s ease}
+.opt:active{transform:scale(.97)}
+.opt svg{flex-shrink:0}
+.opt[aria-pressed="true"]{background:var(--action);color:#fff;box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 10px 22px rgba(31,92,69,.28)}
+.grid.sm .opt{height:48px;font-size:15px}
+.res{display:flex;margin-top:16px;background:#fff;border-radius:22px;padding:16px 18px;box-shadow:0 1px 2px rgba(29,42,35,.05),0 10px 28px rgba(29,42,35,.07)}
+.res>div{flex:1;min-width:0}.res>div+div{flex:1.45}
+.res>div+div{border-left:.5px solid rgba(60,60,67,.2);padding-left:16px;margin-left:16px}
+.res small{display:block;font-size:13px;color:var(--mut);letter-spacing:-.05px}
+.roll{position:relative;height:34px;margin-top:4px;overflow:hidden}
+.roll span{position:absolute;left:0;top:0;white-space:nowrap;font-size:20px;font-weight:700;letter-spacing:-.4px;line-height:34px;font-variant-numeric:tabular-nums}
+.roll span em{font-style:normal;font-size:15px;font-weight:600;color:var(--mut);letter-spacing:-.1px}
+.notif{display:flex;gap:11px;align-items:center;margin-top:14px;padding:11px 14px 11px 11px;border-radius:22px;background:rgba(255,255,255,.86);border:.5px solid rgba(255,255,255,.9);box-shadow:0 10px 30px rgba(29,42,35,.09)}
+.notif .ic{flex-shrink:0;display:flex;border-radius:9px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.14)}
+.notif .nb{flex:1;min-width:0}
+.notif .nt{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.notif .nt b{font-size:15px;font-weight:600;letter-spacing:-.2px}.notif .nt span{font-size:13px;color:var(--mut)}
+.notif p{margin:1px 0 0;font-size:15px;line-height:1.3;letter-spacing:-.2px;color:#2b2f2c}
+.list{margin-top:14px;background:#fff;border-radius:20px;padding:0 16px;box-shadow:0 1px 2px rgba(29,42,35,.05),0 8px 24px rgba(29,42,35,.06)}
+.row{display:flex;align-items:center;gap:10px;min-height:50px;font-size:16px;letter-spacing:-.2px}
+.row+.row{border-top:.5px solid rgba(60,60,67,.18)}.row span{flex:1}
+.sw{appearance:none;-webkit-appearance:none;width:51px;height:31px;border-radius:16px;background:rgba(120,120,128,.24);position:relative;transition:background-color .25s ease;flex-shrink:0;margin:0;cursor:pointer}
+.sw::after{content:"";position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.18);transition:transform .3s var(--ease-out)}
+.sw:checked{background:var(--action)}.sw:checked::after{transform:translateX(20px)}
+.cta{position:absolute;left:24px;right:24px;height:54px;border:0;border-radius:27px;background:linear-gradient(180deg,#256B50,#1F5C45);color:#fff;font-size:17px;font-weight:600;letter-spacing:-.2px;box-shadow:0 1px 0 rgba(255,255,255,.22) inset,0 12px 26px rgba(31,92,69,.3);opacity:0;pointer-events:none;cursor:pointer;z-index:6}
+.cta.on{pointer-events:auto}
+.cta{transition:transform .14s var(--ease-out)}
+.cta:active{transform:scale(.97)}
+
+/* chrome */
+.brand{position:absolute;left:0;right:0;text-align:center;font-family:"Fraunces",serif;font-weight:600;font-size:18px;letter-spacing:-.01em;color:var(--ink);transition:color .4s ease;pointer-events:none;z-index:5}
+.dots{position:absolute;right:9px;width:4px;height:120px;margin-top:-60px;z-index:5;pointer-events:none;transition:opacity .3s ease}
+.dcol{position:absolute;left:0;top:60px;width:4px;will-change:transform}
+.dots .dcol i{position:absolute;left:0;width:4px;height:4px;margin-top:-2px;border-radius:2px;background:rgba(29,42,35,.22);transition:background-color .3s ease}
+.dots .on{position:absolute;left:0;top:60px;width:4px;height:14px;margin-top:-7px;border-radius:2px;background:var(--ink);transition:background-color .3s ease}
+.app.dtop .brand{color:var(--dink)}
+.app.dark .dots .dcol i{background:rgba(239,232,216,.25)}.app.dark .dots .on{background:var(--dink)}
+canvas.voice{position:absolute;left:0;top:0;pointer-events:none}
+
+/* account */
+.home{position:absolute;inset:0;z-index:15;background:linear-gradient(180deg,#FBE3C6 0%,#F7EADB 42%,#F2F0EA 100%);opacity:0;pointer-events:none;transition:opacity .45s var(--ease-out);overflow:hidden}
+.app.acc .home,.app.fin .home{opacity:1}
+.home .hd{position:absolute;left:20px;top:calc(env(safe-area-inset-top,0px) + 54px)}
+.home small{display:block;font-size:15px;color:var(--mut)}
+.home h2{margin:2px 0 0;font-family:"Fraunces",serif;font-weight:600;font-size:34px;letter-spacing:-.02em;line-height:1.1}
+.home .hglow{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 150px);width:520px;height:380px;margin-left:-260px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,250,240,.8),rgba(255,250,240,0))}
+.home .hg{position:absolute;left:-3%;width:106%;top:calc(env(safe-area-inset-top,0px) + 130px);transform:translateY(16px) scale(.97);transition:transform .7s var(--ease-out)}
+.app.acc .home .hg,.app.fin .home .hg{transform:none}
+.home .hs{position:absolute;left:20px;right:20px;top:calc(env(safe-area-inset-top,0px) + 440px);display:flex;justify-content:space-between;font-size:15px;font-weight:600;color:var(--ink)}
+.home .hw{color:var(--water)}
+.home .hdots{position:absolute;left:20px;right:20px;top:calc(env(safe-area-inset-top,0px) + 468px);display:flex;justify-content:space-between}
+.home .hdots i{width:3px;height:3px;border-radius:2px;background:rgba(29,42,35,.18)}
+.home .hcard{position:absolute;left:16px;right:16px;top:calc(env(safe-area-inset-top,0px) + 492px);background:#fff;border-radius:24px;padding:16px 18px;box-shadow:0 10px 28px rgba(29,42,35,.07)}
+.home .hcard small{font-size:13px;font-weight:600;color:var(--water)}.home .hcard b{display:block;font-size:20px;margin:2px 0 12px}
+.home .hbtn{display:flex;height:50px;border-radius:25px;background:var(--action);color:#fff;font-weight:600;align-items:center;justify-content:center}
+.scrim{position:absolute;inset:0;background:rgba(18,16,13,.38);opacity:0;pointer-events:none;transition:opacity .45s var(--ease-drawer);z-index:20}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:#FFFDF8;border-radius:30px 30px 0 0;padding:10px 24px calc(env(safe-area-inset-bottom,0px) + 22px);box-shadow:0 -10px 40px rgba(0,0,0,.18);transform:translateY(105%);transition:transform .5s var(--ease-drawer)}
+.app.acc .scrim{opacity:1;pointer-events:auto}.app.acc .sheet{transform:none;transition-delay:.28s}
+.grab{width:36px;height:5px;border-radius:3px;background:rgba(60,60,67,.22);margin:0 auto 18px}
+.sheet{will-change:transform;touch-action:none}
+.sheet .em{display:block;margin:0 0 12px}
+.sheet h2{margin:0;font-family:"Fraunces",serif;font-weight:600;font-size:29px;line-height:1.12;letter-spacing:-.02em}
+.sheet p{margin:8px 0 22px;font-size:17px;line-height:1.42;letter-spacing:-.012em;color:var(--mut)}
+.ab{width:100%;height:54px;border-radius:27px;border:0;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;font-weight:600;letter-spacing:-.2px;cursor:pointer;transition:transform .14s var(--ease-out)}
+.ab:active{transform:scale(.98)}
+.ab+.ab{margin-top:10px}
+.ab.apple{background:#000;color:#fff}
+.ab.google{background:#fff;color:#1D2A23;box-shadow:inset 0 0 0 1px rgba(29,42,35,.16)}
+.ab.mail{background:none;color:var(--action);height:48px}
+.later{display:block;margin:4px auto 0;background:none;border:0;height:44px;padding:0 16px;font-size:15px;color:var(--mut);cursor:pointer}
+.done{position:absolute;left:0;right:0;bottom:0;z-index:30;display:flex;flex-direction:column;align-items:center;padding:0 32px calc(env(safe-area-inset-bottom,0px) + 18px);text-align:center;opacity:0;pointer-events:none;transition:opacity .5s var(--ease-out) .3s}
+.app.fin .done{opacity:1;pointer-events:auto}
+.done button{background:none;border:0;height:44px;font-size:16px;font-weight:600;color:var(--action);cursor:pointer}
+
+:focus-visible{outline:2px solid var(--water);outline-offset:3px}
+.scroller:focus-visible{outline:none}
+@media (prefers-reduced-motion:reduce){
+  .hint svg,.mini i{animation:none}
+  .sheet{transition:opacity .3s ease;transform:none;opacity:0;pointer-events:none}
+  .app.acc .sheet{opacity:1;pointer-events:auto}
+  .mpill{transition:opacity .2s ease}
+  .night{will-change:opacity}
+}
+@media (prefers-reduced-transparency:reduce){.cap,.notif{background:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="probe" id="probeT"></div><div class="probe b" id="probeB"></div>
+  <div class="scroller" id="sc" tabindex="0" aria-label="Présentation de Jannatuk : fais glisser vers le haut pour avancer, ou utilise les flèches">
+    <div class="stage" id="stage">
+      <div class="sky warm"></div><div class="sky grey" id="skyGrey"></div><div class="sky plain" id="skyPlain"></div><div class="night" id="night"><div class="sky dusk"></div><div class="tail"></div></div>
+      <div class="dusk-glow" id="duskGlow"></div>
+      <div class="sun" id="sun"></div>
+
+      <div class="garden wc" id="garden" role="img" aria-label="Ton jardin"></div>
+      <div class="cap wc" id="cap"><i></i><span id="capT"></span></div>
+
+      <div class="mushaf wc" id="mushaf" aria-hidden="true">
+        <div class="mframe"></div>
+        <div class="mhead">
+          <svg viewBox="0 0 300 46" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M14 23 L30 4 H270 L286 23 L270 42 H30 Z" fill="rgba(217,164,65,.07)" stroke="#D9A441" stroke-width="1" vector-effect="non-scaling-stroke"/>
+            <path d="M22 23 L34 8 H266 L278 23 L266 38 H34 Z" fill="none" stroke="rgba(217,164,65,.45)" stroke-width=".6" vector-effect="non-scaling-stroke"/>
+          </svg>
+          <span lang="ar" dir="rtl">سُورَةُ الفَاتِحَةِ</span>
+        </div>
+        <div class="mlines" id="mlines" lang="ar" dir="rtl"></div>
+        <div class="mpill g" id="mpG"></div><div class="mpill e" id="mpE"></div><div class="mpill f" id="mpF"></div>
+      </div>
+      <div class="follow wc" id="follow" aria-hidden="true">
+        <div class="ft"><b>J’écoute</b><div class="sub"><span id="subA">Al-Fâtiha, verset 1</span><span id="subB" style="opacity:0">Relis ce mot&nbsp;: <span class="ar" lang="ar" dir="rtl" id="errW"></span></span></div></div>
+        
+      </div>
+
+      <canvas class="voice" id="cv" aria-hidden="true"></canvas>
+
+      <div class="fline wc" id="fline" aria-hidden="true"></div>
+
+      <div class="lbl" id="lbl">À l’écoute…</div>
+      <div class="found wc" id="found" aria-hidden="true">
+        <div class="top"><span class="k">Passage reconnu</span><span class="pg">Page 294</span></div>
+        <h3>Al-Kahf, verset 10</h3>
+        <p class="q" lang="ar" dir="rtl">إِذۡ أَوَى ٱلۡفِتۡيَةُ إِلَى ٱلۡكَهۡفِ فَقَالُواْ رَبَّنَآ ءَاتِنَا مِن لَّدُنكَ رَحۡمَةٗ وَهَيِّئۡ لَنَا مِنۡ أَمۡرِنَا رَشَدٗا</p>
+        <div class="acts"><span class="open">Ouvrir dans le mushaf</span><span class="hp"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1F5C45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="7" rx="2"/><rect x="16.5" y="14" width="4.5" height="7" rx="2"/></svg></span></div>
+      </div>
+
+      <div class="friends wc" id="friends" aria-label="Jardins de tes proches">
+        <div class="fc wc"><div class="fg"><img src="garden/h38-f0.webp" alt=""><img src="garden/h38-f0-w2.webp" alt=""></div><div class="fn"><span class="av" style="background:#7B5BD6">M</span>Mustapha</div><div class="fs">38 hizb</div></div>
+        <div class="fc wc"><div class="fg"><img src="garden/h52-f0.webp" alt=""><img src="garden/h52-f0-w2.webp" alt=""></div><div class="fn"><span class="av" style="background:#2F7F8F">T</span>Taghread</div><div class="fs live"><span class="mini" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Récite</div></div>
+        <div class="fc wc"><div class="fg dry"><img src="garden/h14-f1.webp" alt=""><img src="garden/h14-f1-w1.webp" alt=""></div><div class="fn"><span class="av" style="background:#D08A2E">S</span>Sarah</div><div class="fs sw2"><span>14 hizb, a soif</span><span class="enc">Encouragée</span></div></div>
+        <div class="kh wc"><div class="avs"><span class="av" style="background:#7B5BD6">M</span><span class="av" style="background:#2F7F8F">T</span><span class="av" style="background:#D08A2E">S</span><span class="av me">Toi</span></div><div class="kt"><b>Khatma en famille</b><span>Juz 18 sur 30</span></div><div class="kbar"><i id="kbar"></i></div></div>
+      </div>
+
+      <div class="heart wc" id="heart" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24"><path d="M12 20.6s-7.6-4.6-9.4-9.4C1.4 8 3.3 4.6 6.8 4.6c2.1 0 3.6 1.2 5.2 3.1 1.6-1.9 3.1-3.1 5.2-3.1 3.5 0 5.4 3.4 4.2 6.6-1.8 4.8-9.4 9.4-9.4 9.4z" fill="#E0577D"/><path d="M7.2 7.4c-1.2.2-2.1 1.2-2.2 2.4" stroke="rgba(255,255,255,.7)" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg></div>
+      <div id="copies"></div>
+      <div class="hint" id="hint"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>Glisse vers le haut</div>
+
+      <section class="panel wc" id="p14" aria-label="Ton objectif du jour">
+        <h1>Ton objectif du jour.</h1>
+        <p class="lead">C’est toi qui décides. Tu pourras le changer quand tu veux.</p>
+        <div class="grid" role="group" aria-label="Finir le Coran en">
+          <button class="opt" data-goal="m1" aria-pressed="false">1 mois</button>
+          <button class="opt" data-goal="m3" aria-pressed="true">3 mois</button>
+          <button class="opt" data-goal="y1" aria-pressed="false">1 an</button>
+          <button class="opt" data-goal="free" aria-pressed="false">À mon rythme</button>
+        </div>
+        <div class="res" aria-live="polite">
+          <div><small>Chaque jour</small><div class="roll" id="rollA"></div></div>
+          <div><small id="resLbl">Fin de ta khatma</small><div class="roll" id="rollB"></div></div>
+        </div>
+      </section>
+
+      <section class="panel wc" id="p15" aria-label="Tes rappels">
+        <h1>Tes rappels.</h1>
+        <p class="lead">Pour que ton jardin ne manque jamais d’eau.</p>
+        <div class="grid sm" role="group" aria-label="Moment de lecture">
+          <button class="opt" data-mom="fajr" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 4v4M4.9 9.9l1.8 1.4M19.1 9.9l-1.8 1.4"/></svg>Après Fajr</button>
+          <button class="opt" data-mom="midi" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>À midi</button>
+          <button class="opt" data-mom="soir" aria-pressed="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 17h18M6 21h12M7 17a5 5 0 0 1 10 0M12 3v6M9 6l3 3 3-3"/></svg>Le soir</button>
+          <button class="opt" data-mom="nuit" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>Avant de dormir</button>
+        </div>
+        <div class="notif" aria-label="Aperçu du rappel">
+          <span class="ic"><svg viewBox="0 0 40 40" width="38" height="38"><rect width="40" height="40" fill="#1F5C45"/><g fill="none" stroke="#F2D48B" stroke-width="1.6"><rect x="11" y="11" width="18" height="18"/><rect x="11" y="11" width="18" height="18" transform="rotate(45 20 20)"/></g><circle cx="20" cy="20" r="3" fill="#8FE0EA"/></svg></span>
+          <div class="nb"><div class="nt"><b>Ta lecture du jour</b><span>maintenant</span></div><p id="nbody"></p></div>
+        </div>
+        <div class="list">
+          <label class="row"><span>Le vendredi, sourate Al-Kahf</span><input class="sw" type="checkbox" checked></label>
+          <label class="row"><span>Quand mon jardin a soif</span><input class="sw" type="checkbox" checked></label>
+        </div>
+      </section>
+      <button class="cta" id="cta">Créer mon jardin</button>
+
+      <div class="brand" id="brand">Jannatuk</div>
+      <div class="dots" id="dots" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div class="home" id="home" aria-hidden="true">
+    <div class="hd"><small id="hDate"></small><h2>Ton jardin</h2></div>
+    <div class="hglow"></div>
+    <img class="hg" src="garden/h00-f0.webp" alt="">
+    <div class="hs"><span><b>0</b> hizb sur 60</span><span class="hw" id="hGoal"></span></div>
+    <div class="hdots" id="hdots"></div>
+    <div class="hcard"><small>Arrosage du jour</small><b id="hCard"></b><span class="hbtn">Lire et arroser</span></div>
+  </div>
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="accT">
+    <div class="grab"></div>
+    <svg class="em" width="44" height="44" viewBox="-22 -22 44 44" aria-hidden="true"><g id="emStar"></g></svg>
+    <h2 id="accT">Ton jardin est prêt.</h2>
+    <p>Crée un compte pour le retrouver sur tous tes appareils.</p>
+    <button class="ab apple" data-acc><svg width="17" height="20" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12.15 6.9c-.95 0-2.42-1.08-3.96-1.04-2.04.03-3.91 1.18-4.96 3.01-2.12 3.68-.55 9.1 1.52 12.09 1.01 1.45 2.2 3.09 3.79 3.04 1.52-.07 2.09-.99 3.94-.99 1.83 0 2.35.99 3.96.95 1.64-.03 2.68-1.48 3.68-2.95 1.16-1.69 1.64-3.33 1.66-3.42-.04-.01-3.18-1.22-3.22-4.86-.03-3.04 2.48-4.49 2.6-4.56-1.43-2.09-3.62-2.32-4.39-2.38-2-.16-3.68 1.09-4.61 1.09zm3.38-3.07c.84-1.01 1.4-2.43 1.25-3.83-1.21.05-2.66.8-3.53 1.82-.78.9-1.45 2.34-1.27 3.71 1.34.1 2.71-.69 3.55-1.7z"/></svg>Continuer avec Apple</button>
+    <button class="ab google" data-acc><svg width="19" height="19" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"/><path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"/></svg>Continuer avec Google</button>
+    <button class="ab mail" data-acc>Continuer avec un e-mail</button>
+    <button class="later" data-acc>Plus tard</button>
+  </div>
+  <div class="done" id="done"><button id="again">Revoir la présentation</button></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+// ---------------------------------------------------------------- data
+const FATIHA = ["بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ", "ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَٰلَمِينَ", "ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ", "مَٰلِكِ يَوۡمِ ٱلدِّينِ", "إِيَّاكَ نَعۡبُدُ وَإِيَّاكَ نَسۡتَعِينُ", "ٱهۡدِنَا ٱلصِّرَٰطَ ٱلۡمُسۡتَقِيمَ", "صِرَٰطَ ٱلَّذِينَ أَنۡعَمۡتَ عَلَيۡهِمۡ غَيۡرِ ٱلۡمَغۡضُوبِ عَلَيۡهِمۡ وَلَا ٱلضَّآلِّينَ"];   // Al-Fatiha 1:1–7, Uthmani (assets/data/verses/uthmani.json)
+const AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+// the end-of-verse sign (U+06DD) followed by the number: the font draws the number inside the ornament
+const arNum = n => '\u06DD' + String(n).split('').map(d => AR_DIGITS[+d]).join('');
+const VW = FATIHA.map(v => v.split(' '));
+const START = []; let TOTAL = 0; VW.forEach(w => { START.push(TOTAL); TOTAL += w.length; });
+
+const COPY = [
+  ['Une terre nue.', 'Soixante hizb pour en faire un jardin.'],
+  ['Lis, et l’eau coule.', 'Chaque nouvelle page que tu lis arrose ton jardin. Les canaux se remplissent, les premiers arbres arrivent.'],
+  ['Un hizb, un nouvel élément.', 'Un arbre, des fleurs, une fontaine&nbsp;: chaque hizb terminé ajoute quelque chose.'],
+  ['À mi-chemin, les murs s’élèvent.', 'Ton jardin prend forme, hizb après hizb.'],
+  ['Les portes s’ouvrent.', 'Plus tu avances, plus il s’embellit.'],
+  ['Ton jardin est complet.', 'Soixante hizb&nbsp;: tu as lu le Coran en entier.'],
+  ['Si tu arrêtes de lire, il a soif.', 'L’eau ne coule plus, l’herbe pâlit.'],
+  ['Puis il fane.', 'L’herbe jaunit, les arbres prennent leurs couleurs d’automne, les canaux sont à sec.'],
+  ['Les arbres se dénudent.', 'Les fleurs ont disparu, la terre se craquelle.'],
+  ['Et il redevient une terre morte.', 'Deux semaines sans lecture, et il ne reste rien.'],
+  ['Une page suffit pour le faire revivre.', 'Tes hizb lus restent acquis. Reprends, et l’eau revient.'],
+  ['Lis à voix haute, l’appli te suit.', 'Chaque mot s’allume quand tu le récites. Un mot mal lu passe en rouge, pour que tu le reprennes.', 'lt'],
+  ['D’où vient ce passage&nbsp;?', 'Tu entends une récitation&nbsp;? Fais-la écouter&nbsp;: l’appli te dit la sourate et le verset.', 'lt'],
+  ['Avec tes proches.', 'Visite leurs jardins, encouragez-vous, et lisez une khatma à plusieurs.'],
+];
+
+// garden pictures (level 1): base = dry picture, w1 = still water, w2 = flowing water
+const GS = {
+  g0: { base: 'h00-f0' },
+  g8: { base: 'h08-f0', w1: 'h08-f0-w1', w2: 'h08-f0-w2', nw: 'new-h08-f0', from: 'g0' },
+  g20: { base: 'h20-f0', w1: 'h20-f0-w1', w2: 'h20-f0-w2', nw: 'new-h20-f0', from: 'g8' },
+  g30: { base: 'h30-f0', w1: 'h30-f0-w1', w2: 'h30-f0-w2', nw: 'new-h30-f0', from: 'g20' },
+  g40: { base: 'h40-f0', w1: 'h40-f0-w1', w2: 'h40-f0-w2', nw: 'new-h40-f0', from: 'g30' },
+  g60: { base: 'h60-f0', w1: 'h60-f0-w1', w2: 'h60-f0-w2', nw: 'new-h60-f0', from: 'g40' },
+  d3: { base: 'h60-f1', w1: 'h60-f1-w1' },
+  d6: { base: 'h60-f2' }, d10: { base: 'h60-f3' }, d14: { base: 'h00-f3' },
+};
+// one stop per page. bg = [grey, dusk, plain]; voice = how alive the recitation is
+const STOPS = [
+  { g: 'g0', cap: '', bg: [0, 0, 0], voice: 1 },
+  { g: 'g8', cap: 'Hizb 8', bg: [0, 0, 0], voice: 1 },
+  { g: 'g20', cap: 'Hizb 20', bg: [0, 0, 0], voice: 1 },
+  { g: 'g30', cap: 'Hizb 30', bg: [0, 0, 0], voice: 1 },
+  { g: 'g40', cap: 'Hizb 40', bg: [0, 0, 0], voice: 1 },
+  { g: 'g60', cap: 'Hizb 60', bg: [0, 0, 0], voice: 1 },
+  { g: 'd3', cap: '3 jours sans lecture', dry: 1, bg: [.4, 0, 0], voice: .5 },
+  { g: 'd6', cap: '6 jours sans lecture', dry: 1, bg: [.65, 0, 0], voice: .22 },
+  { g: 'd10', cap: '10 jours sans lecture', dry: 1, bg: [.85, 0, 0], voice: .06 },
+  { g: 'd14', cap: '14 jours sans lecture', dry: 1, bg: [1, 0, 0], voice: 0 },
+  { g: 'g60', cap: 'Tu reprends ta lecture', bg: [0, 0, 0], voice: 1 },
+  { g: null, cap: '', bg: [0, 1, 0], voice: 1 },
+  { g: null, cap: '', bg: [0, 1, 0], voice: 1 },
+  { g: null, cap: '', bg: [0, 0, 1], voice: 0 },
+  { g: 'pv', cap: 'pv', bg: [0, 0, 1], voice: 0 },
+  { g: 'pv', cap: 'pv', bg: [0, 0, 1], voice: 0 },
+];
+const N = STOPS.length;
+
+// ---------------------------------------------------------------- helpers
+const $ = id => document.getElementById(id);
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const smooth = v => { v = clamp(v); return v * v * (3 - 2 * v); };
+const mix = (a, b, t) => a + (b - a) * t;
+const easeOut = t => 1 - Math.pow(1 - clamp(t), 3);                 // = cubic-bezier(.33,1,.68,1), Easing.out(Easing.cubic)
+const easeOutQuad = t => { t = clamp(t); return 1 - (1 - t) * (1 - t); };   // = Easing.out(Easing.quad)
+const inOut = t => { t = clamp(t); return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };   // = Easing.inOut(Easing.cubic)
+const ramp = (v, a, b) => clamp((v - a) / (b - a));                 // = interpolate(v, [a, b], [0, 1], CLAMP)
+// a critically damped spring released from rest, as a function of time: 1 − (1 + ωt)·e^(−ωt), ω = 2π / response
+const springT = (t, resp) => { if (t <= 0) return 0; const w = 2 * Math.PI / resp; return 1 - (1 + w * t) * Math.exp(-w * t); };
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const app = $('app'), sc = $('sc'), stage = $('stage'), cv = $('cv'), ctx = cv.getContext('2d');
+// the voice line lives on its own small canvas (a 120 px strip that moves by transform); the big canvas
+// only wakes up for droplets, leaves, the ring and the rosette
+const cvW = document.createElement('canvas'); cvW.className = 'voice'; cvW.setAttribute('aria-hidden', 'true'); cvW.style.willChange = 'transform'; cv.after(cvW);
+const wctx = cvW.getContext('2d'), STRIP = 120;
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+// every per-frame style write goes through here: a value that did not change is never written again,
+// so a still element costs nothing (no style recalc, no repaint)
+const css = (e, k, v) => { const c = e.__c || (e.__c = {}); if (c[k] !== v) { c[k] = v; e.style[k] = v; } };
+const fx = v => (Math.round(v * 100) / 100);
+// opacity, and visibility: an element at 0 leaves the compositor's work entirely
+const op = (e, v) => { v = v <= .002 ? 0 : v >= .998 ? 1 : Math.round(v * 1000) / 1000; css(e, 'opacity', String(v)); css(e, 'visibility', v ? 'visible' : 'hidden'); };
+const tf = (e, v) => css(e, 'transform', v);
+// same, but an element about to be needed stays rasterised at 0 (it is never drawn for the first time mid-swipe)
+const opW = (e, v, keep) => { if (v <= .002 && keep) { css(e, 'opacity', '0'); css(e, 'visibility', 'visible'); } else op(e, v); };
+// haptics: the web has none; the moments are recorded so the spec and the demo agree (see MOTION-SPEC.md)
+const haptic = kind => { (window.__haptics || (window.__haptics = [])).push([Math.round(performance.now()), kind]); };
+
+// ---------------------------------------------------------------- build DOM
+const dcol = el('div', 'dcol'), dots = [];
+for (let i = 0; i < N; i++) { const d = el('i'); d.style.top = i * 10 + 'px'; dcol.appendChild(d); dots.push(d); }
+$('dots').appendChild(dcol); $('dots').appendChild(el('b', 'on'));
+const pins = COPY.map(([h, p, cls], i) => { const c = el('div', 'copy' + (cls ? ' ' + cls : ''), `<h1>${h}</h1><p>${p}</p>`); $('copies').appendChild(c); c._h = c.children[0]; c._p = c.children[1]; return c; });
+
+// garden layers
+const garden = $('garden'), gLayers = {};
+// every picture is decoded before the first frame and kept: nothing is decoded during a swipe
+const ALL_IMGS = [];
+const img = name => { const im = new Image(); im.src = `garden/${name}.webp`; im.alt = ''; im.decoding = 'async'; ALL_IMGS.push(im); return im; };
+const gEls = [];   // every garden layer, so each frame can say which ones are on
+for (const k in GS) {
+  const s = GS[k], d = el('div', 'gs');
+  d.appendChild(img(s.base));
+  let w1 = null, w2 = null;
+  if (s.w1) { w1 = img(s.w1); d.appendChild(w1); }
+  if (s.w2) { w2 = img(s.w2); w2.className = 'w2'; d.appendChild(w2); }
+  garden.appendChild(d); gLayers[k] = { d, w2 }; gEls.push(d);
+  // what this hizb adds, alone: it rises from the ground before the full picture settles
+  if (s.nw) { const r = img(s.nw); r.className = 'rise'; garden.appendChild(r); gLayers[k].nw = r; gEls.push(r); }
+}
+// the preview garden (personalisation): two stacks that crossfade
+const pvA = el('div', 'gs'), pvB = el('div', 'gs');
+garden.appendChild(pvA); garden.appendChild(pvB); gEls.push(pvA, pvB);
+gLayers.pv = { d: el('div') };
+// the revival: the green garden seen through an ellipse that grows from the fountain. Done with two
+// transforms (the ellipse scales up, the picture inside scales down by as much), never a clip-path:
+// the compositor does it, nothing is repainted.
+const REV = { cx: .499, cy: .509, rx: .456, ry: .408, max: 2.035 };
+const reveal = el('div', 'reveal'), revIn = el('div');
+(() => {
+  const w = 2 * REV.rx * REV.max, h = 2 * REV.ry * REV.max;   // in garden widths / heights
+  Object.assign(reveal.style, { left: (REV.cx - w / 2) * 100 + '%', top: (REV.cy - h / 2) * 100 + '%', width: w * 100 + '%', height: h * 100 + '%' });
+  Object.assign(revIn.style, { left: -(REV.cx - w / 2) / w * 100 + '%', top: -(REV.cy - h / 2) / h * 100 + '%', width: 100 / w + '%', height: 100 / h + '%', transformOrigin: `${REV.cx * 100}% ${REV.cy * 100}%` });
+  revIn.appendChild(img('h60-f0')); revIn.appendChild(img('h60-f0-w1')); const w2 = img('h60-f0-w2'); w2.style.willChange = 'opacity'; revIn.appendChild(w2); reveal._w2 = w2;
+  reveal.appendChild(revIn); garden.appendChild(reveal);
+})();
+// the two rings of water that run ahead of it (ellipse rx 534, ry 333 around 584, 415 of the 1170 × 816 picture)
+const rings = [el('div', 'ring'), el('div', 'ring r2')];
+rings.forEach(r => { Object.assign(r.style, { left: 50 / 11.7 + '%', top: 82 / 8.16 + '%', width: 1068 / 11.7 + '%', height: 666 / 8.16 + '%' }); garden.appendChild(r); });
+// drawn on the picture (its 1170 × 816 box), so they turn with it: the cracks of the drought, in eight
+// layers that appear one after the other (each layer's opacity is a compositor job)
+const NS = 'http://www.w3.org/2000/svg';
+const CRACK_B = 8, crackSvgs = [];
+for (let b = 0; b < CRACK_B; b++) { const g = document.createElementNS(NS, 'svg'); g.setAttribute('viewBox', '0 0 1170 816'); g.setAttribute('class', 'gfx'); garden.appendChild(g); crackSvgs.push(g); }
+// the top of the earth block, in picture pixels: P(s, t) = top + s·(right − top) + t·(left − top)
+const ISO = { top: [584, 85], right: [1119, 415], left: [50, 415] };
+const isoPt = (u, v) => [ISO.top[0] + u * (ISO.right[0] - ISO.top[0]) + v * (ISO.left[0] - ISO.top[0]), ISO.top[1] + u * (ISO.right[1] - ISO.top[1]) + v * (ISO.left[1] - ISO.top[1])];
+let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+const cracks = [];
+(() => {
+  const beds = [[.06, .42, .06, .42], [.58, .94, .06, .42], [.06, .42, .58, .94], [.58, .94, .58, .94], [.38, .62, .38, .62]];
+  const walk = (u, v, a, n, delay, span) => {
+    let pts = [[u, v]];
+    for (let k = 0; k < n; k++) { a += (rnd() - .5) * 1.1; u = clamp(u + Math.cos(a) * (.03 + rnd() * .03), .03, .97); v = clamp(v + Math.sin(a) * (.03 + rnd() * .03), .03, .97); pts.push([u, v]); }
+    for (let k = 0; k < pts.length - 1; k += 2) {
+      const seg = pts.slice(k, k + 3).map(([a, b]) => isoPt(a, b).map(x => x.toFixed(1)).join(',')).join(' ');
+      const pl = document.createElementNS(NS, 'polyline'); pl.setAttribute('points', seg);
+      const at = delay + (k / (pts.length - 1)) * span;
+      crackSvgs[Math.min(CRACK_B - 1, Math.floor(at / .95 * CRACK_B))].appendChild(pl);
+      cracks.push({ el: pl, at });
+    }
+    return pts;
+  };
+  beds.forEach(([u0, u1, v0, v1], b) => {
+    for (let c = 0; c < (b === 4 ? 2 : 4); c++) {
+      const delay = rnd() * .45, pts = walk(mix(u0, u1, rnd()), mix(v0, v1, rnd()), rnd() * 6.28, 7 + Math.floor(rnd() * 4), delay, .45);
+      const j = 2 + Math.floor(rnd() * 4), [bu, bv] = pts[j];
+      walk(bu, bv, rnd() * 6.28, 3, delay + .25, .25);
+    }
+  });
+})();
+let pvFront = pvA, pvShown = null, pvTok = 0, pvFade = { t0: -1e9, from: null };
+// the new picture is decoded off the main thread first, then crossfades (300 ms, ease): no blank, no decode mid-fade
+function setPreview(h, instant) {
+  if (h === pvShown) return; pvShown = h;
+  const back = pvFront === pvA ? pvB : pvA, tok = ++pvTok;
+  const ims = [img(h)]; if (h !== 'h00-f0') ims.push(img(h + '-w2'));
+  Promise.all(ims.map(i => i.decode().catch(() => {}))).then(() => {
+    if (tok !== pvTok) return;
+    back.replaceChildren(...ims);
+    pvFade = { t0: instant || reduce ? -1e9 : performance.now(), from: pvFront };
+    pvFront = back;
+  });
+}
+
+// the recited line under the garden: one line per verse
+const fline = $('fline'), lines = [];
+// verse, first word, end word, verse mark at the end. Verse 7 is too long for one line: it is
+// cut where the mushaf cuts it.
+const SEG = [[0, 0, 4, 1], [1, 0, 4, 1], [2, 0, 2, 1], [3, 0, 3, 1], [4, 0, 4, 1], [5, 0, 3, 1], [6, 0, 4, 0], [6, 4, 9, 1]];
+SEG.forEach(([v, k0, k1, mk]) => {
+  const vl = el('div', 'vl wc'), row = el('div', 'vrow'), pill = el('div', 'pill wc');
+  row.appendChild(pill);
+  const spans = VW[v].slice(k0, k1).map(w => { const s = el('span', 'w', w); row.appendChild(s); return s; });
+  if (mk) row.appendChild(el('span', 'mk', arNum(v + 1)));
+  vl.appendChild(row); fline.appendChild(vl);
+  lines.push({ vl, row, pill, spans, pos: [], a: START[v] + k0, n: k1 - k0 });
+});
+
+// the mushaf page of Al-Fatiha, in the lines of the Madinah mushaf
+const MLAYOUT = [
+  [[0, 0], [0, 1], [0, 2], [0, 3], 1],
+  [[1, 0], [1, 1], [1, 2], [1, 3], 2],
+  [[2, 0], [2, 1], 3, [3, 0], [3, 1], [3, 2], 4],
+  [[4, 0], [4, 1], [4, 2], [4, 3], 5],
+  [[5, 0], [5, 1], [5, 2], 6, [6, 0], [6, 1]],
+  [[6, 2], [6, 3], [6, 4], [6, 5], [6, 6]],
+  [[6, 7], [6, 8], 7],
+];
+const mWords = [];
+MLAYOUT.forEach(items => {
+  const ln = el('div', 'ml');
+  items.forEach(it => {
+    if (typeof it === 'number') { ln.appendChild(el('span', 'mk', arNum(it))); return; }
+    const [v, k] = it, t = VW[v][k];
+    const w = el('span', 'mw', `<span class="b">${t}</span><span class="r">${t}</span>`);
+    w.dataset.g = START[v] + k; ln.appendChild(w); mWords[START[v] + k] = w;
+  });
+  $('mlines').appendChild(ln);
+});
+const ERR_G = START[4] + 3;   // نَسۡتَعِينُ (1:5), the word the demo gets wrong once
+$('errW').textContent = VW[4][3];
+
+// mushaf corner stars and the sheet emblem: the eight-pointed star of the hizb quarters
+const starPts = (r, hollow) => { let p = []; for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8 - Math.PI / 2, rr = i % 2 ? r * hollow : r; p.push((Math.cos(a) * rr).toFixed(2) + ',' + (Math.sin(a) * rr).toFixed(2)); } return p.join(' '); };
+const HOLLOW = Math.SQRT1_2 / Math.cos(Math.PI / 8), INNER = Math.SQRT2 - 1;
+const mush = $('mushaf');
+[['8px', '8px', 'left', 'top'], ['8px', '8px', 'right', 'top'], ['8px', '8px', 'left', 'bottom'], ['8px', '8px', 'right', 'bottom']].forEach(([a, b, x, y]) => {
+  const s = el('div', 'mcorner'); s.style[x] = '2px'; s.style[y] = '2px';
+  s.innerHTML = `<svg width="18" height="18" viewBox="-9 -9 18 18"><polygon points="${starPts(7.5, HOLLOW)}" fill="#1E1A16" stroke="#D9A441" stroke-width=".9"/><circle r="1.6" fill="#D9A441"/></svg>`;
+  mush.appendChild(s);
+});
+$('emStar').innerHTML = `<polygon points="${starPts(20, HOLLOW)}" fill="none" stroke="#0E6B78" stroke-width="1.3" stroke-linejoin="round"/><polygon points="${starPts(20 * INNER, HOLLOW)}" fill="rgba(206,154,60,.12)" stroke="#CE9A3C" stroke-width="1.3" stroke-linejoin="round"/>`;
+
+// ---------------------------------------------------------------- layout
+let W = 390, H = 844, safeT = 0, safeB = 0, dpr = 1, L = {};
+function layout() {
+  W = app.clientWidth; H = app.clientHeight;
+  safeT = $('probeT').offsetHeight; safeB = $('probeB').offsetHeight;
+  app.style.setProperty('--h', H + 'px');
+  dpr = Math.min(window.devicePixelRatio || 1, 3);
+
+  const gWfull = W * 1.06, gH = Math.min(gWfull * 816 / 1170, H * 0.36), gW = gH * 1170 / 816;
+  const gTop = safeT + Math.max(52, H * 0.13);
+  const verseTop = gTop + gH + Math.max(14, H * 0.026);
+  const waveY = verseTop + 46 + Math.max(24, H * 0.04);
+  const copyTop = Math.max(waveY + 40, H - 246 - safeB);
+  L = { gH, gW, gTop, verseTop, waveY, copyTop };
+  Object.assign(garden.style, { width: gW + 'px', height: gH + 'px', left: (W - gW) / 2 + 'px', top: gTop + 'px' });
+  $('cap').style.top = (gTop + 4) + 'px';
+  $('sun').style.top = (gTop + gH / 2 - 210) + 'px';
+  fline.style.top = verseTop + 'px';
+  pins.forEach(p => p.style.top = copyTop + 'px');
+  $('hint').style.top = (H - safeB - 74) + 'px';
+  $('brand').style.top = (safeT + 16) + 'px';
+  $('dots').style.top = (H / 2 - 50) + 'px';
+
+  // preview garden on the personalisation pages
+  L.pvTop = safeT + 50;
+  L.p14k = Math.min(.72, (H * 0.27) / gH); L.p15k = Math.min(.6, (H * 0.205) / gH);
+  $('p14').style.top = (L.pvTop + gH * L.p14k + 14) + 'px';
+  $('p15').style.top = (L.pvTop + gH * L.p15k + 10) + 'px';
+  placeCta();
+
+  // the mushaf page
+  const mTop = safeT + Math.max(52, H * 0.088), mLeft = 18;
+  Object.assign(mush.style, { left: mLeft + 'px', right: mLeft + 'px', top: mTop + 'px' });
+  const mFont = Math.min(24, (W - 36 - 36) / 12.2);
+  document.querySelectorAll('.ml').forEach(m => { m.style.fontSize = mFont + 'px'; m.style.lineHeight = Math.round(mFont * 1.9) + 'px'; });
+  mush.style.height = 'auto'; mush.style.paddingBottom = '44px';
+  const mH = mush.offsetHeight;
+  L.mTop = mTop; L.mH = mH;
+  const fol = $('follow'); Object.assign(fol.style, { left: '34px', right: '34px', top: (mTop + mH - 30) + 'px' });
+  L.capY = mTop + mH - 30 + 30; L.capX0 = 34 + 22;
+
+  // the listening rosette and the recognised passage
+  L.R = Math.min(W * 0.27, H * 0.155);
+  L.rcy = safeT + Math.min(H * 0.34, copyTop - L.R * 2.9); L.rkF = .6;
+  $('lbl').style.top = (L.rcy + L.R * 1.75) + 'px';
+  // the card sits just above the title, the small rosette just above the card
+  const f = $('found'); f.style.left = f.style.right = '18px';
+  const cardTop = copyTop - 30 - f.offsetHeight;
+  f.style.top = cardTop + 'px';
+  L.rcyF = Math.max(safeT + 70, cardTop - 26 - L.R * L.rkF * 1.08);
+
+  const fH = $('friends').offsetHeight;
+  L.frTop = Math.max(safeT + 60, (safeT + 50 + L.copyTop) / 2 - fH / 2 - 10);
+  $('friends').style.top = L.frTop + 'px';
+  // the friends' cards, measured once (the heart flies between them; no getBoundingClientRect per frame)
+  L.cards = [...$('friends').children].map(c => ({ x: 20 + c.offsetLeft, y: L.frTop + c.offsetTop, w: c.offsetWidth }));
+  // the canvas covers only the band where the voice, the droplets, the leaves and the rosette live
+  const top = Math.max(0, Math.floor(Math.min(L.gTop - 70, L.rcy - L.R * 2.45, L.rcyF - L.R * 2.45 * L.rkF))), bot = Math.min(H, Math.ceil(Math.max(L.waveY + 50, L.capY + 30, L.rcy + L.R * 2.45)));
+  L.cvTop = top; L.cvH = bot - top;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(L.cvH * dpr); cv.style.width = W + 'px'; cv.style.height = L.cvH + 'px'; cv.style.top = top + 'px';
+  cvW.width = Math.round(W * dpr); cvW.height = Math.round(STRIP * dpr); cvW.style.width = W + 'px'; cvW.style.height = STRIP + 'px';
+  measure();
+}
+// the button follows the last control, unless the screen is too short for that
+function placeCta() { $('cta').style.top = Math.min(H - safeB - 24 - 54, $('p15').offsetTop + $('p15').offsetHeight + 24) + 'px'; }
+function measure() {
+  lines.forEach(l => { l.pos = l.spans.map(s => [s.offsetLeft, s.offsetWidth]); });
+  mWords.forEach(w => { w._x = w.offsetLeft + $('mlines').offsetLeft; w._y = w.offsetTop + $('mlines').offsetTop; w._w = w.offsetWidth; w._h = w.offsetHeight; });
+}
+
+// ---------------------------------------------------------------- the voice
+// One level, 0 to 1, drives the waveform, the water and the rosette. It comes from the scroll
+// (the faster you move, the louder the recitation) and from the simulated reciter on pages 11–12.
+let vLevel = 0, vTarget = 0;
+const pulse = s => { vTarget = Math.max(vTarget, s); };
+const NB = 36, BARS = Array.from({ length: NB }, () => ({ p1: Math.random() * 6.28, s1: 5 + Math.random() * 6, p2: Math.random() * 6.28, s2: 1.7 + Math.random() * 2.6 }));
+const parts = []; let spawnAcc = 0;
+const leaves = []; let leafAcc = 0; const LEAF = [[201, 161, 59], [181, 101, 46], [158, 122, 58], [214, 134, 52], [143, 132, 62]];
+const echoes = []; let echoGold = false, lastEcho = -9;
+
+// ---------------------------------------------------------------- demo clocks
+let demo11 = null, demo12 = null, foundCycle = -1;
+// page 11: each word lit in turn, one mistake caught and corrected
+const TL = []; (() => {
+  let t = 500;
+  for (let g = 0; g < TOTAL; g++) {
+    const len = [...mWords[g].textContent].length / 2;
+    const d = 300 + len * 26;
+    if (g === ERR_G) { TL.push({ k: 'err', g, a: t, b: t + 1500 }); t += 1500; TL.push({ k: 'fix', g, a: t, b: t + 520 }); t += 520; }
+    else { TL.push({ k: 'word', g, a: t, b: t + d }); t += d; }
+    if (mWords[g].nextSibling && mWords[g].nextSibling.classList && mWords[g].nextSibling.classList.contains('mk')) t += 260;
+  }
+  TL.end = t + 1900;
+})();
+let mState = '';
+function renderMushaf(t) {
+  let seg = null; if (t != null) for (const s of TL) if (t >= s.a && t < s.b) { seg = s; break; }
+  let cur = -1, mode = 'none';
+  if (t == null) { cur = ERR_G; mode = 'err'; }
+  else if (seg) { cur = seg.g; mode = seg.k; }
+  else if (t >= TL[TL.length - 1].b) { cur = TOTAL; mode = 'done'; }
+  else { let prev = null; for (const s of TL) if (s.b <= t) prev = s; if (prev) { cur = prev.g + 1; mode = 'gap'; } }   // the breath at a verse mark
+  const key = cur + mode; if (key === mState) return; mState = key;
+  if (mode === 'word' || mode === 'fix') pulse(.16 + Math.random() * .08);
+  // the wrong word: a short shake, as iOS says "no" (with a warning haptic in the app)
+  if (mode === 'err' && t != null && !reduce) {
+    mWords[ERR_G].animate([{ transform: 'none' }, { transform: 'translateX(-3px)' }, { transform: 'translateX(3px)' }, { transform: 'translateX(-2px)' }, { transform: 'translateX(1px)' }, { transform: 'none' }], { duration: 360, easing: 'cubic-bezier(.23,1,.32,1)' });
+    haptic('warning');
+  }
+  mWords.forEach((w, g) => {
+    w.classList.toggle('read', g < cur || (mode === 'fix' && g === cur) || mode === 'done');
+    w.classList.toggle('cur', g === cur && mode === 'word');
+    w.classList.toggle('err', g === cur && mode === 'err');
+  });
+  const place = (p, w, on) => { if (!w) { p.style.opacity = 0; return; } p.style.transform = `translate(${w._x - 6}px,${w._y + (w._h - 36) / 2}px) scaleX(${(w._w + 12) / 100})`; p.style.opacity = on ? 1 : 0; };
+  const w = mWords[Math.max(0, Math.min(cur, TOTAL - 1))];
+  place($('mpG'), w, mode === 'word' && cur >= 0); place($('mpE'), w, mode === 'err'); place($('mpF'), w, mode === 'fix');
+  const err = mode === 'err';
+  $('subA').style.opacity = err ? 0 : 1; $('subA').style.transform = err ? 'translateY(-6px)' : 'none';
+  $('subB').style.opacity = err ? 1 : 0; $('subB').style.transform = err ? 'none' : 'translateY(6px)';
+  if (!err && cur >= 0) { let v = 0; while (v < 6 && START[v + 1] <= Math.min(cur, TOTAL - 1)) v++; $('subA').textContent = `Al-Fâtiha, verset ${v + 1}`; }
+}
+
+// ---------------------------------------------------------------- personalisation
+const DAYS = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+const MOM = { fajr: ['après Fajr', 'après Fajr'], midi: ['chaque midi', 'à midi'], soir: ['chaque soir', 'ce soir'], nuit: ['avant de dormir', 'avant de dormir'] };
+const PV = [[60, 'h60-f0'], [40, 'h40-f0'], [30, 'h30-f0'], [20, 'h20-f0'], [8, 'h08-f0'], [5, 'h05-f0'], [2, 'h02-f0'], [0, 'h00-f0']];
+let goal = 'm3', moment = 'soir', plan = {};
+function computePlan() {
+  const today = new Date(); today.setHours(12, 0, 0, 0);
+  if (goal === 'free') return { ppd: 1, end: null };
+  const end = new Date(today);
+  if (goal === 'm1') end.setMonth(end.getMonth() + 1);
+  if (goal === 'm3') end.setMonth(end.getMonth() + 3);
+  if (goal === 'y1') end.setFullYear(end.getFullYear() + 1);
+  const days = Math.round((end - today) / 864e5);
+  return { ppd: Math.ceil(604 / days), end, today };
+}
+function fmtDate(d, today) { return `${d.getDate() === 1 ? '1er' : d.getDate()} ${MONTHS[d.getMonth()]}` + (d.getFullYear() !== today.getFullYear() ? ' ' + d.getFullYear() : ''); }
+function roll(box, html, dir) {
+  const old = box.firstElementChild, n = el('span', '', html);
+  box.appendChild(n);
+  if (!old) return;
+  if (reduce) { old.remove(); return; }
+  const k = { duration: 260, easing: 'cubic-bezier(.23,1,.32,1)' };
+  old.animate([{ transform: 'none', opacity: 1 }, { transform: `translateY(${-14 * dir}px)`, opacity: 0 }], k).onfinish = () => old.remove();
+  n.animate([{ transform: `translateY(${14 * dir}px)`, opacity: 0 }, { transform: 'none', opacity: 1 }], k);
+}
+let lastPpd = null;
+function applyPlan(instant) {
+  plan = computePlan();
+  const dir = lastPpd == null || plan.ppd >= lastPpd ? 1 : -1; lastPpd = plan.ppd;
+  const pages = `${plan.ppd} <em>page${plan.ppd > 1 ? 's' : ''}</em>`;
+  roll($('rollA'), pages, dir);
+  $('resLbl').textContent = plan.end ? 'Fin de ta khatma' : 'Fin de ta khatma';
+  roll($('rollB'), plan.end ? fmtDate(plan.end, plan.today) : 'Quand tu veux', dir);
+  const hz = Math.min(60, Math.floor(plan.ppd * 30 / 10.07));
+  plan.hz = hz; plan.pv = PV.find(([n]) => n <= hz)[1];
+  setPreview(plan.pv, instant);
+  const m = MOM[moment];
+  $('nbody').textContent = plan.end
+    ? `${plan.ppd} pages ${m[1]}, pour finir le ${fmtDate(plan.end, plan.today)}.`
+    : `Une page ${m[1]} suffit pour l’arroser.`;
+  $('hGoal').textContent = `Objectif : ${plan.ppd} page${plan.ppd > 1 ? 's' : ''}`;
+  $('hCard').textContent = `0 page sur ${plan.ppd}`;
+  placeCta();
+}
+document.querySelectorAll('[data-goal]').forEach(b => b.addEventListener('click', () => {
+  goal = b.dataset.goal; document.querySelectorAll('[data-goal]').forEach(x => x.setAttribute('aria-pressed', x === b)); applyPlan();
+}));
+document.querySelectorAll('[data-mom]').forEach(b => b.addEventListener('click', () => {
+  moment = b.dataset.mom; document.querySelectorAll('[data-mom]').forEach(x => x.setAttribute('aria-pressed', x === b)); applyPlan();
+}));
+
+
+// ---------------------------------------------------------------- paging
+// One number drives everything: pos, in pages (0 … N−1). While a finger is down, pos IS the finger
+// (1:1, rubber band past the ends). When it lifts, a critically damped spring (damping ratio 1,
+// response 0.45 s) takes over from the finger's exact velocity, toward the page nearest the point the
+// flick would reach (Apple's projection, deceleration 0.998), at most one page away from where the
+// gesture started. Grabbing during the spring stops it where it is and the finger takes over.
+const RESP = .45, OMEGA = 2 * Math.PI / RESP;          // stiffness ω² ≈ 195, damping 2ω ≈ 27.9 (mass 1)
+let pos = 0, target = 0, pv = 0, pmode = 'rest';       // pv: velocity, pages per second
+const accOn = () => app.classList.contains('acc') || app.classList.contains('fin');
+const rubber = (x, d, c = .55) => (x * d * c) / (d + c * Math.abs(x));
+const bound = raw => raw < 0 ? -rubber(-raw * H, H) / H : raw > N - 1 ? N - 1 + rubber((raw - N + 1) * H, H) / H : raw;
+const project = v => (v / 1000) * .998 / (1 - .998);   // px/s → px
+function springTo(t, v) {
+  t = clamp(t, 0, N - 1);
+  if (t !== target) haptic('selection');               // a page snaps in: the one haptic of the pager
+  target = t;
+  // seed with the finger's velocity, capped so a critically damped spring never crosses the page
+  const room = Math.abs(target - pos) * OMEGA;
+  pv = Math.sign(v) === Math.sign(target - pos) ? Math.sign(v) * Math.min(Math.abs(v), room) : v;
+  pmode = 'spring';
+}
+function stepSpring(dt) {
+  // exact solution of the critically damped spring over dt (stable at any frame time)
+  const x0 = pos - target, c = pv + OMEGA * x0, e = Math.exp(-OMEGA * dt);
+  const x = (x0 + c * dt) * e; pv = (pv - OMEGA * c * dt) * e; pos = target + x;
+  if (Math.abs(x) < 2e-4 && Math.abs(pv) < 2e-3) { pos = target; pv = 0; pmode = 'rest'; }
+}
+// pointer: touch, pen, mouse drag
+let drag = null, suppressClick = false;
+sc.addEventListener('pointerdown', e => {
+  if (accOn() || drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  const caught = pmode === 'spring' && Math.abs(pv) > .05;   // grabbed while moving: no dead zone, it stops under the finger
+  drag = { id: e.pointerId, y0: e.clientY, p0: pos, page0: Math.round(caught ? target : pos), on: false, hist: [[e.timeStamp, e.clientY]] };
+  if (caught) { drag.on = true; pmode = 'drag'; pv = 0; sc.setPointerCapture(e.pointerId); }
+});
+sc.addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  if (!drag.on) {
+    if (Math.abs(e.clientY - drag.y0) < 8) return;     // 8 px before it is a swipe (a tap stays a tap)
+    drag.on = true; drag.y0 = e.clientY; drag.p0 = pos; pmode = 'drag'; pv = 0; sc.setPointerCapture(e.pointerId);
+  }
+  pos = bound(drag.p0 + (drag.y0 - e.clientY) / H);
+  drag.hist.push([e.timeStamp, e.clientY]); while (drag.hist.length > 2 && e.timeStamp - drag.hist[0][0] > 100) drag.hist.shift();
+});
+function endDrag(e, cancel) {
+  if (!drag || e.pointerId !== drag.id) return;
+  const d = drag; drag = null;
+  if (!d.on) return;
+  suppressClick = true; setTimeout(() => { suppressClick = false; }, 0);
+  // release velocity from the finger's last 100 ms of movement, in px/s (positive = toward the next
+  // page). A finger that rested more than 40 ms before lifting has no velocity (Android/Flutter rule).
+  const h = d.hist, a = h[0], b = h[h.length - 1], dtm = b[0] - a[0];
+  const vpx = cancel || dtm <= 0 || e.timeStamp - b[0] > 40 ? 0 : (a[1] - b[1]) / dtm * 1000;
+  window.__lastRelease = { vpx: Math.round(vpx), drag: Math.round((pos - d.p0) * H) };
+  const proj = pos + project(vpx) / H;
+  springTo(clamp(Math.round(proj), d.page0 - 1, d.page0 + 1), vpx / H);
+}
+sc.addEventListener('pointerup', e => endDrag(e, false));
+sc.addEventListener('pointercancel', e => endDrag(e, true));
+sc.addEventListener('click', e => { if (suppressClick) { e.stopPropagation(); e.preventDefault(); } }, true);
+
+// wheel. A mouse notch is one page (a second notch while the spring is past halfway goes on to the
+// next page, nothing is locked). A trackpad follows 1:1, and commits to the next page past 22 %.
+let wg = null;
+sc.addEventListener('wheel', e => {
+  e.preventDefault();
+  if (e.ctrlKey || accOn() || drag) return;
+  const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY, now = performance.now();
+  const discrete = e.deltaMode !== 0 || (Math.abs(dy) >= 50 && Number.isInteger(dy) && Math.abs(e.deltaX) < 1);
+  if (discrete) {
+    if (pmode !== 'spring' || Math.abs(target - pos) < .5) springTo(clamp((pmode === 'spring' ? target : Math.round(pos)) + Math.sign(dy), 0, N - 1), pv);
+    return;
+  }
+  if (!wg || now - wg.last > 220) wg = { start: pmode === 'spring' ? target : Math.round(pos), last: now, done: false, v: 0 };
+  const gap = Math.max(1, now - wg.last); wg.last = now;
+  if (wg.done) return;                                  // the momentum tail of a gesture that already turned the page
+  pmode = 'wheel'; pv = 0;
+  pos = bound(pos + dy / H);
+  wg.v = mix(wg.v, dy / gap * 1000 / H, .5);
+  if (Math.abs(pos - wg.start) > .22) { wg.done = true; springTo(clamp(wg.start + Math.sign(pos - wg.start), 0, N - 1), wg.v); return; }
+  clearTimeout(wg.tm); const g = wg;
+  wg.tm = setTimeout(() => { if (pmode === 'wheel' && !g.done) springTo(Math.round(pos), 0); }, 140);
+}, { passive: false });
+
+// keyboard: one page per key press
+sc.addEventListener('keydown', e => {
+  const k = e.key; let d = 0;
+  if (k === 'ArrowDown' || k === 'PageDown' || (k === ' ' && !e.shiftKey)) d = 1;
+  if (k === 'ArrowUp' || k === 'PageUp' || (k === ' ' && e.shiftKey)) d = -1;
+  if (!d || accOn() || e.target.closest('button,input,label')) return;
+  e.preventDefault(); springTo((pmode === 'spring' ? target : Math.round(pos)) + d, pv);
+});
+
+// ---------------------------------------------------------------- account
+for (let k = 0; k < 60; k++) $('hdots').appendChild(el('i'));
+const sheet = $('sheet'), scrim = $('scrim');
+$('cta').addEventListener('click', () => {
+  const d = new Date(); $('hDate').textContent = `${DAYS[d.getDay()]} ${d.getDate() === 1 ? '1er' : d.getDate()} ${MONTHS[d.getMonth()]}`;
+  haptic('impact-medium');
+  app.classList.add('acc');
+  setTimeout(() => sheet.querySelector('.apple').focus({ preventScroll: true }), 520);
+});
+const finish = () => { app.classList.remove('acc'); app.classList.add('fin'); };
+document.querySelectorAll('[data-acc]').forEach(b => b.addEventListener('click', finish));
+$('again').addEventListener('click', () => { app.classList.remove('fin'); go(0); applyPlan(true); sc.focus({ preventScroll: true }); });
+// the sheet follows the finger down (it resists going up); let go past a third, or flick, and it
+// leaves the way "Plus tard" does; otherwise it springs back. Grabbed mid-way, it starts from where it is.
+let sd = null, sheetClick = false;
+sheet.addEventListener('pointerdown', e => {
+  if (!app.classList.contains('acc') || sd || (e.pointerType === 'mouse' && e.button !== 0)) return;
+  const m = new DOMMatrixReadOnly(getComputedStyle(sheet).transform);
+  sd = { id: e.pointerId, y0: e.clientY, base: m.m42, on: m.m42 > 1, y: m.m42, h: sheet.offsetHeight, hist: [[e.timeStamp, e.clientY]] };
+  if (sd.on) { sheet.setPointerCapture(e.pointerId); sheet.style.transition = scrim.style.transition = 'none'; sheet.style.transform = `translateY(${sd.y}px)`; }
+});
+sheet.addEventListener('pointermove', e => {
+  if (!sd || e.pointerId !== sd.id) return;
+  if (!sd.on) {
+    if (Math.abs(e.clientY - sd.y0) < 8) return;
+    sd.on = true; sd.y0 = e.clientY; sheet.setPointerCapture(e.pointerId); sheet.style.transition = scrim.style.transition = 'none';
+  }
+  let y = sd.base + e.clientY - sd.y0; if (y < 0) y = -rubber(-y, sd.h);
+  sd.y = y; sheet.style.transform = `translateY(${fx(y)}px)`; scrim.style.opacity = fx(clamp(1 - y / sd.h));
+  sd.hist.push([e.timeStamp, e.clientY]); while (sd.hist.length > 2 && e.timeStamp - sd.hist[0][0] > 100) sd.hist.shift();
+});
+const sheetUp = (e, cancel) => {
+  if (!sd || e.pointerId !== sd.id) return;
+  const d = sd; sd = null; if (!d.on) return;
+  sheetClick = true; setTimeout(() => { sheetClick = false; }, 0);
+  const a = d.hist[0], b = d.hist[d.hist.length - 1], v = cancel || b[0] <= a[0] || e.timeStamp - b[0] > 40 ? 0 : (b[1] - a[1]) / (b[0] - a[0]);   // px/ms, down > 0
+  const out = d.y > d.h * .35 || v > .5;
+  sheet.style.transition = `transform ${out ? .42 : .35}s cubic-bezier(.32,.72,0,1)`; scrim.style.transition = `opacity ${out ? .42 : .35}s cubic-bezier(.32,.72,0,1)`;
+  sheet.style.transform = ''; scrim.style.opacity = '';
+  if (out) finish();
+  setTimeout(() => { if (!sd) sheet.style.transition = scrim.style.transition = ''; }, 460);
+};
+sheet.addEventListener('pointerup', e => sheetUp(e, false));
+sheet.addEventListener('pointercancel', e => sheetUp(e, true));
+sheet.addEventListener('click', e => { if (sheetClick) { e.stopPropagation(); e.preventDefault(); } }, true);
+
+// ---------------------------------------------------------------- frame
+let lastPos = 0, vel = 0, scrollLv = 0, last = performance.now(), t0 = last, clock = 0;
+const go = p => { pos = target = clamp(p, 0, N - 1); pv = 0; pmode = 'rest'; };
+// a page's own visual leaves before the next one arrives: the two never sit on top of each other
+const presence = k => smooth(1 - Math.abs(pos - k) * 1.85);
+const gPresEarly = () => pos <= 10 ? 1 : pos < 11 ? 1 - smooth((pos - 10) * 1.85) : pos < 13 ? 0 : pos < 14 ? smooth((pos - 13) * 1.85 - .85) * .6 : .6;
+const gWant = new Map(), warm = new Set();
+// the pictures of the page before and the two after stay rasterised (at opacity 0), so a picture is
+// never drawn for the first time in the middle of a swipe. In React Native: keep them mounted.
+let warmFor = -1;
+function warmUp(i) {
+  if (i === warmFor) return; warmFor = i; warm.clear();
+  for (let k = Math.max(0, i - 1); k <= Math.min(N - 1, i + 2); k++) {
+    const g = STOPS[k].g; if (!g) continue;
+    if (g === 'pv') { warm.add(pvA); warm.add(pvB); continue; }
+    warm.add(gLayers[g].d); if (gLayers[g].nw) warm.add(gLayers[g].nw);
+  }
+}
+function gardenShow(a, b, s, flow, f, now) {
+  gWant.clear();
+  let rev = -1, ringA = 0, ringB = 0, ringSA = 1, ringSB = 1;
+  const set = (k, o, z) => {
+    if (!k || o <= 0) return;
+    if (k === 'pv') {
+      // a new preview picture fades in over the one it replaces (300 ms, ease), then the old one leaves
+      const u = clamp((now - pvFade.t0) / 300), e = u * u * (3 - 2 * u);
+      if (u < 1 && pvFade.from && pvFade.from !== pvFront) gWant.set(pvFade.from, [o, (z || 0)]);
+      gWant.set(pvFront, [o * (u < 1 ? e : 1), (z || 0) + 1]); return;
+    }
+    const L = gLayers[k]; gWant.set(L.d, [o, z || 0]); if (L.w2) op(L.w2, flow);
+  };
+  if (!b || a === b) set(a || b, 1);
+  else if (!a) set(b, 1);
+  else if (!reduce && GS[b] && GS[b].from === a) {
+    // a new hizb: what it adds rises from the ground, then the full picture settles on top
+    set(a, 1, 1);
+    const nw = gLayers[b].nw, u = clamp(f / .8);
+    gWant.set(nw, [smooth(f / .4), 2]);
+    tf(nw, `translateY(${fx((1 - easeOut(u)) * 26)}px) scaleY(${fx(.9 + .1 * easeOut(u)) })`);
+    set(b, smooth((f - .72) / .28), 3);
+  } else if (!reduce && a === 'd14' && b === 'g60') {
+    // the revival: water flows back from the fountain and the garden greens behind it
+    set(a, 1, 1);
+    if (f >= .999) set(b, 1, 2);
+    else if (f > .002) rev = 1.85 * smooth(f * .5 + .5) * f * 1.1;
+    ringA = Math.sin(Math.PI * clamp(f)) * .95; ringSA = .04 + 1.3 * f;
+    const u2 = clamp((f - .12) / .88); ringB = Math.sin(Math.PI * u2) * .8; ringSB = .04 + 1.15 * easeOut(u2);
+  } else {
+    // the earlier picture stays full while the next one arrives: no see-through dip
+    set(a, s < .5 ? 1 : 2 * (1 - s), 1); set(b, s < .5 ? 2 * s : 1, 2);
+  }
+  for (const e of gEls) { const w = gWant.get(e); if (w) { op(e, w[0]); css(e, 'zIndex', String(w[1])); } else if (warm.has(e)) { css(e, 'opacity', '0'); css(e, 'visibility', 'visible'); } else op(e, 0); }
+  if (rev > 0) {
+    const k = Math.max(.02, rev / REV.max);
+    op(reveal, 1); tf(reveal, `scale(${k.toFixed(4)})`); tf(revIn, `scale(${(1 / k).toFixed(4)})`); op(reveal._w2, flow);
+  } else op(reveal, 0);
+  op(rings[0], ringA); if (ringA > 0) tf(rings[0], `scale(${fx(ringSA)})`);
+  op(rings[1], ringB); if (ringB > 0) tf(rings[1], `scale(${fx(ringSB)})`);
+}
+
+function drawCracks() {
+  // eight layers of cracks, each fading in over its own slice of the drought (pages 7.35 → 8.9)
+  const cp = clamp((pos - 7.35) / 1.55), out = pos > 9 ? 1 - smooth((pos - 9) * 1.7) : 1;
+  crackSvgs.forEach((g, b) => op(g, out * (reduce ? (cp > .5 ? 1 : 0) : ramp(cp, b / CRACK_B * .95 - .02, b / CRACK_B * .95 + .14))));
+}
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now; clock += dt;
+  if (pmode === 'spring') stepSpring(dt);
+  pos = clamp(pos, -.2, N - .8);
+  const dp = (pos - lastPos) / Math.max(dt, 1e-3); lastPos = pos;
+  vel = mix(vel, dp, 1 - Math.exp(-dt * 14));
+  const sl = clamp(Math.abs(vel) * 0.85);
+  scrollLv = mix(scrollLv, sl, 1 - Math.exp(-dt * (sl > scrollLv ? 22 : 3.5)));
+  // the first page arrives: a slow critically damped spring (response 0.9 s) per element, staggered
+  const introAt = d => reduce ? 1 : springT((now - t0 - d) / 1000, .9);
+  const pc = clamp(pos, 0, N - 1);
+  const i = clamp(Math.floor(pc), 0, N - 2), f = pc - i, s = smooth(f), A = STOPS[i], B = STOPS[i + 1];
+  const voiceOn = mix(A.voice, B.voice, s);
+  const ac = accOn();
+
+  // skies. Night does not fade in as a grey veil: it comes down from the top like dusk (a dark layer
+  // with a soft lower edge, translated), and leaves upward like dawn. Reduce motion: a plain crossfade.
+  const grey = mix(A.bg[0], B.bg[0], s);
+  op($('skyGrey'), grey);
+  const night = pc <= 10 ? 0 : pc < 11 ? f : pc <= 12 ? 1 : pc < 13 ? 1 - f : 0;
+  const nightEl = $('night');
+  if (reduce) { op(nightEl, smooth(night)); op($('skyPlain'), mix(A.bg[2], B.bg[2], s)); }
+  else {
+    const y = pc <= 10 ? -1.5 : pc < 11 ? -1.5 * (1 - easeOutQuad(f)) : pc <= 12 ? 0 : pc < 13 ? -1.5 * easeOutQuad(f) : -1.5;
+    op(nightEl, y > -1.499 ? 1 : 0); tf(nightEl, `translate3d(0,${fx(y * H)}px,0)`);
+    op($('skyPlain'), pc >= 12 ? 1 : 0);   // swapped under the full night
+  }
+  op($('duskGlow'), night * night); tf($('duskGlow'), `translateY(${fx(L.rcy - 260 + (pc - 12) * -40)}px)`);
+  op($('sun'), (1 - night) * (1 - grey * .7) * gPresEarly());
+  const dark = night > .5; if (app.__dark !== dark) { app.__dark = dark; app.classList.toggle('dark', dark); }
+  // the night reaches the top of the screen first and leaves it last: the name turns light with it
+  const dtop = reduce ? dark : pc > 10.1 && pc < 12.75; if (app.__dtop !== dtop) { app.__dtop = dtop; app.classList.toggle('dtop', dtop); }
+
+  // the simulated reciter
+  const on11 = Math.abs(pc - 11) < .55, on12 = Math.abs(pc - 12) < .55;
+  if (on11) { if (demo11 == null) { demo11 = now; mState = ''; } } else demo11 = null;
+  if (on12) { if (demo12 == null) demo12 = now; } else demo12 = null;
+  let t11 = demo11 != null ? (now - demo11) % TL.end : 0;
+  if (reduce) renderMushaf(null); else if (on11) renderMushaf(t11); else if (mState !== '') { renderMushaf(-1); }
+  // page 12: listening 2.7 s, then the passage is found. The rosette moves first, the card follows 80 ms
+  // later (springs, damping 1, response 0.55 s and 0.5 s); both leave faster (0.45 s ease-out) at 8.3 s.
+  let foundR = 0, foundC = 0, listening = false;
+  if (demo12 != null) {
+    const T = 9000, cyc = Math.floor((now - demo12) / T), t = ((now - demo12) % T) / 1000;
+    if (t < 2.7) listening = true;
+    else if (foundCycle !== cyc && t < 8.3) { foundCycle = cyc; haptic('success'); }
+    const leave = t < 8.3 ? 1 : 1 - easeOut((t - 8.3) / .45);
+    foundR = springT(t - 2.7, .55) * leave; foundC = springT(t - 2.78, .5) * leave;
+    if (reduce) { foundR = foundC = 1; listening = false; }
+    if (listening && Math.random() < dt * 3.6) pulse(.5 + Math.random() * .5);
+  }
+
+  // the voice level
+  vTarget *= Math.pow(.945, dt * 60);
+  vLevel += (vTarget - vLevel) * (1 - Math.exp(-dt * (vTarget > vLevel ? 24 : 6)));
+  const idle = (.2 + .07 * Math.sin(clock * 1.3)) * (pc < 10.5 ? 1 : .6);   // at rest the voice still breathes
+  const Lv = reduce ? .35 * voiceOn : clamp(Math.max(scrollLv, vLevel, idle) * voiceOn);
+
+  // garden
+  const gPres = pc <= 10 ? 1 : pc < 11 ? 1 - smooth(f * 1.85) : pc < 13 ? 0 : pc < 14 ? smooth(f * 1.85 - .85) : 1;
+  const flow = clamp(.25 + Lv * 1.1);
+  const gOp = gPres * introAt(0);
+  op(garden, gOp);
+  warmUp(i);
+  if (gOp > 0 || pc > 12) { gardenShow(A.g, B.g, s, flow, f, now); drawCracks(); }
+  // where the garden sits: full on the story pages, smaller above the personalisation
+  const GT = k => k <= 10 ? [0, 1] : k === 11 ? [-26, .94] : k === 12 ? [-26, .94] : k === 13 ? [L.pvTop - L.gTop + 30, L.p14k * .9] : k === 14 ? [L.pvTop - L.gTop, L.p14k] : [L.pvTop - L.gTop, L.p15k];
+  let [ty0, k0] = GT(i), [ty1, k1] = GT(i + 1);
+  let gty = mix(ty0, ty1, s), gkk = mix(k0, k1, s);
+  if (reduce && (k0 !== k1)) { gty = f < .5 ? ty0 : ty1; gkk = f < .5 ? k0 : k1; }
+  if (ac) { gty = 0; gkk = 1; }
+  // degrees: the camera walks around the garden. It is square-on (2D) for the revival, where the
+  // ellipse's rounded clip must stay a cheap 2D clip.
+  const TURN = [-5, -3, -1, 1, 3, 5, 4, 3, 1.5, 0, 0, 0, 0, 0, 0, 0];
+  const turn = reduce || ac ? 0 : mix(TURN[i], TURN[i + 1], s);
+  const gi = introAt(0);   // it rises 14 px and grows from 0.97 as it appears
+  tf(garden, `translateY(${fx(gty + (1 - gi) * 14)}px) scale(${(gkk * (.97 + .03 * gi)).toFixed(4)})` + (Math.abs(turn) > .01 ? ` perspective(1400px) rotateY(${fx(turn)}deg)` : ''));
+  css(garden, 'transition', app.classList.contains('acc') ? 'transform .6s cubic-bezier(.32,.72,0,1)' : 'none');
+
+  // caption
+  const capOf = st => st.cap === 'pv' ? (plan.hz != null ? `Dans un mois : ${plan.hz} hizb` : '') : st.cap;
+  const ca = capOf(A), cb = capOf(B), ctext = s < .5 ? ca : cb, capEl = $('cap');
+  if (capEl.__t !== ctext) { capEl.__t = ctext; $('capT').textContent = ctext; capEl.classList.toggle('dry', !!(s < .5 ? A.dry : B.dry)); }
+  const capOp = ctext ? (ca === cb ? 1 : Math.abs(s - .5) * 2) : 0;
+  op(capEl, capOp * gPres * (ac ? 0 : 1) * introAt(200));
+  tf(capEl, i >= 13 ? `translateY(${fx(L.pvTop - L.gTop - 2)}px)` : 'none');
+
+  // the recited line: Al-Fatiha advances with the swipe over the five growing pages
+  // each page rests on a word in the middle of a line (never on two lines crossfading)
+  const W_REST = [0, 5.8, 11.5, 15, 22.2, TOTAL], wi = Math.min(4, Math.floor(clamp(pc, 0, 5))), w = pc >= 5 ? TOTAL : mix(W_REST[wi], W_REST[wi + 1], clamp(pc, 0, 5) - wi);
+  const fOp = (pc <= 10 ? 1 : 1 - smooth((pc - 10) * 1.85)) * introAt(160);
+  op(fline, fOp);
+  tf(fline, pc > 10 && !reduce ? `translateY(${fx(-(pc - 10) * 40)}px)` : `translateY(${fx((1 - introAt(160)) * 10)}px)`);
+  if (fOp > 0) lines.forEach((ln, v) => {
+    const a = ln.a, n = ln.n, b = a + n;
+    const tIn = v === 0 ? 1 : clamp((w - (a - .1)) / .7), tOut = v === lines.length - 1 ? 0 : clamp((w - (b - .1)) / .7);
+    const o = tIn * (1 - tOut);
+    op(ln.vl, o);
+    if (o <= 0) return;
+    tf(ln.vl, reduce ? 'none' : `translateY(${fx((1 - tIn) * 12 - tOut * 12)}px)`);
+    ln.spans.forEach((sp, k) => css(sp, 'opacity', String(fx(.26 + .74 * clamp(w - (a + k)) * voiceOn))));
+    const li = w - a;
+    if (li > 0 && li < n + .5 && ln.pos.length) {
+      const kk = Math.min(n - 1, Math.floor(clamp(li, 0, n - .001))), fr = li - kk;
+      const e = kk < n - 1 ? smooth((fr - .55) / .45) : 0;
+      const p0 = ln.pos[kk], p1 = ln.pos[Math.min(n - 1, kk + 1)];
+      const x = mix(p0[0], p1[0], e) - 5, wd = mix(p0[1], p1[1], e) + 10;
+      tf(ln.pill, `translateX(${fx(x)}px) scaleX(${(wd / 100).toFixed(3)})`);
+      op(ln.pill, clamp(li * 4) * clamp((n - li) * 3 + (kk < n - 1 ? 1 : 0)) * voiceOn);
+    } else op(ln.pill, 0);
+  });
+
+  // mushaf + follow bar (page 11): the page rises 70 px into place, the bar follows it 40 px behind
+  const p11 = presence(11), d11 = pc - 11;
+  const near = k => Math.abs(pc - k) < 1.6;
+  opW(mush, p11, near(11)); opW($('follow'), p11, near(11));
+  if (p11 > 0) {
+    tf(mush, reduce ? 'none' : d11 < 0 ? `translateY(${fx(-d11 * 70)}px) scale(${(1 + d11 * .04).toFixed(4)})` : `translateY(${fx(-d11 * 30)}px) scale(${(1 - d11 * .1).toFixed(4)})`);
+    tf($('follow'), reduce ? 'none' : `translateY(${fx(-d11 * (d11 < 0 ? 110 : 60))}px)`);
+  }
+
+  // rosette page (12)
+  const p12 = presence(12), d12 = pc - 12;
+  op($('lbl'), p12 * (1 - clamp(foundR * 2.5)));
+  if (p12 > 0) tf($('lbl'), reduce ? 'none' : `translateY(${fx(-d12 * 40 - foundR * 14)}px)`);
+  const fo = $('found');
+  opW(fo, p12 * clamp(foundC * 1.4), near(12));
+  if (p12 > 0) tf(fo, reduce ? 'none' : `translateY(${fx((1 - foundC) * 46 - d12 * 50)}px) scale(${(.96 + .04 * foundC).toFixed(4)})`);
+
+  // friends (13): three gardens arrive at different speeds
+  const p13 = presence(13), d13 = pc - 13, fr = $('friends');
+  opW(fr, p13, near(13));
+  if (p13 > 0) {
+    tf($('kbar'), `scaleX(${(.6 * (reduce ? 1 : .55 + .45 * smooth(1 - Math.abs(d13) * 1.4))).toFixed(4)})`);
+    [...fr.children].forEach((c, k) => {
+      const lift = k === 1 ? -14 : 0;
+      tf(c, reduce ? `translateY(${lift}px)` : `translateY(${fx(lift - d13 * (60 + k * 34))}px) rotate(${fx(d13 * (k - 1) * -3)}deg)`);
+    });
+  }
+  // the heart: it leaves Taghread's card as you arrive and lands on Sarah's, whose garden is thirsty.
+  // It lands at 12.88, before the settle's slow tail, then a light haptic and "Encouragée".
+  const hp = clamp((pc - 12.4) / .48), hv = $('heart');
+  if (p13 > .01 && hp > 0) {
+    const cy = k => L.cards[k].y + (reduce ? (k === 1 ? -14 : 0) : (k === 1 ? -14 : 0) - d13 * (60 + k * 34));
+    const x0 = L.cards[1].x + L.cards[1].w / 2, y0 = cy(1) + 50, x1 = L.cards[2].x + L.cards[2].w - 18, y1 = cy(2) + 16;
+    const u = reduce ? 1 : easeOut(hp), cx = (x0 + x1) / 2, cyy = Math.min(y0, y1) - 70;
+    const x = (1 - u) * (1 - u) * x0 + 2 * (1 - u) * u * cx + u * u * x1, y = (1 - u) * (1 - u) * y0 + 2 * (1 - u) * u * cyy + u * u * y1;
+    const pop = hp < 1 ? 1 + .35 * Math.sin(Math.PI * hp) : 1;
+    tf(hv, `translate(${fx(x)}px,${fx(y)}px) scale(${fx(pop * (hp >= 1 ? .8 : 1))}) rotate(${fx((1 - u) * -18)}deg)`);
+    op(hv, p13 * smooth(hp * 5));
+  } else op(hv, 0);
+  const enc = hp >= .97 && p13 > .3;
+  if (fr.__enc !== enc) { fr.__enc = enc; if (enc) haptic('impact-light'); const sw2 = fr.querySelector('.sw2'); sw2.children[0].style.opacity = enc ? 0 : 1; sw2.children[1].style.opacity = enc ? 1 : 0; }
+
+  // copy. Leaving: the block goes up with the finger and is gone by 42 % of the swipe. Arriving: the
+  // title leads (visible from 50 % to 92 %), the text follows from further down (58 % to 100 %).
+  pins.forEach((c, k) => {
+    const d = pc - k;
+    if (Math.abs(d) >= .6) { op(c, 0); return; }
+    op(c, 1);
+    let oh, ob, yh, yb;
+    if (d >= 0) { oh = ob = 1 - smooth(ramp(d, 0, .42)); yh = yb = -d * 56; }
+    else { oh = smooth(ramp(d, -.5, -.08)); ob = smooth(ramp(d, -.42, 0)); yh = -d * 56; yb = -d * 76; }
+    if (k === 0) { const a = introAt(320), b2 = introAt(420); oh *= a; ob *= b2; yh += (1 - a) * 16; yb += (1 - b2) * 20; }
+    css(c._h, 'opacity', String(fx(oh))); css(c._p, 'opacity', String(fx(ob)));
+    tf(c._h, reduce ? 'none' : `translateY(${fx(yh)}px)`); tf(c._p, reduce ? 'none' : `translateY(${fx(yb)}px)`);
+  });
+  op($('hint'), smooth(1 - pc * 3) * introAt(900));
+  ['p14', 'p15'].forEach((id, j) => {
+    const k = 14 + j, d = pc - k, p = $(id), o = smooth(1 - Math.abs(d) * 2.2);
+    op(p, o * (ac ? 0 : 1)); tf(p, reduce ? 'none' : `translateY(${fx(-d * 56 + (ac ? 20 : 0))}px)`);
+    css(p, 'transition', ac ? 'opacity .3s ease, transform .5s cubic-bezier(.32,.72,0,1)' : 'none');
+    const on = Math.abs(d) < .3; if (p.__on !== on) { p.__on = on; p.classList.toggle('on', on); }
+  });
+  const ctaO = smooth(1 - Math.abs(pc - 15) * 2.2), cta = $('cta');   // it moves with the reminders, as one block
+  op(cta, ctaO * (ac ? 0 : 1)); tf(cta, reduce ? 'none' : `translateY(${fx(-(pc - 15) * 56)}px)`);
+  const con = ctaO > .9; if (cta.__on !== con) { cta.__on = con; cta.classList.toggle('on', con); }
+
+  // page dots: the column glides with the finger under a fixed indicator; far dots shrink away
+  tf(dcol, `translateY(${fx(-pc * 10)}px)`);
+  dots.forEach((d, k) => {
+    const dd = Math.abs(k - pc);
+    css(d, 'opacity', String(fx(dd < .5 ? 0 : dd < 1 ? (dd - .5) * 2 : dd <= 3 ? 1 : clamp(1 - (dd - 3) / 2))));
+    css(d, 'transform', dd > 3 ? `scale(${fx(Math.max(.4, 1 - (dd - 3) * .3))})` : 'none');
+  });
+  op($('dots'), ac ? 0 : .9 * introAt(600));
+
+  drawVoice(now / 1000, dt, { i, f, s, Lv, voiceOn, night, foundT: foundR, listening, p12, pc });
+  requestAnimationFrame(frame);
+}
+
+// ---------------------------------------------------------------- canvas: waveform, droplets, rosette
+const C = {
+  water: [14, 107, 120], gold: [206, 154, 60], grey: [168, 160, 148], white: [255, 255, 255],
+  nWater: [92, 200, 214], nGold: [217, 164, 65], nHeart: [143, 224, 234],
+};
+const lerpC = (a, b, t) => [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)];
+const rgba = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+function barIn(mode, k, voiceOn, out) {
+  const mid = (NB - 1) / 2, d = (k - mid) / mid, env = .28 + .72 * Math.exp(-(d * d) / .3);
+  if (mode === 0) {   // a line under the garden
+    out.x = W / 2 + (k - mid) * 7; out.y = L.waveY; out.a = Math.PI / 2; out.max = 40 * env; out.w = 3;
+    out.c = lerpC(lerpC(C.water, C.gold, Math.pow(Math.abs(d), 1.4)), C.grey, 1 - voiceOn); out.al = .95;
+  } else if (mode === 1) {   // inside the follow bar
+    out.x = L.capX0 + k * 2.2; out.y = capYNow(); out.a = Math.PI / 2; out.max = 26 * env; out.w = 1.7; out.c = C.white; out.al = .95;
+  } else {   // a ring around the rosette, which then gives way to it. The bar's two ends wrap round:
+    // the left half of the line goes up the left side, the right half up the right side.
+    const th = Math.PI / 2 + (k + .5) / NB * Math.PI * 2, pr = presence(12), r0 = L.R * 1.38 * (.86 + .14 * pr);
+    const cy = L.rcy - (reduce ? 0 : (pos - 12) * 50);
+    out.x = W / 2 + Math.cos(th) * r0; out.y = cy + Math.sin(th) * r0; out.a = th; out.max = 18; out.w = 2.2;
+    out.c = k % 2 ? C.nWater : C.nGold; out.al = .9;
+  }
+  return out;
+}
+const bA = {}, bB = {};
+// the follow bar's centre where it is right now (it rises 110 px into place, leaves 60 px up): the bars ride in it
+const capYNow = () => L.capY - (reduce ? 0 : (pos < 11 ? (pos - 11) * 110 : (pos - 11) * 60));
+// bars are lines: an angle and the same angle + π are the same bar. Turn the short way.
+const turnTo = (a, b, t) => { let d = (b - a) % Math.PI; if (d > Math.PI / 2) d -= Math.PI; if (d < -Math.PI / 2) d += Math.PI; return a + d * t; };
+let cvBusy = true, wBusy = true;
+// the 36 bars, on either canvas (top = that canvas's top in page pixels). The morph between two shapes
+// is in-out cubic over its own slice of the swipe, so it lands before the settle.
+function drawBars(c2, top, alpha, msLine, i, f, mA, mB, t, Lv, voiceOn) {
+  c2.setTransform(dpr, 0, 0, dpr, 0, -top * dpr);
+  if (c2 === wctx) c2.clearRect(0, top, W, STRIP);
+  c2.lineCap = 'round';
+  const ring = mA === 2 || mB === 2;
+  const ms = ring ? (reduce ? (f < .5 ? 0 : 1) : inOut(ramp(f, .04, .72))) : msLine;
+  const shrink = ring && !reduce ? 1 - .85 * smooth(ramp(f, .55, .92)) : 1;
+  for (let k = 0; k < NB; k++) {
+    barIn(mA, k, voiceOn, bA); barIn(mB, k, voiceOn, bB);
+    const x = mix(bA.x, bB.x, ms), y = mix(bA.y, bB.y, ms), a = turnTo(bA.a, bB.a, ms), mx = mix(bA.max, bB.max, ms);
+    const b = BARS[k];
+    const n = reduce ? .6 : .55 + .45 * Math.sin(t * b.s1 + b.p1) * Math.sin(t * b.s2 + b.p2);
+    const len = (3 + mx * Lv * n) * shrink;
+    const c = lerpC(bA.c, bB.c, ms), al = mix(bA.al, bB.al, ms) * alpha;
+    const ca = Math.cos(a) * len / 2, sa = Math.sin(a) * len / 2;
+    c2.strokeStyle = rgba(c, al); c2.lineWidth = mix(bA.w, bB.w, ms);
+    c2.beginPath(); c2.moveTo(x - ca, y - sa); c2.lineTo(x + ca, y + sa); c2.stroke();
+  }
+}
+function drawVoice(t, dt, S) {
+  const { i, f, s, Lv, voiceOn, foundT, listening, p12 } = S;
+  // which shape the voice takes, and how much of it is left. One object all the way: the line under
+  // the garden slides into the follow bar (page 11), then rises and wraps into a ring around the
+  // rosette, shortens and dissolves into its outline as the rosette lights up (page 12).
+  const modeOf = k => k <= 10 ? 0 : k === 11 ? 1 : 2;
+  const mA = modeOf(i), mB = modeOf(i + 1);
+  let alpha = i <= 10 ? 1 : i === 11 ? (reduce ? 1 - smooth(f * 2.4) : 1 - smooth(ramp(f, .6, .92))) : 0;
+  if (i === 0) alpha *= reduce ? 1 : springT((performance.now() - t0 - 250) / 1000, .9);
+  const growing = !reduce && ((pos > 0 && pos < 5.02) || (pos > 9 && pos < 10.02));
+  const dry = !reduce && pos > 5.45 && pos < 8.9;
+  // the line (pages 0–11) is drawn on the strip; the ring (11 → 12) on the big canvas
+  const onStrip = mA !== 2 && mB !== 2;
+  if (onStrip && alpha > .003) {
+    const yA = mA === 0 ? L.waveY : capYNow(), yB = mB === 0 ? L.waveY : capYNow();
+    const ms = reduce && mA !== mB ? (s < .5 ? 0 : 1) : i === 10 ? inOut(ramp(f, .08, .85)) : s;
+    const sy = mix(yA, yB, ms);
+    tf(cvW, `translateY(${fx(sy - STRIP / 2)}px)`); op(cvW, 1);
+    drawBars(wctx, sy - STRIP / 2, alpha, ms, i, f, mA, mB, t, Lv, voiceOn);
+    wBusy = true;
+  } else if (wBusy) { wctx.setTransform(1, 0, 0, 1, 0, 0); wctx.clearRect(0, 0, cvW.width, cvW.height); op(cvW, 0); wBusy = false; }
+  const ring = !onStrip && alpha > .003;
+  // nothing to draw and nothing drawn last frame: leave the big canvas alone (no clear, no upload)
+  if (!ring && !parts.length && !leaves.length && p12 <= .003 && !growing && !dry) {
+    if (cvBusy) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); cvBusy = false; op(cv, 0); }
+    return;
+  }
+  cvBusy = true; op(cv, 1);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, -L.cvTop * dpr); ctx.clearRect(0, L.cvTop, W, L.cvH);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  if (ring) drawBars(ctx, L.cvTop, alpha, 0, i, f, mA, mB, t, Lv, voiceOn);
+
+  // droplets: the recitation rises into the garden while it grows
+  if (growing) {
+    spawnAcc += scrollLv * dt * 70;
+    while (spawnAcc > 1 && parts.length < 90) {
+      spawnAcc -= 1;
+      const k = Math.floor(Math.random() * NB), mid = (NB - 1) / 2;
+      const sx = W / 2 + (k - mid) * 7, sy = L.waveY - 10;
+      const tx = W / 2 + (Math.random() - .5) * L.gW * .62, ty = L.gTop + L.gH * (.3 + Math.random() * .42);
+      parts.push({ sx, sy, tx, ty, cx: mix(sx, tx, .5) + (Math.random() - .5) * 60, cy: Math.min(sy, ty) - 30 - Math.random() * 40, t: 0, life: .9 + Math.random() * .6, r: 1.1 + Math.random() * 1.6, gold: Math.random() < .35 });
+    }
+  } else spawnAcc = 0;
+  for (let k = parts.length - 1; k >= 0; k--) {
+    const p = parts[k]; p.t += dt / p.life;
+    if (p.t >= 1) { parts.splice(k, 1); continue; }
+    const u = easeOut(p.t), iu = 1 - u;
+    const x = iu * iu * p.sx + 2 * iu * u * p.cx + u * u * p.tx, y = iu * iu * p.sy + 2 * iu * u * p.cy + u * u * p.ty;
+    ctx.fillStyle = rgba(p.gold ? C.gold : [40, 150, 168], Math.sin(Math.PI * p.t) * .85);
+    ctx.beginPath(); ctx.arc(x, y, p.r * (1 - p.t * .4), 0, 6.283); ctx.fill();
+  }
+
+  // the drought: leaves fall from the trees, more of them when you scroll
+  if (dry) {
+    leafAcc += (scrollLv * 34 + (pos > 5.8 && pos < 8.4 ? 1.8 : 0)) * dt;
+    const k = L.gW / 1170, gl = (W - L.gW) / 2;   // the garden's box from the layout (no getBoundingClientRect)
+    while (leafAcc > 1 && leaves.length < 70) {
+      leafAcc -= 1;
+      const [ix, iy] = isoPt(.08 + rnd() * .84, .08 + rnd() * .84);
+      leaves.push({ x: gl + ix * k, y: L.gTop + (iy - 60 - Math.random() * 150) * k, vy: 26 + Math.random() * 26, sw: Math.random() * 6.28, sp: 1.6 + Math.random() * 1.8, r: Math.random() * 6.28, vr: (Math.random() - .5) * 4, t: 0, life: 1.8 + Math.random() * 1.4, sz: 3.6 + Math.random() * 2.8, c: LEAF[Math.floor(Math.random() * LEAF.length)] });
+    }
+  } else leafAcc = 0;
+  for (let k = leaves.length - 1; k >= 0; k--) {
+    const l = leaves[k]; l.t += dt; if (l.t > l.life) { leaves.splice(k, 1); continue; }
+    l.y += l.vy * dt; l.r += l.vr * dt;
+    const x = l.x + Math.sin(l.t * l.sp + l.sw) * 9, a = Math.min(1, l.t * 3) * (1 - Math.pow(l.t / l.life, 3)) * .95;
+    ctx.save(); ctx.translate(x, l.y); ctx.rotate(l.r + Math.sin(l.t * l.sp) * .6); ctx.scale(1, .55 + .45 * Math.abs(Math.cos(l.t * l.sp)));
+    ctx.fillStyle = rgba(l.c, a); ctx.beginPath(); ctx.moveTo(-l.sz, 0); ctx.quadraticCurveTo(0, -l.sz * .75, l.sz, 0); ctx.quadraticCurveTo(0, l.sz * .75, -l.sz, 0); ctx.fill();
+    ctx.restore();
+  }
+
+  // the rosette (D27, D29), night values
+  if (p12 > .003) drawRosette(t, Lv, p12, foundT, listening);
+}
+function starPath(x, y, r) { ctx.beginPath(); for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8 - Math.PI / 2, rr = k % 2 ? r * HOLLOW : r; const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr; k ? ctx.lineTo(px, py) : ctx.moveTo(px, py); } ctx.closePath(); }
+function petalPath(x, y, r, round) { ctx.beginPath(); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4 - Math.PI / 2; const h = [x + Math.cos(a - Math.PI / 8) * r * HOLLOW, y + Math.sin(a - Math.PI / 8) * r * HOLLOW], tp = [x + Math.cos(a) * r * (1 + .16 * (1 - round)), y + Math.sin(a) * r * (1 + .16 * (1 - round))], nx = [x + Math.cos(a + Math.PI / 8) * r * HOLLOW, y + Math.sin(a + Math.PI / 8) * r * HOLLOW]; if (!k) ctx.moveTo(h[0], h[1]); ctx.quadraticCurveTo(tp[0], tp[1], nx[0], nx[1]); } ctx.closePath(); }
+function insidePath(x, y, R) { ctx.beginPath(); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4 - Math.PI / 2, at = (r, an) => [x + Math.cos(an) * r, y + Math.sin(an) * r]; const tip = at(R, a), heart = at(R * INNER, a), l = at(R * HOLLOW, a - Math.PI / 8), rr = at(R * HOLLOW, a + Math.PI / 8); ctx.moveTo(l[0], l[1]); ctx.lineTo(heart[0], heart[1]); ctx.lineTo(rr[0], rr[1]); ctx.moveTo(tip[0], tip[1]); ctx.lineTo(heart[0], heart[1]); } }
+function drawRosette(t, level, pres, foundT, listening) {
+  const d12 = pos - 12;
+  const x = W / 2, y = mix(L.rcy, L.rcyF, foundT) - (reduce ? 0 : d12 * 50);
+  const k = mix(1, L.rkF, foundT) * (reduce ? 1 : .86 + .14 * pres);
+  const R = L.R * k * (1 + .02 * level), al = pres;
+  // a petal leaves at each breath of the voice, and a quiet one in silence
+  if (!reduce && (listening || scrollLv > .25) && pres > .5) {
+    if (Math.max(vLevel, scrollLv) > .45 && t - lastEcho > .85) { echoGold = !echoGold; echoes.push({ t0: t, p: vLevel, gold: echoGold }); lastEcho = t; }
+    else if (t - lastEcho > 2.3) { echoGold = !echoGold; echoes.push({ t0: t, p: .12, gold: echoGold }); lastEcho = t; }
+    if (echoes.length > 6) echoes.shift();
+  }
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let e = echoes.length - 1; e >= 0; e--) {
+    const E = echoes[e], age = (t - E.t0) / 4.6; if (age > 1) { echoes.splice(e, 1); continue; }
+    const grow = 1.04 + age * (.95 + .35 * E.p), a = Math.pow(1 - age, 1.6) * .5 * (.55 + .45 * E.p) * al;
+    ctx.strokeStyle = rgba(E.gold ? C.nGold : C.nWater, a); ctx.lineWidth = 1.25 - age * .5;
+    petalPath(x, y, R * grow, Math.min(1, age * 1.5)); ctx.stroke();
+  }
+  const breathe = .84 + .16 * level + (reduce ? 0 : .04 * Math.sin(t * 1.4));
+  // the light on the two stars
+  ctx.strokeStyle = rgba(C.nWater, (.10 + .16 * level) * breathe * al); ctx.lineWidth = 6 + 8 * level; starPath(x, y, R * INNER); ctx.stroke();
+  ctx.lineWidth = 5 + 6 * level; starPath(x, y, R); ctx.stroke();
+  ctx.restore();
+  ctx.lineWidth = 1.05; ctx.strokeStyle = rgba(C.nGold, .58 * breathe * al); insidePath(x, y, R); ctx.stroke();
+  ctx.lineWidth = 1.3; ctx.strokeStyle = rgba(C.nWater, .8 * breathe * al); starPath(x, y, R); ctx.stroke();
+  ctx.lineWidth = 1.6; ctx.strokeStyle = rgba(C.nHeart, .95 * breathe * al); starPath(x, y, R * INNER); ctx.stroke();
+  for (let n = 0; n < 8; n++) {
+    const a = n * Math.PI / 4 - Math.PI / 2, px = x + Math.cos(a) * R * INNER, py = y + Math.sin(a) * R * INNER;
+    const g = ctx.createRadialGradient(px, py, 0, px, py, 4); g.addColorStop(0, rgba(C.nHeart, .45 * (.25 + .75 * level) * al)); g.addColorStop(1, rgba(C.nHeart, 0));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px, py, 4, 0, 6.283); ctx.fill();
+  }
+}
+
+// ---------------------------------------------------------------- start
+window.__jannatuk = { errAt: TL.find(x => x.k === 'err').a, go, pos: () => pos, demo: (page, ms) => { const now = performance.now(); if (page === 11) demo11 = now - ms; if (page === 12) demo12 = now - ms; } };
+const start = () => { layout(); applyPlan(true); t0 = performance.now(); requestAnimationFrame(frame); sc.focus({ preventScroll: true }); };
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { const p = Math.round(pos); layout(); go(p); }, 60); });
+// fonts and every garden picture decoded before the first frame (1.5 s at most)
+const fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+const PV_ALL = PV.map(([, h]) => h); PV_ALL.forEach(h => { img(h); if (h !== 'h00-f0') img(h + '-w2'); });
+const decoded = Promise.all(ALL_IMGS.concat([...document.querySelectorAll('.fg img, .home img')]).map(i => i.decode().catch(() => {})));
+Promise.race([Promise.all([fontsReady, decoded]), new Promise(r => setTimeout(r, 1500))]).then(start);
+})();
+</script>
+</body>
+</html>
