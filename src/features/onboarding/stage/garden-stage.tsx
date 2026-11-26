@@ -38,7 +38,6 @@ import {
 } from '../story-math';
 import { isNear, type StageProps } from './stage-props';
 
-
 /** The pictures of each garden of the story (the prototype's `GS`): dry, still water, flowing. */
 interface StagePictures {
   readonly base: string;
