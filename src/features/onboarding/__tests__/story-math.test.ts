@@ -108,6 +108,9 @@ describe('from the finger’s position to what the stage shows', () => {
     expect(revivalLook(gardens, 9.999, false)?.reach).toBeGreaterThan(2);
     expect(gardenLayerLook('g60', gardens, 10, 26, false).opacity).toBe(1);
     expect(revivalLook(gardens, 10.2, false)).toBeNull();
+    // Resting on the dead page, no green at all at the fountain.
+    expect(revivalLook(gardens, 9, false)).toBeNull();
+    expect(revivalLook(gardens, 9.001, false)).toBeNull();
   });
 
   it('cracks the earth from page 7.35 and lets the cracks go after the dead page', () => {

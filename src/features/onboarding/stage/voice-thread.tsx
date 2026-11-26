@@ -17,6 +17,7 @@ import {
   clamp,
   easeOut,
   followBarOffset,
+  introArrival,
   mix,
   pageValue,
   presence,
@@ -70,7 +71,7 @@ export function VoiceThread({
   const middle = (L.waveBars - 1) / 2;
   const left = layout.width / 2 - middle * L.waveStep;
   const right = layout.width / 2 + middle * L.waveStep;
-  const build = (pos: number, t: number, level: number, fy: number, introMs: number) => {
+  const build = (pos: number, t: number, level: number, fy: number) => {
     'worklet';
     const m = STORY_MOTION;
     const thread = threadLook(pos, marks, reducedMotion);
@@ -120,8 +121,7 @@ export function VoiceThread({
       if (k % 2 === 0) even += bar;
       else odd += bar;
     }
-    const arrival = reducedMotion ? 1 : easeOut((introMs - m.introWaveDelayMs) / m.introWaveMs);
-    const alpha = thread.opacity * arrival * m.barOpacity;
+    const alpha = thread.opacity * m.barOpacity;
     const alive = pageValue(voices, pos);
     const inFollow = thread.inBar * (1 - thread.inRing);
     return {
@@ -141,13 +141,7 @@ export function VoiceThread({
   };
   const shape = () => {
     'worklet';
-    return build(
-      position.get(),
-      engine.clock.get(),
-      engine.level.get(),
-      followY.get(),
-      engine.introMs.get(),
-    );
+    return build(position.get(), engine.clock.get(), engine.level.get(), followY.get());
   };
   const greyProps = useAnimatedProps(() => {
     const s = shape();
@@ -172,8 +166,11 @@ export function VoiceThread({
   });
   // The whole thread also fades as a view: its opacity reaches every platform, the paths' own
   // props only where the platform redraws them on the UI thread.
+  // The thread arrives 250 ms after the first frame (motion spec §2), as a view's opacity.
   const whole = useAnimatedStyle(() => ({
-    opacity: threadLook(position.get(), marks, reducedMotion).opacity,
+    opacity:
+      threadLook(position.get(), marks, reducedMotion).opacity *
+      introArrival(engine.introMs.get(), STORY_MOTION.introWaveDelayMs, reducedMotion),
   }));
   // The first frame, before the UI thread runs: the thread at rest on the page shown.
   const initial = build(
@@ -181,7 +178,6 @@ export function VoiceThread({
     0,
     reducedMotion ? STORY_MOTION.reducedLevel : STORY_MOTION.idleLevel,
     0,
-    Number.POSITIVE_INFINITY,
   );
   // Gold at the ends, water in the middle: the prototype mixes them by |d|^1.4 along the thread.
   const stops = [0, 0.15, 0.3, 0.5, 0.7, 0.85, 1].map((offset) => ({

@@ -24,16 +24,13 @@ export const STORY_MOTION = {
   riseFade: 0.4,
   /** Its height starts at 90 % (`scaleY(.9 + .1 * …)`). */
   riseScaleFrom: 0.9,
-  /** The arrival: the garden over 800 ms, the line 160 ms later, the words 320 ms, the hint 900 ms. */
-  introMs: 800,
+  /** The arrival (motion spec §2), each on the 0.9 s spring: the garden at once, the line 160 ms later, the thread 250, the title 320, the sentence 420, the dots 600, the hint 900. */
   introLineDelayMs: 160,
   introCopyDelayMs: 320,
   introTextDelayMs: 420,
   introDotsDelayMs: 600,
-  introCopyRise: 16,
   introHintDelayMs: 900,
   introWaveDelayMs: 250,
-  introWaveMs: 900,
   /** The hint to swipe fades out over the first third of a page. */
   hintRate: 3,
   hintLoopMs: 1800,
@@ -198,7 +195,6 @@ export const STORY_MOTION = {
   /** The listening demonstration loops every 9 s: it listens 2.7 s, the card comes in 0.7 s. */
   recognitionLoopMs: 9000,
   recognitionListenMs: 2700,
-  recognitionCardMs: 700,
   recognitionLeaveAtMs: 8300,
   /** It leaves faster than it came (motion spec §9: 0.45 s). */
   recognitionLeaveMs: 450,

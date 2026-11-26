@@ -85,11 +85,18 @@ userSeed, pauses, reminders }` et journal de lecture (type du domaine). `reminde
 3. **Premier lancement** (direction « voix », choisie par le propriétaire le 25 novembre 2026).
    Référence, pour l'aspect et pour le mouvement : `docs/design/premier-lancement-voix/index.html`
    (et ses captures `shots/01–17.png`). Elle remplace `premier-lancement-prototype.html` et
-   `bienvenue.png` pour le premier lancement.
+   `bienvenue.png` pour le premier lancement. **Le mouvement suit la spécification revue**
+   `onb-styles/voice-v2/review/MOTION-SPEC.md` (valeurs dans `src/features/onboarding/config.ts`,
+   fonctions pures dans `story-math.ts`, pageur dans `src/ui/components/swipe-paging.ts`) :
+   transformations et opacité seulement, rien en couleur, taille, flou ni découpe animés.
    - _Rôle_ : faire comprendre en quelques gestes que lire arrose le jardin, montrer la voix et
      l'écoute, puis prendre l'objectif et les rappels.
    - _Signature_ : tout est lié au doigt. **Un glissement vertical = une page** (`SwipePager`,
-     `axis="vertical"`, `pageMotion="still"`, ressort critique au relâcher) ; la position du pageur
+     `axis="vertical"`, `pageMotion="still"`, `release="projected"`) : le doigt suivi 1:1, élastique
+     aux deux bouts (`x·d·c / (d + c·|x|)`, c = 0,55) ; au relâcher, la page la plus proche du point
+     où le geste s'arrêterait (décélération 0,998), une page au plus, puis un ressort critique
+     (masse 1, raideur 195, amortissement 27,9) lancé à la vitesse du doigt, plafonnée pour ne
+     jamais dépasser la page ; un toucher attrape les pages en route ; la position du pageur
      (valeur partagée, fil de l'interface) pilote chaque animation, et revenir en arrière la joue à
      l'envers. Ni « Passer » ni « Suivant » (décision du propriétaire).
    - **Pages et textes** : ceux du prototype, dans son ordre (`src/features/onboarding/pages.ts`,
@@ -102,7 +109,10 @@ userSeed, pauses, reminders }` et journal de lecture (type du domaine). `reminde
      de quelques degrés par page. Sécheresse : feuilles qui tombent, voix qui se tait et grisonne,
      terre qui se craquelle. Reprise : l'eau revient de la fontaine en anneaux, le vert la suit.
    - **Le fil de la voix** : 36 barres sous le verset, qui bougent avec la vitesse du doigt et la
-     voix simulée ; il entre dans la barre « J'écoute » de la page du mushaf puis s'en va.
+     voix simulée ; il entre dans la barre « J'écoute » de la page du mushaf, y voyage avec elle,
+     puis les mêmes barres s'enroulent autour de la rosace de l'écoute et s'y fondent.
+   - **La nuit** des deux pages de la voix est un rideau (1,5 écran) qui descend puis remonte comme
+     l'aube, par translation ; le nom et les points changent de couleur en 400 ms à un instant.
    - **Al-Fâtiha 1:1–7** s'allume mot à mot sous le jardin pendant les cinq pages de croissance :
      texte uthmani de la page 1 de la couche de données, police KFGQPC Hafs.
    - **La voix** : la page 1 du mushaf, de nuit ; les mots s'allument, « نَسۡتَعِينُ » passe en rouge
@@ -122,7 +132,9 @@ userSeed, pauses, reminders }` et journal de lecture (type du domaine). `reminde
    - **« Créer mon jardin »** enregistre l'objectif (`setReadingGoal`), le moment
      (`setReadingMoment`) et les deux interrupteurs (`updateReminders`), marque le parcours fini,
      demande l'autorisation des notifications (premier lancement, un rappel actif), puis ouvre
-     l'accueil avec `?welcome=1`. Retour léger (sélection) à chaque page posée, succès sur le bouton.
+     l'accueil avec `?welcome=1`. Les six retours haptiques de la spécification (§13) : sélection
+     quand une page se pose et sur une option, avertissement quand le mot passe en rouge, succès
+     quand le passage est reconnu, impact léger quand le cœur arrive, impact moyen sur le bouton.
    - **Réduire les animations** : fondus seulement (pas de translation, de montée, de rotation, de
      particules ; la page du mushaf reste sur le mot à relire). **Sombre** : valeurs crépuscule.
    - **Accessibilité** : chaque page décrit sa scène en mots (élément image), puis son titre

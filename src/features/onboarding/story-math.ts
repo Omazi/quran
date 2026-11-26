@@ -347,6 +347,8 @@ export function revivalLook(
   if (reducedMotion) return null;
   const { from, to, along } = segmentAt(position, gardens.length);
   if (gardens[from] !== 'd14' || gardens[to] !== 'g60') return null;
+  // Nothing at the very start: a dot of green would show on the dead earth (motion spec §5).
+  if (along <= 0.002) return null;
   const m = STORY_MOTION;
   const reach = m.revivalReach * smooth(along * 0.5 + 0.5) * along * m.revivalOvershoot;
   const second = clamp((along - m.ringSecondDelay) / (1 - m.ringSecondDelay));
