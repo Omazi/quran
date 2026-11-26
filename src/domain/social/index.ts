@@ -1,3 +1,4 @@
+export { GENDERS, isGender, parseGender, type Gender } from '@/domain/shared/gender';
 export { NO_BOND } from './bond';
 export { bondBetween, replaceBond } from './bond';
 export type { Bond, BondTables } from './bond';

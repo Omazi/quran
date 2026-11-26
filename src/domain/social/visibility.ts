@@ -29,7 +29,7 @@ function assertPersonData(data: PersonData): void {
  *
  * - The person themselves: everything.
  * - Blocked, in either direction: `null`, nothing at all (not even the name).
- * - An accepted friend: the name; the garden if `showGarden`; the level, badges and reading
+ * - An accepted friend: the name and the gender (how to speak of them); the garden if `showGarden`; the level, badges and reading
  *   counters (words, verses, hasanat estimate) if `showLevel`. A pending or declined request is not a friendship.
  * - Anyone else: the name only.
  *
@@ -79,6 +79,7 @@ export function viewOf(owner: PersonData, viewerId: UserId, bond: Bond): PersonV
     kind: 'friend',
     userId: profile.id,
     displayName: profile.displayName,
+    gender: profile.gender,
     garden: sharedGarden,
     level: sharedLevel,
   };

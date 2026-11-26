@@ -3,7 +3,7 @@
  */
 import { parseLocalDate, type LocalDate } from '@/domain/shared/local-date';
 
-import { SocialRuleError, type Profile, type SocialRefusal } from '../index';
+import { SocialRuleError, type Gender, type Profile, type SocialRefusal } from '../index';
 
 /** Short alias: tests write `day('2026-11-24')`. */
 export function day(value: string): LocalDate {
@@ -65,13 +65,14 @@ export async function expectRefusalLater(
 export function profileOf(
   id: string,
   displayName: string,
-  overrides: Partial<{ showGarden: boolean; showLevel: boolean }> = {},
+  overrides: Partial<{ showGarden: boolean; showLevel: boolean; gender: Gender | null }> = {},
 ): Profile {
   return {
     id,
     displayName,
     showGarden: true,
     showLevel: true,
+    gender: null,
     createdOn: day('2026-10-01'),
     ...overrides,
   };

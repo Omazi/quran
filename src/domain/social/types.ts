@@ -1,4 +1,5 @@
 import type { ReadingJournal } from '@/domain/khatm';
+import type { Gender } from '@/domain/shared/gender';
 import type { LocalDate } from '@/domain/shared/local-date';
 
 /**
@@ -24,6 +25,12 @@ export interface Profile {
   readonly showGarden: boolean;
   /** Whether friends see the level and the badges. True by default (D23). */
   readonly showLevel: boolean;
+  /**
+   * What the person says they are, so that friends are spoken of correctly ("Lire avec lui" /
+   * "Lire avec elle"). Null until they say it: texts then use their neutral wording. Friends
+   * see it; anyone else sees the name only (rule 4).
+   */
+  readonly gender: Gender | null;
   readonly createdOn: LocalDate;
 }
 
@@ -188,6 +195,8 @@ export interface ProfileChanges {
   readonly displayName?: string;
   readonly showGarden?: boolean;
   readonly showLevel?: boolean;
+  /** `null` goes back to unspecified. */
+  readonly gender?: Gender | null;
 }
 
 /** A word of encouragement about to be sent. `today` is the sender's day. */
@@ -238,6 +247,8 @@ export interface FriendView {
   readonly kind: 'friend';
   readonly userId: UserId;
   readonly displayName: string;
+  /** What I say I am; null when I have not said. A friend sees it whatever else I hide. */
+  readonly gender: Gender | null;
   /** Null when I hide my garden, or before my app has published it. */
   readonly garden: SharedGarden | null;
   /** Null when I hide my level, or before my app has published my garden summary. */

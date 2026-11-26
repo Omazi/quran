@@ -21,6 +21,11 @@ export const SYNC_DEVICE_MIGRATION =
   process.env.SYNC_DEVICE_MIGRATION ??
   join(here, '..', 'migrations', '20261126000000_sync_device_id.sql');
 
+// The profile gender (list_friends() answers one column more).
+export const GENDER_MIGRATION =
+  process.env.GENDER_MIGRATION ??
+  join(here, '..', 'migrations', '20261126120000_profile_gender.sql');
+
 const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 export const U = {
   omar: id(1), // the owner of the rows
