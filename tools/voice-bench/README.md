@@ -52,6 +52,9 @@ Variables : `VOICE_BENCH_CONFIG` (réglages nommés dans `voice-bench.test.ts`),
 `VOICE_BENCH_SCORE_TAG`, `VOICE_BENCH_FIXED_MS` / `VOICE_BENCH_PER_WORD_MS` (durée d'une lecture
 sur l'iPhone simulé). Les lectures sont gardées en cache (`cache-<modèle>.jsonl`).
 
+Les temps du repli de température (D45) : `python3 -I tools/voice-bench/retime.py <données>
+<travail> <travail>/offline-before.jsonl`.
+
 **Ne lancer qu'une mesure à la fois** : ggml attend ses fils en tournant ; deux mesures sur deux
 cœurs se ralentissent l'une l'autre d'un facteur 10 et faussent les temps.
 
