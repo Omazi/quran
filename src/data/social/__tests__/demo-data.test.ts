@@ -7,6 +7,8 @@ import {
   type PersonData,
 } from '@/domain/social';
 
+import { levelOfCompletedKhatmas } from '@/domain/levels';
+
 import { createDemoSocialData, DEMO_GROUP_ID, DEMO_USERS } from '../index';
 
 const TODAY = parseLocalDate('2026-11-24');
@@ -72,6 +74,20 @@ describe('Demonstration data (createDemoSocialData)', () => {
     expect(thirsty!.streakDays).toBe(0);
     expect(thirsty!.lastWateredOn).toBe(addDays(TODAY, -6));
     expect(complete).toMatchObject({ hizbCompleted: 60, health: 1 });
+  });
+
+  it('gives the three friends different levels, each with the badges of its khatmas (D46)', () => {
+    const levels = [mustapha, sarah, taghread].map((id) => {
+      const { garden, badges } = personData(id);
+      expect(garden?.badgeCount).toBe(badges.length);
+      expect(badges.map((badge) => badge.khatmNumber)).toEqual(
+        badges.map((_badge, index) => index + 1),
+      );
+      return levelOfCompletedKhatmas(badges.length);
+    });
+    // Mustapha, the screen check's friend, is level 3; Sarah 4; Taghread, who has just completed
+    // her first khatma, 2.
+    expect(levels).toEqual([3, 4, 2]);
   });
 
   it('every pair has a valid bond: one friendship row per pair, as the rules say', () => {

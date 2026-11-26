@@ -94,22 +94,23 @@ const PEOPLE: readonly DemoPerson[] = [
     pagesOn: (daysAgo) => 6 + (daysAgo % 5) * 3,
   },
   {
-    // A garden that is thirsty: nothing read for six days.
+    // A garden that is thirsty: nothing read for six days, by a reader of three khatmas.
     id: sarah,
     name: 'Sarah',
     joinedDaysAgo: 100,
     garden: {
-      khatmNumber: 1,
+      // Three khatmas completed (level 4, D46), the fourth at hizb 9.
+      khatmNumber: 4,
       hizbCompleted: 9,
       health: 0.25,
       wateredDaysAgo: 6,
       streakDays: 0,
-      badgeCount: 0,
-      wordsRead: 11_615,
-      versesRead: 935,
-      hasanatEstimate: 499_445,
+      badgeCount: 3,
+      wordsRead: 243_905,
+      versesRead: 19_643,
+      hasanatEstimate: 10_487_894,
     },
-    badgesDaysAgo: [],
+    badgesDaysAgo: [160, 100, 45],
     pagesOn: (daysAgo) => (daysAgo < 6 ? 0 : pattern(3, 2)(daysAgo)),
   },
   {

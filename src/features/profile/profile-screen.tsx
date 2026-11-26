@@ -2,8 +2,17 @@ import { useTranslation } from 'react-i18next';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { GardenPhase, GardenState } from '@/domain/garden';
+import type { Progression } from '@/domain/levels';
+import {
+  BadgeShelf,
+  CurrentGardenCard,
+  LevelChip,
+  ownShelf,
+  ShowLevelCard,
+} from '@/features/gardens';
 import { DataResetNoticeCard, type SettingsActions, type SettingsModel } from '@/features/settings';
 import {
+  ActionButton,
   AppText,
   Card,
   GradientBackdrop,
@@ -17,7 +26,6 @@ import {
 } from '@/ui';
 
 import { PROFILE_CARDS_RISE, PROFILE_PULL_ROOM_STEPS, PROFILE_SYMBOLS } from './config';
-import { ProfileGarden } from './profile-garden';
 import { StatsPreviewSection } from './state-preview';
 import { StatsSections } from './stats-sections';
 import type { ProfileStatsActions, ProfileStatsModel } from './use-profile-stats';
@@ -28,6 +36,10 @@ export interface ProfileActions {
   readonly openSettings: () => void;
   /** Opens the reader where the person resumes, as "Lire et arroser" does on the home screen. */
   readonly read: () => void;
+  /** Opens "Mes jardins", the path of the levels (D46). */
+  readonly openGardens: () => void;
+  /** Shows or hides the level and badges to friends ("Montrer mon niveau", D46). */
+  readonly setShowLevel: (showLevel: boolean) => void;
 }
 
 export interface ProfileScreenProps {
@@ -38,6 +50,10 @@ export interface ProfileScreenProps {
   settingsActions: SettingsActions;
   /** The person's garden, or null when it cannot be computed. */
   garden: GardenState | null;
+  /** Level, badges and garden in progress (D46), or null when they cannot be computed. */
+  progression: Progression | null;
+  /** Whether friends see the level and badges. */
+  showLevel: boolean;
   actions: ProfileActions;
 }
 
@@ -52,13 +68,14 @@ const BACKDROP_OF_PHASE: Readonly<Record<GardenPhase, BackdropName>> = {
 };
 
 /**
- * The "Profil" tab, in the visual language of the home screen (docs/design/accueil.png; there is
- * no mockup of the profile): the title in the serif of the mockups and the person's garden on the
- * gradient of its state, then white cards that rise over the end of the gradient, in the order of
- * importance (layout.md › Visual hierarchy): the reading statistics, the gardens, and one card
- * that opens the settings (settings.md › General settings). A notice about lost data, when there
- * is one, comes first: the tab's badge points to it (tab-bars.md › Best practices). One scroll
- * view, so nothing is cut at the largest text sizes (layout.md › Adaptability).
+ * The "Profil" tab (docs/design/maquettes-2026-11-26/profile-*.png): the title in the serif of the
+ * mockups and the level under it ("Niveau 2 · Oasis") on the gradient of the garden's state, then
+ * white cards that rise over the end of the gradient, in the order of the mockup (layout.md ›
+ * Visual hierarchy): the garden in progress (it opens "Mes jardins"), the badges, "Montrer mon
+ * niveau", the reading statistics, and one card that opens the settings (settings.md › General
+ * settings). A notice about lost data, when there is one, comes first: the tab's badge points to
+ * it (tab-bars.md › Best practices). One scroll view, so nothing is cut at the largest text sizes
+ * (layout.md › Adaptability).
  */
 export function ProfileScreen({
   stats,
@@ -66,9 +83,12 @@ export function ProfileScreen({
   settings,
   settingsActions,
   garden,
+  progression,
+  showLevel,
   actions,
 }: ProfileScreenProps) {
   const { t } = useTranslation('profile');
+  const { t: tGardens } = useTranslation('gardens');
   const colors = useColors();
   const insets = useSafeInsets();
   // iOS insets a scroll view for the status bar and the tab bar by itself; elsewhere the safe
@@ -95,11 +115,45 @@ export function ProfileScreen({
             <AppText variant="largeTitle" color="heading">
               {t('title')}
             </AppText>
+            {progression === null ? null : (
+              <LevelChip
+                level={progression.level}
+                styleId={progression.styleId}
+                testID="profile-level"
+              />
+            )}
           </View>
-          {garden === null ? null : <ProfileGarden garden={garden} />}
         </View>
         <View style={styles.cards}>
           <DataResetNoticeCard model={settings} actions={settingsActions} />
+          {progression === null ? null : (
+            <>
+              <CurrentGardenCard
+                progression={progression}
+                garden={garden}
+                onPress={actions.openGardens}
+                testID="profile-garden"
+              />
+              <View style={styles.sectionHeader}>
+                <AppText variant="title2" color="heading" style={styles.sectionTitle}>
+                  {tGardens('badges.title')}
+                </AppText>
+                <ActionButton
+                  variant="plain"
+                  label={tGardens('badges.seeAll')}
+                  onPress={actions.openGardens}
+                  fullWidth={false}
+                  testID="profile-open-gardens"
+                />
+              </View>
+              <BadgeShelf items={ownShelf(progression)} testID="profile-badges" />
+              <ShowLevelCard
+                value={showLevel}
+                onChange={actions.setShowLevel}
+                testID="profile-show-level"
+              />
+            </>
+          )}
           <StatsSections model={stats} actions={statsActions} onRead={actions.read} />
           <SettingsCard onPress={actions.openSettings} />
           {StatsPreviewSection === null ? null : <StatsPreviewSection />}
@@ -139,7 +193,16 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: layout.screenMargin + spacing.xs,
     paddingTop: layout.controlGap,
+    paddingBottom: spacing.xl,
+    rowGap: spacing.sm,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    marginBottom: -spacing.sm,
+  },
+  sectionTitle: { flex: 1 },
   cards: {
     marginTop: -spacing[PROFILE_CARDS_RISE],
     paddingHorizontal: layout.screenMargin,

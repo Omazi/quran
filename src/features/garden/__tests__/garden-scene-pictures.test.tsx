@@ -48,6 +48,22 @@ describe('GardenScene with its pictures', () => {
     expect(screen.queryByText('Jardin au hizb 24')).toBeNull();
   });
 
+  it('lays a provisional tint over the garden, never over its water, when asked (D46)', async () => {
+    await showLanguage('fr');
+    await render(
+      <GardenScene state={garden(24)} size="band" tint={{ color: '#123456', opacity: 0.2 }} />,
+    );
+    const images = drawnImages();
+    expect(images.map(({ props }) => props.source)).toEqual([
+      baseAsset('h24-f0'),
+      baseAsset('h24-f0'),
+      waterAsset('h24-f0-w2'),
+    ]);
+    expect(images[1]?.props).toMatchObject({ tintColor: '#123456' });
+    expect(images[1]?.props.style).toEqual(expect.arrayContaining([{ opacity: 0.2 }]));
+    expect(images[0]?.props.tintColor).toBeUndefined();
+  });
+
   it('loads only the pictures the state needs: no water on a dry garden', async () => {
     await showLanguage('fr');
     await render(<GardenScene state={garden(24, 3)} size="band" />);

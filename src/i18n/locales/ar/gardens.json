@@ -1,0 +1,94 @@
+{
+  "styles": {
+    "fountain-courtyard": "فناء النافورة",
+    "oasis": "الواحة",
+    "waterside-orchard": "بستان على ضفة الماء",
+    "mountain-garden": "حديقة الجبل",
+    "cherry-blossoms": "أزهار الكرز",
+    "pine-clearing": "الصنوبر والفسحة",
+    "night-garden": "حديقة الليل"
+  },
+  "level": {
+    "value": "المستوى {{level}}",
+    "chip": "المستوى {{level}} · {{garden}}",
+    "chipLabel": "المستوى {{level}}، {{garden}}"
+  },
+  "current": {
+    "title": "الحديقة الحالية",
+    "progress_zero": "{{count}} من 60 حزبًا",
+    "progress_one": "{{count}} من 60 حزبًا",
+    "progress_two": "{{count}} من 60 حزبًا",
+    "progress_few": "{{count}} من 60 حزبًا",
+    "progress_many": "{{count}} من 60 حزبًا",
+    "progress_other": "{{count}} من 60 حزبًا",
+    "notStarted": "صفحتك القادمة تبدأ بإنباتها",
+    "hint": "يفتح حدائقك"
+  },
+  "badges": {
+    "title": "الأوسمة",
+    "seeAll": "حدائقي",
+    "inProgress": "قيد النمو",
+    "locked": "قريبًا",
+    "lockedName": "المستوى {{level}}",
+    "earnedLabel": "وسام الختمة {{khatm}}، {{garden}}، نِلتَه في {{date}}",
+    "inProgressLabel": "{{garden}}، قيد النمو، {{progress}}",
+    "lockedLabel": "المستوى {{level}}، قريبًا",
+    "count_zero": "لا ختمات",
+    "count_one": "ختمة واحدة",
+    "count_two": "ختمتان",
+    "count_few": "{{count}} ختمات",
+    "count_many": "{{count}} ختمة",
+    "count_other": "{{count}} ختمة"
+  },
+  "showLevel": {
+    "title": "إظهار مستواي",
+    "on": "يرى أحبّتك مستواك وأوسمتك.",
+    "off": "مستواك وأوسمتك لك وحدك."
+  },
+  "path": {
+    "title": "حدائقي",
+    "subtitle": "كل ختمة تُنبت حديقة جديدة.",
+    "completed": "الختمة {{khatm}} · {{date}}",
+    "current_zero": "قيد النمو · {{count}} من 60 حزبًا",
+    "current_one": "قيد النمو · {{count}} من 60 حزبًا",
+    "current_two": "قيد النمو · {{count}} من 60 حزبًا",
+    "current_few": "قيد النمو · {{count}} من 60 حزبًا",
+    "current_many": "قيد النمو · {{count}} من 60 حزبًا",
+    "current_other": "قيد النمو · {{count}} من 60 حزبًا",
+    "currentNotStarted": "تبدأ بالنمو مع صفحتك القادمة",
+    "locked": "قريبًا",
+    "lockedLabel": "المستوى {{level}}، قريبًا، ما زال سرًّا",
+    "doneLabel": "اكتملت",
+    "lastLevel": "ستأتي حدائق أخرى مع الإصدارات القادمة. وإلى ذلك الحين، كل ختمة تُنبت هذه الحديقة من جديد."
+  },
+  "celebration": {
+    "badge": "نِلتَ وسامًا · {{garden}}",
+    "title": "تمّت الختمة",
+    "dua": "تقبّل الله منك",
+    "duaMeaning": "تقبّل الله منك.",
+    "hizb": "حزبًا",
+    "pages": "صفحة",
+    "days_zero": "يوم",
+    "days_one": "يوم",
+    "days_two": "يومان",
+    "days_few": "أيام",
+    "days_many": "يومًا",
+    "days_other": "يوم",
+    "statsLabel": "{{hizb}} حزبًا، {{pages}} صفحة، {{days}}",
+    "daysSpoken_zero": "{{count}} يوم",
+    "daysSpoken_one": "يوم واحد",
+    "daysSpoken_two": "يومان",
+    "daysSpoken_few": "{{count}} أيام",
+    "daysSpoken_many": "{{count}} يومًا",
+    "daysSpoken_other": "{{count}} يوم",
+    "next": "حديقتك الجديدة تنتظرك",
+    "nextDetail": "المستوى {{level}} · {{garden}}، على أرض جرداء",
+    "nextSame": "{{garden}} من جديد، على أرض جرداء",
+    "button": "شاهد حديقتي الجديدة",
+    "close": "إغلاق",
+    "badgeLabel": "وسام الختمة {{khatm}}، {{garden}}"
+  },
+  "friend": {
+    "title": "الأوسمة"
+  }
+}

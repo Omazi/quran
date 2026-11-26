@@ -27,6 +27,17 @@ import { useGardenPictureSequence } from './use-garden-picture';
  */
 export type GardenSceneSize = 'band' | 'fill';
 
+/**
+ * PROVISIONAL (D46): a colour cast laid over the level-1 pictures, for a garden style that has no
+ * pictures of its own yet. Only the garden is cast, not its water nor the empty space around it.
+ */
+export interface GardenSceneTint {
+  /** A plain colour value (not a dynamic one: the image tints with a single colour). */
+  readonly color: string;
+  /** How strong the cast is, from 0 to 1. */
+  readonly opacity: number;
+}
+
 export interface GardenSceneProps {
   /** The garden to show, exactly as the garden module describes it. */
   state: GardenState;
@@ -35,6 +46,8 @@ export interface GardenSceneProps {
   anchor?: 'bottom' | 'center';
   /** Which pictures exist. Only tests give it: the app uses the set that ships with it. */
   images?: GardenImageNames;
+  /** A provisional colour cast for a garden style without pictures of its own (D46). */
+  tint?: GardenSceneTint | null;
 }
 
 /** One layer of the picture: a rendered image, as tall and wide as the scene, never cropped. */
@@ -42,16 +55,24 @@ function Layer({
   asset,
   transitionMs,
   position,
+  tint,
 }: {
   asset: number | undefined;
   transitionMs: number;
   position: ImageContentPosition;
+  tint?: GardenSceneTint;
 }) {
   if (asset === undefined) return null;
   return (
     <Image
       source={asset}
-      style={StyleSheet.absoluteFill}
+      style={
+        tint === undefined
+          ? StyleSheet.absoluteFill
+          : [StyleSheet.absoluteFill, { opacity: tint.opacity }]
+      }
+      // A tinted copy of the picture keeps only its shape and casts one colour over it.
+      tintColor={tint?.color}
       contentFit="contain"
       contentPosition={position}
       // The garden is described once, by the scene: the layers are not elements of their own.
@@ -82,6 +103,7 @@ export function GardenScene({
   size,
   anchor = 'bottom',
   images = SHIPPED_GARDEN_IMAGES,
+  tint = null,
 }: GardenSceneProps) {
   const { t } = useTranslation('garden');
   const target = gardenPicture(state, { images });
@@ -117,6 +139,14 @@ export function GardenScene({
       testID="garden-scene"
     >
       <Layer asset={baseAsset(names.base)} transitionMs={transitionMs} position={position} />
+      {tint === null ? null : (
+        <Layer
+          asset={baseAsset(names.base)}
+          transitionMs={transitionMs}
+          position={position}
+          tint={tint}
+        />
+      )}
       <FadingLayer
         asset={names.water === null ? undefined : waterAsset(names.water)}
         transitionMs={transitionMs}

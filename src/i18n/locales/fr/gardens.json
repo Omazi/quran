@@ -1,0 +1,74 @@
+{
+  "styles": {
+    "fountain-courtyard": "Cour à fontaine",
+    "oasis": "Oasis",
+    "waterside-orchard": "Verger au bord de l’eau",
+    "mountain-garden": "Jardin de montagne",
+    "cherry-blossoms": "Cerisiers en fleurs",
+    "pine-clearing": "Pinède et clairière",
+    "night-garden": "Jardin de nuit"
+  },
+  "level": {
+    "value": "Niveau {{level}}",
+    "chip": "Niveau {{level}} · {{garden}}",
+    "chipLabel": "Niveau {{level}}, {{garden}}"
+  },
+  "current": {
+    "title": "Jardin en cours",
+    "progress_one": "{{count}} hizb sur 60",
+    "progress_other": "{{count}} hizb sur 60",
+    "notStarted": "Ta prochaine page le fera pousser",
+    "hint": "Ouvre tes jardins"
+  },
+  "badges": {
+    "title": "Badges",
+    "seeAll": "Mes jardins",
+    "inProgress": "En cours",
+    "locked": "À venir",
+    "lockedName": "Niveau {{level}}",
+    "earnedLabel": "Badge de la khatma {{khatm}}, {{garden}}, obtenu le {{date}}",
+    "inProgressLabel": "{{garden}}, en cours, {{progress}}",
+    "lockedLabel": "Niveau {{level}}, à venir",
+    "count_one": "{{count}} khatma",
+    "count_other": "{{count}} khatmas"
+  },
+  "showLevel": {
+    "title": "Montrer mon niveau",
+    "on": "Tes proches voient ton niveau et tes badges.",
+    "off": "Ton niveau et tes badges restent pour toi."
+  },
+  "path": {
+    "title": "Mes jardins",
+    "subtitle": "Chaque khatma fait pousser un nouveau jardin.",
+    "completed": "Khatma {{khatm}} · {{date}}",
+    "current_one": "En cours · {{count}} hizb sur 60",
+    "current_other": "En cours · {{count}} hizb sur 60",
+    "currentNotStarted": "Il pousse dès ta prochaine page",
+    "locked": "À venir",
+    "lockedLabel": "Niveau {{level}}, à venir, encore secret",
+    "doneLabel": "Achevé",
+    "lastLevel": "D’autres jardins arriveront avec les prochaines versions. D’ici là, chaque khatma fait repousser celui-ci."
+  },
+  "celebration": {
+    "badge": "Badge obtenu · {{garden}}",
+    "title": "Khatma terminée",
+    "dua": "تقبّل الله منك",
+    "duaMeaning": "Qu’Allah l’accepte de toi.",
+    "hizb": "hizb",
+    "pages": "pages",
+    "days_one": "jour",
+    "days_other": "jours",
+    "statsLabel": "{{hizb}} hizb, {{pages}} pages, {{days}}",
+    "daysSpoken_one": "{{count}} jour",
+    "daysSpoken_other": "{{count}} jours",
+    "next": "Ton nouveau jardin t’attend",
+    "nextDetail": "Niveau {{level}} · {{garden}}, sur une terre nue",
+    "nextSame": "Un nouveau jardin, {{garden}}, sur une terre nue",
+    "button": "Voir mon nouveau jardin",
+    "close": "Fermer",
+    "badgeLabel": "Badge de la khatma {{khatm}}, {{garden}}"
+  },
+  "friend": {
+    "title": "Ses badges"
+  }
+}

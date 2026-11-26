@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { HIZB_COUNT } from '@/domain/quran';
 import { publishHandle } from '@/features/screen-check/handles';
 import { GARDEN_PICTURE_ASPECT_RATIO, GardenView3D } from '@/features/garden';
+import { FriendLevelSection } from '@/features/gardens';
 import {
   ActionButton,
   AppText,
@@ -232,6 +233,13 @@ export function FriendScreen({
           </Card>
         </View>
 
+        {/* Their level and badges (D46, friendProfile.png); nothing when they hide them. */}
+        {level === null ? null : (
+          <View style={styles.more}>
+            <FriendLevelSection level={level} hizbCompleted={card.hizbCompleted} />
+          </View>
+        )}
+
         <Card contentGap="md" style={styles.more}>
           <AppText variant="title2" color="heading">
             {t('friend.readingTitle')}
@@ -243,20 +251,6 @@ export function FriendScreen({
                 label={t('friend.streak')}
                 testID="friend-streak"
               />
-            )}
-            {level === null ? null : (
-              <>
-                <FriendsStat
-                  value={t('friend.levelValue', { count: level.level })}
-                  label={t('friend.level')}
-                  testID="friend-level"
-                />
-                <FriendsStat
-                  value={number(level.badgeCount)}
-                  label={t('friend.badges')}
-                  testID="friend-badges"
-                />
-              </>
             )}
           </View>
           {level === null ? (
