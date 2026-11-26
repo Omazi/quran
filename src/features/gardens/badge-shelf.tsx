@@ -149,8 +149,9 @@ function shelfWords(item: BadgeView, t: TFunction<'gardens'>, language: string) 
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'flex-start', columnGap: spacing.sm },
-  place: { alignItems: 'center', rowGap: spacing.xs },
+  // Stretched, so that the "Partager" of each badge sits on one line whatever the garden's name.
+  row: { flexDirection: 'row', alignItems: 'stretch', columnGap: spacing.sm },
+  place: { alignItems: 'center', justifyContent: 'space-between', rowGap: spacing.xs },
   group: { alignSelf: 'stretch', alignItems: 'center', rowGap: spacing.sm },
   grows: { flex: 1, flexBasis: 0 },
   fixed: { width: SHELF_COLUMN },

@@ -384,8 +384,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     rowGap: spacing.md,
   },
-  // Share at the start, close at the end: the toolbar of a screen with no navigation bar.
-  closeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  // Share at the start, close at the end: the toolbar of a screen with no navigation bar. Above
+  // the gold light of the badge, which would wash the buttons out.
+  closeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 1,
+  },
   badgeStage: { alignItems: 'center' },
   entrance: { alignItems: 'center', justifyContent: 'center' },
   halo: { position: 'absolute' },
