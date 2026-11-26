@@ -20,7 +20,6 @@ import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import {
   AppText,
-  emphasisWeight,
   getWritingDirection,
   Icon,
   layout,
@@ -152,7 +151,7 @@ export function FriendsTile({
       ]}
     >
       <Icon symbol={symbol} textStyle="title2" color="actionTint" />
-      <AppText variant="footnote" color="actionTint" align="center" style={styles.tileLabel}>
+      <AppText variant="subheadEmphasized" color="actionTint" align="center">
         {label}
       </AppText>
     </Pressable>
@@ -361,7 +360,6 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     padding: spacing.sm,
   },
-  tileLabel: { fontWeight: emphasisWeight },
   rowWords: { flex: 1, gap: spacing.xs / 2 },
   rowValue: { flexShrink: 1 },
   field: {

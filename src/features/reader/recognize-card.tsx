@@ -41,28 +41,31 @@ export function RecognizeCard({ onRecognize }: RecognizeCardProps) {
       <View style={styles.halo}>
         <StarHalo size={pieceSizes.recognizeHalo} />
       </View>
-      <View style={styles.row}>
-        <View style={styles.words}>
-          <AppText variant="title2" color="onAction" accessibilityRole="header">
-            {t('contents.recognizeCard.title')}
-          </AppText>
-          <AppText variant="subhead" color="onActionSecondary">
-            {t('contents.recognizeCard.text')}
-          </AppText>
-          <View style={styles.action}>
-            <ActionButton
-              variant="onAction"
-              isCompact
-              fullWidth={false}
-              symbol={MIC_SYMBOL}
-              label={t('contents.recognizeCard.action')}
-              accessibilityLabel={t('contents.recognize')}
-              onPress={onRecognize}
-              testID="contents-recognize-card-button"
-            />
+      <View style={styles.inside}>
+        {/* The title on its own line, over the rosette's side too, as in the mockup. */}
+        <AppText variant="title2" color="onAction" accessibilityRole="header">
+          {t('contents.recognizeCard.title')}
+        </AppText>
+        <View style={styles.row}>
+          <View style={styles.words}>
+            <AppText variant="subhead" color="onActionSecondary">
+              {t('contents.recognizeCard.text')}
+            </AppText>
+            <View style={styles.action}>
+              <ActionButton
+                variant="onAction"
+                isCompact
+                fullWidth={false}
+                symbol={MIC_SYMBOL}
+                label={t('contents.recognizeCard.action')}
+                accessibilityLabel={t('contents.recognize')}
+                onPress={onRecognize}
+                testID="contents-recognize-card-button"
+              />
+            </View>
           </View>
+          <RosetteMark size={pieceSizes.recognizeRosette} tone="onAction" />
         </View>
-        <RosetteMark size={pieceSizes.recognizeRosette} tone="onAction" />
       </View>
     </View>
   );
@@ -76,12 +79,8 @@ const styles = StyleSheet.create({
     top: pieceSizes.recognizeHaloTop,
     end: pieceSizes.recognizeHaloEnd,
   },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    padding: spacing.md + spacing.xs,
-  },
+  inside: { padding: spacing.md + spacing.xs, gap: spacing.xs },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   words: { flex: 1, gap: spacing.xs },
   action: { marginTop: layout.controlGap, alignItems: 'flex-start' },
 });

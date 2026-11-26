@@ -110,7 +110,7 @@ export function DailyCard({ model, onRead, onRecognize }: DailyCardProps) {
           accessibilityLabel={t('actions.recognizeLabel')}
           leading={<RosetteMark size={pieceSizes.markInButton} tone="tonal" />}
           onPress={onRecognize}
-          fullWidth={!isSideBySide}
+          grows={isSideBySide}
           testID="home-recognize"
         />
       </View>

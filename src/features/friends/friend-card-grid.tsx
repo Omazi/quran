@@ -9,7 +9,6 @@ import {
   AppText,
   Avatar,
   Card,
-  emphasisWeight,
   GradientBackdrop,
   layout,
   Placeholder,
@@ -116,7 +115,7 @@ function FriendGardenCard({
             style={[styles.example, { backgroundColor: colors.exampleChip }]}
             testID={`friend-card-${card.userId}-example`}
           >
-            <AppText variant="footnote" color="dateLabel" style={styles.exampleWord}>
+            <AppText variant="footnote" color="dateLabel">
               {t('card.example')}
             </AppText>
           </View>
@@ -155,7 +154,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs / 2,
   },
-  exampleWord: { fontWeight: emphasisWeight },
   words: { paddingHorizontal: spacing.xs, paddingBottom: spacing.xs, gap: spacing.xs },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   name: { flexShrink: 1 },
