@@ -253,6 +253,33 @@ describe('settings', () => {
     expect(device.values.settings.onboardingCompleted).toBe(true);
   });
 
+  it('a celebrated khatma stays celebrated: the highest number wins, whatever its stamp', () => {
+    const device = new Device('a');
+    device.set('celebratedKhatm', 2);
+    const changed = device.receive([
+      { kind: 'setting', key: 'celebratedKhatm', value: 1, at: 10 ** 9, device: 'z' },
+    ]);
+    expect(changed).toBe(false);
+    expect(device.values.settings.celebratedKhatm).toBe(2);
+    device.receive([{ kind: 'setting', key: 'celebratedKhatm', value: 3, at: 1, device: 'z' }]);
+    expect(device.values.settings.celebratedKhatm).toBe(3);
+  });
+
+  it('two phones that celebrated different khatmas end on the same, highest one', () => {
+    const server = newServer();
+    const a = new Device('a', { now: 100 });
+    const b = new Device('b', { now: 200 });
+    a.signIn('u');
+    b.signIn('u');
+    a.set('celebratedKhatm', 2);
+    b.set('celebratedKhatm', 1);
+    a.sync(server);
+    b.sync(server);
+    a.sync(server);
+    expect(a.values.settings.celebratedKhatm).toBe(2);
+    expect(b.values.settings.celebratedKhatm).toBe(2);
+  });
+
   it('settings never chosen on a new phone give way to the account’s', () => {
     const server = newServer();
     const a = new Device('a', { now: 100 });
@@ -445,7 +472,7 @@ describe('reinstalling, and a new phone', () => {
     const kinds = fullStateEvents(device.meta, device.values).map((event) => event.kind);
     expect(kinds.filter((kind) => kind === 'page')).toHaveLength(2);
     expect(kinds).toContain('time');
-    expect(kinds.filter((kind) => kind === 'setting')).toHaveLength(4);
+    expect(kinds.filter((kind) => kind === 'setting')).toHaveLength(5);
   });
 });
 

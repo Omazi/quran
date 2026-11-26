@@ -54,6 +54,12 @@ function settingWins(
     case 'true-wins':
       if (incoming.value === current.value) return compareStamps(incoming.stamp, current.stamp) < 0;
       return incoming.value === true;
+    case 'highest':
+      if (typeof current.value !== 'number' || typeof incoming.value !== 'number') {
+        return typeof incoming.value === 'number';
+      }
+      if (incoming.value === current.value) return compareStamps(incoming.stamp, current.stamp) < 0;
+      return incoming.value > current.value;
   }
 }
 
