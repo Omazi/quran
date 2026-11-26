@@ -47,6 +47,8 @@ const SETTINGS: AppSettings = {
   readerTextSize: 0,
   showLevel: true,
   celebratedKhatm: 0,
+  gender: null,
+  genderAsked: false,
   userSeed: 987_654,
   pauses: [{ from: parseLocalDate('2026-03-01'), to: parseLocalDate('2026-03-04') }],
   reminders: { ...DEFAULT_REMINDERS, fridayKahfEnabled: true },

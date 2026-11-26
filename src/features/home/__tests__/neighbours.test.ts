@@ -10,6 +10,7 @@ function friend(name: string, garden: Partial<SharedGarden> | null): FriendView 
     kind: 'friend',
     userId: `id-${name}`,
     displayName: name,
+    gender: null,
     garden:
       garden === null
         ? null

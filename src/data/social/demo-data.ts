@@ -1,6 +1,7 @@
 import {
   acceptFriendRequest,
   addGroupMember,
+  applyProfileChanges,
   bondBetween,
   createGroup,
   createProfile,
@@ -13,6 +14,7 @@ import {
   type Badge,
   type BondTables,
   type DailyReading,
+  type Gender,
   type GardenSummary,
   type GardenSummaryInput,
   type GroupState,
@@ -37,6 +39,8 @@ const { omar, mustapha, sarah, taghread, yacine } = DEMO_USERS;
 interface DemoPerson {
   readonly id: UserId;
   readonly name: string;
+  /** What the person says they are (the owner's choice of 26 November 2026 for the five). */
+  readonly gender: Gender;
   readonly joinedDaysAgo: number;
   /** Null: this person's app has not published a garden yet. */
   readonly garden:
@@ -59,6 +63,7 @@ const PEOPLE: readonly DemoPerson[] = [
   {
     id: omar,
     name: 'Omar',
+    gender: 'male',
     joinedDaysAgo: 120,
     garden: {
       khatmNumber: 2,
@@ -78,6 +83,7 @@ const PEOPLE: readonly DemoPerson[] = [
     // A flourishing garden: watered every day for weeks.
     id: mustapha,
     name: 'Mostapha',
+    gender: 'male',
     joinedDaysAgo: 110,
     garden: {
       khatmNumber: 3,
@@ -97,6 +103,7 @@ const PEOPLE: readonly DemoPerson[] = [
     // A garden that is thirsty: nothing read for six days, by a reader of three khatmas.
     id: sarah,
     name: 'Sarah',
+    gender: 'female',
     joinedDaysAgo: 100,
     garden: {
       // Three khatmas completed (level 4, D46), the fourth at hizb 9.
@@ -117,6 +124,7 @@ const PEOPLE: readonly DemoPerson[] = [
     // A complete garden: 60 hizb, the first khatma finished.
     id: taghread,
     name: 'Taghread',
+    gender: 'female',
     joinedDaysAgo: 90,
     garden: {
       khatmNumber: 1,
@@ -136,6 +144,7 @@ const PEOPLE: readonly DemoPerson[] = [
     // Has asked Omar and waits: only the name is known of this person, and no garden yet.
     id: yacine,
     name: 'Yacine',
+    gender: 'male',
     joinedDaysAgo: 3,
     garden: null,
     badgesDaysAgo: [],
@@ -149,7 +158,8 @@ const REQUEST_DAYS_AGO = 1;
 const GROUP_CREATED_DAYS_AGO = 70;
 
 function profileOf(person: DemoPerson, today: LocalDate): Profile {
-  return createProfile(person.id, person.name, addDays(today, -person.joinedDaysAgo));
+  const profile = createProfile(person.id, person.name, addDays(today, -person.joinedDaysAgo));
+  return applyProfileChanges(profile, { gender: person.gender });
 }
 
 function gardenOf(person: DemoPerson, today: LocalDate): GardenSummary | null {

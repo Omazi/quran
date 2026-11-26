@@ -1,4 +1,5 @@
 import type { PageRead, Pause, ReadingJournal } from '@/domain/khatm';
+import type { Gender } from '@/domain/shared/gender';
 import type { LocalDate } from '@/domain/shared/local-date';
 import type { SecondsByDay } from '@/domain/stats';
 import type { SyncEvent, SyncMeta } from '@/domain/sync';
@@ -57,6 +58,17 @@ export interface AppSettings {
    * off in the profile ("Montrer mon niveau").
    */
   readonly showLevel: boolean;
+  /**
+   * What the person says they are, so that the texts that speak to them agree ("arrêté" or
+   * "arrêtée", "اقرأ" or "اقرئي"): null until they say it, or when they prefer not to, and every
+   * text then has a neutral wording. Friends see it too (the social profile).
+   */
+  readonly gender: Gender | null;
+  /**
+   * True once the question was answered, "prefer not to say" included, so that it is never asked
+   * twice (sync rule `true-wins`: a question answered on one phone is not asked on the others).
+   */
+  readonly genderAsked: boolean;
   /**
    * The last khatma whose celebration was shown (0: none yet). It only goes up, on every phone
    * (sync rule `highest`): a khatma is celebrated once, wherever it was completed.
@@ -168,6 +180,12 @@ export interface AppState extends AppData, SyncActions {
   setReaderTextSize: (step: number) => void;
   /** Shows or hides the person's level, garden style and badges to their friends (D46). */
   setShowLevel: (showLevel: boolean) => void;
+  /**
+   * Records what the person says they are: "male", "female", or null for "prefer not to say".
+   * Any answer, null included, counts as the question asked. Throws a `RangeError` or a
+   * `TypeError` for anything else.
+   */
+  setGender: (gender: Gender | null) => void;
   /**
    * Remembers that the celebration of khatma `khatm` was shown, so it is not shown again. A number
    * lower than the one remembered changes nothing. Throws a `RangeError` for anything but a whole

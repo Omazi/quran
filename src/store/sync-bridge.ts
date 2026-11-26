@@ -15,6 +15,7 @@ import {
   isCelebratedKhatm,
   isDailyGoalPages,
   isGoalKind,
+  isStoredGender,
   isLastOpenedPage,
   isReaderScript,
   isReaderTextSize,
@@ -51,6 +52,10 @@ export const SYNC_RULES: SyncRules = Object.freeze({
     readerTextSize: { rule: 'latest', isValid: isReaderTextSize },
     // Whether friends see the level (D46): the person's last choice, on every phone.
     showLevel: { rule: 'latest', isValid: (value: unknown) => typeof value === 'boolean' },
+    // What the person says they are (null: "prefer not to say" is a choice like the others), and
+    // whether they were asked: a question answered on one phone is not asked on the others.
+    gender: { rule: 'latest', isValid: isStoredGender },
+    genderAsked: { rule: 'true-wins', isValid: (value: unknown) => typeof value === 'boolean' },
     // A khatma celebrated on one phone is not celebrated again on another.
     celebratedKhatm: { rule: 'highest', isValid: isCelebratedKhatm },
   }),
@@ -77,6 +82,8 @@ export function toSyncedValues({ settings, journal, timeSpent }: AppData): Synce
       readerScript: settings.readerScript,
       readerTextSize: settings.readerTextSize,
       showLevel: settings.showLevel,
+      gender: settings.gender,
+      genderAsked: settings.genderAsked,
       celebratedKhatm: settings.celebratedKhatm,
     },
     bookmarks: settings.bookmarks,
@@ -113,6 +120,8 @@ export function fromSyncedValues(current: AppData, values: SyncedValues): AppDat
       readerScript: keep('readerScript', isReaderScript),
       readerTextSize: keep('readerTextSize', isReaderTextSize),
       showLevel: keep('showLevel', (value) => typeof value === 'boolean'),
+      gender: keep('gender', isStoredGender),
+      genderAsked: keep('genderAsked', (value) => typeof value === 'boolean'),
       celebratedKhatm: keep('celebratedKhatm', isCelebratedKhatm),
       bookmarks: isBookmarkList(values.bookmarks) ? values.bookmarks : current.settings.bookmarks,
       pauses: values.pauses,

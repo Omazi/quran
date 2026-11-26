@@ -133,6 +133,39 @@ describe('Demonstration of accounts and friends', () => {
       });
     });
 
+    it('the demonstration people each say what they are: Omar and Mostapha men, Sarah and Taghread women, Yacine a man', async () => {
+      const { demo } = await signedIn();
+
+      expect((await demo.repository.getMyProfile()).gender).toBe('male');
+      const friends = await demo.repository.listFriends();
+      expect(Object.fromEntries(friends.map((friend) => [friend.userId, friend.gender]))).toEqual({
+        [mustapha]: 'male',
+        [sarah]: 'female',
+        [taghread]: 'female',
+      });
+      // Yacine's request is a stranger's: the name only, no gender (rule 4).
+      const requests = await demo.repository.listFriendRequests();
+      expect(requests.incoming.map((request) => request.person)).toEqual([
+        { kind: 'other', userId: yacine, displayName: 'Yacine' },
+      ]);
+      expect(await demo.repositoryAs(sarah).getMyProfile()).toMatchObject({ gender: 'female' });
+    });
+
+    it('the person changes their gender, and friends see it at once; null says "not said"', async () => {
+      const { demo } = await signedIn();
+
+      await demo.repository.updateMyProfile({ gender: 'female' });
+      expect(await demo.repositoryAs(sarah).getPersonView(omar)).toMatchObject({
+        kind: 'friend',
+        gender: 'female',
+      });
+      await demo.repository.updateMyProfile({ gender: null });
+      expect(await demo.repositoryAs(sarah).getPersonView(omar)).toMatchObject({ gender: null });
+      await expect(
+        demo.repository.updateMyProfile({ gender: 'x' as unknown as 'male' }),
+      ).rejects.toThrow(RangeError);
+    });
+
     it('a new name is checked by the rule, and a refused name changes nothing', async () => {
       const { demo } = await signedIn();
 

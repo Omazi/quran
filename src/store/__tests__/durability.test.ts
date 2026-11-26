@@ -43,6 +43,8 @@ const SETTINGS: AppSettings = {
   readerTextSize: 2,
   showLevel: true,
   celebratedKhatm: 0,
+  gender: null,
+  genderAsked: false,
   pauses: [{ from: parseLocalDate('2026-10-01'), to: parseLocalDate('2026-10-02') }],
   reminders: {
     dailyEnabled: true,
@@ -231,11 +233,11 @@ describe('builds of other versions', () => {
     store.getState().recordPageRead({ page: 1, date: DAY });
     await store.whenSaved();
     const text = storage.peek(STORED_DATA_KEY);
-    // Versions 6 (D41), 7 and 8 only add settings (the reader's two choices, the goal kind, the
-    // level shown and the khatma celebrated).
+    // Versions 6 (D41), 7, 8 and 9 only add settings (the reader's two choices, the goal kind, the
+    // level shown, the khatma celebrated, the gender and whether it was asked).
     const written = JSON.parse(text ?? '{}');
     expect(written.version).toBe(STORED_DATA_VERSION);
-    expect(STORED_DATA_VERSION).toBe(8);
+    expect(STORED_DATA_VERSION).toBe(9);
     // A version 5 build reads its own device's newer document (`acceptNewer`) with its checks,
     // which look only at the settings they know: those are all there, and valid.
     for (const key of [

@@ -14,10 +14,13 @@ import { GOAL_KINDS, type GoalKind } from '@/domain/goal-plan';
 import { PAGE_COUNT } from '@/domain/quran';
 import { compareLocalDates, isLocalDate, type LocalDate } from '@/domain/shared/local-date';
 import { isDaySeconds, type SecondsByDay } from '@/domain/stats';
+import { isGender, type Gender } from '@/domain/shared/gender';
 import { isSupportedLanguage } from '@/i18n';
 
 import {
   DAILY_GOAL_RANGE,
+  DEFAULT_GENDER,
+  DEFAULT_GENDER_ASKED,
   DEFAULT_GOAL_KIND,
   DEFAULT_READER_SCRIPT,
   DEFAULT_READER_TEXT_SIZE,
@@ -126,6 +129,11 @@ export function isCelebratedKhatm(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
 
+/** What the person says they are, or null for "prefer not to say" (or not said yet). */
+export function isStoredGender(value: unknown): value is Gender | null {
+  return value === null || isGender(value);
+}
+
 /** A seed the garden module accepts: a whole number from 0 to 2^53 - 1. */
 export function isUserSeed(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
@@ -225,6 +233,8 @@ function readSettings(value: unknown): AppSettings | null {
     goalKind,
     showLevel,
     celebratedKhatm,
+    gender,
+    genderAsked,
   } = value;
   const reminders = readReminders(value.reminders);
   const pauses = readPauses(value.pauses);
@@ -237,6 +247,7 @@ function readSettings(value: unknown): AppSettings | null {
   if (!isReaderScript(readerScript) || !isReaderTextSize(readerTextSize)) return null;
   if (!isGoalKind(goalKind)) return null;
   if (typeof showLevel !== 'boolean' || !isCelebratedKhatm(celebratedKhatm)) return null;
+  if (!isStoredGender(gender) || typeof genderAsked !== 'boolean') return null;
   return {
     language,
     dailyGoalPages,
@@ -249,6 +260,8 @@ function readSettings(value: unknown): AppSettings | null {
     readerTextSize,
     showLevel,
     celebratedKhatm,
+    gender,
+    genderAsked,
     pauses,
     reminders,
   };
@@ -320,6 +333,8 @@ const VERSION_WITHOUT_READER_CHOICES = 5;
 const VERSION_WITHOUT_GOAL_KIND = 6;
 /** The version that had no level setting and no celebrated khatma. */
 const VERSION_WITHOUT_LEVEL_SETTINGS = 7;
+/** The version that had no gender. */
+const VERSION_WITHOUT_GENDER = 8;
 
 /** Version 1 to 2: the reminders get the Friday time and the quiet hours of the defaults. */
 function upgradeFromVersion1(document: UnknownRecord): UnknownRecord {
@@ -405,7 +420,7 @@ function upgradeFromVersion6(document: UnknownRecord): UnknownRecord {
  */
 function upgradeFromVersion7(document: UnknownRecord): UnknownRecord {
   const { settings } = document;
-  const next: UnknownRecord = { ...document, version: STORED_DATA_VERSION };
+  const next: UnknownRecord = { ...document, version: VERSION_WITHOUT_GENDER };
   if (!isRecord(settings)) return next;
   return {
     ...next,
@@ -414,6 +429,24 @@ function upgradeFromVersion7(document: UnknownRecord): UnknownRecord {
       showLevel: settings.showLevel === undefined ? DEFAULT_SHOW_LEVEL : settings.showLevel,
       celebratedKhatm:
         settings.celebratedKhatm === undefined ? NO_KHATMA_CELEBRATED : settings.celebratedKhatm,
+    },
+  };
+}
+
+/**
+ * Version 8 to 9: the person has not said what they are, and has not been asked. A field already
+ * there is left untouched, so that the checks that follow decide about it.
+ */
+function upgradeFromVersion8(document: UnknownRecord): UnknownRecord {
+  const { settings } = document;
+  const next: UnknownRecord = { ...document, version: STORED_DATA_VERSION };
+  if (!isRecord(settings)) return next;
+  return {
+    ...next,
+    settings: {
+      ...settings,
+      gender: settings.gender === undefined ? DEFAULT_GENDER : settings.gender,
+      genderAsked: settings.genderAsked === undefined ? DEFAULT_GENDER_ASKED : settings.genderAsked,
     },
   };
 }
@@ -441,6 +474,7 @@ function upgradeDocument(document: UnknownRecord, acceptNewer: boolean): Unknown
   if (current.version === VERSION_WITHOUT_READER_CHOICES) current = upgradeFromVersion5(current);
   if (current.version === VERSION_WITHOUT_GOAL_KIND) current = upgradeFromVersion6(current);
   if (current.version === VERSION_WITHOUT_LEVEL_SETTINGS) current = upgradeFromVersion7(current);
+  if (current.version === VERSION_WITHOUT_GENDER) current = upgradeFromVersion8(current);
   return current.version === STORED_DATA_VERSION ? current : null;
 }
 

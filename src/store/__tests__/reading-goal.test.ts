@@ -152,6 +152,8 @@ describe('a document written by version 6', () => {
       goalKind: 'own-pace',
       showLevel: true,
       celebratedKhatm: 0,
+      gender: null,
+      genderAsked: false,
     });
     expect(reading.discarded).toEqual([]);
     expect(reading.wasUpgraded).toBe(true);

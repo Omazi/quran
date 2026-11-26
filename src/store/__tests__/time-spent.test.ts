@@ -36,6 +36,8 @@ const SETTINGS: AppSettings = {
   readerTextSize: 1,
   showLevel: true,
   celebratedKhatm: 0,
+  gender: null,
+  genderAsked: false,
   pauses: [],
   reminders: DEFAULT_REMINDERS,
 };
