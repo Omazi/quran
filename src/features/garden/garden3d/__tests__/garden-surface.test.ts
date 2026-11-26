@@ -13,9 +13,15 @@ import { shippedGardenBytes } from '../test-support/shipped-model';
 
 // No GL here: the renderer is a stand-in that counts the frames drawn; the scene is the real one.
 const drawn: THREE.Scene[] = [];
+/** Set by a test: the drawing buffer is empty, so that `drawFrame` draws nothing (as the real one). */
+const buffer = { isEmpty: false };
 jest.mock('../garden-renderer', () => ({
   createGardenRenderer: () => ({ shadowMap: { needsUpdate: false }, dispose: () => undefined }),
-  drawFrame: (_renderer: unknown, _gl: unknown, scene: THREE.Scene) => drawn.push(scene),
+  drawFrame: (_renderer: unknown, _gl: unknown, scene: THREE.Scene) => {
+    if (buffer.isEmpty) return false;
+    drawn.push(scene);
+    return true;
+  },
 }));
 
 const MODEL = readGardenModel(parseGlb(shippedGardenBytes()));
@@ -129,5 +135,43 @@ describe('GardenSurface once its view is gone', () => {
     surface.controller.turnBy(1);
     surface.draw();
     expect(onFail).not.toHaveBeenCalled();
+  });
+});
+
+describe('GardenSurface tells that it is ready only once a frame is on the screen', () => {
+  beforeEach(() => {
+    drawn.length = 0;
+    buffer.isEmpty = false;
+  });
+
+  it('waits for the size of the view when the GL context arrives first', () => {
+    const onReady = jest.fn();
+    const view = new GardenSurface({ onReady, onFail: jest.fn() });
+    view.attach(GL, MODEL);
+    // No frame could be drawn: the picture must stay.
+    expect(drawn).toHaveLength(0);
+    expect(onReady).not.toHaveBeenCalled();
+
+    view.setSize({ width: 390, height: 272 });
+    expect(drawn).toHaveLength(1);
+    expect(onReady).toHaveBeenCalledTimes(1);
+    view.dispose();
+  });
+
+  it('waits while the drawing buffer is empty, then tells once, at the first frame', () => {
+    const onReady = jest.fn();
+    const view = new GardenSurface({ onReady, onFail: jest.fn() });
+    buffer.isEmpty = true;
+    view.setSize({ width: 390, height: 272 });
+    view.attach(GL, MODEL);
+    view.setSize({ width: 390, height: 300 });
+    expect(onReady).not.toHaveBeenCalled();
+
+    buffer.isEmpty = false;
+    view.setSize({ width: 390, height: 600 });
+    expect(onReady).toHaveBeenCalledTimes(1);
+    view.setSize({ width: 390, height: 640 });
+    expect(onReady).toHaveBeenCalledTimes(1);
+    view.dispose();
   });
 });

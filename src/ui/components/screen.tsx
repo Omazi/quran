@@ -31,6 +31,13 @@ export interface ScreenProps {
    * Leave it off when the content scrolls by itself, as a grouped list does.
    */
   scroll?: boolean;
+  /**
+   * The content is a grouped list, which scrolls by itself. On iOS it passes under the bars and
+   * insets itself for them, as a scroll view does: the screen then keeps clear of the sides only.
+   * With the top and bottom edges as well, the bars were counted twice (a band above the first
+   * group, the last note cut above the home indicator).
+   */
+  hasScrollingList?: boolean;
   testID?: string;
 }
 
@@ -43,12 +50,13 @@ export function Screen({
   background = 'background',
   edges,
   scroll = false,
+  hasScrollingList = false,
   testID,
 }: ScreenProps) {
   const colors = useColors();
   const backgroundColor = colors[background];
   // Only iOS can inset a scroll view for the bars by itself; elsewhere the safe area does it.
-  const scrollsUnderBars = scroll && Platform.OS === 'ios';
+  const scrollsUnderBars = (scroll || hasScrollingList) && Platform.OS === 'ios';
   return (
     <SafeAreaView
       edges={edges ?? (scrollsUnderBars ? SIDE_EDGES : ALL_EDGES)}

@@ -3,40 +3,150 @@
   "hiddenPreview": "Un rappel pour toi",
   "kinds": {
     "daily-goal": {
-      "title": "Ton jardin t’attend",
-      "body": "Quelques pages, et son eau continue de couler."
+      "title": "Chaque lettre lue, dix hasanat",
+      "body": "Quelques pages, là où tu en es."
     },
     "water-stopped": {
-      "title": "L’eau s’est arrêtée",
-      "body": "L’eau de ton jardin ne coule plus. Une page la fait repartir."
+      "title": "« Lisez ce qui vous est facile »",
+      "body": "L’eau de ton jardin s’est arrêtée. Une page la fait repartir."
     },
     "thirsty": {
-      "title": "Ton jardin a soif",
-      "body": "Ses plantes attendent un peu d’eau."
+      "title": "Le Coran, guérison et miséricorde",
+      "body": "Ton jardin a soif. Une page suffit."
     },
     "wilting": {
-      "title": "Ton jardin se fane",
-      "body": "Il tient encore : quelques pages suffisent à le redresser."
+      "title": "Même avec peine, deux récompenses",
+      "body": "Ton jardin se fane, mais il tient encore."
     },
     "dying": {
-      "title": "Ton jardin a besoin de toi",
-      "body": "Ses éléments commencent à s’effacer. Rien n’est perdu."
+      "title": "Une lettre, et déjà dix hasanat",
+      "body": "Ton jardin commence à s’effacer. Rien n’est perdu."
     },
     "last-chance": {
-      "title": "Ton jardin tient encore",
-      "body": "Il peut revivre dès aujourd’hui."
+      "title": "Le Coran, un intercesseur pour toi",
+      "body": "Ton jardin peut encore revivre aujourd’hui."
     },
     "dead": {
-      "title": "Ton jardin s’est asséché",
-      "body": "La terre se souvient de tout. Une page, et l’eau revient."
+      "title": "Allah redonne vie à la terre morte",
+      "body": "Ton jardin s’est asséché. Une page, et l’eau revient."
     },
     "come-back": {
-      "title": "Ton jardin est toujours là",
-      "body": "Il t’attend quand tu veux. Une page suffit pour que l’eau revienne."
+      "title": "« Je suis tout proche », dit Allah",
+      "body": "Ton jardin est toujours là, quand tu voudras."
     },
     "friday-kahf": {
-      "title": "C’est vendredi",
+      "title": "Une lumière d’un vendredi à l’autre",
       "body": "Un moment pour la sourate Al-Kahf ?"
+    }
+  },
+  "goal": {
+    "today_one": "Une page aujourd’hui.",
+    "today_other": "{{count}} pages aujourd’hui.",
+    "left_one": "Plus qu’une page aujourd’hui.",
+    "left_other": "Encore {{count}} pages aujourd’hui."
+  },
+  "where": {
+    "at": "Reprends {{surah}}, page {{page}}.",
+    "start": "Commence à la première page."
+  },
+  "variants": {
+    "daily-goal": {
+      "1": { "title": "Chaque lettre lue, dix hasanat", "body": "{{goal}} {{where}}" },
+      "2": { "title": "Lis : le Coran intercédera pour toi", "body": "{{goal}} {{where}}" },
+      "3": { "title": "Le Coran, rendu facile à retenir", "body": "{{goal}} {{where}}" },
+      "4": { "title": "Aimé d’Allah : peu, mais régulier", "body": "{{goal}} {{where}}" },
+      "5": { "title": "Le rappel d’Allah apaise les cœurs", "body": "{{goal}} {{where}}" },
+      "6": { "title": "Lire avec peine : double récompense", "body": "{{goal}} {{where}}" },
+      "7": { "title": "Pensez à Moi, Je penserai à vous", "body": "{{goal}} {{where}}" },
+      "8": { "title": "Un Livre béni, pour méditer", "body": "{{goal}} {{where}}" }
+    },
+    "water-stopped": {
+      "1": {
+        "title": "« Lisez ce qui vous est facile »",
+        "body": "L’eau de ton jardin s’est arrêtée. {{where}}"
+      },
+      "2": {
+        "title": "L’acte le plus aimé : le régulier",
+        "body": "Une page relance l’eau de ton jardin. {{where}}"
+      }
+    },
+    "thirsty": {
+      "1": {
+        "title": "Le croyant qui lit, tel un agrume",
+        "body": "Bon parfum, bon goût. Ton jardin a soif. {{where}}"
+      },
+      "2": {
+        "title": "Le Coran, guérison et miséricorde",
+        "body": "Les plantes de ton jardin attendent un peu d’eau. {{where}}"
+      }
+    },
+    "wilting": {
+      "1": {
+        "title": "Même avec peine, deux récompenses",
+        "body": "Ton jardin se fane, mais il tient encore. {{where}}"
+      },
+      "2": {
+        "title": "Allah a rendu le Coran facile",
+        "body": "Quelques pages redressent ton jardin. {{where}}"
+      }
+    },
+    "dying": {
+      "1": {
+        "title": "Une lettre, et déjà dix hasanat",
+        "body": "Ton jardin s’efface, mais rien n’est perdu. {{where}}"
+      },
+      "2": {
+        "title": "« Lisez ce qui vous est facile »",
+        "body": "Ton jardin commence à s’effacer. {{where}}"
+      }
+    },
+    "last-chance": {
+      "1": {
+        "title": "Le Coran, un intercesseur pour toi",
+        "body": "Ton jardin peut encore revivre aujourd’hui. {{where}}"
+      },
+      "2": {
+        "title": "Le rappel d’Allah apaise les cœurs",
+        "body": "Une page aujourd’hui, et ton jardin tient. {{where}}"
+      }
+    },
+    "dead": {
+      "1": {
+        "title": "Allah redonne vie à la terre morte",
+        "body": "Ton jardin s’est asséché. Une page, et l’eau revient."
+      },
+      "2": {
+        "title": "Pensez à Moi, Je penserai à vous",
+        "body": "La terre se souvient de tout. Une page, et l’eau revient."
+      }
+    },
+    "come-back": {
+      "1": {
+        "title": "« Je suis tout proche », dit Allah",
+        "body": "Ton jardin est toujours là, quand tu voudras."
+      },
+      "2": {
+        "title": "Lire avec peine : double récompense",
+        "body": "Revenir, même par une page, compte. Ton jardin t’attend."
+      },
+      "3": {
+        "title": "Le Coran, rendu facile à retenir",
+        "body": "Une page, et l’eau revient dans ton jardin."
+      }
+    },
+    "friday-kahf": {
+      "1": {
+        "title": "Une lumière d’un vendredi à l’autre",
+        "body": "Pour qui lit Al-Kahf le vendredi. Elle commence page {{page}}."
+      },
+      "2": {
+        "title": "Seigneur, donne-nous Ta miséricorde",
+        "body": "L’invocation des gens de la caverne (18:10). Al-Kahf, page {{page}}."
+      },
+      "3": {
+        "title": "Dix versets qui protègent",
+        "body": "Retenir les dix premiers versets d’Al-Kahf protège du Dajjâl. Page {{page}}."
+      }
     }
   }
 }

@@ -5,7 +5,13 @@
 
 export { AL_KAHF_PAGE } from './config';
 export { hrefOfTarget, type NotificationHref } from './notification-routes';
-export { buildReminderInput, type ReminderSource } from './reminder-input';
+export { buildReminderInput, buildReminderResume, type ReminderSource } from './reminder-input';
+export {
+  REMINDER_COPY_SOURCES,
+  reminderText,
+  type ReminderResume,
+  type ReminderTextData,
+} from './reminder-copy';
 export { useNotificationTaps, type NotificationTapsDependencies } from './use-notification-taps';
 export {
   momentOf,

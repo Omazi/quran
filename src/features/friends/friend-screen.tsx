@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { HIZB_COUNT } from '@/domain/quran';
 import { publishHandle } from '@/features/screen-check/handles';
@@ -85,7 +85,12 @@ export function FriendScreen({
 }: FriendScreenProps) {
   const { t, i18n } = useTranslation('friends');
   const sky = useSkyStyle('visit');
-  const [viewportHeight, setViewportHeight] = useState(0);
+  // The scroll view is measured after the first layout. Until then the garden area takes the
+  // height of the window, never nothing: a 3D garden asked to fill a flat area makes a context
+  // with no pixels and the page shows an empty space (iOS check of 683ad8d).
+  const [measuredHeight, setMeasuredHeight] = useState(0);
+  const windowHeight = useWindowDimensions().height;
+  const viewportHeight = measuredHeight > 0 ? measuredHeight : windowHeight;
   const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
   const { encourage } = actions;
   // The iOS check's automatic run presses Encourager and scrolls the page through these; nothing
@@ -148,10 +153,14 @@ export function FriendScreen({
         ref={scroller}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.content}
-        onLayout={(event) => setViewportHeight(event.nativeEvent.layout.height)}
+        onLayout={(event) => setMeasuredHeight(event.nativeEvent.layout.height)}
+        testID="friend-scroll"
       >
         {/* The first screen: the garden, then the card resting at the bottom, as in the mockup. */}
-        <View style={[styles.firstScreen, { minHeight: viewportHeight }]}>
+        <View
+          style={[styles.firstScreen, { minHeight: viewportHeight }]}
+          testID="friend-first-screen"
+        >
           <View style={styles.garden}>
             {card.garden === null ? (
               <Placeholder

@@ -59,8 +59,9 @@ const TURN_SYMBOL: IconSymbol = { ios: 'arrow.clockwise', android: 'rotate_right
  * it is the picture: same models, same camera, same light, same stage for the same state.
  *
  * - **Never a blank box** (loading.md › Show something as soon as possible): the picture
- *   (`GardenScene`) is shown while the model loads, and stays if the GL view or the model fails;
- *   the 3D garden fades in over it once its first frame is drawn.
+ *   (`GardenScene`) is shown while the model loads and until the view has a size, and stays if
+ *   the GL view or the model fails; the 3D garden fades in over it once its first frame is
+ *   really drawn (a frame into an empty buffer is not one). If GL never draws, the picture stays.
  * - **The stage follows the state** as the pictures do: one step at a time, drying slower than
  *   reviving (D26), at once with Reduce Motion.
  * - **VoiceOver** reads one image, described in words as the picture is (voiceover.md ›
@@ -91,6 +92,8 @@ export function GardenView3D({
   const hint = useGardenHint();
   const [isReady, setReady] = useState(false);
   const [hasFailed, setFailed] = useState(false);
+  // The GL view is made once the view has a size: a context made at 0 by 0 draws nothing.
+  const [hasSize, setHasSize] = useState(false);
   const [reveal] = useState(() => new Animated.Value(0));
   const [surface] = useState(
     () =>
@@ -156,6 +159,7 @@ export function GardenView3D({
   const onLayout = useCallback(
     (event: LayoutChangeEvent) => {
       const { width, height } = event.nativeEvent.layout;
+      if (width > 0 && height > 0) setHasSize(true);
       // expo-gl resizes its drawing buffer with the view: draw at the new size next frame.
       if (resizeFrame.current !== null) cancelAnimationFrame(resizeFrame.current);
       resizeFrame.current = requestAnimationFrame(() => {
@@ -182,7 +186,7 @@ export function GardenView3D({
     [surface],
   );
 
-  const shows3D = model !== null && !hasFailed;
+  const shows3D = model !== null && !hasFailed && hasSize;
   const isInteractive = shows3D && isReady;
   const showsHint = hint.isShown && isInteractive;
   const hintPill = (

@@ -122,7 +122,7 @@ export interface PagerDrive {
  * - a move across the axis goes to what scrolls inside a page;
  * - turned on its side (`axis="vertical"`), one swipe up is one page forwards, and with
  *   `pageMotion="still"` the pages do not slide: they draw themselves from the position (the
- *   first launch, whose scene changes under the finger: SKILLS.md, deviation 127);
+ *   first launch, whose scene changes under the finger: SKILLS.md, deviation 128);
  * - with "reduce motion", a page changed from outside comes at once and a drag ends without a
  *   spring (motion.md › Best practices: make motion optional);
  * - only the page shown is read by screen readers and can be touched: the page dots, in the

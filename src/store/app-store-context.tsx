@@ -28,3 +28,16 @@ export function useAppStore<Selected>(selector: (state: AppState) => Selected): 
   }
   return useStore(store, selector);
 }
+
+/**
+ * The store itself, for the rare code that must change many values in one write or wait for the
+ * device to hold them (the iOS check's demonstration history). A screen reads through
+ * `useAppStore` and changes through the actions.
+ */
+export function useAppStoreApi(): AppStore {
+  const store = useContext(AppStoreContext);
+  if (store === null) {
+    throw new Error('useAppStoreApi must be used below an AppStoreProvider.');
+  }
+  return store;
+}

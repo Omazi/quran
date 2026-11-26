@@ -166,6 +166,18 @@ describe('settings screen', () => {
     expect(screen.getByTestId('settings')).toBeOnTheScreen();
   });
 
+  it('insets nothing above or below its list on an iPhone: the list passes under the bars and insets itself', async () => {
+    await renderSettings({ onIOS: true });
+    // A second inset here made a band of about 70 points above "Langue" and cut the last note
+    // above the home indicator (iOS check of 683ad8d).
+    expect(screen.getByTestId('settings')).toHaveProp('edges', {
+      top: 'off',
+      right: 'additive',
+      bottom: 'off',
+      left: 'additive',
+    });
+  });
+
   it('sits on the warm canvas of the app, its groups on white cards, like the profile that opens it', async () => {
     await renderSettings();
     expect(screen.getByTestId('settings')).toHaveStyle({

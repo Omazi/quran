@@ -54,7 +54,9 @@ export function createGardenRenderer(gl: ExpoWebGLRenderingContext): THREE.WebGL
 
 /**
  * Draws one frame at the size of the drawing buffer, which expo-gl keeps at the view's size in
- * pixels, then hands it to the screen.
+ * pixels, then hands it to the screen. Returns false, having drawn nothing, while the buffer is
+ * empty (a context made before its view had a size): such a frame shows nothing, and must not
+ * count as the first one.
  */
 export function drawFrame(
   renderer: THREE.WebGLRenderer,
@@ -62,7 +64,8 @@ export function drawFrame(
   scene: THREE.Scene,
   camera: THREE.Camera,
   fade?: { scene: THREE.Scene; camera: THREE.Camera; isVisible: () => boolean },
-): void {
+): boolean {
+  if (gl.drawingBufferWidth === 0 || gl.drawingBufferHeight === 0) return false;
   const size = renderer.getSize(new THREE.Vector2());
   if (size.x !== gl.drawingBufferWidth || size.y !== gl.drawingBufferHeight) {
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight, false);
@@ -75,4 +78,5 @@ export function drawFrame(
     renderer.autoClear = true;
   }
   gl.endFrameEXP();
+  return true;
 }

@@ -17,7 +17,10 @@ import { GrowthPlayer, type ShownGrowthFrame } from './growth-player';
 import { OrbitController, type FrameScheduler, type ViewSize } from './orbit-controller';
 
 export interface GardenSurfaceOptions {
-  /** The first frame is drawn: the 3D garden can replace the picture. */
+  /**
+   * The first frame is on the screen, drawn into a view that has a size: the 3D garden can
+   * replace the picture. Never before, so that the picture is never taken away for nothing.
+   */
   readonly onReady: () => void;
   /** Something failed: the picture stays. */
   readonly onFail: (error: unknown) => void;
@@ -54,6 +57,8 @@ export class GardenSurface {
   private motionReduced = false;
   private onUse: () => void = () => undefined;
   private failed = false;
+  /** A frame has been drawn into a buffer with a size, and `onReady` has been told. */
+  private hasDrawnFrame = false;
   /** The element growing on screen, and how far: what the player or `setGrowth` last said. */
   private growth: ShownGrowthFrame | null = null;
   private readonly player: GrowthPlayer;
@@ -107,8 +112,8 @@ export class GardenSurface {
       if (stage !== null) three.showStage(stage);
       three.showGrowth(this.growth);
       this.engine = { gl, renderer, three, drawFrame: modules.renderer.drawFrame };
+      // Ready is told by the first frame that really draws, now or when the view has its size.
       this.draw();
-      if (this.engine !== null) this.options.onReady();
     } catch (error) {
       this.fail(error);
     }
@@ -187,13 +192,17 @@ export class GardenSurface {
         this.size.width / this.size.height,
         this.options.anchor,
       );
-      engine.drawFrame(
+      const isDrawn = engine.drawFrame(
         engine.renderer,
         engine.gl,
         engine.three.scene,
         engine.three.camera,
         engine.three.fade,
       );
+      if (isDrawn && !this.hasDrawnFrame) {
+        this.hasDrawnFrame = true;
+        this.options.onReady();
+      }
     } catch (error) {
       this.fail(error);
     }

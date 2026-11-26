@@ -13,8 +13,10 @@ import {
 } from '@/features/home/dev-preview/reading-histories';
 
 import { AL_KAHF_PAGE } from '../config';
-import { buildReminderInput, type ReminderSource } from '../reminder-input';
+import { hrefOfTarget } from '../notification-routes';
+import { buildReminderInput, buildReminderResume, type ReminderSource } from '../reminder-input';
 import { buildWantedNotifications, slotMoment } from '../wanted-notifications';
+import { resolveResumePage } from '@/features/reader';
 
 // A Tuesday: the Fridays of the plan are the 27th and the following ones.
 const TODAY = parseLocalDate('2026-11-24');
@@ -36,12 +38,17 @@ function sourceOf(
     userSeed: settings.userSeed,
     pauses: settings.pauses,
     reminders: WITH_FRIDAY,
+    lastOpenedPage: null,
     ...overrides,
   };
 }
 
 function wanted(source: ReminderSource, language: 'fr' | 'en' | 'ar' = 'fr') {
-  return buildWantedNotifications(buildReminderInput(source, MORNING, RANGES), language);
+  return buildWantedNotifications(
+    buildReminderInput(source, MORNING, RANGES),
+    language,
+    buildReminderResume(source, RANGES),
+  );
 }
 
 function readMore(journal: ReadingJournal, pages: number): ReadingJournal {
@@ -117,8 +124,8 @@ describe('the garden reminders', () => {
   });
 
   it('say the garden is thirsty, in the voice of the garden, when it dries', () => {
-    const texts = wanted(sourceOf('thirsty')).map((notification) => notification.title);
-    expect(texts.some((title) => title.includes('soif') || title.includes('eau'))).toBe(true);
+    const texts = wanted(sourceOf('thirsty')).map((notification) => notification.body);
+    expect(texts.some((body) => body.includes('soif') || body.includes('eau'))).toBe(true);
   });
 
   it('after the death of the garden, leave only a few come-back reminders then fall silent', () => {
@@ -141,7 +148,8 @@ describe('Friday', () => {
     );
     expect(friday?.target).toBe('al-kahf');
     expect(friday?.date.getHours()).toBe(WITH_FRIDAY.fridayTime.hour);
-    expect(friday?.title).toBe('C’est vendredi');
+    expect(friday?.title).toBe('Dix versets qui protègent');
+    expect(friday?.body).toContain(String(AL_KAHF_PAGE));
   });
 
   it('stays next to the reading reminder of that day', () => {
@@ -162,9 +170,9 @@ describe('time and language', () => {
     const fr = wanted(sourceOf('thriving'), 'fr')[0];
     const en = wanted(sourceOf('thriving'), 'en')[0];
     const ar = wanted(sourceOf('thriving'), 'ar')[0];
-    expect(fr?.title).toBe('Ton jardin t’attend');
-    expect(en?.title).toBe('Your garden is waiting');
-    expect(ar?.title).toBe('حديقتك تنتظرك');
+    expect(fr?.title).toBe('Chaque lettre lue, dix hasanat');
+    expect(en?.title).toBe('Every letter read: ten hasanat');
+    expect(ar?.title).toBe('بكل حرف حسنة، والحسنة بعشر أمثالها');
     expect(new Set([fr?.signature, en?.signature, ar?.signature]).size).toBe(3);
   });
 
@@ -190,7 +198,70 @@ describe('with the reminders as proposed at the first launch', () => {
 describe('a bare earth', () => {
   it('gets the daily and the Friday reminders, no garden reminder', () => {
     const notifications = wanted(sourceOf('bare-earth'));
-    const titles = new Set(notifications.map((notification) => notification.title));
-    expect(titles).toEqual(new Set(['Ton jardin t’attend', 'C’est vendredi']));
+    const reading = notifications.filter((notification) => notification.target !== 'al-kahf');
+    expect(reading.length).toBeGreaterThan(0);
+    // Every reading reminder is the daily one: it gives the goal of the day.
+    expect(reading.every((notification) => notification.body.includes('aujourd’hui'))).toBe(true);
+    expect(reading.every((notification) => notification.signature.startsWith('daily-goal@'))).toBe(
+      true,
+    );
+  });
+});
+
+describe('where a reminder sends the person', () => {
+  const lastOpenedPage = 40;
+
+  it('says the page to resume, and a tap opens the reader on that same page', () => {
+    const source = sourceOf('thriving', { lastOpenedPage });
+    const daily = wanted(source)[0];
+    expect(daily?.body).toContain('Reprends Al-Baqarah, page 40.');
+    const pageAtTap = resolveResumePage({
+      lastOpenedPage,
+      journal: source.journal,
+      hizbPageRanges: RANGES,
+    });
+    expect(daily && hrefOfTarget(daily.target, pageAtTap)).toBe('/reader/40');
+  });
+
+  it('without a place to resume yet, says the first page, where a tap opens the reader', () => {
+    const fresh = sourceOf('bare-earth', { journal: [], lastOpenedPage: null });
+    const daily = wanted(fresh)[0];
+    expect(daily?.body).toContain('Commence à la première page.');
+    const pageAtTap = resolveResumePage({
+      lastOpenedPage: null,
+      journal: [],
+      hizbPageRanges: RANGES,
+    });
+    expect(daily && hrefOfTarget(daily.target, pageAtTap)).toBe('/reader/1');
+  });
+
+  it('says the goal of each day: what is left today, the whole goal on the days after', () => {
+    const notifications = wanted(sourceOf('thriving'));
+    const goal = READING_HISTORY_CONFIG.dailyGoalPages;
+    const today = notifications.find(
+      (notification) => notification.id === 'reminder.2026-11-24.reading',
+    );
+    const tomorrow = notifications.find(
+      (notification) => notification.id === 'reminder.2026-11-25.reading',
+    );
+    expect(today?.body).toContain(`Encore ${goal - 3} pages aujourd’hui.`);
+    expect(tomorrow?.body).toContain(`${goal} pages aujourd’hui.`);
+    expect(tomorrow?.body).not.toContain('Encore');
+  });
+
+  it('is signed with its words: a new place to resume replaces what is scheduled', () => {
+    const before = wanted(sourceOf('thriving', { lastOpenedPage: 40 }))[0];
+    const after = wanted(sourceOf('thriving', { lastOpenedPage: 41 }))[0];
+    expect(before?.id).toBe(after?.id);
+    expect(before?.signature).not.toBe(after?.signature);
+  });
+
+  it('two days in a row do not get the same words', () => {
+    const notifications = wanted(sourceOf('thriving')).filter(
+      (notification) => notification.target === 'resume',
+    );
+    for (let index = 1; index < notifications.length; index += 1) {
+      expect(notifications[index]?.title).not.toBe(notifications[index - 1]?.title);
+    }
   });
 });

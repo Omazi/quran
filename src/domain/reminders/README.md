@@ -120,3 +120,11 @@ Lectures retenues là où la spécification est floue ou muette. Chacune a un te
 - Le plan s'arrête au 30e jour : sans ouverture de l'appli pendant un mois, plus aucune
   notification n'est programmée, vendredi compris.
 - Un plan contient au plus 34 ou 35 rappels (30 de lecture, 4 ou 5 vendredis).
+
+## Textes
+
+Le domaine ne contient aucun mot. Il donne à l'appli ce dont le texte dépend :
+`copyVariantIndex(kind, date, count)` (quelle variante un jour reçoit : jour après jour, ou
+semaine après semaine pour `friday-kahf` et `come-back` ; deux rappels consécutifs d'un type ne
+se ressemblent jamais) et `readingGoalOn(input, date)` (pages restantes de l'objectif ce jour-là,
+si rien de plus n'est lu). Voir `docs/specs/reminders-copy.md`.

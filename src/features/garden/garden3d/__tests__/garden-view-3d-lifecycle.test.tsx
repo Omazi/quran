@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { previewGardenState } from '../../garden-preview';
 import { showLanguage } from '../../test-support/screen-conditions';
@@ -54,6 +54,9 @@ describe('GardenView3D leaving the screen', () => {
     const { unmount } = await render(
       <GardenView3D state={previewGardenState({ hizbCompleted: 24 })} />,
     );
+    await fireEvent(screen.getByTestId('garden-3d'), 'layout', {
+      nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 272 } },
+    });
     await screen.findByTestId('garden-3d-gl');
     await unmount();
     // A passive effect would let the surface go after the view, leaving a moment where a frame

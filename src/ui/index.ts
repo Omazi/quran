@@ -94,3 +94,4 @@ export { IconTile, type IconTileProps, type IconTileTone } from './components/ic
 export { Pill, type PillProps } from './components/pill';
 export { ProgressRing, type ProgressRingProps } from './components/progress-ring';
 export { SectionHeader, type SectionHeaderProps } from './components/section-header';
+export { pushedPageOptions } from './pushed-page-options';

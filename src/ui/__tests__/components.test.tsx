@@ -472,6 +472,28 @@ describe('Screen', () => {
     expect(screen.getByTestId('screen')).toHaveProp('edges', allEdges);
   });
 
+  it('leaves the bars to a grouped list that scrolls by itself on iOS: no second inset above and below it', async () => {
+    setDeviceConditions({ os: 'ios' });
+    await render(
+      <Screen hasScrollingList testID="screen">
+        <AppText>Contenu</AppText>
+      </Screen>,
+    );
+    const sidesOnly = { top: 'off', right: 'additive', bottom: 'off', left: 'additive' };
+    expect(screen.getByTestId('screen')).toHaveProp('edges', sidesOnly);
+  });
+
+  it('keeps every edge of a screen with a grouped list clear elsewhere, where nothing insets it', async () => {
+    setDeviceConditions({ os: 'android' });
+    await render(
+      <Screen hasScrollingList testID="screen">
+        <AppText>Contenu</AppText>
+      </Screen>,
+    );
+    const allEdges = { top: 'additive', right: 'additive', bottom: 'additive', left: 'additive' };
+    expect(screen.getByTestId('screen')).toHaveProp('edges', allEdges);
+  });
+
   it('lets the caller choose the edges of a scrolling screen', async () => {
     setDeviceConditions({ os: 'ios' });
     await render(
