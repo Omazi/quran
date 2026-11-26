@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Icon } from '../native';
@@ -28,6 +29,11 @@ export interface ActionButtonProps {
   label?: string;
   /** A symbol before the label ("Lire et arroser" has a drop), or alone. */
   symbol?: IconSymbol;
+  /**
+   * A small drawing before the label, in place of a symbol, when the app has its own mark for
+   * the action ("Reconnaître" and its rosette). Decorative: VoiceOver reads the label.
+   */
+  leading?: ReactNode;
   variant?: ActionButtonVariant;
   /** What VoiceOver says. Required for a button that shows only a symbol. */
   accessibilityLabel?: string;
@@ -73,6 +79,7 @@ const LOOK: Readonly<
 export function ActionButton({
   label,
   symbol,
+  leading,
   variant = 'filled',
   accessibilityLabel,
   accessibilityHint,
@@ -117,6 +124,15 @@ export function ActionButton({
       >
         {symbol === undefined ? null : (
           <Icon symbol={symbol} textStyle="headline" color={look.foreground} />
+        )}
+        {leading === undefined ? null : (
+          <View
+            accessible={false}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            {leading}
+          </View>
         )}
         {label === undefined ? null : (
           <AppText variant="headline" color={look.foreground} align="center" style={styles.label}>

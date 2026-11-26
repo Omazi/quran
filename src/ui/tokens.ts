@@ -222,6 +222,17 @@ export const palette = {
   /** The thin gold lines of the star pattern on that green (shazam.png): a decoration only. */
   patternLine: { light: 'rgba(232, 207, 152, 0.13)', dark: 'rgba(232, 207, 152, 0.1)' },
   /**
+   * The rosette drawn on that green, in the card "Quel est ce passage ?" of the Quran tab
+   * (maquettes 2026-11-26, 3A): its outer star in pale water and its inside lines in pale gold;
+   * its heart takes `onAction`. A decoration beside the words that name the action.
+   */
+  onActionRosette: { light: '#BFE9EE', dark: '#BFE9EE' },
+  onActionRosetteGold: { light: '#E3C27A', dark: '#E3C27A' },
+  /** The label of the white capsule on that green ("Reconnaître"): 10.9:1 on white. */
+  onActionCapsule: { light: '#123C2D', dark: '#123C2D' },
+  /** The white capsule itself, the same in both appearances: it sits on the dark green. */
+  actionCapsule: { light: '#FFFFFF', dark: '#FFFFFF' },
+  /**
    * The golden microphone of the listening page (shazam.png): its light, middle and deep gold,
    * and its rays. A shape beside the words that name it.
    */
@@ -832,11 +843,14 @@ export const pieceSizes = {
   /** The ring of the day's watering. */
   ringLarge: 60,
   ringLargeStroke: 6,
-  /** The small ring of the floating label over the garden. */
-  ringSmall: 32,
-  ringSmallStroke: 3,
+  /** The small ring of growth on the line under the garden (maquettes 2026-11-26, 1A: 40, 3.6). */
+  ringSmall: 40,
+  ringSmallStroke: 3.5,
   /** One dot of the 60-step progress, and the least space between two. */
   dot: 4,
+  /** The step under way: a small circle, its line (maquettes 2026-11-26, 1A: 7 and 1.6). */
+  dotCurrent: 7,
+  dotCurrentStroke: 1.5,
   /** The avatar of a friend's page (visite.png). */
   avatarLarge: 48,
   /** The avatar of the header, and of a friend's card. */
@@ -847,11 +861,10 @@ export const pieceSizes = {
   tileLarge: 72,
   /** The main button: a capsule taller than the 44-point minimum. */
   actionHeight: 52,
+  /** A drawn mark in place of a symbol in a button: the rosette of "Reconnaître" (3C: 24). */
+  markInButton: 24,
   /** A friend's card in the row of neighbouring gardens. */
   neighbourCardWidth: 140,
-  /** Where the floating label sits over the garden: from the top, and its widest. */
-  sceneLabelTop: '14%',
-  sceneLabelMaxWidth: '62%',
   /** A sheet's corners (nouveau.png), and its margin from the screen's edges. */
   sheetRadius: 32,
   /** Distance a sheet must be dragged down to close. */

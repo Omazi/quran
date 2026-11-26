@@ -4,19 +4,18 @@
   "streak_other": "{{count}} days in a row",
   "profile": "Profile",
   "growing": {
-    "title": "Hizb {{hizb}}",
     "value": "{{percent}}% of the hizb read",
     "pages_one": "{{count}} page of {{total}}",
     "pages_other": "{{count}} pages of {{total}}",
-    "detail": "{{pages}} · {{stage}}"
+    "line": "Hizb {{hizb}} of {{total}} · {{pages}}",
+    "lineAlone": "Hizb {{hizb}} of {{total}}"
   },
   "progress": {
-    "watered_one": "Watered for {{count}} d",
-    "watered_other": "Watered for {{count}} d",
-    "still_one": "No water for {{count}} d",
-    "still_other": "No water for {{count}} d",
-    "dry_one": "Dry for {{count}} d",
-    "dry_other": "Dry for {{count}} d",
+    "days_one": "{{count}} d",
+    "days_other": "{{count}} d",
+    "wateredCaption": "of water",
+    "stillCaption": "without water",
+    "dryCaption": "dry",
     "wateredLabel_one": "Watered for {{count}} day",
     "wateredLabel_other": "Watered for {{count}} days",
     "stillLabel_one": "No water for {{count}} day",
@@ -37,7 +36,9 @@
   "actions": {
     "read": "Read and Water",
     "waterNow": "Water Now",
-    "readOnePage": "Read a Page"
+    "readOnePage": "Read a Page",
+    "recognize": "Recognize",
+    "recognizeLabel": "Recognize a Passage"
   },
   "added": {
     "title": "Added at hizb {{hizb}}"

@@ -4,19 +4,18 @@
   "streak_other": "{{count}} jours de suite",
   "profile": "Profil",
   "growing": {
-    "title": "Hizb {{hizb}}",
     "value": "{{percent}} % du hizb lu",
     "pages_one": "{{count}} page sur {{total}}",
     "pages_other": "{{count}} pages sur {{total}}",
-    "detail": "{{pages}} · {{stage}}"
+    "line": "Hizb {{hizb}} sur {{total}} · {{pages}}",
+    "lineAlone": "Hizb {{hizb}} sur {{total}}"
   },
   "progress": {
-    "watered_one": "Arrosé depuis {{count}} j",
-    "watered_other": "Arrosé depuis {{count}} j",
-    "still_one": "Sans eau depuis {{count}} j",
-    "still_other": "Sans eau depuis {{count}} j",
-    "dry_one": "À sec depuis {{count}} j",
-    "dry_other": "À sec depuis {{count}} j",
+    "days_one": "{{count}} j",
+    "days_other": "{{count}} j",
+    "wateredCaption": "d’arrosage",
+    "stillCaption": "sans eau",
+    "dryCaption": "à sec",
     "wateredLabel_one": "Arrosé depuis {{count}} jour",
     "wateredLabel_other": "Arrosé depuis {{count}} jours",
     "stillLabel_one": "Sans eau depuis {{count}} jour",
@@ -37,7 +36,9 @@
   "actions": {
     "read": "Lire et arroser",
     "waterNow": "Arroser maintenant",
-    "readOnePage": "Lire une page"
+    "readOnePage": "Lire une page",
+    "recognize": "Reconnaître",
+    "recognizeLabel": "Reconnaître un passage"
   },
   "added": {
     "title": "Ajouté au hizb {{hizb}}"

@@ -1,4 +1,4 @@
-import { fireEvent, render, renderHook, screen } from '@testing-library/react-native';
+import { fireEvent, render, renderHook, screen, within } from '@testing-library/react-native';
 
 import { quranStructure } from '@/data/quran';
 import { parseLocalDate } from '@/domain/shared/local-date';
@@ -76,6 +76,7 @@ function actionsSpy(): ActionsSpy {
     startNewKhatma: jest.fn(),
     share: jest.fn(),
     dismissArrival: jest.fn(),
+    recognize: jest.fn(),
   };
 }
 
@@ -188,19 +189,17 @@ describe('HomeScreen, the validated home (accueil.png) at hizb 24', () => {
     expect(props.actions.openProfile).toHaveBeenCalledTimes(1);
   });
 
-  it('labels the element growing over the garden, with how much of its hizb is read', async () => {
+  it('leaves the garden without words: nothing is laid over it (mockup 1A)', async () => {
     await showLanguage('fr');
     await render(<HomeScreen {...propsOf(model)} />);
-    const next = model.garden.nextElement;
-    if (next === null) throw new Error('hizb 24 has a next element');
-    const percent = Math.round(next.growth * 100);
-    expect(screen.getByTestId('home-growing')).toHaveProp(
-      'accessibilityLabel',
-      expect.stringMatching(new RegExp(`^Hizb 25, .+ pousse, .+, ${percent}\\s% du hizb lu$`)),
-    );
+    const stage = screen.getByTestId('home-garden-stage');
+    // The 3D garden is the only thing in its area: no label, no ring, no text (its first-time
+    // turning hint aside, which a test never shows: it waits for the device's storage).
+    expect(stage.queryAll(({ type }) => type === 'Text')).toHaveLength(0);
+    expect(screen.queryByTestId('home-growing-callout')).toBeNull();
   });
 
-  it('says how many pages of the hizb are read, and how far the plant has come', async () => {
+  it('says under the garden what grows, its hizb and its pages, with a ring of growth', async () => {
     await showLanguage('fr');
     const next = model.garden.nextElement;
     if (next === null) throw new Error('hizb 24 has a next element');
@@ -208,60 +207,104 @@ describe('HomeScreen, the validated home (accueil.png) at hizb 24', () => {
       ...model,
       garden: {
         ...model.garden,
-        nextElement: { ...next, element: { ...next.element, kind: 'olive' as const }, growth: 0.3 },
+        nextElement: {
+          ...next,
+          element: { ...next.element, kind: 'pomegranate' as const },
+          growth: 0.3,
+        },
       },
       growingPages: { read: 3, total: 10 },
     };
     await render(<HomeScreen {...propsOf(growing)} />);
-    expect(screen.getByText('3 pages sur 10 · un jeune arbre')).toBeOnTheScreen();
-    expect(screen.getByTestId('home-growing')).toHaveProp(
+    const line = screen.getByTestId('home-growing');
+    expect(within(line).getByText('Un grenadier pousse')).toBeOnTheScreen();
+    expect(within(line).getByText('Hizb 25 sur 60 · 3 pages sur 10')).toBeOnTheScreen();
+    expect(within(line).getByRole('progressbar')).toHaveAccessibilityValue({
+      text: '30\u00a0% du hizb lu',
+    });
+    // Read as one sentence, the stage of the tree included.
+    expect(line).toHaveProp(
       'accessibilityLabel',
-      expect.stringMatching(
-        /^Hizb 25, un olivier pousse, 3 pages sur 10, un jeune arbre, 30\s% du hizb lu$/,
-      ),
+      'Un grenadier pousse, Hizb 25 sur 60, 3 pages sur 10, un jeune arbre, 30\u00a0% du hizb lu',
     );
   });
 
-  it('one page: a sprout; for what is built, only the pages', async () => {
+  it('for what is built, says only the hizb and the pages', async () => {
     await showLanguage('fr');
     const next = model.garden.nextElement;
     if (next === null) throw new Error('hizb 24 has a next element');
-    const sprouting = {
+    const building = {
       ...model,
       garden: {
         ...model.garden,
-        nextElement: { ...next, element: { ...next.element, kind: 'fig' as const }, growth: 0.1 },
-      },
-      growingPages: { read: 1, total: 10 },
-    };
-    const { unmount } = await render(<HomeScreen {...propsOf(sprouting)} />);
-    expect(screen.getByText('1 page sur 10 · une pousse sort de terre')).toBeOnTheScreen();
-    await unmount();
-    const building = {
-      ...sprouting,
-      garden: {
-        ...sprouting.garden,
         nextElement: { ...next, element: { ...next.element, kind: 'wall' as const }, growth: 0.4 },
       },
       growingPages: { read: 4, total: 10 },
     };
     await render(<HomeScreen {...propsOf(building)} />);
-    expect(screen.getByText('4 pages sur 10')).toBeOnTheScreen();
+    expect(screen.getByText('Hizb 25 sur 60 · 4 pages sur 10')).toBeOnTheScreen();
+    expect(screen.getByTestId('home-growing')).toHaveProp(
+      'accessibilityLabel',
+      expect.not.stringMatching(/arbre|pousse sort/),
+    );
   });
 
-  it('counts the hizb in words and in sixty dots, and how long the water has run', async () => {
+  it('puts the water at the end of the line: the days, then what they count', async () => {
     await showLanguage('fr');
     await render(<HomeScreen {...propsOf(model)} />);
-    expect(screen.getByLabelText('24 hizb sur 60')).toBeOnTheScreen();
+    const water = screen.getByTestId('home-water');
+    expect(water).toHaveTextContent(`${model.streakDays} jd’arrosage`);
+    expect(water).toHaveProp('accessibilityLabel', `Arrosé depuis ${model.streakDays} jours`);
+  });
+
+  it('counts the hizb in sixty dots; the hizb that grows is a small circle', async () => {
+    await showLanguage('fr');
+    const { result: colors } = await renderHook(() => useColors());
+    await render(<HomeScreen {...propsOf(model)} />);
     expect(screen.getByRole('progressbar', { name: 'Hizb terminés' })).toHaveAccessibilityValue({
       min: 0,
       max: 60,
       now: 24,
     });
-    expect(screen.getByTestId('home-water')).toHaveTextContent(
-      `Arrosé depuis ${model.streakDays} j`,
+    const current = styleOf(screen.getByTestId('home-hizb-dots-dot-24'));
+    expect(current.backgroundColor).toBe('transparent');
+    expect(current.borderColor).toBe(colors.current.growth);
+    expect(current.width).toBeGreaterThan(
+      Number(styleOf(screen.getByTestId('home-hizb-dots-dot-23')).width),
     );
-    expect(screen.getByLabelText(`Arrosé depuis ${model.streakDays} jours`)).toBeOnTheScreen();
+  });
+  it('offers "Reconnaître" beside "Lire et arroser", quieter, and it opens the recognition (mockup 3C)', async () => {
+    setDeviceConditions({ fontScale: 1 });
+    await showLanguage('fr');
+    const { result: colors } = await renderHook(() => useColors());
+    const props = propsOf(model);
+    await render(<HomeScreen {...props} />);
+    const read = screen.getByRole('button', { name: 'Lire et arroser' });
+    const recognize = screen.getByRole('button', { name: 'Reconnaître un passage' });
+    expect(recognize).toHaveTextContent('Reconnaître');
+    expect(touchTargetHeight(recognize)).toBeGreaterThanOrEqual(layout.touchTarget);
+    // Style, not size, tells the main one: green for reading, pale green for recognizing.
+    expect(styleOf(recognize).backgroundColor).toBe(colors.current.actionTonal);
+    expect(styleOf(read).backgroundColor).toBe(colors.current.action);
+    let row = read.parent;
+    while (row !== null && !row.queryAll(() => true).includes(recognize)) row = row.parent;
+    expect(row).toHaveStyle({ flexDirection: 'row' });
+    await fireEvent.press(recognize);
+    expect(props.actions.recognize).toHaveBeenCalledTimes(1);
+    expect(props.actions.readAndWater).not.toHaveBeenCalled();
+  });
+
+  it('stacks the two buttons at the largest text size', async () => {
+    setDeviceConditions({ fontScale: LARGEST_FONT_SCALE });
+    await showLanguage('fr');
+    await render(<HomeScreen {...propsOf(model)} />);
+    const read = screen.getByRole('button', { name: 'Lire et arroser' });
+    const recognize = screen.getByRole('button', { name: 'Reconnaître un passage' });
+    let around = read.parent;
+    while (around !== null && !around.queryAll(() => true).includes(recognize)) {
+      around = around.parent;
+    }
+    expect(around).not.toHaveStyle({ flexDirection: 'row' });
   });
 
   it('says the pages of the day and what is left of the hizb, then where to resume', async () => {
@@ -363,7 +406,13 @@ describe('HomeScreen, a thirsty garden (soif.png)', () => {
       const banner = screen.getByTestId(`home-notice-${history}`);
       // The matcher reads every kind of space, non-breaking ones included, as one space.
       expect(banner).toHaveTextContent(`${title}${text}`);
-      expect(screen.getByTestId('home-water')).toHaveTextContent(/^À sec depuis \d+ j$/);
+      expect(screen.getByTestId('home-water')).toHaveTextContent(/^\d+ jà sec$/);
+      expect(screen.getByTestId('home-water')).toHaveProp(
+        'accessibilityLabel',
+        expect.stringMatching(/^À sec depuis \d+ jours?$/),
+      );
+      // Nothing grows while the garden suffers: the line says the hizb count instead.
+      expect(screen.getByTestId('home-hizb-count')).toHaveTextContent(/^\d+ hizb sur 60$/);
       expect(screen.getByTestId('home-today-pages')).toHaveTextContent(
         /Une page suffit pour que l’eau revienne/,
       );

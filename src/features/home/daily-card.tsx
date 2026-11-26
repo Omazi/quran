@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
+
+import { RosetteMark } from '@/features/listening';
 
 import {
   ActionButton,
@@ -9,6 +11,7 @@ import {
   Icon,
   ProgressRing,
   layout,
+  pieceSizes,
   spacing,
 } from '@/ui';
 
@@ -19,6 +22,8 @@ import { resumePlaceOf } from './resume-place';
 export interface DailyCardProps {
   model: HomeReadyModel;
   onRead: () => void;
+  /** "Reconnaître": opens the recognition of a passage (maquettes 2026-11-26, 3C). */
+  onRecognize: () => void;
 }
 
 /**
@@ -26,9 +31,17 @@ export interface DailyCardProps {
  * what is left to finish the hizb (or, on a thirsty garden, that one page brings the water back),
  * the page to resume in its cream card, and the one main button of the screen
  * (buttons.md › Style). The header is read as one sentence; the ring only draws it.
+ *
+ * Beside the main button, "Reconnaître" with the rosette of the listening page (maquettes
+ * 2026-11-26, 3C, chosen by the owner with the card of the Quran tab): the same height, the
+ * quieter pale green, so that style and not size tells which one matters most
+ * (buttons.md › Style). The two stack at large text sizes rather than cut a word
+ * (typography.md › Supporting Dynamic Type).
  */
-export function DailyCard({ model, onRead }: DailyCardProps) {
+export function DailyCard({ model, onRead, onRecognize }: DailyCardProps) {
   const { t, i18n } = useTranslation('home');
+  const { fontScale } = useWindowDimensions();
+  const isSideBySide = fontScale <= layout.sideBySideMaxFontScale;
   const { today, reading, hizb, layout: homeLayout } = model;
   const isThirsty = homeLayout === 'thirsty';
   const pages = t('today.pages', { count: today.pagesRead, goal: today.goalPages });
@@ -82,12 +95,22 @@ export function DailyCard({ model, onRead }: DailyCardProps) {
           {place.arabicName === null ? null : <ArabicDisplayText text={place.arabicName} />}
         </View>
       </Card>
-      <View style={styles.action}>
+      <View style={[styles.action, isSideBySide ? styles.actionRow : styles.actionColumn]}>
         <ActionButton
           label={t(isThirsty ? 'actions.waterNow' : 'actions.read')}
           symbol={HOME_SYMBOLS.drop}
           onPress={onRead}
+          grows={isSideBySide}
           testID="home-read"
+        />
+        <ActionButton
+          variant="tonal"
+          label={t('actions.recognize')}
+          accessibilityLabel={t('actions.recognizeLabel')}
+          leading={<RosetteMark size={pieceSizes.markInButton} tone="tonal" />}
+          onPress={onRecognize}
+          fullWidth={!isSideBySide}
+          testID="home-recognize"
         />
       </View>
     </Card>
@@ -106,5 +129,7 @@ const styles = StyleSheet.create({
     columnGap: spacing.md,
   },
   resumeText: { flexShrink: 1, paddingVertical: spacing.xs },
-  action: { marginTop: layout.controlGap + spacing.xs },
+  action: { marginTop: layout.controlGap + spacing.xs, gap: layout.controlGap },
+  actionRow: { flexDirection: 'row', alignItems: 'center' },
+  actionColumn: { flexDirection: 'column' },
 });

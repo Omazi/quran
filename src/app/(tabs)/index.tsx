@@ -2,6 +2,7 @@ import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
 
 import { AccountInvitation, HomeScreen, useHomeScreen, type HomeActions } from '@/features/home';
+import { useOpenRecognition } from '@/features/listening';
 import { useResumePage } from '@/features/reader';
 
 /**
@@ -25,6 +26,7 @@ export default function HomeRoute() {
   // The tab stays mounted under the reader: the garden's growth plays when it is in front again.
   const isFocused = useIsFocused();
   const { welcome } = useLocalSearchParams<{ welcome?: string }>();
+  const recognize = useOpenRecognition();
   const actions = useMemo<HomeActions>(
     () => ({
       readAndWater: () => router.push(`/reader/${resumePage}`),
@@ -35,8 +37,9 @@ export default function HomeRoute() {
       startNewKhatma: (page) => router.push(`/reader/${page}`),
       share,
       dismissArrival,
+      recognize,
     }),
-    [resumePage, retry, share, dismissArrival],
+    [resumePage, retry, share, dismissArrival, recognize],
   );
   return (
     <>

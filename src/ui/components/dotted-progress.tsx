@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { avatarRoles, pieceSizes, radius, spacing, stateOpacity } from '../tokens';
+import { avatarRoles, pieceSizes, radius, spacing } from '../tokens';
 import { useColors } from '../use-colors';
 
 export interface DottedProgressProps {
@@ -13,7 +13,10 @@ export interface DottedProgressProps {
    * `avatarRoles`, as `Avatar` takes it (visite.png: the friend's hizb in their colour).
    */
   color?: 'action' | number;
-  /** Whether the step after the last one reached is under way: its dot is half tone. */
+  /**
+   * Whether the step after the last one reached is under way: its dot becomes a small circle in
+   * the green of growth (maquettes 2026-11-26, 1A: the hizb that grows).
+   */
   hasStepInProgress?: boolean;
   /** What is counted, for screen readers: "Hizb terminés". */
   accessibilityLabel: string;
@@ -68,13 +71,11 @@ export function DottedProgress({
         <View
           key={index}
           testID={testID === undefined ? undefined : `${testID}-dot-${index}`}
-          style={[
-            styles.dot,
-            {
-              backgroundColor: state === 'ahead' ? colors.dotEmpty : filled,
-            },
-            state === 'inProgress' ? styles.inProgress : null,
-          ]}
+          style={
+            state === 'inProgress'
+              ? [styles.current, { borderColor: colors.growth }]
+              : [styles.dot, { backgroundColor: state === 'ahead' ? colors.dotEmpty : filled }]
+          }
         />
       ))}
     </View>
@@ -90,5 +91,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   dot: { width: pieceSizes.dot, height: pieceSizes.dot, borderRadius: radius.full },
-  inProgress: { opacity: stateOpacity.inProgress },
+  current: {
+    width: pieceSizes.dotCurrent,
+    height: pieceSizes.dotCurrent,
+    borderRadius: radius.full,
+    borderWidth: pieceSizes.dotCurrentStroke,
+    backgroundColor: 'transparent',
+  },
 });

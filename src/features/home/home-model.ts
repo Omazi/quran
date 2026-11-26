@@ -171,6 +171,11 @@ export interface HomeActions {
   readonly share: (message: string) => void;
   /** Closes the sheet of a hizb just finished. */
   readonly dismissArrival: () => void;
+  /**
+   * "Reconnaître", beside the main button (maquettes 2026-11-26, 3C): opens the recognition of a
+   * passage, as a tap in the app (the microphone may start).
+   */
+  readonly recognize: () => void;
 }
 
 interface NoticeFacts {

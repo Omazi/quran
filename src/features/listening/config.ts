@@ -7,6 +7,24 @@
  * otherwise, sizes in points or as a share of the screen.
  */
 
+/**
+ * The still rosette that marks "recognize a passage" outside the listening page (maquettes
+ * 2026-11-26, 3A and 3C, drawn by their `rosette()`): the outer star at 94 % of the half side,
+ * the three lines' widths (inside, outer star, heart) times one weight, and the halo of three
+ * stars behind it on the green card (radius 108 of 115, 30 apart, a 1-point line).
+ */
+export const ROSETTE_MARK = {
+  radiusShare: 0.94,
+  insideWidth: 0.9,
+  outerWidth: 1.3,
+  heartWidth: 1.5,
+  weight: 1.2,
+  haloStars: 3,
+  haloRadiusShare: 108 / 115,
+  haloStepShare: 30 / 115,
+  haloWidth: 1,
+} as const;
+
 export const ROSETTE_GEOMETRY = {
   /** The centre of the rosette, as a share of the screen width and height (`W * 0.5, H * 0.38`). */
   centreX: 0.5,

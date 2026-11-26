@@ -20,7 +20,7 @@ import type { Arrival } from './arrival';
 import { ArrivalSheet } from './arrival-sheet';
 import { DailyCard } from './daily-card';
 import { DeadGarden } from './dead-garden';
-import { GardenProgress } from './garden-progress';
+import { GardenProgress, type GardenGrowing } from './garden-progress';
 import { GardenStage } from './garden-stage';
 import { HomeHeader } from './home-header';
 import type { HomeActions, HomeLayout, HomeModel, HomeReadyModel } from './home-model';
@@ -160,18 +160,13 @@ function GardenHome({
         {homeLayout === 'dead' ? (
           // The dry earth in the middle of the room left, as on the mockup.
           <View style={styles.deadEarth}>
-            <GardenStage garden={garden} showsGrowing={false} isActive={isFocused} />
+            <GardenStage garden={garden} isActive={isFocused} />
           </View>
         ) : (
-          <GardenStage
-            garden={garden}
-            showsGrowing={homeLayout === 'growing'}
-            growingPages={model.growingPages}
-            isActive={isFocused}
-          />
+          <GardenStage garden={garden} isActive={isFocused} />
         )}
         {homeLayout === 'dead' ? null : (
-          <GardenProgress hizb={model.hizb} waterRun={model.waterRun} />
+          <GardenProgress hizb={model.hizb} waterRun={model.waterRun} growing={growingOf(model)} />
         )}
       </View>
       {homeLayout === 'dead' ? (
@@ -189,7 +184,11 @@ function GardenHome({
               <ThirstBanner phase={garden.phase} drought={model.drought} />
             ) : null}
             {model.notice === 'recovering' ? <RecoveringBanner /> : null}
-            <DailyCard model={model} onRead={actions.readAndWater} />
+            <DailyCard
+              model={model}
+              onRead={actions.readAndWater}
+              onRecognize={actions.recognize}
+            />
             {homeLayout === 'growing' && garden.lastUnlocked !== null ? (
               <AddedCard element={garden.lastUnlocked} />
             ) : null}
@@ -203,6 +202,16 @@ function GardenHome({
       )}
     </>
   );
+}
+
+/**
+ * What grows, for the line under the garden: only while the garden grows. A thirsty garden has
+ * nothing to celebrate (soif.png), and a garden complete has nothing left to grow.
+ */
+function growingOf(model: HomeReadyModel): GardenGrowing | null {
+  const next = model.garden.nextElement;
+  if (model.layout !== 'growing' || next === null) return null;
+  return { kind: next.element.kind, growth: next.growth, pages: model.growingPages };
 }
 
 /**

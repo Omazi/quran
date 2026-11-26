@@ -14,3 +14,11 @@ export {
   wasOpenedInApp,
   type MicrophoneRoute,
 } from './in-app-open';
+// The still rosette that marks "recognize a passage" on the home screen and the Quran tab.
+export {
+  RosetteMark,
+  StarHalo,
+  type RosetteMarkProps,
+  type RosetteMarkTone,
+} from './rosette/rosette-mark';
+export { useOpenRecognition } from './use-open-recognition';

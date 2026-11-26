@@ -8,7 +8,6 @@
   "streak_other": "{{count}} يوم متتالٍ",
   "profile": "الملف الشخصي",
   "growing": {
-    "title": "الحزب {{hizb}}",
     "value": "قُرئ {{percent}}٪ من الحزب",
     "pages_zero": "{{count}} صفحة من {{total}}",
     "pages_one": "صفحة واحدة من {{total}}",
@@ -16,27 +15,19 @@
     "pages_few": "{{count}} صفحات من {{total}}",
     "pages_many": "{{count}} صفحة من {{total}}",
     "pages_other": "{{count}} صفحة من {{total}}",
-    "detail": "{{pages}} · {{stage}}"
+    "line": "الحزب {{hizb}} من {{total}} · {{pages}}",
+    "lineAlone": "الحزب {{hizb}} من {{total}}"
   },
   "progress": {
-    "watered_zero": "مَسقيّة منذ {{count}} ي",
-    "watered_one": "مَسقيّة منذ {{count}} ي",
-    "watered_two": "مَسقيّة منذ {{count}} ي",
-    "watered_few": "مَسقيّة منذ {{count}} ي",
-    "watered_many": "مَسقيّة منذ {{count}} ي",
-    "watered_other": "مَسقيّة منذ {{count}} ي",
-    "still_zero": "بلا ماء منذ {{count}} ي",
-    "still_one": "بلا ماء منذ {{count}} ي",
-    "still_two": "بلا ماء منذ {{count}} ي",
-    "still_few": "بلا ماء منذ {{count}} ي",
-    "still_many": "بلا ماء منذ {{count}} ي",
-    "still_other": "بلا ماء منذ {{count}} ي",
-    "dry_zero": "جافة منذ {{count}} ي",
-    "dry_one": "جافة منذ {{count}} ي",
-    "dry_two": "جافة منذ {{count}} ي",
-    "dry_few": "جافة منذ {{count}} ي",
-    "dry_many": "جافة منذ {{count}} ي",
-    "dry_other": "جافة منذ {{count}} ي",
+    "days_zero": "{{count}} ي",
+    "days_one": "{{count}} ي",
+    "days_two": "{{count}} ي",
+    "days_few": "{{count}} ي",
+    "days_many": "{{count}} ي",
+    "days_other": "{{count}} ي",
+    "wateredCaption": "من السقي",
+    "stillCaption": "بلا ماء",
+    "dryCaption": "جافة",
     "wateredLabel_zero": "مَسقيّة منذ {{count}} يوم",
     "wateredLabel_one": "مَسقيّة منذ يوم واحد",
     "wateredLabel_two": "مَسقيّة منذ يومين",
@@ -77,7 +68,9 @@
   "actions": {
     "read": "اقرأ واسقِ",
     "waterNow": "اسقِ الآن",
-    "readOnePage": "اقرأ صفحة"
+    "readOnePage": "اقرأ صفحة",
+    "recognize": "تعرّف",
+    "recognizeLabel": "التعرّف على مقطع"
   },
   "added": {
     "title": "أُضيف عند الحزب {{hizb}}"
