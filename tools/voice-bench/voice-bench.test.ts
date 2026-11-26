@@ -15,6 +15,8 @@ import type { AudioCapture, EngineTimers, Transcriber } from '@/data/speech/whis
 import { searchHeardWords, type SpeechEngine } from '@/domain/listening';
 import {
   createVerseIndex,
+  normalizeArabic,
+  type VerseText,
   type PassageCandidate,
   type SearchResult,
   type VerseIndex,
@@ -56,6 +58,8 @@ interface Clip {
   readonly condition: string;
   readonly start: number;
   readonly length: number;
+  /** The length asked by the plan (the clip is shorter when the recording is). */
+  readonly wanted: number;
   readonly midVerse: boolean;
   /** The verses heard in the clip. */
   readonly truth: readonly { surah: number; verse: number }[];
@@ -159,6 +163,7 @@ function clipsOf(streams: readonly Stream[]): Clip[] {
           condition,
           start,
           length,
+          wanted,
           midVerse,
           truth,
         });
@@ -328,7 +333,76 @@ export function scoreListening(
   };
 }
 
-const SEARCHES: readonly { name: string; search: Search; partial: boolean }[] = [
+interface NamedSearch {
+  readonly name: string;
+  readonly search: Search;
+  readonly partial: boolean;
+  /** The index this search runs on (a matcher variant has its own). */
+  readonly index?: VerseIndex;
+}
+
+/**
+ * Other settings of the passage search, as JSON:
+ * `{"close-0.6":{"recognition":{"closeWordSimilarity":0.6},"recentWords":8,"partial":true}}`.
+ * Each variant gets its own index, built with those settings (the module's config is replaced).
+ */
+function matcherVariants(corpus: readonly VerseText[]): NamedSearch[] {
+  const asked = JSON.parse(env.VOICE_BENCH_MATCHERS ?? '{}') as Record<
+    string,
+    { recognition?: Record<string, number>; recentWords?: number; partial?: boolean }
+  >;
+  return Object.entries(asked).map(([name, variant]) => {
+    const actual = jest.requireActual<typeof import('@/domain/recognition/config')>(
+      '../../src/domain/recognition/config',
+    );
+    const config = { ...actual.RECOGNITION_CONFIG, ...variant.recognition };
+    let build: ((verses: readonly VerseText[]) => VerseIndex) | null = null;
+    jest.isolateModules(() => {
+      jest.doMock('../../src/domain/recognition/config', () => ({ RECOGNITION_CONFIG: config }));
+      build = jest.requireActual<typeof import('@/domain/recognition')>(
+        '../../src/domain/recognition',
+      ).createVerseIndex;
+    });
+    const variantIndex = build!(corpus);
+    const recent = variant.recentWords ?? 8;
+    const search: Search = (_index, words) => {
+      const all = variantIndex.search(words);
+      if (all.status === 'found' || words.length <= recent || recent <= 0) return all;
+      const latest = variantIndex.search(words.slice(-recent));
+      return latest.status === 'found' ? latest : all;
+    };
+    return { name, search, partial: variant.partial ?? false, index: variantIndex };
+  });
+}
+
+/**
+ * How often a search says `found` on inputs of 3 to 14 words drawn at random from the Quran's own
+ * words (never a real passage, except by chance): the price of a looser search.
+ */
+function falseFoundRate(search: Search, index: VerseIndex, corpus: readonly VerseText[]): string {
+  const words = corpus.flatMap((verse) => normalizeArabic(verse.text));
+  let seed = 20261126;
+  const next = () => {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    return seed / 0x7fffffff;
+  };
+  const inputs = Number(env.VOICE_BENCH_RANDOM_INPUTS ?? 1000);
+  let found = 0;
+  for (let i = 0; i < inputs; i += 1) {
+    const length = 3 + Math.floor(next() * 12);
+    const input = Array.from({ length }, () => words[Math.floor(next() * words.length)]!);
+    // Words arrive one by one, as on the screen: any `found` on the way counts.
+    for (let count = 3; count <= length; count += 1) {
+      if (search(index, input.slice(0, count)).status === 'found') {
+        found += 1;
+        break;
+      }
+    }
+  }
+  return `${found}/${inputs}`;
+}
+
+const SEARCHES: readonly NamedSearch[] = [
   { name: 'app', search: searchHeardWords, partial: false },
   { name: 'app+partial', search: searchHeardWords, partial: true },
   { name: 'all-words-only', search: (index, words) => index.search(words), partial: false },
@@ -361,8 +435,12 @@ describeBench('voice benchmark', () => {
   const outFile = `${work}/listen-${configName}${tag}.jsonl`;
   let index: VerseIndex;
 
+  let searches: readonly NamedSearch[] = SEARCHES;
+  let corpus: VerseText[] = [];
   beforeAll(() => {
-    index = createVerseIndex(loadUthmaniCorpus() ?? []);
+    corpus = loadUthmaniCorpus() ?? [];
+    index = createVerseIndex(corpus);
+    searches = [...SEARCHES, ...matcherVariants(corpus)];
   });
 
   const phases = new Set((env.VOICE_BENCH_PHASE ?? 'listen,score').split(','));
@@ -424,13 +502,14 @@ describeBench('voice benchmark', () => {
   function writeScores(listened: ReadonlyMap<string, Listened>, name: string): void {
     const lines: string[] = [];
     const summary: Record<string, unknown> = { config: name, latency, groups: {} };
-    for (const { name: searchName, search, partial } of SEARCHES) {
+    for (const { name: searchName, search, partial, index: own } of searches) {
+      const searchIndex = own ?? index;
       const groups = new Map<string, { clip: Clip; score: ClipScore }[]>();
       for (const clip of clips) {
         const record = listened.get(clip.id);
         if (record === undefined) continue;
         const score = scoreListening(
-          index,
+          searchIndex,
           search,
           heardViews(record, partial),
           record.batches.flatMap((batch) => batch.words),
@@ -438,7 +517,7 @@ describeBench('voice benchmark', () => {
         );
         const reader = clip.stream.professional ? 'pro' : 'ordinary';
         for (const key of [
-          `${clip.condition} ${clip.length >= 9.5 ? 10 : clip.length >= 5.5 ? 6 : 3}s`,
+          `${clip.condition} ${clip.wanted}s`,
           `${clip.condition} all`,
           `${reader} ${clip.condition}`,
           `${reader} all`,
@@ -448,7 +527,12 @@ describeBench('voice benchmark', () => {
           groups.set(key, [...(groups.get(key) ?? []), { clip, score }]);
         }
       }
-      lines.push(`\n${name} / search ${searchName}`);
+      lines.push(
+        `\n${name} / search ${searchName}` +
+          (env.VOICE_BENCH_RANDOM_INPUTS === '0'
+            ? ''
+            : ` (found on random Quran words: ${falseFoundRate(search, searchIndex, corpus)})`),
+      );
       lines.push('group | clips | top-1 | wrong | top-3 | median time to right answer (s)');
       for (const [key, entries] of [...groups].sort(([a], [b]) => a.localeCompare(b))) {
         const right = entries.filter((e) => e.score.answer === 'right').length;
