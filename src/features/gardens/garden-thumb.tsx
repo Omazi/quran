@@ -60,5 +60,5 @@ export function GardenSilhouette({ style }: { style?: StyleProp<ViewStyle> }) {
 }
 
 const styles = StyleSheet.create({
-  silhouette: { alignSelf: 'stretch', aspectRatio: GARDEN_PICTURE_ASPECT_RATIO },
+  silhouette: { width: '100%', aspectRatio: GARDEN_PICTURE_ASPECT_RATIO },
 });

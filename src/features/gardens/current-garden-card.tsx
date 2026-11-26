@@ -77,19 +77,23 @@ export function CurrentGardenCard({
           <AppText variant="subhead" color="muted">
             {progress}
           </AppText>
-          {progression.hasStarted ? (
-            <DottedProgress
-              total={HIZB_COUNT}
-              reached={progression.hizbCompleted}
-              accessibilityLabel={t('current.title')}
-              accessibilityValue={progress}
-            />
-          ) : null}
         </View>
         <View style={mirrorsChevron ? styles.mirrored : null}>
           <Icon symbol={DISCLOSURE} textStyle="footnote" color="muted" />
         </View>
       </View>
+      {progression.hasStarted ? (
+        // Under the row, across the card: sixty dots need its whole width.
+        <View style={styles.dots}>
+          <DottedProgress
+            total={HIZB_COUNT}
+            reached={progression.hizbCompleted}
+            hasStepInProgress
+            accessibilityLabel={t('current.title')}
+            accessibilityValue={progress}
+          />
+        </View>
+      ) : null}
     </Card>
   );
 }
@@ -104,5 +108,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   words: { flex: 1, rowGap: spacing.xs },
+  dots: { paddingTop: spacing.md },
   mirrored: { transform: [{ scaleX: -1 }] },
 });

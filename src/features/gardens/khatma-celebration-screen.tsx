@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useColorScheme, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
   FadeIn,
@@ -51,6 +51,8 @@ const MOTION = {
   haloOutMs: 1400,
   haloPeak: 0.9,
   haloRest: 0.45,
+  /** At night the gold light is dimmed: a full one reads as a flat disc on the dark sky. */
+  haloNightShare: 0.4,
   wordsDelayMs: 380,
   wordsMs: 320,
   reducedFadeMs: 220,
@@ -235,28 +237,33 @@ function BadgeEntrance({
   children: ReactNode;
 }) {
   const values = useColorValues();
+  const isNight = useColorScheme() === 'dark';
+  const haloShare = isNight ? MOTION.haloNightShare : 1;
   const scale = useSharedValue(reduceMotion ? 1 : MOTION.badgeFromScale);
   const opacity = useSharedValue(0);
   const halo = useSharedValue(0);
   useEffect(() => {
     if (reduceMotion) {
       opacity.value = withTiming(1, { duration: MOTION.reducedFadeMs });
-      halo.value = withTiming(MOTION.haloRest, { duration: MOTION.reducedFadeMs });
+      halo.value = withTiming(MOTION.haloRest * haloShare, { duration: MOTION.reducedFadeMs });
       return;
     }
     scale.value = withSpring(1, MOTION.badgeSpring);
     opacity.value = withTiming(1, { duration: MOTION.haloInMs, easing: Easing.out(Easing.cubic) });
     halo.value = withSequence(
-      withTiming(MOTION.haloPeak, { duration: MOTION.haloInMs, easing: Easing.out(Easing.cubic) }),
+      withTiming(MOTION.haloPeak * haloShare, {
+        duration: MOTION.haloInMs,
+        easing: Easing.out(Easing.cubic),
+      }),
       withDelay(
         120,
-        withTiming(MOTION.haloRest, {
+        withTiming(MOTION.haloRest * haloShare, {
           duration: MOTION.haloOutMs,
           easing: Easing.inOut(Easing.cubic),
         }),
       ),
     );
-  }, [reduceMotion, scale, opacity, halo]);
+  }, [reduceMotion, haloShare, scale, opacity, halo]);
   const badgeStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
     transform: [{ scale: scale.value }],

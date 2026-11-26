@@ -9,7 +9,6 @@ import { HIZB_COUNT } from '@/domain/quran';
 import { previewGardenState } from '@/features/garden';
 import {
   AppText,
-  DottedProgress,
   getWritingDirection,
   Icon,
   layout,
@@ -175,14 +174,6 @@ function PathStep({
             {detail}
           </AppText>
         )}
-        {step.status === 'current' && progression?.hasStarted ? (
-          <DottedProgress
-            total={HIZB_COUNT}
-            reached={progression.hizbCompleted}
-            accessibilityLabel={name}
-            accessibilityValue={detail}
-          />
-        ) : null}
       </View>
     </View>
   );
@@ -247,7 +238,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     opacity: 0.7,
   },
-  locked: { opacity: 0.85 },
+  locked: { opacity: 0.6 },
   lock: {
     position: 'absolute',
     top: 0,

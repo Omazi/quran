@@ -32,28 +32,28 @@ export interface GardenStyleArt {
 export const GARDEN_STYLE_ART: Readonly<Record<GardenStyleId, GardenStyleArt>> = Object.freeze({
   'fountain-courtyard': { pictures: 'level-1', provisionalTint: null },
   // Warm sand light.
-  oasis: { pictures: 'level-1', provisionalTint: { role: 'goldLight', opacity: 0.24 } },
+  oasis: { pictures: 'level-1', provisionalTint: { role: 'goldLight', opacity: 0.3 } },
   // The water's blue-green.
   'waterside-orchard': {
     pictures: 'level-1',
-    provisionalTint: { role: 'waterFill', opacity: 0.18 },
+    provisionalTint: { role: 'waterFill', opacity: 0.24 },
   },
   // Cool mountain air.
   'mountain-garden': {
     pictures: 'level-1',
-    provisionalTint: { role: 'avatarBlue', opacity: 0.18 },
+    provisionalTint: { role: 'avatarBlue', opacity: 0.24 },
   },
   // Blossom pink.
   'cherry-blossoms': {
     pictures: 'level-1',
-    provisionalTint: { role: 'avatarRose', opacity: 0.2 },
+    provisionalTint: { role: 'avatarRose', opacity: 0.26 },
   },
   // Deep pine green.
-  'pine-clearing': { pictures: 'level-1', provisionalTint: { role: 'avatarGreen', opacity: 0.24 } },
+  'pine-clearing': { pictures: 'level-1', provisionalTint: { role: 'avatarGreen', opacity: 0.28 } },
   // Night water.
   'night-garden': {
     pictures: 'level-1',
-    provisionalTint: { role: 'launchWater', opacity: 0.32 },
+    provisionalTint: { role: 'launchWater', opacity: 0.38 },
   },
 });
 
