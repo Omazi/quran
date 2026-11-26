@@ -7,8 +7,8 @@
  *
  * A clip says what it holds in its name: `<id>__<surah>-<first verse>-<last verse>.wav`.
  */
-import { searchHeardWords, type SpeechEngine } from '@/domain/listening';
-import type { PassageCandidate, VerseIndex } from '@/domain/recognition';
+import { searchHeardWords, searchWithPartialWords, type SpeechEngine } from '@/domain/listening';
+import type { PassageCandidate, SearchResult, VerseIndex } from '@/domain/recognition';
 
 export interface ProofClip {
   readonly name: string;
@@ -100,6 +100,7 @@ async function listenTo(
   const heard: string[] = [];
   let found: PassageCandidate | null = null;
   let foundAtMs: number | null = null;
+  let wordsAtAnswer: number | null = null;
   let startedAt = deps.now();
   const ending = await new Promise<string>((resolve) => {
     const timer = setTimeout(() => resolve('timeout'), deps.clipTimeoutMs ?? 90_000);
@@ -107,16 +108,27 @@ async function listenTo(
       clearTimeout(timer);
       resolve(why);
     };
+    const answer = (result: SearchResult | null, words: number) => {
+      if (found !== null || result === null || result.status !== 'found') return;
+      found = result.candidates[0] ?? null;
+      foundAtMs = deps.now() - startedAt;
+      wordsAtAnswer = words;
+      // As on the screen: the answer closes the microphone.
+      void engine.stop().then(() => done('stopped at the answer'));
+    };
+    // The same searches as the listening screen (use-listening.ts): the final words, and the
+    // words of the latest reading not final yet.
     engine.onWords((words) => {
       if (found !== null) return;
       heard.push(...words);
-      const result = searchHeardWords(index, heard);
-      if (result.status === 'found') {
-        found = result.candidates[0] ?? null;
-        foundAtMs = deps.now() - startedAt;
-        // As on the screen: the answer closes the microphone.
-        void engine.stop().then(() => done('stopped at the answer'));
-      }
+      answer(searchHeardWords(index, heard), heard.length);
+    });
+    engine.onActivity?.((activity) => {
+      if (found !== null) return;
+      answer(
+        searchWithPartialWords(index, heard, activity.partial),
+        heard.length + activity.partial.length,
+      );
     });
     engine.onEnd((reason, failure) =>
       done(failure === undefined ? reason : `${reason}: ${failure}`),
@@ -130,7 +142,7 @@ async function listenTo(
     );
   });
   await engine.stop().catch(() => undefined);
-  return { clip, found, foundAtMs, words: heard.length, readingsMs, ending };
+  return { clip, found, foundAtMs, words: wordsAtAnswer ?? heard.length, readingsMs, ending };
 }
 
 /** Every clip, one after the other; the last line says DONE and how many were right. */

@@ -433,6 +433,19 @@ comparer l'empreinte SHA-256 des fichiers avec `SHA256SUMS`.
    comparaison de deux textes d'éditeurs différents, comparaison avec la mise en page. Ils
    ne remplacent pas la validation par une personne compétente.
 
+## Enregistrements de récitation (mesure de la voix, jamais livrés)
+
+Aucun son n'est dans le dépôt ni dans l'appli. Pour mesurer la reconnaissance de la voix (D45) :
+
+- **Faraj Elahjal, « Quran Recitation Dataset »** (`github.com/faraj-elahjal/quran-recitation-dataset`,
+  83:1–3, lecture de Qalun, ~320 lecteurs ordinaires) : licence du dépôt, permissive (utiliser,
+  copier, modifier, publier, distribuer, y compris pour entraîner des modèles ; « tel quel »).
+  Mesure locale (`tools/voice-bench`) et preuve dans le simulateur : cinq fichiers téléchargés
+  pendant la vérification iOS, vérifiés par leur SHA-256 (`tools/ci/voice-clips.json`).
+- **EveryAyah** (récitants professionnels), par le miroir `MohamedAbulgasem/Taqwa-data` : conditions
+  d'alquran.cloud, usage personnel et éducatif, droits aux récitants. **Non permissive** : mesure
+  locale seulement, hors du dépôt, jamais téléchargée par la CI.
+
 ## Mentions à prévoir dans l'appli
 
 À afficher dans un écran de crédits, sous réserve des points ci-dessus :

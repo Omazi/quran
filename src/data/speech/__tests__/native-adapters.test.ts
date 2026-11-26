@@ -230,4 +230,16 @@ describe('Whisper', () => {
     expect(Array.from(new Int16Array(data))).toEqual([-1, 300]);
     expect(options).toEqual(expect.objectContaining({ language: 'ar', translate: false }));
   });
+
+  it('reads each pass once: greedy, without the temperature fallback (D45)', async () => {
+    const { binding, context } = fakeWhisper();
+    const transcriber = createWhisperTranscriber(() => binding as unknown as WhisperBinding);
+    await transcriber.transcribe(new Int16Array([1, 2]));
+    const [, options] = context.transcribeData.mock.calls[0]!;
+    expect(options).toEqual(
+      expect.objectContaining({ temperature: 0, temperatureInc: 0, maxContext: 0 }),
+    );
+    expect(options).not.toHaveProperty('beamSize');
+    expect(options).not.toHaveProperty('prompt');
+  });
 });

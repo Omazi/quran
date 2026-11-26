@@ -76,6 +76,12 @@ interface BenchConfig {
 const QURAN_PROMPT = 'بسم الله الرحمن الرحيم';
 const CONFIGS: Readonly<Record<string, BenchConfig>> = {
   app: { model: 'ggml-quran-tiny-q8_0.bin', decoding: APP_DECODING, engine: {} },
+  /** The app before D45: whisper.cpp's temperature fallback left on. */
+  before: {
+    model: 'ggml-quran-tiny-q8_0.bin',
+    decoding: { ...APP_DECODING, temperatureInc: 0.2 },
+    engine: {},
+  },
   'no-fallback': {
     model: 'ggml-quran-tiny-q8_0.bin',
     decoding: { ...APP_DECODING, temperatureInc: 0 },

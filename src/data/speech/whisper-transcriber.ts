@@ -26,14 +26,20 @@ export interface WhisperBinding {
 }
 
 /**
- * How Whisper decodes (docs/DECISIONS.md, D42): Arabic only, greedy, without the text of the
- * previous pass as a prompt (each pass reads the whole phrase again). The number of threads is
- * whisper.rn's choice for the phone (2 on a 4-core chip, else up to 4).
+ * How Whisper decodes (docs/DECISIONS.md, D42 and D45): Arabic only, greedy, without the text of
+ * the previous pass as a prompt (each pass reads the whole phrase again), and **without the
+ * temperature fallback**. whisper.cpp's default re-reads a pass up to five times at higher
+ * temperatures, five candidates each, when it doubts its first reading; on recitations it doubted
+ * often (noise, telephone band, ordinary readers) and a doubted pass took up to 40 times longer,
+ * for the same words: measured on 612 clips, the same passages found and 7 times less computing
+ * (tools/voice-bench). The number of threads is whisper.rn's choice for the phone (2 on a 4-core
+ * chip, else up to 4).
  */
 export const WHISPER_OPTIONS = Object.freeze({
   language: 'ar',
   translate: false,
   temperature: 0,
+  temperatureInc: 0,
   maxContext: 0,
 });
 

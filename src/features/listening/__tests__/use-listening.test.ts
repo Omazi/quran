@@ -267,6 +267,36 @@ describe('what the person sees while the engine works', () => {
     expect(result.current.heardWords).toEqual(['قل', 'هو', 'الله']);
   });
 
+  it('the words not final yet are searched too: a passage they complete is found at once (D45)', async () => {
+    const hand = handEngine();
+    const { result } = await listenWith(hand.engine);
+    await wait(100);
+    await act(async () => hand.hear(['ايه', 'الكرسي']));
+    await wait(100);
+    expect(result.current.state).toMatchObject({ status: 'listening' });
+    // Ayat al-Kursi's opening, still being read: not final, yet the passage is certain.
+    await act(async () =>
+      hand.act({ partial: 'الله لا اله الا هو الحي القيوم لا تاخذه سنه'.split(' ') }),
+    );
+    await wait(100);
+    expect(result.current.state).toMatchObject({
+      status: 'found',
+      passage: { start: { surah: 2, verse: 255 } },
+    });
+  });
+
+  it('words not final yet that find nothing change nothing', async () => {
+    const hand = handEngine();
+    const { result } = await listenWith(hand.engine);
+    await wait(100);
+    await act(async () => hand.act({ partial: ['قل', 'هو'] }));
+    await wait(100);
+    expect(result.current.state).toMatchObject({ status: 'listening', heardWordCount: 0 });
+    await act(async () => hand.hear(['قل']));
+    await wait(100);
+    expect(result.current.state).toMatchObject({ status: 'listening', heardWordCount: 1 });
+  });
+
   it('a start refused with a reason: failed, with that reason', async () => {
     const hand = handEngine(new SpeechEngineError('model-missing', 'not in the app'));
     const { result } = await listenWith(hand.engine);

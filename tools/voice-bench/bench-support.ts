@@ -81,7 +81,7 @@ export const APP_DECODING: WhisperDecoding = Object.freeze({
   beam: 0,
   bestOf: 5,
   temperature: 0,
-  temperatureInc: 0.2,
+  temperatureInc: 0,
   maxContext: 0,
   prompt: '',
   threads: 2,
