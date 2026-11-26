@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { previewGardenState } from '../../garden-preview';
 import { showLanguage } from '../../test-support/screen-conditions';
@@ -34,6 +34,12 @@ beforeEach(async () => {
 
 const garden = previewGardenState({ hizbCompleted: 24 });
 
+/** The view is laid out: the GL view is only made once it has a size. */
+const layOut = () =>
+  fireEvent(screen.getByTestId('garden-3d'), 'layout', {
+    nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 272 } },
+  });
+
 describe('GardenView3D before its first frame (no GL context under Jest)', () => {
   it('shows the picture of the garden while the model loads: never a blank box', async () => {
     loadGardenModelBytes.mockReturnValue(new Promise(() => undefined));
@@ -52,6 +58,7 @@ describe('GardenView3D before its first frame (no GL context under Jest)', () =>
   it('mounts the GL view once the model is read, and keeps the picture until it draws', async () => {
     loadGardenModelBytes.mockResolvedValue(shippedGardenBytes());
     await render(<GardenView3D state={garden} />);
+    await layOut();
     expect(await screen.findByTestId('garden-3d-gl')).toBeOnTheScreen();
     expect(screen.getByTestId('garden-scene', { includeHiddenElements: true })).toBeOnTheScreen();
   });
@@ -69,6 +76,7 @@ describe('GardenView3D before its first frame (no GL context under Jest)', () =>
   it('shows no hint and offers no action before the garden can turn', async () => {
     loadGardenModelBytes.mockResolvedValue(shippedGardenBytes());
     await render(<GardenView3D state={garden} hintPlacement="below" />);
+    await layOut();
     await screen.findByTestId('garden-3d-gl');
     expect(screen.queryByTestId('garden-3d-hint', { includeHiddenElements: true })).toBeNull();
     expect(screen.getByRole('image').props.accessibilityActions).toBeUndefined();

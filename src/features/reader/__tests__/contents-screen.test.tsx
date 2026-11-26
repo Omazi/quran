@@ -4,6 +4,7 @@
  */
 
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 import { EMPTY_JOURNAL, recordPageRead } from '@/domain/khatm';
 import { parseLocalDate } from '@/domain/shared/local-date';
@@ -22,6 +23,7 @@ import {
 } from '@/ui/test-support/environment';
 import { appColors, palette, textStyles } from '@/ui/tokens';
 
+import { SkyBand } from '../contents-parts';
 import { ContentsScreen } from '../contents-screen';
 import { useContentsModel } from '../use-contents-model';
 
@@ -46,6 +48,24 @@ beforeEach(() => {
 });
 
 afterEach(resetDeviceConditions);
+
+describe('the sky of the Quran tab', () => {
+  it('goes up behind the status bar: no strip of the plain ground above the gradient', async () => {
+    const TOP = 59;
+    await render(
+      <SafeAreaInsetsContext.Provider value={{ top: TOP, right: 0, bottom: 34, left: 0 }}>
+        <SkyBand />
+      </SafeAreaInsetsContext.Provider>,
+    );
+    const above = screen.getByTestId('contents-sky-above', { includeHiddenElements: true });
+    const style = styleOf(above);
+    const height = Number(style.height);
+    expect(height).toBeGreaterThanOrEqual(TOP);
+    expect(style.top).toBe(-height);
+    // The colour the gradient starts with, so that the two meet without a seam.
+    expect(style.backgroundColor).toBe(palette.skyTop.light);
+  });
+});
 
 describe('the Quran tab', () => {
   it('opens the passage recognition from the button next to the title', async () => {

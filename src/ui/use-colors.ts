@@ -183,3 +183,8 @@ export function useColorValues(appearance?: Appearance): ColorValues {
   const resolved = appearance ?? (scheme === 'dark' ? 'dark' : 'light');
   return colorValues[isHighContrast ? 'high' : 'standard'][resolved];
 }
+
+/** The plain colours of an appearance at standard contrast: for code that holds no hook (tests). */
+export function colorValuesFor(appearance: Appearance): ColorValues {
+  return colorValues.standard[appearance];
+}

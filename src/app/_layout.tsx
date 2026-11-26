@@ -25,7 +25,7 @@ import {
 import { ScreenCheckAutoRun, screenCheckLaunch } from '@/features/screen-check';
 import { SyncProvider, useAppSync, type AppSyncDependencies } from '@/features/sync';
 import { AppStoreProvider } from '@/store';
-import { appFonts, useColors } from '@/ui';
+import { appFonts, pushedPageOptions, useColorValues } from '@/ui';
 
 // The app has been closing by itself on some phones with no log to read: before anything else
 // loads, the diagnostics start (the record of a fatal error, the trail, the error screen's
@@ -120,21 +120,11 @@ function RootStack() {
   useRouteBreadcrumbs();
   const { t } = useTranslation('onboarding');
   const { t: tSettings } = useTranslation('settings');
-  const colors = useColors();
-  // The settings page of the profile opens over the tabs, as the reader does, with the system bar,
-  // its title and its back button, a chevron alone (toolbars.md › Navigation; deviation 52). The bar
-  // takes the warm canvas and the title colour of the validated mockups, which follow the dark
-  // appearance, so it runs into the page under it (deviation 101); without them the navigation
-  // library paints its own light theme.
-  const pushedPage = {
-    headerShown: true,
-    headerTintColor: colors.actionTint,
-    headerBackButtonDisplayMode: 'minimal',
-    headerStyle: { backgroundColor: colors.canvas },
-    headerTitleStyle: { color: colors.heading },
-    headerShadowVisible: false,
-    contentStyle: { backgroundColor: colors.canvas },
-  } as const;
+  const colors = useColorValues();
+  // The settings page of the profile opens over the tabs with the system bar (deviations 52 and
+  // 101). Its colours are plain values of the appearance: a dynamic colour given to the bar was
+  // resolved as light, so the dark appearance had a cream bar over a dark page.
+  const pushedPage = pushedPageOptions(colors);
   return (
     <DiagnosticBoundary>
       <Stack screenOptions={{ headerShown: false }}>

@@ -18,6 +18,7 @@ import { freshAppDemoForTest } from '@/features/friends/test-support/demo';
 import { DIRECTION_RESTART_KEY } from '@/features/settings';
 import { REJECTED_DATA_KEY, RESET_NOTICE_KEY, STORED_DATA_KEY, STORED_DATA_VERSION } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
+import { palette } from '@/ui/tokens';
 import {
   iosPaletteColor,
   resetDeviceConditions,
@@ -370,7 +371,7 @@ describe('returning person', () => {
       .queryAll(({ type }) => type === 'RNSScreenStackHeaderConfig')
       .find(({ props }) => props.title === 'Réglages');
     expect(header).toHaveProp('hidden', false);
-    expect(header).toHaveProp('color', iosPaletteColor('actionTint'));
+    expect(header).toHaveProp('color', palette.actionTint.light);
     expect(screen.getByRole('adjustable', { name: 'Pages par jour' })).toHaveAccessibilityValue({
       text: '12',
     });
@@ -476,7 +477,7 @@ describe('returning person', () => {
       .find(({ props }) => props.title === 'Présentation');
     expect(header).toHaveProp('hidden', false);
     // The back button takes the action green of the app, not the system's blue.
-    expect(header).toHaveProp('color', iosPaletteColor('actionTint'));
+    expect(header).toHaveProp('color', palette.actionTint.light);
 
     // Opened again, the flow simply ends: "Terminé", and the system is asked nothing.
     await swipeToPage(LAST_PAGE);

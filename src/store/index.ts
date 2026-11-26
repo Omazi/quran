@@ -9,7 +9,12 @@ export {
   type AppStoreDependencies,
   type LoadedAppStore,
 } from './app-store';
-export { AppStoreProvider, useAppStore, type AppStoreProviderProps } from './app-store-context';
+export {
+  AppStoreProvider,
+  useAppStore,
+  useAppStoreApi,
+  type AppStoreProviderProps,
+} from './app-store-context';
 export {
   DAILY_GOAL_RANGE,
   DEFAULT_DAILY_GOAL_PAGES,

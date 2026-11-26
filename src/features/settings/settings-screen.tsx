@@ -43,7 +43,7 @@ const NOTICE_SYMBOL: IconSymbol = { ios: 'info.circle', android: 'info' };
  */
 export function SettingsScreen({ model, actions }: SettingsScreenProps) {
   return (
-    <Screen background="canvas" testID="settings">
+    <Screen background="canvas" hasScrollingList testID="settings">
       <GroupedList appearance="garden" testID="settings-list">
         <DataResetNoticeSection model={model} actions={actions} />
         <SettingsSections model={model} actions={actions} />

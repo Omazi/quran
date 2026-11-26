@@ -19,6 +19,7 @@ import {
   stateOpacity,
   useColors,
   useColorValues,
+  useSafeInsets,
   type IconSymbol,
 } from '@/ui';
 
@@ -389,6 +390,7 @@ const styles = StyleSheet.create({
   },
   rowWords: { flex: 1, gap: spacing.xs / 2 },
   sky: { position: 'absolute', top: 0, start: 0, end: 0, height: readerShapes.skyHeight },
+  skyAbove: { position: 'absolute', start: 0, end: 0 },
 });
 
 /**
@@ -398,8 +400,16 @@ const styles = StyleSheet.create({
  */
 export function SkyBand() {
   const colors = useColorValues();
+  // The gradient starts where the scroll content does, below the status bar (the scroll view
+  // insets itself for it): its top colour goes on up behind the bar, and past it for the bounce,
+  // so that no strip of the plain ground shows above it (iOS check of 683ad8d).
+  const reach = useSafeInsets().top + spacing.xxl;
   return (
     <View pointerEvents="none" style={styles.sky} testID="contents-sky">
+      <View
+        style={[styles.skyAbove, { top: -reach, height: reach, backgroundColor: colors.skyTop }]}
+        testID="contents-sky-above"
+      />
       <Svg width="100%" height="100%">
         <Defs>
           <LinearGradient id="contents-sky" x1="0" y1="0" x2="0" y2="1">
