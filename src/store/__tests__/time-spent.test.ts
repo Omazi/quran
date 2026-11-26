@@ -34,6 +34,8 @@ const SETTINGS: AppSettings = {
   bookmarks: [],
   readerScript: 'uthmani',
   readerTextSize: 1,
+  showLevel: true,
+  celebratedKhatm: 0,
   pauses: [],
   reminders: DEFAULT_REMINDERS,
 };

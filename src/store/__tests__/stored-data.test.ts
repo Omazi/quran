@@ -23,6 +23,8 @@ const SETTINGS: AppSettings = {
   bookmarks: [18, 293, 604],
   readerScript: 'imlaei',
   readerTextSize: 3,
+  showLevel: true,
+  celebratedKhatm: 0,
   pauses: [{ from: parseLocalDate('2026-03-01'), to: parseLocalDate('2026-03-04') }],
   reminders: {
     dailyEnabled: false,
@@ -582,6 +584,55 @@ describe('the script and the text size of the reader (D41)', () => {
     ['a size above the range', { readerTextSize: READER_TEXT_SIZE_RANGE.max + 1 }],
     ['a size that is not whole', { readerTextSize: 1.5 }],
     ['a size written as text', { readerTextSize: '2' }],
+  ])('discards the settings, and keeps the journal, for %s', (_name, change) => {
+    expect(readStoredData(settingsWith(change))).toMatchObject({
+      settings: null,
+      journal: JOURNAL,
+      discarded: ['settings'],
+    });
+  });
+});
+
+describe('the level shown to friends and the last khatma celebrated (D46)', () => {
+  it('are written and read back', () => {
+    for (const showLevel of [true, false]) {
+      for (const celebratedKhatm of [0, 1, 37]) {
+        const settings = { ...SETTINGS, showLevel, celebratedKhatm };
+        const reading = readStoredData(writeStoredData({ settings, journal: JOURNAL }));
+        expect(reading.settings).toEqual(settings);
+        expect(reading.discarded).toEqual([]);
+      }
+    }
+  });
+
+  it('upgrade a version 7 document: the level shown, nothing celebrated, nothing else changes', () => {
+    const { showLevel: _shown, celebratedKhatm: _celebrated, ...settingsOfVersion7 } = SETTINGS;
+    const reading = readStoredData(
+      JSON.stringify({ version: 7, settings: settingsOfVersion7, journal: JOURNAL, timeSpent: {} }),
+    );
+    expect(reading).toEqual({
+      settings: { ...SETTINGS, showLevel: true, celebratedKhatm: 0 },
+      journal: JOURNAL,
+      timeSpent: {},
+      discarded: [],
+      wasUpgraded: true,
+    });
+  });
+
+  it('keep an existing user at their progress: the journal is untouched by the upgrade', () => {
+    const { showLevel: _shown, celebratedKhatm: _celebrated, ...settingsOfVersion7 } = SETTINGS;
+    const reading = readStoredData(
+      JSON.stringify({ version: 7, settings: settingsOfVersion7, journal: JOURNAL }),
+    );
+    expect(reading.journal).toEqual(JOURNAL);
+  });
+
+  it.each([
+    ['a level shown written as text', { showLevel: 'yes' }],
+    ['no level shown', { showLevel: null }],
+    ['a negative khatma', { celebratedKhatm: -1 }],
+    ['a khatma that is not whole', { celebratedKhatm: 1.5 }],
+    ['a khatma written as text', { celebratedKhatm: '2' }],
   ])('discards the settings, and keeps the journal, for %s', (_name, change) => {
     expect(readStoredData(settingsWith(change))).toMatchObject({
       settings: null,

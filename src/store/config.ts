@@ -20,8 +20,11 @@ import type { ReminderSettings } from './types';
  * thus reads a version 6 document, without the reader's two choices.
  * Version 7 adds `settings.goalKind`, how the goal was chosen (1 month, 3 months, 1 year, own
  * pace): required, so a version 6 document takes `own-pace`, which is what its daily goal was.
+ * Version 8 adds `settings.showLevel` and `settings.celebratedKhatm` (D46): a version 7 document
+ * shows its level (the default) and has celebrated nothing, its journal untouched, so an existing
+ * user keeps their progress and level.
  */
-export const STORED_DATA_VERSION = 7;
+export const STORED_DATA_VERSION = 8;
 
 /** The key of the stored document. */
 export const STORED_DATA_KEY = 'app-data';
@@ -87,6 +90,12 @@ export const DAILY_GOAL_RANGE = { min: 1, max: 60 } as const;
  * The person changes it in the first-launch flow or in the settings.
  */
 export const DEFAULT_DAILY_GOAL_PAGES = 5;
+
+/** A first launch shows the person's level to their friends (D46): they can hide it. */
+export const DEFAULT_SHOW_LEVEL = true;
+
+/** No khatma celebrated yet. */
+export const NO_KHATMA_CELEBRATED = 0;
 
 /** The goal kind of a first launch, and of a document from before the goal kinds: an own pace. */
 export const DEFAULT_GOAL_KIND = 'own-pace';

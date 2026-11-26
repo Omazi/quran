@@ -24,9 +24,11 @@ import {
   DEFAULT_READER_SCRIPT,
   DEFAULT_READER_TEXT_SIZE,
   DEFAULT_REMINDERS,
+  DEFAULT_SHOW_LEVEL,
   EMPTY_TIME_SPENT,
   MAX_PAUSES,
   MAX_TIME_DAYS,
+  NO_KHATMA_CELEBRATED,
   READER_SCRIPTS,
   READER_TEXT_SIZE_RANGE,
   REJECTED_DATA_KEY,
@@ -139,6 +141,8 @@ export function createFirstLaunchSettings(userSeed: number): AppSettings {
     bookmarks: [],
     readerScript: DEFAULT_READER_SCRIPT,
     readerTextSize: DEFAULT_READER_TEXT_SIZE,
+    showLevel: DEFAULT_SHOW_LEVEL,
+    celebratedKhatm: NO_KHATMA_CELEBRATED,
     pauses: [],
     reminders: DEFAULT_REMINDERS,
   };
@@ -387,6 +391,20 @@ export function createStateStore(
           );
         }
         if (get().settings.readerTextSize !== step) changeSettings({ readerTextSize: step });
+      },
+
+      setShowLevel: (showLevel) => {
+        if (typeof showLevel !== 'boolean') {
+          throw new TypeError(`showLevel must be true or false, received ${String(showLevel)}.`);
+        }
+        if (get().settings.showLevel !== showLevel) changeSettings({ showLevel });
+      },
+
+      markKhatmaCelebrated: (khatm) => {
+        if (!Number.isSafeInteger(khatm) || khatm < 1) {
+          throw new RangeError(`A khatma is a whole number from 1, received ${String(khatm)}.`);
+        }
+        if (khatm > get().settings.celebratedKhatm) changeSettings({ celebratedKhatm: khatm });
       },
 
       recordPageRead: (pageRead) => {

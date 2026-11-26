@@ -12,6 +12,7 @@ import { isSupportedLanguage } from '@/i18n';
 import { MAX_PAUSES, MAX_TIME_DAYS, STORED_DATE_RANGE } from './config';
 import {
   isBookmarkList,
+  isCelebratedKhatm,
   isDailyGoalPages,
   isGoalKind,
   isLastOpenedPage,
@@ -48,6 +49,10 @@ export const SYNC_RULES: SyncRules = Object.freeze({
     // The reader's script and text size (D41): the person's last choice, on every phone.
     readerScript: { rule: 'latest', isValid: isReaderScript },
     readerTextSize: { rule: 'latest', isValid: isReaderTextSize },
+    // Whether friends see the level (D46): the person's last choice, on every phone.
+    showLevel: { rule: 'latest', isValid: (value: unknown) => typeof value === 'boolean' },
+    // A khatma celebrated on one phone is not celebrated again on another.
+    celebratedKhatm: { rule: 'highest', isValid: isCelebratedKhatm },
   }),
   maxPauses: MAX_PAUSES,
   maxTimeDays: MAX_TIME_DAYS,
@@ -71,6 +76,8 @@ export function toSyncedValues({ settings, journal, timeSpent }: AppData): Synce
       reminders: settings.reminders as unknown as JsonValue,
       readerScript: settings.readerScript,
       readerTextSize: settings.readerTextSize,
+      showLevel: settings.showLevel,
+      celebratedKhatm: settings.celebratedKhatm,
     },
     bookmarks: settings.bookmarks,
     pauses: settings.pauses,
@@ -105,6 +112,8 @@ export function fromSyncedValues(current: AppData, values: SyncedValues): AppDat
       reminders,
       readerScript: keep('readerScript', isReaderScript),
       readerTextSize: keep('readerTextSize', isReaderTextSize),
+      showLevel: keep('showLevel', (value) => typeof value === 'boolean'),
+      celebratedKhatm: keep('celebratedKhatm', isCelebratedKhatm),
       bookmarks: isBookmarkList(values.bookmarks) ? values.bookmarks : current.settings.bookmarks,
       pauses: values.pauses,
     },

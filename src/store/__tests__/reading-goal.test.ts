@@ -24,8 +24,8 @@ async function freshStore(storage = createMemoryStorage()) {
 }
 
 describe('the reading goal in the settings', () => {
-  it('is version 7 of the document', () => {
-    expect(STORED_DATA_VERSION).toBe(7);
+  it('came with version 7 of the document', () => {
+    expect(STORED_DATA_VERSION).toBeGreaterThanOrEqual(7);
   });
 
   it('starts on the own pace of 5 pages a day', async () => {
@@ -147,7 +147,12 @@ describe('a document written by version 6', () => {
     const reading = readStoredData(
       JSON.stringify({ version: 6, settings, journal: [], timeSpent: {} }),
     );
-    expect(reading.settings).toEqual({ ...settings, goalKind: 'own-pace' });
+    expect(reading.settings).toEqual({
+      ...settings,
+      goalKind: 'own-pace',
+      showLevel: true,
+      celebratedKhatm: 0,
+    });
     expect(reading.discarded).toEqual([]);
     expect(reading.wasUpgraded).toBe(true);
   });
