@@ -10,7 +10,7 @@ arch=x86
 case "$(uname -m)" in aarch64|arm64) arch=arm ;; esac
 
 flags=(-O3 -DNDEBUG -D_GNU_SOURCE -DWSP_GGML_USE_CPU -DWSP_GGML_USE_CPU_REPACK -pthread
-  -march=native -I"$cpp" -I"$cpp/ggml-cpu")
+  -march=native -I"$cpp" -I"$cpp/ggml-cpu" -I"$here/../../native/quran-decoding")
 c_sources=(ggml.c ggml-alloc.c ggml-cpu/ggml-cpu.c ggml-cpu/quants.c ggml-quants.c
   "ggml-cpu/arch/$arch/quants.c")
 cxx_sources=(ggml.cpp ggml-backend.cpp ggml-backend-meta.cpp ggml-backend-reg.cpp
@@ -33,6 +33,7 @@ for src in "${cxx_sources[@]}"; do
   while [ "$(jobs -r | wc -l)" -ge 2 ]; do sleep 0.5; done
 done
 wait
-g++ -std=c++17 "${flags[@]}" "$here/whisper-driver.cpp" "${objects[@]}" -o "$out"
+g++ -std=c++17 "${flags[@]}" "$here/whisper-driver.cpp" \
+  "$here/../../native/quran-decoding/quran-decoding.cpp" "${objects[@]}" -o "$out"
 [ -n "${OBJ_DIR:-}" ] || rm -rf "$obj"
 echo "built $out"

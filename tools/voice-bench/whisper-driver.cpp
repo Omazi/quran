@@ -10,7 +10,19 @@
 //            maxctx=<m> prompt=<p>" (beam 0: greedy; prompt: byte length of a UTF-8 prompt
 //            that follows the line), the prompt bytes, then n little-endian int16 samples.
 //   answer:  {"text":"...","ms":<compute milliseconds>}
+//
+//   or, to read the audio again held to passages (native/quran-decoding, D47):
+//   request: "held samples=<n> threads=<t> minletters=<m> freecost=<f> firsts=<k> margin=<g>
+//            texts=<b>", then b bytes:
+//            the texts,
+//            separated by form feeds, each in the index format of quran-decoding.h; then the
+//            samples.
+//   answer:  {"readings":[{"text":"...","cost":<c>,"letters":<l>,"freeLetters":<f>,
+//            "passageLetters":<p>,"tokens":<t>,
+//            "deadEnd":<b>,"abandoned":<b>}],
+//            "ms":<compute milliseconds>}
 #include "whisper.h"
+#include "quran-decoding.h"
 
 #include <chrono>
 #include <cstdio>
@@ -65,7 +77,12 @@ int main(int argc, char **argv) {
     while (std::getline(std::cin, line)) {
         if (line.empty()) continue;
         long samples = 0, prompt_len = 0;
-        int threads = 2, beam = 0, bestof = 5, maxctx = 0;
+        int threads = 2, beam = 0, bestof = 5, maxctx = 0, minletters = 0;
+        float freecost = 2.0f;
+        int firsts = 3;
+        double margin = 0.0;
+        long texts_len = 0;
+        const bool held = line.rfind("held ", 0) == 0;
         float temp = 0.0f, tinc = 0.2f;
         std::istringstream in(line);
         std::string kv;
@@ -81,9 +98,16 @@ int main(int argc, char **argv) {
             else if (k == "tinc") tinc = static_cast<float>(atof(v.c_str()));
             else if (k == "maxctx") maxctx = atoi(v.c_str());
             else if (k == "prompt") prompt_len = atol(v.c_str());
+            else if (k == "minletters") minletters = atoi(v.c_str());
+            else if (k == "freecost") freecost = static_cast<float>(atof(v.c_str()));
+            else if (k == "firsts") firsts = atoi(v.c_str());
+            else if (k == "margin") margin = atof(v.c_str());
+            else if (k == "texts") texts_len = atol(v.c_str());
         }
         std::string prompt(static_cast<size_t>(prompt_len), '\0');
         if (prompt_len > 0) std::cin.read(&prompt[0], prompt_len);
+        std::string texts(static_cast<size_t>(texts_len), '\0');
+        if (texts_len > 0) std::cin.read(&texts[0], texts_len);
         std::vector<int16_t> pcm(static_cast<size_t>(samples));
         if (samples > 0) std::cin.read(reinterpret_cast<char *>(pcm.data()), samples * 2);
         if (!std::cin) break;
@@ -93,6 +117,35 @@ int main(int argc, char **argv) {
         for (size_t i = 0; i < pcm.size(); ++i) {
             float x = static_cast<float>(pcm[i]) / 32767.0f;
             audio[i] = x < -1.0f ? -1.0f : (x > 1.0f ? 1.0f : x);
+        }
+
+        if (held) {
+            std::vector<std::shared_ptr<const quran_decoding::Index>> indexes;
+            size_t from = 0;
+            while (from <= texts.size()) {
+                size_t to = texts.find('\f', from);
+                if (to == std::string::npos) to = texts.size();
+                indexes.push_back(quran_decoding::build_index(texts.substr(from, to - from)));
+                from = to + 1;
+            }
+            quran_decoding::ReadOptions options;
+            options.threads = threads;
+            options.min_letters = minletters;
+            options.free_letter_cost = freecost;
+            options.first_choices = firsts;
+            options.margin = margin;
+            auto t0 = std::chrono::steady_clock::now();
+            auto readings = quran_decoding::read_held_to(ctx, audio.data(), static_cast<int>(audio.size()),
+                                                         indexes, options);
+            double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+            const std::string out = "{\"readings\":" + quran_decoding::readings_json(readings);
+            if (getenv("WHISPER_DRIVER_VERBOSE") != nullptr) {
+                whisper_print_timings(ctx);
+                whisper_reset_timings(ctx);
+            }
+            printf("%s,\"ms\":%.1f}\n", out.c_str(), ms);
+            fflush(stdout);
+            continue;
         }
 
         // RNWhisperJSI.cpp, createTranscribeConfig.
