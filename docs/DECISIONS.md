@@ -943,3 +943,39 @@ Choix de mise en œuvre (développeur, 26 novembre 2026) :
 
 _Changerait si_ le propriétaire voit les images provisoires et préfère une autre solution, ou
 change l'ordre des jardins avant que des badges existent.
+
+## D47 — On demande le genre, pour accorder les phrases
+
+Décision du propriétaire (26 novembre 2026) : **on demandera le genre**. Le français, l'arabe et,
+dans une moindre mesure, l'anglais accordent des phrases selon la personne à qui l'on parle et celle
+dont on parle (« Encouragée aujourd’hui », « Lire avec elle », « اقرئي معها »). Sans réponse, le
+texte reste neutre : « Lire avec Sarah ».
+
+- **Une valeur, trois états** : `male`, `female` ou rien (« Préférer ne pas dire », et par défaut).
+  Réglage `gender` du téléphone (le plus récent gagne ; « rien » est un choix valide qui remplace un
+  autre) et `genderAsked` (vrai gagne) pour ne poser la question qu'une fois.
+- **Où on le demande** : une ligne « Je suis » dans les Réglages (Un homme, Une femme, Préférer ne
+  pas dire) et une petite carte, une seule fois, dans l'onglet Profil (« Pour s'adresser à toi
+  correctement »). Facultative, jamais bloquante ; toute réponse, même « préférer ne pas dire », la
+  fait disparaître. Rien dans l'introduction (en refonte, autre chantier).
+- **Qui le voit** : les amis acceptés, par `list_friends()` et `get_friend_garden()` (colonne
+  `profiles.gender`, migration `20261126120000_profile_gender.sql`). Un inconnu, une personne
+  bloquée ou non connectée ne le voit jamais ; la recherche par nom ne le rend pas (règle 4, D36).
+  Les règles d'accès (RLS) ne changent pas.
+- **Les textes** : contexte i18next `_male` / `_female`, avec un texte de repli neutre. Deux usages à
+  ne pas confondre : le genre de **la personne à qui l'on parle** (impératifs arabes, participes
+  français ; crochet `useGenderedTranslation`) et celui de **la personne dont on parle** (lui/elle,
+  him/her, suffixes arabes ; toujours passé en `context` explicite sur la page d'un ami). Un texte
+  qui dépend des deux (« اقرئي معها ») reçoit le genre de l'ami en contexte et celui de la personne
+  par le verbe interpolé `friend.readVerb`. Les notifications arabes qui s'adressent à la personne
+  (« متى شئتَ / شئتِ ») prennent le genre du réglage ; « حديقتك » ne change pas.
+- **Arabe par défaut** : quand le genre n'est pas précisé, l'impératif arabe garde la forme
+  conventionnelle au masculin ; seules les formes féminines (`_female`) sont écrites.
+- **À faire plus tard** : la vraie couche serveur ne publie pas encore le profil (ni le jardin) ; elle
+  devra envoyer `settings.gender` par `updateMyProfile({ gender })`. Les impératifs arabes des
+  écrans Accueil, Écoute, Lecteur et Réglages, et « Je ne t'ai pas entendu » (Écoute, français),
+  n'ont pas encore de forme féminine ; l'introduction et « Mes jardins » (autre chantier) non plus.
+  La migration n'est appliquée à aucun projet distant.
+
+_Changerait si_ le propriétaire préfère ne pas conserver le genre sur le serveur (alors seul le
+réglage du téléphone resterait, et la page d'un ami redeviendrait neutre).

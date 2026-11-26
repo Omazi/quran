@@ -39,9 +39,11 @@ Les noms ci-dessous sont ceux du code (anglais). Les tables portent les mêmes n
 `snake_case`.
 
 - **Profile** : `id` (celui du compte), `displayName`, `showGarden` (vrai par défaut),
-  `showLevel` (vrai par défaut), `createdOn`.
+  `showLevel` (vrai par défaut), `gender` (`male`, `female` ou rien ; rien par défaut, D47),
+  `createdOn`.
   Décision du propriétaire : niveau et jardin visibles par défaut, avec un réglage pour les
-  cacher (D23).
+  cacher (D23). Le genre n'est vu que **par les amis** (jamais par un inconnu ni dans la
+  recherche) : il sert uniquement à accorder les phrases (« Lire avec lui », « avec elle »).
 - **GardenSummary**, une ligne par personne, publiée par son appli : `level` (numéro de la
   khatma en cours, 1 pour la première), `hizbCompleted` (0 à 60), `health` (0 à 1),
   `lastWateredOn` (jour, ou rien), `streakDays`, `badgeCount`, `updatedOn`. C'est tout ce
