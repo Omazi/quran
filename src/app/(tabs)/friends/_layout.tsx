@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
-import { useTranslation } from 'react-i18next';
 
+import { useGenderedTranslation } from '@/features/gender';
 import { DiagnosticBoundary } from '@/features/diagnostics';
 import { useColorValues } from '@/ui';
 
@@ -25,7 +25,7 @@ export const unstable_settings = { initialRouteName: 'index' };
  * their title; both follow the dark appearance (deviation 49).
  */
 export default function FriendsLayout() {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   const colors = useColorValues();
   const page = {
     headerShown: true,

@@ -83,6 +83,8 @@ export function useReminderSync({
   const journal = useAppStore((state) => state.journal);
   const lastOpenedPage = useAppStore((state) => state.settings.lastOpenedPage);
   const savedLanguage = useAppStore((state) => state.settings.language);
+  // The Arabic texts agree with the person: a new answer asks for new texts.
+  const gender = useAppStore((state) => state.settings.gender);
   const hizbPageRanges = useMemo(() => quranStructure.hizbPageRanges(), []);
   // Bumped by what the store does not tell: the foreground, the system's answer, a new day.
   const [wakeUps, setWakeUps] = useState(0);
@@ -122,6 +124,7 @@ export function useReminderSync({
         input,
         language,
         buildReminderResume(source, hizbPageRanges),
+        gender,
       );
     } catch (error) {
       // A journal that cannot be read must not wipe the reminders the person already has.
@@ -142,6 +145,7 @@ export function useReminderSync({
     journal,
     lastOpenedPage,
     savedLanguage,
+    gender,
     wakeUps,
     clock,
     sync,

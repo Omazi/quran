@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { useGenderedTranslation } from '@/features/gender';
 import type { Invite } from '@/domain/social';
 import {
   ActionButton,
@@ -67,7 +67,7 @@ export interface FriendsListScreenProps {
  * the same size, the preferred one in the stronger style (buttons.md › Style).
  */
 export function FriendsListScreen({ model, refusal, actions, invite }: FriendsListScreenProps) {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   const fewRequests = model.requests.length <= MOST_PROMINENT_REQUESTS;
   const acceptKind: ActionButtonVariant = fewRequests ? 'filled' : 'tonal';
   const declineKind: ActionButtonVariant = fewRequests ? 'tonal' : 'outline';
@@ -202,7 +202,7 @@ function AddCard({
   invite: Invite | null;
   actions: FriendsListActions;
 }) {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   const colors = useColors();
   return (
     <Card contentGap="md" testID="friends-add-card">

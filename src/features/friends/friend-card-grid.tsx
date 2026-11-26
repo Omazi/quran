@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
+import { useGenderedTranslation } from '@/features/gender';
 import type { GardenPhase } from '@/domain/garden';
 import type { UserId } from '@/domain/social';
 import { GARDEN_PICTURE_ASPECT_RATIO, GardenScene } from '@/features/garden';
@@ -84,7 +84,7 @@ function FriendGardenCard({
   isExample: boolean;
   onOpen: (userId: UserId) => void;
 }) {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   const colors = useColors();
   const isWell = card.garden === null || WELL.has(card.garden.phase);
   const label = cardLabel(card, t);

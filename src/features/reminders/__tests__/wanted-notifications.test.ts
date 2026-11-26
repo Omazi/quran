@@ -265,3 +265,80 @@ describe('where a reminder sends the person', () => {
     }
   });
 });
+
+describe('the notifications and the gender of the person', () => {
+  const HISTORIES = [
+    'bare-earth',
+    'thriving',
+    'thirsty',
+    'wilting',
+    'dying',
+    'dead',
+    'recovering',
+  ] as const;
+
+  function arabicTexts(
+    history: (typeof HISTORIES)[number],
+    gender: 'male' | 'female' | null,
+  ): { texts: string[]; signatures: string[] } {
+    const source = sourceOf(history);
+    const notifications = buildWantedNotifications(
+      buildReminderInput(source, MORNING, RANGES),
+      'ar',
+      buildReminderResume(source, RANGES),
+      gender,
+    );
+    return {
+      texts: notifications.map(({ title, body }) => `${title} ${body}`),
+      signatures: notifications.map((notification) => notification.signature),
+    };
+  }
+
+  it('gives a woman the feminine Arabic where there is one, a man the masculine, nobody the plain', () => {
+    let withAForm = 0;
+    for (const history of HISTORIES) {
+      const plain = arabicTexts(history, null);
+      const male = arabicTexts(history, 'male');
+      const female = arabicTexts(history, 'female');
+      expect(female.texts).toHaveLength(plain.texts.length);
+      plain.texts.forEach((text, index) => {
+        if (text.includes('متى شئت')) {
+          withAForm += 1;
+          expect(male.texts[index]).toContain('شئتَ');
+          expect(female.texts[index]).toContain('شئتِ');
+        } else {
+          // Whatever the variant of the day, a text with no feminine form is the same for all.
+          expect(male.texts[index]).toBe(text);
+          expect(female.texts[index]).toBe(text);
+        }
+      });
+    }
+    expect(withAForm).toBeGreaterThan(0);
+  });
+
+  it('a new gender changes the signature of a notification that says it differently, so it is replaced', () => {
+    for (const history of HISTORIES) {
+      const plain = arabicTexts(history, null);
+      const female = arabicTexts(history, 'female');
+      plain.texts.forEach((text, index) => {
+        const isSame = female.texts[index] === text;
+        expect(female.signatures[index] === plain.signatures[index]).toBe(isSame);
+      });
+    }
+  });
+
+  it('French and English are the same for everyone', () => {
+    const source = sourceOf('dead');
+    for (const language of ['fr', 'en'] as const) {
+      const build = (gender: 'male' | 'female' | null) =>
+        buildWantedNotifications(
+          buildReminderInput(source, MORNING, RANGES),
+          language,
+          buildReminderResume(source, RANGES),
+          gender,
+        );
+      expect(build('female')).toEqual(build(null));
+      expect(build('male')).toEqual(build(null));
+    }
+  });
+});

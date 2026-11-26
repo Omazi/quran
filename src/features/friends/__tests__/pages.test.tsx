@@ -180,7 +180,7 @@ describe("a friend's page", () => {
     await render(withStore(store, <FriendPage userId={DEMO_USERS.sarah} goBack={jest.fn()} />));
     const button = await screen.findByRole('button', { name: 'Encourager Sarah' });
     await fireEvent.press(button);
-    expect(await screen.findByRole('button', { name: 'Encouragé aujourd’hui' })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: 'Encouragée aujourd’hui' })).toBeDisabled();
   });
 
   it('asks before removing, in the destructive style, then goes back', async () => {
@@ -254,7 +254,7 @@ describe("a friend's page", () => {
         <FriendPage userId={DEMO_USERS.sarah} goBack={jest.fn()} openReader={openReader} />,
       ),
     );
-    await fireEvent.press(await screen.findByRole('button', { name: 'Lire avec Sarah' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Lire avec elle' }));
     expect(openReader).toHaveBeenCalledTimes(1);
   });
 
@@ -287,8 +287,8 @@ describe("a friend's page", () => {
     );
     // The two buttons of the visit, the soft one first (maquettes 2026-11-26, "friend").
     expect(within(card).getByRole('button', { name: 'Encourager Mostapha' })).toBeOnTheScreen();
-    expect(within(card).getByRole('button', { name: 'Lire avec Mostapha' })).toHaveTextContent(
-      'Lire avec Mostapha',
+    expect(within(card).getByRole('button', { name: 'Lire avec lui' })).toHaveTextContent(
+      'Lire avec lui',
     );
   });
 

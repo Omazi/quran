@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
 
+import { useGenderedTranslation } from '@/features/gender';
 import type { GroupId, UserId } from '@/domain/social';
 import type { ConfirmAction } from '@/ui';
 
@@ -31,7 +31,7 @@ export type { FriendOptionsItem, FriendOptionsMenu } from './friend-screen';
  */
 
 function Failed() {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   return (
     <FriendsUnavailable
       title={t('failed.title')}
@@ -107,7 +107,7 @@ function FriendPageContent({
   /** Draws the More menu in the navigation bar (see `FriendScreen`). */
   renderOptions?: (menu: FriendOptionsMenu) => ReactNode;
 }) {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   const { state, refusal, actions } = useFriendPage(userId, { goBack, confirm });
   const name =
     state.status !== 'ready'
@@ -161,7 +161,7 @@ function GroupPageContent({
   openPerson(userId: UserId): void;
   onTitle?: (title: string) => void;
 }) {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   const { state, refusal, actions } = useGroup(groupId, { openPerson });
   useTitle(state.status === 'ready' ? state.value.name : null, onTitle);
   if (state.status === 'loading') return <FriendsLoading testID="group-loading" />;

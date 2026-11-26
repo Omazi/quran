@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { useGenderedTranslation } from '@/features/gender';
 import { ContentUnavailable, ProgressIndicator, type IconSymbol } from '@/ui';
 
 import { FriendsPage } from './friends-kit';
@@ -13,7 +13,7 @@ const FAILED_SYMBOL: IconSymbol = { ios: 'person.2', android: 'group' };
  * flashes grey before the page. With the demonstration it lasts a moment.
  */
 export function FriendsLoading({ testID }: { testID?: string }) {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   return (
     <FriendsPage isBare testID={testID}>
       <View style={styles.centre}>

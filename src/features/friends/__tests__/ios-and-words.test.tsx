@@ -184,6 +184,12 @@ describe.each(['fr', 'ar'] as const)('on iOS (%s)', (language) => {
 /** Suffixes i18next adds to a key that depends on a number, by plural category. */
 const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/;
 
+/**
+ * Suffixes of a key that depends on the gender of a person (`key_male`, `key_female`): a language
+ * writes them only where its grammar needs them, so the languages are compared without them.
+ */
+const GENDER_SUFFIX = /_(male|female)$/;
+
 function keysOf(value: unknown, prefix = ''): string[] {
   if (typeof value === 'string') return [prefix];
   if (typeof value !== 'object' || value === null) return [];
@@ -197,11 +203,26 @@ describe('translations of the tab', () => {
     const plain = (language: 'fr' | 'en' | 'ar') =>
       [
         ...new Set(
-          keysOf(resources[language].friends).map((key) => key.replace(PLURAL_SUFFIX, '')),
+          keysOf(resources[language].friends).map((key) =>
+            key.replace(PLURAL_SUFFIX, '').replace(GENDER_SUFFIX, ''),
+          ),
         ),
       ].sort();
     expect(plain('en')).toEqual(plain('fr'));
     expect(plain('ar')).toEqual(plain('fr'));
+  });
+
+  it('give every text that has a form for one gender the form for the other, and the plain text', () => {
+    for (const language of ['fr', 'en', 'ar'] as const) {
+      const keys = keysOf(resources[language].friends);
+      for (const key of keys.filter((other) => GENDER_SUFFIX.test(other))) {
+        const plain = key.replace(GENDER_SUFFIX, '');
+        // Gendered keys come as a pair, so a person never gets a form while the other gets none
+        // (viewer-gendered texts may give only the feminine: the plain Arabic is the masculine).
+        expect(keys).toContain(plain);
+        if (key.endsWith('_male')) expect(keys).toContain(`${plain}_female`);
+      }
+    }
   });
 
   it('give Arabic every plural form it needs', () => {

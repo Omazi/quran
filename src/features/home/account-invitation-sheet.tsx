@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
+import { useGenderedTranslation } from '@/features/gender';
 import type { SignInProvider } from '@/domain/social';
 import { APPLE_LOGO, SIGN_IN_BUTTON_KINDS, useSignIn } from '@/features/friends';
 import { ActionButton, AppText, layout, spacing } from '@/ui';
@@ -22,7 +23,7 @@ export interface AccountInvitationSheetProps {
  */
 export function AccountInvitationSheet({ onDismiss, onOpenEmail }: AccountInvitationSheetProps) {
   const { t } = useTranslation('home');
-  const { t: tFriends } = useTranslation('friends');
+  const { t: tFriends } = useGenderedTranslation('friends');
   const { model, actions } = useSignIn();
   const press: Record<SignInProvider, () => void> = {
     apple: actions.signInWithApple,

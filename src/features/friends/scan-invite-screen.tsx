@@ -1,7 +1,7 @@
 import { CameraView } from 'expo-camera';
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { useGenderedTranslation } from '@/features/gender';
 import { ActionButton, AppText, Card, Icon, layout, radius, type IconSymbol } from '@/ui';
 
 import { FriendsPage, FriendsRow } from './friends-kit';
@@ -27,7 +27,7 @@ export interface ScanInviteScreenProps {
  * single "Continuer" button opens the system question (privacy.md › Pre-alert screens).
  */
 export function ScanInviteScreen({ model, actions }: ScanInviteScreenProps) {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   if (model.camera === 'unknown') return <FriendsLoading testID="scan-loading" />;
   if (model.camera !== 'granted' || model.cameraFailed) {
     const state =

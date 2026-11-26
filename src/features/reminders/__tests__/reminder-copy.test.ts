@@ -237,3 +237,82 @@ describe('the sources', () => {
     }
   });
 });
+
+describe('the words follow the gender of the person who reads them (owner, 26 November 2026)', () => {
+  const GENDERS = ['male', 'female', null] as const;
+
+  it('is neutral by default: no gender given gives the plain text, as before', () => {
+    for (const kind of KINDS) {
+      for (const language of LANGUAGES) {
+        expect(reminderText(kind, TUESDAY, language, { ...SOME_DAY, gender: null })).toEqual(
+          reminderText(kind, TUESDAY, language, SOME_DAY),
+        );
+      }
+    }
+  });
+
+  it('French and English do not change: nothing they say to the person depends on gender', () => {
+    for (const language of ['fr', 'en'] as const) {
+      for (const kind of KINDS) {
+        for (const date of DAYS) {
+          const plain = reminderText(kind, date, language, SOME_DAY);
+          for (const gender of GENDERS) {
+            expect(reminderText(kind, date, language, { ...SOME_DAY, gender })).toEqual(plain);
+          }
+        }
+      }
+    }
+  });
+
+  it('Arabic says «متى شئتَ» to a man and «متى شئتِ» to a woman, and the unmarked «متى شئت» otherwise', () => {
+    const seen = new Set<string>();
+    for (const date of DAYS) {
+      const plain = reminderText('come-back', date, 'ar', SOME_DAY).body;
+      if (!plain.includes('متى شئت')) continue;
+      seen.add(date);
+      expect(reminderText('come-back', date, 'ar', { ...SOME_DAY, gender: 'male' }).body).toContain(
+        'متى شئتَ',
+      );
+      expect(
+        reminderText('come-back', date, 'ar', { ...SOME_DAY, gender: 'female' }).body,
+      ).toContain('متى شئتِ');
+      expect(plain).not.toMatch(/شئت[َِ]/);
+    }
+    // The wording is one of the variants of the kind: it comes up within ten weeks.
+    expect(seen.size).toBeGreaterThan(0);
+  });
+
+  it('the Arabic of the other reminders is written neutrally: the same for a man and a woman', () => {
+    for (const kind of KINDS) {
+      for (const date of DAYS) {
+        const male = reminderText(kind, date, 'ar', { ...SOME_DAY, gender: 'male' });
+        const female = reminderText(kind, date, 'ar', { ...SOME_DAY, gender: 'female' });
+        const plain = reminderText(kind, date, 'ar', SOME_DAY);
+        if (plain.body.includes('متى شئت')) continue;
+        expect(male).toEqual(plain);
+        expect(female).toEqual(plain);
+      }
+    }
+  });
+
+  it.each(['male', 'female'] as const)(
+    'a %s text is as short as the others for a lock screen, and has no left-over placeholder',
+    (gender) => {
+      for (const kind of KINDS) {
+        for (const date of DAYS) {
+          const { title, body } = reminderText(kind, date, 'ar', { ...SOME_DAY, gender });
+          expect(visibleLength(title)).toBeLessThanOrEqual(TITLE_LIMIT);
+          expect(visibleLength(body)).toBeLessThanOrEqual(BODY_LIMIT);
+          expect(`${title} ${body}`).not.toMatch(/\{\{|\}\}/);
+        }
+      }
+    },
+  );
+
+  it('the examples of the first launch (`kinds`) have the same forms', () => {
+    const entry = ar.kinds['come-back'];
+    expect(entry.body_male).toContain('شئتَ');
+    expect(entry.body_female).toContain('شئتِ');
+    expect(visibleLength(entry.body_female)).toBeLessThanOrEqual(BODY_LIMIT);
+  });
+});
