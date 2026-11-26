@@ -1250,3 +1250,57 @@ export const stateOpacity = {
   /** A step under way, shown at half strength (accueil.png: the dot of the hizb being read). */
   inProgress: 0.45,
 } as const;
+
+/**
+ * The image a person shares of a badge (docs/specs/ui-lot1.md is silent on it: owner's decision of
+ * 26 November 2026). It is a picture, not a screen: drawn on a fixed 1080 × 1350 grid of design
+ * units, always in the light appearance, whatever the device's, and never scaled by the person's
+ * text size (typography.md › Supporting Dynamic Type is for text people read in the app). One
+ * design unit is one pixel of the finished image: the card multiplies every number below by
+ * `1 / PixelRatio.get()` points, so the capture comes out at exactly this size.
+ * Portrait 4:5 is the tallest ratio Instagram and WhatsApp keep whole. Colours: `palette` and
+ * `appColors` in their light values; fonts: `fontFamily`.
+ */
+export const shareCardShape = {
+  width: 1080,
+  height: 1350,
+  /** The two gold rules of the frame (the mushaf's frame, mushaf.png), from the edge. */
+  frameOuterInset: 40,
+  frameOuterWidth: 3,
+  frameInnerInset: 56,
+  frameInnerWidth: 1.5,
+  paddingTop: 116,
+  paddingBottom: 100,
+  /** The badge, with its glow around it. */
+  badgeSize: 500,
+  glowRadius: 460,
+  gardenSize: 38,
+  gardenLineHeight: 48,
+  titleSize: 76,
+  titleLineHeight: 92,
+  nameSize: 44,
+  nameLineHeight: 56,
+  dateSize: 38,
+  dateLineHeight: 48,
+  figureSize: 72,
+  figureLineHeight: 84,
+  figureLabelSize: 36,
+  figureLabelLineHeight: 46,
+  figureDividerWidth: 2,
+  figureDividerHeight: 96,
+  duaSize: 88,
+  duaLineHeight: 124,
+  appIconSize: 84,
+  appIconRadiusShare: 0.225,
+  appNameSize: 48,
+  appNameLineHeight: 60,
+  /** Gaps between the blocks, from the top of the card. */
+  gapBadgeToGarden: 28,
+  gapGardenToTitle: 20,
+  gapTitleToDate: 14,
+  gapDateToFigures: 56,
+  gapFiguresToDua: 40,
+  footerGap: 24,
+  /** Width of the row of figures. */
+  figuresWidth: 800,
+} as const;

@@ -42,6 +42,7 @@ export {
   MINIMUM_FONT_SIZE,
   radius,
   readerShapes,
+  shareCardShape,
   spacing,
   stateOpacity,
   storyMotion,
