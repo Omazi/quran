@@ -432,6 +432,8 @@ describeBench('voice benchmark', () => {
   const streams = (manifest?.streams ?? []).filter((s) => only === null || only.test(s.id));
   const clips = clipsOf(streams);
   const tag = env.VOICE_BENCH_TAG ?? '';
+  /** Names the scores of one scoring (matcher variants) without changing what is read. */
+  const scoreTag = env.VOICE_BENCH_SCORE_TAG ?? '';
   const outFile = `${work}/listen-${configName}${tag}.jsonl`;
   let index: VerseIndex;
 
@@ -587,7 +589,7 @@ describeBench('voice benchmark', () => {
   (phase.includes('score') ? it : it.skip)('scores what was heard', () => {
     const listened = new Map<string, Listened>();
     for (const record of readJsonl<Listened>(outFile)) listened.set(record.clip, record);
-    writeScores(listened, `${configName}${tag}`);
+    writeScores(listened, `${configName}${tag}${scoreTag}`);
     expect(listened.size).toBeGreaterThan(0);
   });
 
@@ -665,7 +667,7 @@ describeBench('voice benchmark', () => {
         endedAt: reading.audioMs,
       });
     }
-    writeScores(listened, `offline-${configName}${tag}`);
+    writeScores(listened, `offline-${configName}${tag}${scoreTag}`);
     expect(listened.size).toBeGreaterThan(0);
   });
 });
