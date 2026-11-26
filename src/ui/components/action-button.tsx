@@ -20,9 +20,11 @@ import { AppText } from './app-text';
  * beside it, pale green ("Partager", "Encourager"). `outline`: a white capsule with a thin border
  * ("Continuer avec Google"). `contrast`: black by day, white at night ("Continuer avec Apple").
  * `plain`: green words ("Tout voir", "Ajouter"). `destructive`: red words (removing, blocking).
+ * `onAction`: a white capsule with deep green words, on the green of the listening page
+ * ("Reconnaître" in the card "Quel est ce passage ?", maquettes 2026-11-26, 3A).
  */
 export type ActionButtonVariant =
-  'filled' | 'tonal' | 'outline' | 'contrast' | 'plain' | 'destructive';
+  'filled' | 'tonal' | 'outline' | 'contrast' | 'plain' | 'destructive' | 'onAction';
 
 export interface ActionButtonProps {
   /** Says what the button does, starting with a verb. Omit only for a button with a symbol. */
@@ -44,6 +46,11 @@ export interface ActionButtonProps {
   fullWidth?: boolean;
   /** Shares a row with other buttons at the same width (flex 1). */
   grows?: boolean;
+  /**
+   * A smaller capsule, inside a card that is itself the call to action (3A): the 44-point
+   * minimum and the size of a subhead. Defaults to false.
+   */
+  isCompact?: boolean;
   disabled?: boolean;
   /**
    * A done state ("Encouragé aujourd'hui"): disabled, but drawn at full strength, because its
@@ -65,6 +72,7 @@ const LOOK: Readonly<
   contrast: { background: 'contrastButton', foreground: 'onContrastButton' },
   plain: { foreground: 'actionTint' },
   destructive: { foreground: 'destructiveText' },
+  onAction: { background: 'actionCapsule', foreground: 'onActionCapsule' },
 };
 
 /**
@@ -86,6 +94,7 @@ export function ActionButton({
   onPress,
   fullWidth = true,
   grows = false,
+  isCompact = false,
   disabled = false,
   isDone = false,
   testID,
@@ -113,6 +122,7 @@ export function ActionButton({
           isWords ? styles.words : styles.capsule,
           // Sharing a row, a capsule keeps its label on one line as long as it can.
           grows && !isWords ? styles.capsuleInRow : null,
+          isCompact && !isWords ? styles.compact : null,
           label === undefined ? styles.iconOnly : null,
           look.background === undefined ? null : { backgroundColor: colors[look.background] },
           look.border === undefined
@@ -123,7 +133,11 @@ export function ActionButton({
         ]}
       >
         {symbol === undefined ? null : (
-          <Icon symbol={symbol} textStyle="headline" color={look.foreground} />
+          <Icon
+            symbol={symbol}
+            textStyle={isCompact ? 'subheadEmphasized' : 'headline'}
+            color={look.foreground}
+          />
         )}
         {leading === undefined ? null : (
           <View
@@ -135,7 +149,12 @@ export function ActionButton({
           </View>
         )}
         {label === undefined ? null : (
-          <AppText variant="headline" color={look.foreground} align="center" style={styles.label}>
+          <AppText
+            variant={isCompact ? 'subheadEmphasized' : 'headline'}
+            color={look.foreground}
+            align="center"
+            style={styles.label}
+          >
             {label}
           </AppText>
         )}
@@ -162,6 +181,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   capsuleInRow: { paddingHorizontal: spacing.sm },
+  compact: {
+    minHeight: layout.touchTarget,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
   words: {
     minHeight: layout.touchTarget,
     minWidth: layout.touchTarget,

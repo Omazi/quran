@@ -42,7 +42,12 @@
       "hizb": "Hizb {{hizb}}",
       "start": "{{surah}}, verse {{verse}} · Page {{page}}"
     },
-    "recognize": "Recognize a Passage"
+    "recognize": "Recognize a Passage",
+    "recognizeCard": {
+      "title": "What’s This Passage?",
+      "text": "Play a recitation and the app finds the verse.",
+      "action": "Recognize"
+    }
   },
   "page": {
     "subtitle": "Juz {{juz}}, Hizb {{hizb}} · Page {{page}}",

@@ -35,6 +35,11 @@ function Contents() {
   return <ContentsScreen model={model} actions={actions} onRecognize={openRecognition} />;
 }
 
+function ContentsWithoutRecognition() {
+  const { model, actions } = useContentsModel(openPage);
+  return <ContentsScreen model={model} actions={actions} />;
+}
+
 async function renderContents(store: AppStore = createTestAppStore()) {
   await render(
     <AppStoreProvider store={store}>
@@ -68,14 +73,47 @@ describe('the sky of the Quran tab', () => {
 });
 
 describe('the Quran tab', () => {
-  it('opens the passage recognition from the button next to the title', async () => {
+  it('opens the passage recognition from the green card at the top of the tab (mockup 3A)', async () => {
     await showLanguage('fr');
     await renderContents();
-    const button = screen.getByTestId('contents-recognize');
-    expect(button.props.accessibilityRole).toBe('button');
-    expect(button.props.accessibilityLabel).toBe('Reconnaître un passage');
+    const card = screen.getByTestId('contents-recognize-card');
+    expect(
+      within(card).getByRole('header', { name: 'Quel est ce passage\u202f?' }),
+    ).toBeOnTheScreen();
+    expect(
+      within(card).getByText('Fais écouter une récitation, l’appli retrouve le verset.'),
+    ).toBeOnTheScreen();
+    const button = within(card).getByRole('button', { name: 'Reconnaître un passage' });
+    expect(button).toHaveTextContent('Reconnaître');
+    expect(touchTargetHeight(button)).toBeGreaterThanOrEqual(44);
     await fireEvent.press(button);
     expect(openRecognition).toHaveBeenCalledTimes(1);
+  });
+
+  it('puts the card first, above the card of the day, and nothing next to the title', async () => {
+    await showLanguage('fr');
+    await renderContents();
+    // The small symbol beside "Coran" is gone: the card is the one way in on this tab.
+    expect(screen.queryByTestId('contents-recognize')).toBeNull();
+    const list = screen.getByTestId('contents-list');
+    const order = list.queryAll(
+      ({ props }) =>
+        props.testID === 'contents-recognize-card' || props.testID === 'contents-today',
+    );
+    expect(order.map(({ props }) => props.testID)).toEqual([
+      'contents-recognize-card',
+      'contents-today',
+    ]);
+  });
+
+  it('has no card without a way to open the recognition', async () => {
+    await showLanguage('fr');
+    await render(
+      <AppStoreProvider store={createTestAppStore()}>
+        <ContentsWithoutRecognition />
+      </AppStoreProvider>,
+    );
+    expect(screen.queryByTestId('contents-recognize-card')).toBeNull();
   });
 
   it('opens page 1 for a new person, from the cream resume card of the mockup', async () => {

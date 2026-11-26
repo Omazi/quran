@@ -54,7 +54,12 @@
       "hizb": "الحزب {{hizb}}",
       "start": "{{surah}}، الآية {{verse}} · صفحة {{page}}"
     },
-    "recognize": "التعرّف على مقطع"
+    "recognize": "التعرّف على مقطع",
+    "recognizeCard": {
+      "title": "ما هذا المقطع؟",
+      "text": "أسمِع التطبيق تلاوةً، فيجد لك الآية.",
+      "action": "تعرّف"
+    }
   },
   "page": {
     "subtitle": "الجزء {{juz}}، الحزب {{hizb}} · صفحة {{page}}",

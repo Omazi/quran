@@ -863,6 +863,14 @@ export const pieceSizes = {
   actionHeight: 52,
   /** A drawn mark in place of a symbol in a button: the rosette of "Reconnaître" (3C: 24). */
   markInButton: 24,
+  /**
+   * The card "Quel est ce passage ?" of the Quran tab (maquettes 2026-11-26, 3A): its rosette,
+   * the faint stars behind it, and how far they reach past the card's top and trailing edges.
+   */
+  recognizeRosette: 100,
+  recognizeHalo: 230,
+  recognizeHaloTop: -40,
+  recognizeHaloEnd: -46,
   /** A friend's card in the row of neighbouring gardens. */
   neighbourCardWidth: 140,
   /** A sheet's corners (nouveau.png), and its margin from the screen's edges. */

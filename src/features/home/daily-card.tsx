@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
-import { RosetteMark } from '@/features/listening';
+// The mark alone, not the whole listening module (which reaches the reader, then the home screen).
+import { RosetteMark } from '@/features/listening/rosette/rosette-mark';
 
 import {
   ActionButton,

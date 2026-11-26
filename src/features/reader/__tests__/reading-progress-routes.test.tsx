@@ -170,9 +170,19 @@ async function closeReader(): Promise<void> {
   await fireEvent.press(screen.getByRole('button', { name: 'Retour' }));
 }
 
-/** The hizb count written under the garden of the home screen. */
+/**
+ * The hizb count of the home screen: the sixty dots under the garden, whose value is said in
+ * words. (The line above them names the hizb in progress, "Hizb 1 sur 60", maquettes
+ * 2026-11-26, 1A.)
+ */
 function homeHizbCount(text: string) {
-  return within(screen.getByTestId('home')).findByText(text);
+  return waitFor(() => {
+    const dots = within(screen.getByTestId('home')).getByRole('progressbar', {
+      name: 'Hizb terminés',
+    });
+    expect(dots.props.accessibilityValue?.text).toBe(text);
+    return dots;
+  });
 }
 
 function accessibilityLabelOf(testID: string): string {

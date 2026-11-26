@@ -25,19 +25,20 @@ import {
   TodayCard,
   type ReaderChoiceOption,
 } from './contents-parts';
+import { RecognizeCard } from './recognize-card';
 import { surahDisplayName } from './surah-name';
 import type { ContentsActions, ContentsModel, ContentsView } from './use-contents-model';
 
 const NO_RESULT_SYMBOL: IconSymbol = { ios: 'magnifyingglass', android: 'search' };
 const PAGE_SYMBOL: IconSymbol = { ios: 'book.pages', android: 'auto_stories' };
-const RECOGNIZE_SYMBOL: IconSymbol = { ios: 'waveform.and.magnifyingglass', android: 'graphic_eq' };
 
 export interface ContentsScreenProps {
   model: ContentsModel;
   actions: ContentsActions;
   /**
    * Opens the passage recognition ("Shazam", `/listening`): the reader's microphone follows the
-   * recitation now (spec reader 3b), so the recognition is reached from here.
+   * recitation now (spec reader 3b), so the recognition is reached from here, by the card at the
+   * top of the tab. Without it, there is no card.
    */
   onRecognize?: () => void;
 }
@@ -50,6 +51,8 @@ export interface ContentsScreenProps {
  * (layout.md › Visual hierarchy):
  *
  * - the title, in the serif of the mockups' titles;
+ * - the green card "Quel est ce passage ?" that opens the recognition (maquettes 2026-11-26, 3A,
+ *   chosen by the owner; the small symbol that stood next to the title is gone);
  * - the white card of the day: the water ring with today's pages toward the goal, then the cream
  *   card "Al-Kahf · Reprendre page 293" with the Arabic name in gold, the most likely action;
  * - the inline search field, above the list it searches (search-fields.md › Search as an inline
@@ -68,24 +71,10 @@ export function ContentsScreen({ model, actions, onRecognize }: ContentsScreenPr
     <Screen background="canvas" scroll testID="contents">
       <SkyBand />
       <View style={styles.content} testID="contents-list">
-        <View style={styles.titleRow}>
-          <AppText variant="largeTitle" color="ink" style={styles.title}>
-            {t('contents.title')}
-          </AppText>
-          {onRecognize === undefined ? null : (
-            // A trailing action next to the title, a symbol with its label for VoiceOver
-            // (toolbars.md › Actions: simple, recognizable symbols; 44-point target).
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('contents.recognize')}
-              onPress={onRecognize}
-              testID="contents-recognize"
-              style={({ pressed }) => [styles.recognize, pressed && styles.pressed]}
-            >
-              <Icon symbol={RECOGNIZE_SYMBOL} textStyle="title2" color="actionTint" />
-            </Pressable>
-          )}
-        </View>
+        <AppText variant="largeTitle" color="ink">
+          {t('contents.title')}
+        </AppText>
+        {onRecognize === undefined ? null : <RecognizeCard onRecognize={onRecognize} />}
         <TodayCard
           today={model.today}
           resume={model.resume}
@@ -221,14 +210,6 @@ function SearchResults({ model, actions }: ContentsScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  title: { flex: 1 },
-  recognize: {
-    minWidth: layout.touchTarget,
-    minHeight: layout.touchTarget,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   content: {
     gap: spacing.md,
     paddingHorizontal: layout.screenMargin,
