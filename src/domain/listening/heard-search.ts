@@ -34,7 +34,7 @@ export function searchHeardWords(index: VerseIndex, words: readonly string[]): S
  * The search while a phrase is still being read (D45): the final words, then the words of the
  * latest reading that are not final yet. Whisper only makes a word final once two readings in a
  * row agree on it, about a reading later than it first wrote it: searching these words too
- * announces the passage about 1.3 s sooner (median, measured on 312 clips), with the same
+ * announces the passage about 1.3 s sooner (median, measured on 312 clips, D45), with the same
  * thresholds and no passage announced wrongly. Only a `found` counts (the words not final yet may
  * still change): otherwise null, and the answer for the final words stands.
  */

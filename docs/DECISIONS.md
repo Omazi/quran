@@ -816,3 +816,98 @@ de l'accueil, et des fleurs, canaux et murs, regardé.
 à chaque image pendant la pousse (environ 2 s).
 
 _Changerait si_ le propriétaire veut un arbre sans feuilles jusqu'à 75 %, ou d'autres seuils.
+
+## D45 — La reconnaissance de la voix mesurée sur de vraies récitations, puis réglée
+
+Décidé le 26 novembre 2026 (développeur, branche `work/voice-bench`), à la demande du
+propriétaire : « la reconnaissance est super importante ; personne n'a prouvé qu'elle reconnaît
+une vraie récitation de bout en bout ». Complète D42.
+
+**Le banc** (`tools/voice-bench`, README) : whisper.cpp 1.9.3 compilé depuis les sources que
+whisper.rn 0.7.4 embarque, le modèle de l'appli (même SHA-256), les réglages de l'appli, **le vrai
+moteur** (`whisper-speech-engine.ts`, rejoué sur une horloge simulée, chaque lecture comptée
+`350 ms + 20 ms par mot` comme sur un iPhone : estimation) et **la vraie recherche**. 102
+enregistrements : 30 lecteurs ordinaires (jeu de Faraj Elahjal, 83:1–3, téléphone 8 kHz, licence
+permissive, voix inconnues des tests) et 6 récitants professionnels sur 24 passages, sourates
+courtes et longues (EveryAyah : usage personnel et éducatif, mesure locale seulement ; **le modèle
+a probablement été entraîné sur ces voix**, leurs chiffres sont optimistes). Extraits de 3, 6 et
+10 s, un sur deux commençant au milieu d'un verset ; propre, bruit de pièce à 20 et 10 dB, bande
+téléphonique. Aucun son dans le dépôt.
+
+**Ce qui a été mesuré** (top-1 : premier passage annoncé juste ; « faux » : un autre passage
+annoncé ; top-3 : le bon passage parmi les trois premiers classés à la fin) :
+
+| Écoute comme sur le téléphone, 312 extraits | Avant               | Après               |
+| ------------------------------------------- | ------------------- | ------------------- |
+| top-1 / faux / top-3                        | 60,3 % / 0 / 72,4 % | 61,5 % / 0 / 72,4 % |
+| 10 s propres · bruit 10 dB · téléphone      | 77 · 69 · 73 %      | 77 · 73 · 73 %      |
+| 3 s · 6 s (propres)                         | 13 · 54 %           | 15 · 56 %           |
+| lecteurs ordinaires · professionnels        | 44 · 68 %           | 45 · 69 %           |
+| temps médian jusqu'au bon passage           | 6,5 s               | **5,2 s**           |
+
+Ce temps compte chaque lecture de Whisper au même prix (estimation iPhone) : il ne montre pas le
+repli de température (point 1 ci-dessous). Mesuré à part, sur cet ordinateur (2 cœurs x86, rien
+d'autre en cours), mêmes extraits lus avec et sans repli : les 20 extraits les plus lents, **16,0 s
+au pire avec le repli, 1,3 s sans** (63,6 s de calcul au total contre 18,8 s) ; 24 autres extraits
+pris au hasard, 6,5 s au pire contre 1,1 s (29,1 s contre 17,4 s) ; 78 débuts d'enregistrement de
+10 s, aucune différence (0,78 s par lecture, RTF 0,08). Sur 612 extraits lus en entier, mêmes
+réponses : 60,9 % / 0 faux / 71,1 % avec le repli, 60,3 % / 0 / 71,1 % sans. Jamais
+un autre passage annoncé, dans aucune mesure. Un extrait de 3 s ne contient souvent que 2 à 4 mots :
+trop peu pour la recherche (3 mots au moins), c'est voulu.
+
+**Changé dans l'appli** :
+
+1. **Plus de repli de température** (`temperatureInc: 0`, `whisper-transcriber.ts`). Par défaut,
+   whisper.cpp relit une lecture dont il doute jusqu'à cinq fois, à des températures croissantes,
+   cinq candidats chaque fois. Sur ces récitations il doute de temps en temps (bruit, téléphone, lecteurs
+   ordinaires, un mot coupé à la fin du son) : une lecture pouvait durer 12 fois plus, pour les
+   mêmes passages trouvés. Sur l'iPhone, une lecture qui dure fige les mots à l'écran, et au-delà
+   de 20 s l'écoute échoue (`transcribeTimeoutMs`).
+2. **Les mots pas encore définitifs sont cherchés aussi** (`searchWithPartialWords`,
+   `use-listening.ts`) : un mot ne devient définitif qu'à l'accord de deux lectures, une lecture
+   plus tard ; chercher aussi les mots de la dernière lecture annonce le passage 1,3 s plus tôt
+   (médiane), avec les mêmes seuils, sans aucun passage faux. Seul un `found` compte.
+3. **306 transcriptions réelles** dans les tests (`__fixtures__/bench-recitations.ts`) : la
+   recherche ne doit jamais nommer un autre passage et doit en trouver au moins autant.
+
+**Essayé, pas retenu** :
+
+- **Recherche en faisceau** (beam 3) : +1 point en écoute (63 %), +3 en lecture entière, pour
+  1,7 à 2,2 fois plus de calcul et des réponses un peu plus lentes. Pas assez pour un coût non
+  mesuré sur l'iPhone.
+- **Phrase d'amorce** (« بسم الله الرحمن الرحيم ») : **sans aucun effet** avec `maxContext: 0`
+  (whisper.cpp ne lit l'amorce que si le contexte est permis : transcriptions identiques sur 260
+  extraits) ; avec un contexte de 64 jetons, **pire** : 53 % au lieu de 58 % (le modèle écrit la
+  basmala ou mange les premiers mots, surtout sur 3 s).
+- **Seuils de la recherche** (8 variantes : fenêtre des derniers mots 6 ou 12, mots proches à 0,65
+  ou 0,6, seuils de score, pénalités) : au mieux +2 points, toujours au prix de plus de passages
+  annoncés sur des suites de mots tirés au hasard du Coran (6 sur 1 000 aujourd'hui ; 10 à 19 sur
+  1 000 avec les variantes), et parfois un passage faux sur les vrais extraits. La règle « jamais
+  sûr à tort » passe avant : rien changé.
+
+**Le levier qui reste : le modèle `base`** (`tarteel-ai/whisper-base-ar-quran`, Apache-2.0, GGML
+q5_1, 59,7 Mo, même publication que `tiny`) — en lecture entière sur 260 extraits : **66 % au lieu
+de 58 %**, lecteurs ordinaires **52 % au lieu de 35 %**, bruit 10 dB 81 % au lieu de 69 %, sans
+aucun passage faux ; mais environ 4 fois plus de calcul (RTF 0,35) et 16 Mo de plus dans l'appli.
+D42 l'avait écarté pour le temps, sur un seul enregistrement. **Question au propriétaire** : passer à
+`base` après une mesure du temps d'une lecture sur un vrai iPhone (la preuve du simulateur donne
+déjà le temps sur le processeur d'un Mac).
+
+**Autre piste pour le propriétaire** : quand rien n'est trouvé, montrer « peut-être » les trois
+passages les plus proches. Le bon passage y est 10 points plus souvent qu'en top-1 (72 % contre
+62 %). C'est un changement d'écran, à dessiner : pas fait.
+
+**La preuve native** : la version de contrôle de la vérification iOS fait lire de vraies
+récitations par le module natif à la place du micro (même convertisseur, mêmes morceaux, temps
+réel), puis par le vrai Whisper et la vraie recherche, dans le simulateur ; le passage trouvé et la
+durée de chaque lecture sont publiés dans `crash-report.txt` (`docs/voice-test-clips.md`). Le module
+refuse tout fichier hors de son dossier `voice-proof` ; une version TestFlight n'appelle jamais
+cette fonction.
+
+**Pas vérifié** : la durée d'une lecture sur un iPhone avec Metal (estimée, jamais mesurée ici) ;
+le micro d'un iPhone dans une vraie pièce ; des récitants professionnels jamais entendus par le
+modèle ; d'autres passages que 83:1–3 chez des lecteurs ordinaires ; la compilation du nouveau code
+Swift (`startFile`) et la preuve elle-même, qui attendent la prochaine vérification iOS.
+
+_Changerait si_ un iPhone montre que `base` tient le rythme (le prendre), ou que `tiny` est trop
+lent même sans repli (relire moins souvent : `passEveryMs`).
