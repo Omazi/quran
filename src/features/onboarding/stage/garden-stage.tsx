@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -96,10 +96,17 @@ function previewPictures(stage: PreviewStage): StagePictures {
   return stage === 0 ? { base } : { base, flowing: `${base}-w2` };
 }
 
-/** The layers the pages around `pageIndex` may show: nothing else is decoded (memory). */
-function layersNear(gardens: readonly (StageGarden | null)[], pageIndex: number): Set<LayerKey> {
+/**
+ * The layers the pages around `pageIndex` may show, mounted (at opacity 0 when not shown) so that
+ * nothing is decoded for the first time during a swipe (motion spec §0.5). Within `reach` pages.
+ */
+function layersNear(
+  gardens: readonly (StageGarden | null)[],
+  pageIndex: number,
+  reach = MOUNTED_REACH,
+): Set<LayerKey> {
   const keys = new Set<LayerKey>();
-  for (let page = pageIndex - 2; page <= pageIndex + 2; page += 1) {
+  for (let page = pageIndex - reach; page <= pageIndex + reach; page += 1) {
     const garden = gardens[page];
     if (garden === undefined || garden === null) continue;
     keys.add(garden);
@@ -107,6 +114,57 @@ function layersNear(gardens: readonly (StageGarden | null)[], pageIndex: number)
   }
   if (keys.has('d14') && keys.has('g60')) keys.add('revival');
   return keys;
+}
+
+/** Garden layers stay mounted two pages around the page shown (the spec asks −1 … +2). */
+const MOUNTED_REACH = 2;
+/** One page further, their pictures are decoded ahead, before they mount. */
+const DECODED_REACH = 3;
+
+/** The picture files of a layer of the story (the rise pictures and the three of a garden). */
+function layerAssets(key: LayerKey): number[] {
+  if (key === 'preview') return [];
+  if (key === 'revival') return layerAssets('g60');
+  if (key.startsWith('rise:')) {
+    const hizb = RISE_HIZB[key.slice('rise:'.length) as StageGarden];
+    const asset = hizb === undefined ? undefined : riseAsset(hizb);
+    return asset === undefined ? [] : [asset];
+  }
+  const pictures = STORY_PICTURES[key as Exclude<StageGarden, 'preview'>];
+  return [
+    baseAsset(pictures.base),
+    pictures.still === undefined ? undefined : waterAsset(pictures.still),
+    pictures.flowing === undefined ? undefined : waterAsset(pictures.flowing),
+  ].filter((asset): asset is number => asset !== undefined);
+}
+
+/**
+ * Decodes ahead the pictures of the layers about to mount (`Image.loadAsync`) and keeps them
+ * decoded while they are near; the ones left behind are let go (memory: a decoded picture is
+ * about 4 MB, the story has some thirty).
+ */
+function useDecodedAhead(gardens: readonly (StageGarden | null)[], pageIndex: number): void {
+  const decoded = useRef(new Map<number, unknown>());
+  useEffect(() => {
+    const wanted = new Set<number>();
+    for (const key of layersNear(gardens, pageIndex, DECODED_REACH)) {
+      for (const asset of layerAssets(key)) wanted.add(asset);
+    }
+    const kept = decoded.current;
+    for (const asset of [...kept.keys()]) if (!wanted.has(asset)) kept.delete(asset);
+    if (typeof Image.loadAsync !== 'function') return;
+    for (const asset of wanted) {
+      if (kept.has(asset)) continue;
+      kept.set(asset, null);
+      Image.loadAsync(asset).then(
+        (ref) => {
+          if (kept.has(asset)) kept.set(asset, ref);
+        },
+        // A picture that cannot be decoded ahead is decoded when it mounts, as before.
+        () => kept.delete(asset),
+      );
+    }
+  }, [gardens, pageIndex]);
 }
 
 export interface GardenStageProps extends StageProps {
@@ -131,6 +189,7 @@ export function GardenStage(props: GardenStageProps) {
     remindersScale: layout.remindersScale,
   };
   const near = layersNear(gardens, pageIndex);
+  useDecodedAhead(gardens, pageIndex);
   const crackPages = pages.some((page, index) => page.isDry && isNear(pageIndex, index, 2));
   const box = layout.garden;
   const look = useAnimatedStyle(() => {

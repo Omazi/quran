@@ -90,8 +90,10 @@ function AutoSwipe({ drive }: { drive: PagerDrive }) {
         await sleep(swipe.pauseMs);
         const { length, isRightToLeft } = latest.current;
         // Forwards: to the left in a left-to-right interface, or upwards on a vertical pager, as
-        // a finger turns the page.
-        const reach = (isRightToLeft ? 1 : -1) * 0.45 * length;
+        // a finger turns the page. Past half a page, so that the page turns even if a slow frame
+        // of the simulator counts as a rest before the lift (the first launch's pager then drops
+        // the release speed, as for a finger that stopped).
+        const reach = (isRightToLeft ? 1 : -1) * 0.55 * length;
         const velocity = reach / (swipe.dragMs / 1000);
         progress.line(
           `pager: swipe ${index + 1}/${plan.length} from page ${latest.current.page + 1}`,
