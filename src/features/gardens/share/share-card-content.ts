@@ -24,6 +24,7 @@ export interface ShareCardFigure {
 export interface ShareCardContent {
   readonly khatm: number;
   readonly styleId: GardenStyleId;
+  readonly completedOn: LocalDate;
   readonly appName: string;
   /** "Khatma n°3 terminée". */
   readonly title: string;
@@ -73,6 +74,7 @@ export function buildShareCardContent(
   return {
     khatm: input.khatm,
     styleId: input.styleId,
+    completedOn: input.completedOn,
     appName,
     title: t('share.title', { khatm: input.khatm }),
     garden: t(`styles.${input.styleId}`),

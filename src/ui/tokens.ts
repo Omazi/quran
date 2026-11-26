@@ -1269,11 +1269,17 @@ export const shareCardShape = {
   frameOuterWidth: 3,
   frameInnerInset: 56,
   frameInnerWidth: 1.5,
-  paddingTop: 116,
-  paddingBottom: 100,
+  /**
+   * The body (badge to invocation) is centred between these two paddings, so that a card with a
+   * name and a card without one both sit evenly above the footer.
+   */
+  bodyPaddingTop: 96,
+  bodyPaddingBottom: 216,
+  /** The footer (icon and name of the app) rests this far from the bottom edge. */
+  footerBottom: 84,
   /** The badge, with its glow around it. */
-  badgeSize: 500,
-  glowRadius: 460,
+  badgeSize: 420,
+  glowRadius: 440,
   gardenSize: 38,
   gardenLineHeight: 48,
   titleSize: 76,
@@ -1288,17 +1294,17 @@ export const shareCardShape = {
   figureLabelLineHeight: 46,
   figureDividerWidth: 2,
   figureDividerHeight: 96,
-  duaSize: 88,
-  duaLineHeight: 124,
+  duaSize: 84,
+  duaLineHeight: 104,
   appIconSize: 84,
   appIconRadiusShare: 0.225,
   appNameSize: 48,
   appNameLineHeight: 60,
   /** Gaps between the blocks, from the top of the card. */
-  gapBadgeToGarden: 28,
-  gapGardenToTitle: 20,
-  gapTitleToDate: 14,
-  gapDateToFigures: 56,
+  gapBadgeToGarden: 24,
+  gapGardenToTitle: 16,
+  gapTitleToDate: 12,
+  gapDateToFigures: 44,
   gapFiguresToDua: 40,
   footerGap: 24,
   /** Width of the row of figures. */

@@ -65,6 +65,7 @@ export {
   useBackdropGradient,
   useColors,
   useColorValues,
+  colorValuesFor,
   useElevation,
   type Colors,
   type ColorValues,

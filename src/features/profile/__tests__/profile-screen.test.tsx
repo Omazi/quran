@@ -35,6 +35,9 @@ jest.mock('expo-notifications', () =>
     .loadQuietly(),
 );
 
+jest.mock('expo-sharing', () => ({ isAvailableAsync: jest.fn(), shareAsync: jest.fn() }));
+jest.mock('react-native-view-shot', () => ({ captureRef: jest.fn(), releaseCapture: jest.fn() }));
+
 const table = buildFixtureTable();
 const loadTable = () => Promise.resolve(table);
 // Wednesday 25 November 2026, in the afternoon.
@@ -243,6 +246,15 @@ describe('ProfileScreen › statistics', () => {
     expect(screen.getByLabelText('Niveau 3, à venir')).toBeOnTheScreen();
     // The garden to come is never named.
     expect(screen.queryByText('Verger au bord de l’eau')).toBeNull();
+  });
+
+  it('shares the badge earned as a picture, from the "Partager" under it', async () => {
+    await renderProfile();
+    expect(screen.getAllByRole('button', { name: /^Partager le badge/ })).toHaveLength(1);
+    await fireEvent.press(screen.getByRole('button', { name: 'Partager le badge de la khatma 1' }));
+    expect(
+      await screen.findByText('Khatma n°1 terminée', { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
   });
 
   it('lets the person hide their level from friends, and says what they see', async () => {
