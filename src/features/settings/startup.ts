@@ -9,7 +9,11 @@ import {
   type StoredDataPart,
 } from '@/store';
 
-import { alignDirectionAtStartup, type WritingDirectionPlatform } from './writing-direction';
+import {
+  alignDirectionAtStartup,
+  isLaidOutFor,
+  type WritingDirectionPlatform,
+} from './writing-direction';
 
 export interface StartupDependencies {
   /** Where the settings and the journal are kept. */
@@ -59,11 +63,14 @@ export async function startApp({
   const { store, discarded, restoredFromBackup } = await loadAppStore({ storage, backup, now });
   const language = resolveLanguage(store.getState().settings.language, getDeviceLanguageCodes());
   initI18n(language);
-  // The copy of the progress may be adopted while the app runs (it can arrive late): the texts
-  // then follow its language at once, the layout at the next start, as for a change in Réglages.
+  // The language kept may change while the app runs (Réglages, or a copy of the progress adopted
+  // late). Its texts show at once only when its direction is the running one: the layout is fixed
+  // until the next start, and texts of the other direction would leave the app half mirrored.
+  // Réglages restarts the app for those; otherwise they wait for the next start.
   store.subscribe((state, previous) => {
     if (state.settings.language !== previous.settings.language) {
-      setDisplayedLanguage(resolveLanguage(state.settings.language, getDeviceLanguageCodes()));
+      const next = resolveLanguage(state.settings.language, getDeviceLanguageCodes());
+      if (isLaidOutFor(next, direction)) setDisplayedLanguage(next);
     }
   });
   const isLaidOutForLanguage = await alignDirectionAtStartup(language, {

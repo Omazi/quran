@@ -17,7 +17,13 @@
     },
     "deviceLanguageMissing": "L’appli n’est pas encore traduite dans la langue de ton téléphone. Choisis-en une ci-dessus.",
     "restartNote": "Le sens d’écriture changera au prochain démarrage de l’appli.",
-    "restart": "Redémarrer l’appli"
+    "restart": "Redémarrer l’appli",
+    "restartConfirm": {
+      "title": "Redémarrer en français ?",
+      "message": "L’appli redémarre pour tout afficher en français, de gauche à droite. Ta progression est gardée.",
+      "restart": "Redémarrer",
+      "cancel": "Annuler"
+    }
   },
   "goal": {
     "title": "Objectif du jour",

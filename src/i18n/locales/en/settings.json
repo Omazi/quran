@@ -17,7 +17,13 @@
     },
     "deviceLanguageMissing": "The app is not translated into your phone’s language yet. Choose one above.",
     "restartNote": "The writing direction will change the next time the app starts.",
-    "restart": "Restart the App"
+    "restart": "Restart the App",
+    "restartConfirm": {
+      "title": "Restart in English?",
+      "message": "The app restarts to show everything in English, left to right. Your progress is kept.",
+      "restart": "Restart",
+      "cancel": "Cancel"
+    }
   },
   "goal": {
     "title": "Daily Goal",

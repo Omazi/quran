@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import {
   createInertNotificationPermissions,
@@ -17,6 +17,8 @@ import {
   touchTargetHeight,
   withDescendants,
 } from '@/ui/test-support/environment';
+
+import type { ConfirmAction, ConfirmActionOptions } from '@/ui';
 
 import { SettingsScreen } from '../settings-screen';
 import {
@@ -44,6 +46,7 @@ const NO_BREAK_SPACE = ' ';
 interface SettingsHarnessProps {
   notifications: NotificationPermissions;
   direction: WritingDirectionPlatform;
+  confirm: ConfirmAction;
   getDeviceLanguageCodes?: () => readonly (string | null)[];
   openSystemSettings: () => void;
   openIntroduction: () => void;
@@ -71,10 +74,13 @@ async function renderSettings({
   const direction = createFixedDirection(rightToLeft);
   const openSystemSettings = jest.fn();
   const openIntroduction = jest.fn();
+  // The confirmation the system would show: kept, so that each test answers it.
+  const confirm = jest.fn<void, [ConfirmActionOptions]>();
   const store = await renderWithStore(
     <SettingsHarness
       notifications={notifications}
       direction={direction.platform}
+      confirm={confirm}
       getDeviceLanguageCodes={() => deviceLanguages}
       openSystemSettings={openSystemSettings}
       openIntroduction={openIntroduction}
@@ -83,7 +89,14 @@ async function renderSettings({
   );
   // The permission is read when the screen appears.
   await waitFor(async () => expect(await notifications.getStatus()).toBeDefined());
-  return { store, direction, openSystemSettings, openIntroduction, notifications };
+  return { store, direction, openSystemSettings, openIntroduction, notifications, confirm };
+}
+
+/** The last confirmation asked for. */
+function lastConfirmation(confirm: jest.Mock<void, [ConfirmActionOptions]>): ConfirmActionOptions {
+  const options = confirm.mock.calls.at(-1)?.[0];
+  if (options === undefined) throw new Error('No confirmation was asked for.');
+  return options;
 }
 
 function stepper() {
@@ -225,23 +238,24 @@ describe('language setting', () => {
     expect(screen.queryByTestId('restart-app')).toBeNull();
   });
 
-  it('offers the restart when the phone’s language is written the other way', async () => {
+  it('restarts at once, after asking, when the phone’s language is written the other way', async () => {
     // French was chosen on a phone set to Arabic: the app runs left to right.
-    const { store, direction } = await renderSettings({
+    const { store, direction, confirm } = await renderSettings({
       settings: { language: 'fr' },
       deviceLanguages: ['ar'],
     });
     await fireEvent.press(screen.getByRole('radio', { name: 'Langue du téléphone' }));
 
+    // Asked in the language that is coming, which the person chose.
+    expect(lastConfirmation(confirm)).toMatchObject({
+      title: 'إعادة التشغيل بالعربية؟',
+      confirmLabel: 'إعادة التشغيل',
+      cancelLabel: 'إلغاء',
+      isDestructive: false,
+    });
+    await act(async () => lastConfirmation(confirm).onConfirm());
     expect(store.getState().settings.language).toBeNull();
-    expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'اللغة');
-    expect(screen.getByRole('radio', { name: 'لغة الهاتف' })).toBeChecked();
-    expect(
-      screen.getByText('سيتغيّر اتجاه الكتابة عند تشغيل التطبيق في المرة القادمة.'),
-    ).toBeOnTheScreen();
     expect(direction.recorded()).toBe(true);
-    expect(direction.platform.restart).not.toHaveBeenCalled();
-    await fireEvent.press(screen.getByRole('button', { name: 'إعادة تشغيل التطبيق' }));
     expect(direction.platform.restart).toHaveBeenCalledTimes(1);
   });
 
@@ -290,33 +304,82 @@ describe('language setting', () => {
     expect(screen.queryByTestId('restart-app')).toBeNull();
   });
 
-  it('shows Arabic at once, says that the direction waits for a restart, and offers it', async () => {
-    const { store, direction } = await renderSettings();
+  it('never leaves the app half mirrored: Arabic asks first, and changes nothing until the restart', async () => {
+    const { store, direction, confirm } = await renderSettings();
     await fireEvent.press(screen.getByRole('radio', { name: 'العربية' }));
 
-    expect(store.getState().settings.language).toBe('ar');
-    // The texts are in Arabic, so the note can be read by the person who chose it.
-    expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'اللغة');
-    expect(
-      screen.getByText('سيتغيّر اتجاه الكتابة عند تشغيل التطبيق في المرة القادمة.'),
-    ).toBeOnTheScreen();
-    // The direction is recorded for the next start, and nothing restarts by itself.
-    expect(direction.recorded()).toBe(true);
+    // Nothing changed yet: the texts, the language kept and the direction are still French.
+    expect(store.getState().settings.language).toBeNull();
+    expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'Langue');
+    expect(direction.platform.setRightToLeft).not.toHaveBeenCalled();
     expect(direction.platform.restart).not.toHaveBeenCalled();
+    expect(lastConfirmation(confirm)).toMatchObject({
+      title: 'إعادة التشغيل بالعربية؟',
+      message: 'سيُعاد تشغيل التطبيق ليظهر كلّه بالعربية، من اليمين إلى اليسار. يبقى تقدّمك محفوظًا.',
+    });
 
-    await fireEvent.press(screen.getByRole('button', { name: 'إعادة تشغيل التطبيق' }));
+    // Confirmed: the language is kept, the direction recorded, then the app starts again.
+    await act(async () => lastConfirmation(confirm).onConfirm());
+    expect(store.getState().settings.language).toBe('ar');
+    expect(direction.recorded()).toBe(true);
     expect(direction.platform.restart).toHaveBeenCalledTimes(1);
   });
 
-  it('withdraws the restart when the person returns to a language of the running direction', async () => {
-    const { direction } = await renderSettings();
+  it('saves the language on the phone before restarting', async () => {
+    const { store, direction, confirm } = await renderSettings();
+    const order: string[] = [];
+    let finishSaving: () => void = () => {};
+    jest.spyOn(store, 'whenSaved').mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          finishSaving = () => {
+            order.push('saved');
+            resolve();
+          };
+        }),
+    );
+    jest.mocked(direction.platform.restart).mockImplementation(async () => {
+      order.push('restart');
+    });
     await fireEvent.press(screen.getByRole('radio', { name: 'العربية' }));
-    expect(screen.getByTestId('restart-app')).toBeOnTheScreen();
+    await act(async () => lastConfirmation(confirm).onConfirm());
+    expect(direction.platform.restart).not.toHaveBeenCalled();
+    await act(async () => finishSaving());
+    expect(order).toEqual(['saved', 'restart']);
+  });
 
-    await fireEvent.press(screen.getByRole('radio', { name: 'Français' }));
-    expect(screen.queryByTestId('restart-app')).toBeNull();
-    expect(direction.recorded()).toBe(false);
+  it('keeps everything as it was when the person cancels', async () => {
+    const { store, direction, confirm } = await renderSettings({ settings: { language: 'fr' } });
+    await fireEvent.press(screen.getByRole('radio', { name: 'العربية' }));
+    expect(confirm).toHaveBeenCalledTimes(1);
+    // Cancel: the system closes the sheet and `onConfirm` is never called.
+    expect(store.getState().settings.language).toBe('fr');
+    expect(screen.getByRole('radio', { name: 'Français' })).toBeChecked();
     expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'Langue');
+    expect(direction.platform.setRightToLeft).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('restart-app')).toBeNull();
+  });
+
+  it('from Arabic to French: asks in French, then restarts left to right', async () => {
+    const { store, direction, confirm } = await renderSettings({
+      language: 'ar',
+      rightToLeft: true,
+      settings: { language: 'ar' },
+    });
+    await fireEvent.press(screen.getByRole('radio', { name: 'Français' }));
+    expect(store.getState().settings.language).toBe('ar');
+    expect(screen.getByTestId('language')).toHaveProp('accessibilityLabel', 'اللغة');
+    expect(lastConfirmation(confirm)).toMatchObject({
+      title: 'Redémarrer en français ?',
+      message:
+        'L’appli redémarre pour tout afficher en français, de gauche à droite. Ta progression est gardée.',
+      confirmLabel: 'Redémarrer',
+      cancelLabel: 'Annuler',
+    });
+    await act(async () => lastConfirmation(confirm).onConfirm());
+    expect(store.getState().settings.language).toBe('fr');
+    expect(direction.recorded()).toBe(false);
+    expect(direction.platform.restart).toHaveBeenCalledTimes(1);
   });
 
   it('says a restart is needed when the app runs in the other direction than its language', async () => {
@@ -328,14 +391,20 @@ describe('language setting', () => {
     expect(screen.getByRole('button', { name: 'Redémarrer l’appli' })).toBeOnTheScreen();
   });
 
-  it('keeps the note when the restart fails', async () => {
+  it('keeps the note and its button when the restart fails', async () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    const { direction } = await renderSettings();
+    const { direction, confirm } = await renderSettings();
     jest.mocked(direction.platform.restart).mockRejectedValue(new Error('no reload'));
     await fireEvent.press(screen.getByRole('radio', { name: 'العربية' }));
-    await fireEvent.press(screen.getByTestId('restart-app'));
+    await act(async () => lastConfirmation(confirm).onConfirm());
     await waitFor(() => expect(warn).toHaveBeenCalled());
-    expect(screen.getByTestId('restart-app')).toBeOnTheScreen();
+    // The layout was not mirrored, so the texts stay in the language of the running direction.
+    expect(
+      screen.getByText('Le sens d’écriture changera au prochain démarrage de l’appli.'),
+    ).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('restart-app'));
+    expect(direction.platform.restart).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
   });
 });
 

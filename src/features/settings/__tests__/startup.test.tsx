@@ -174,6 +174,18 @@ describe('start of the app', () => {
     expect(getDisplayedLanguage()).toBe('en');
   });
 
+  it('keeps the texts in the running direction when the language kept changes direction', async () => {
+    // Arabic chosen in a left-to-right app: the settings restart it. Until then (or if the
+    // restart fails), French stays on screen rather than Arabic words laid out left to right.
+    const { startup } = dependencies(createMemoryStorage(), { deviceLanguages: ['fr'] });
+    const app = await startApp(startup);
+    app.store.getState().setLanguage('ar');
+    expect(getDisplayedLanguage()).toBe('fr');
+    // A language of the same direction still shows at once.
+    app.store.getState().setLanguage('en');
+    expect(getDisplayedLanguage()).toBe('en');
+  });
+
   it('restarts once to mirror the layout when Arabic starts in a left-to-right app', async () => {
     const storage = createMemoryStorage();
     const { startup, direction } = dependencies(storage, { deviceLanguages: ['ar'] });

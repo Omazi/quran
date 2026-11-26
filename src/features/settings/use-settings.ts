@@ -1,12 +1,14 @@
 import type { NotificationPermissions } from '@/data/notifications';
 import {
   SUPPORTED_LANGUAGES,
+  getTranslator,
   isSupportedLanguage,
   resolveLanguage,
   setDisplayedLanguage,
   type AppLanguage,
 } from '@/i18n';
-import { useAppStore, type DataResetNotice, type ReminderSettings } from '@/store';
+import { useAppStore, useAppStoreApi, type DataResetNotice, type ReminderSettings } from '@/store';
+import { confirmAction, type ConfirmAction } from '@/ui';
 
 import { useDailyGoal, type DailyGoalModel } from './daily-goal';
 import { readDeviceLanguageCodes } from './device-languages';
@@ -82,6 +84,11 @@ export interface SettingsDependencies {
   readonly openSystemSettings: () => void;
   /** Shows the first-launch flow again. */
   readonly openIntroduction: () => void;
+  /**
+   * Asks before the restart a change of writing direction needs. Defaults to the system's
+   * confirmation (`confirmAction`).
+   */
+  readonly confirm?: ConfirmAction;
 }
 
 /** Builds the model and the actions of the settings screen. */
@@ -91,7 +98,9 @@ export function useSettings({
   getDeviceLanguageCodes = readDeviceLanguageCodes,
   openSystemSettings,
   openIntroduction,
+  confirm = confirmAction,
 }: SettingsDependencies): { model: SettingsModel; actions: SettingsActions } {
+  const store = useAppStoreApi();
   const savedLanguage = useAppStore((state) => state.settings.language);
   const saveLanguage = useAppStore((state) => state.setLanguage);
   const dataResetNotice = useAppStore((state) => state.dataResetNotice);
@@ -124,12 +133,38 @@ export function useSettings({
       dismissDataResetNotice,
       selectLanguage: (choice) => {
         const chosen = choice === DEVICE_LANGUAGE ? null : choice;
-        saveLanguage(chosen);
         const language = resolveLanguage(chosen, getDeviceLanguageCodes());
-        // The texts change at once, so that the person can read what follows in the language
-        // they chose; the layout follows only if its direction is already the right one.
-        setDisplayedLanguage(language);
-        chooseDirectionFor(language, direction);
+        if (isLaidOutFor(language, direction)) {
+          // Same direction: the texts change at once, nothing else has to.
+          saveLanguage(chosen);
+          setDisplayedLanguage(language);
+          chooseDirectionFor(language, direction);
+          return;
+        }
+        // The other direction. React Native lays the app out once, at launch; switching the
+        // texts now would leave the app half mirrored (French words laid out right to left, and
+        // native parts that follow the recorded direction before the rest). So nothing changes
+        // until the person agrees to the restart, asked in the language that is coming; then the
+        // choice is written on the phone, the direction recorded, and the app starts again.
+        const words = getTranslator(language, 'settings');
+        confirm({
+          title: words('language.restartConfirm.title'),
+          message: words('language.restartConfirm.message'),
+          confirmLabel: words('language.restartConfirm.restart'),
+          cancelLabel: words('language.restartConfirm.cancel'),
+          isDestructive: false,
+          onConfirm: () => {
+            saveLanguage(chosen);
+            chooseDirectionFor(language, direction);
+            store
+              .whenSaved()
+              .then(() => direction.restart())
+              .catch((error: unknown) => {
+                // The note and its button stay: the direction still applies at the next start.
+                console.warn('The app could not restart in its new writing direction.', error);
+              });
+          },
+        });
       },
       restartApp: () => {
         direction.restart().catch((error: unknown) => {
