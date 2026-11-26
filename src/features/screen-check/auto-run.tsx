@@ -51,6 +51,7 @@ const FRIEND_LAUNCH: CheckLaunch = {
   page: null,
   script: null,
   seedsDemo: true,
+  seedsGardens: false,
   autoSwipe: false,
   voiceProof: false,
 };

@@ -7,13 +7,14 @@
  */
 import { createMemoryStorage } from '@/data/storage';
 import { quranStructure } from '@/data/quran';
-import { type LocalDate } from '@/domain/shared/local-date';
+import { getProgression } from '@/domain/levels';
+import { daysBetween, type LocalDate } from '@/domain/shared/local-date';
 import { buildReadingHistory } from '@/features/home/dev-preview/reading-histories';
 import { loadAppStore } from '@/store/app-store';
 import { STORED_DATA_KEY } from '@/store/config';
 import type { KeyValueStorage } from '@/store/storage';
 
-import { DEMO_TIME_DAYS, seedDemo } from '../demo-seed';
+import { DEMO_TIME_DAYS, seedDemo, seedGardens } from '../demo-seed';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
   jest.requireActual('@react-native-async-storage/async-storage/jest/async-storage-mock'),
@@ -94,6 +95,37 @@ describe('the demonstration history', () => {
     const store = await load(createMemoryStorage());
     const pendingBefore = store.getState().sync;
     await seedDemo(store, TODAY, RANGES);
+    expect(store.getState().sync).toBe(pendingBefore);
+  });
+});
+
+describe('the gardens history (D46)', () => {
+  it('is one khatma completed a month ago and the next one under way, read every day', async () => {
+    const store = await load(createMemoryStorage());
+    await seedGardens(store, TODAY, RANGES);
+    const progression = getProgression(store.getState().journal, RANGES);
+    expect(progression.completed).toHaveLength(1);
+    expect(progression.completed[0]).toMatchObject({ khatm: 1, level: 1 });
+    expect(daysBetween(progression.completed[0]!.completedOn, TODAY)).toBeGreaterThan(7);
+    expect(progression).toMatchObject({ level: 2, styleId: 'oasis', hasStarted: true });
+    expect(progression.hizbCompleted).toBeGreaterThan(0);
+    const lastDay = store.getState().journal.at(-1)?.date;
+    expect(lastDay).toBe(TODAY);
+  });
+
+  it('marks its khatma celebrated, so nothing opens by itself over the pictures', async () => {
+    const store = await load(createMemoryStorage());
+    await seedGardens(store, TODAY, RANGES);
+    expect(store.getState().settings).toMatchObject({
+      celebratedKhatm: 1,
+      onboardingCompleted: true,
+    });
+  });
+
+  it('is written in one change, and nothing of it is queued for an account', async () => {
+    const store = await load(createMemoryStorage());
+    const pendingBefore = store.getState().sync;
+    await seedGardens(store, TODAY, RANGES);
     expect(store.getState().sync).toBe(pendingBefore);
   });
 });

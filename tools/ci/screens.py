@@ -42,11 +42,20 @@ FILLED_SCREENS = [
     ("reglages", "Réglages", "settings", None, None, 0),
 ]
 
+# Screens of the levels and badges (D46), opened after the app is filled with the gardens history
+# (one khatma completed, the next under way: -screenCheckSeed gardens). Same fields.
+GARDEN_SCREENS = [
+    ("profil-badges", "Profil : niveau, jardin en cours, badges", "profile", None, None, 1),
+    ("mes-jardins", "Mes jardins (chemin des niveaux)", "gardens", None, None, 1),
+    ("khatma-terminee", "Khatma terminée (célébration)", "khatma", None, None, 3),
+]
+
 DEFAULT_WAIT = 9  # seconds between the launch and the picture; "wait" adds to it
 
 
 class Shot:
-    def __init__(self, name, label, group, look, language, screen, page=None, script=None, seed=False, wait=0):
+    # seed: the made-up history to fill the app with ("demo", "gardens"), or None for a first launch.
+    def __init__(self, name, label, group, look, language, screen, page=None, script=None, seed=None, wait=0):
         self.name, self.label, self.group = name, label, group
         self.look, self.language = look, language
         self.screen, self.page, self.script, self.seed, self.wait = screen, page, script, seed, wait
@@ -80,7 +89,10 @@ def build() -> list[Shot]:
 
     def filled(language, look, only=None):
         group = f"Écrans de l'appli ({_how(language, look)})"
-        for slug, label, screen, page, script, wait in FILLED_SCREENS:
+        screens_and_seeds = [(entry, "demo") for entry in FILLED_SCREENS] + [
+            (entry, "gardens") for entry in GARDEN_SCREENS
+        ]
+        for (slug, label, screen, page, script, wait), seed in screens_and_seeds:
             if only is not None and slug not in only:
                 continue
             shots.append(
@@ -93,7 +105,7 @@ def build() -> list[Shot]:
                     screen,
                     page=page,
                     script=script,
-                    seed=True,
+                    seed=seed,
                     wait=wait,
                 )
             )
@@ -108,7 +120,7 @@ def build() -> list[Shot]:
     filled("fr", "light")
     filled("fr", "dark")
     filled("en", "light", only={"jardin"})
-    filled("ar", "light", only={"jardin"})
+    filled("ar", "light", only={"jardin", "profil-badges"})
     return shots
 
 
@@ -128,7 +140,7 @@ def plan() -> str:
             shot.screen,
             "" if shot.page is None else str(shot.page),
             shot.script or "",
-            "demo" if shot.seed else "",
+            shot.seed or "",
             str(DEFAULT_WAIT + shot.wait),
         ]
         # An empty field would be swallowed by `read` with a tab separator: "-" says "none".

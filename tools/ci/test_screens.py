@@ -55,6 +55,17 @@ class ListTest(unittest.TestCase):
         plain = [i for i, shot in enumerate(screens.SHOTS) if shot.screen == "onboarding"]
         self.assertLess(max(plain), min(seeded))
 
+    def test_the_levels_and_badges_are_photographed_with_the_gardens_history(self):
+        for slug in ("profil-badges", "mes-jardins", "khatma-terminee"):
+            for look in ("clair", "sombre"):
+                self.assertIn(f"ecran-{slug}-fr-{look}.png", screens.EXPECTED)
+        gardens = [shot for shot in screens.SHOTS if shot.screen in ("gardens", "khatma")]
+        self.assertTrue(gardens)
+        self.assertTrue(all(shot.seed == "gardens" for shot in gardens))
+        lines = [line.split("\t") for line in screens.plan().splitlines()]
+        self.assertIn("gardens", {fields[7] for fields in lines})
+        self.assertIn("demo", {fields[7] for fields in lines})
+
     def test_plan_has_nine_fields_without_empty_ones(self):
         for line in screens.plan().splitlines():
             fields = line.split("\t")

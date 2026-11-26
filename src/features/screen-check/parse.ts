@@ -15,6 +15,8 @@ export const CHECK_SCREENS = [
   'friend',
   'profile',
   'settings',
+  'gardens',
+  'khatma',
 ] as const;
 
 export type CheckScreen = (typeof CHECK_SCREENS)[number];
@@ -24,6 +26,9 @@ export type CheckScript = (typeof CHECK_SCRIPTS)[number];
 
 /** The friend whose garden page the check opens: a person of the demonstration. */
 export const CHECK_FRIEND_ID = 'demo-mustapha';
+
+/** The khatma whose celebration the check opens: the first, completed in the gardens history. */
+export const CHECK_CELEBRATED_KHATMA = 1;
 
 /** The page of the reader the check opens when none is asked: an ordinary page of Al-Baqara. */
 export const CHECK_READER_PAGE = 3;
@@ -36,6 +41,11 @@ export interface CheckLaunch {
   readonly script: CheckScript | null;
   /** True: fill the app with the made-up reading history and the demonstration friends first. */
   readonly seedsDemo: boolean;
+  /**
+   * True (`-screenCheckSeed gardens`): the made-up history is one completed khatma and the next
+   * one under way, for the level, the badges and the celebration (D46). Implies `seedsDemo`.
+   */
+  readonly seedsGardens: boolean;
   /**
    * True: the app swipes through the introduction by itself, then opens the demonstration friend's
    * page and works its garden (auto-run.tsx). Off unless the argument says 1.
@@ -88,6 +98,7 @@ export function parseCheckLaunch(
   const screen = firstText(read(CHECK_ARGUMENTS.screen));
   if (screen === null || !(CHECK_SCREENS as readonly string[]).includes(screen)) return null;
   const script = firstText(read(CHECK_ARGUMENTS.script));
+  const seed = firstText(read(CHECK_ARGUMENTS.seed));
   return {
     screen: screen as CheckScreen,
     // The upper bound is the reader's (604); the introduction narrows it again where it is used.
@@ -95,7 +106,8 @@ export function parseCheckLaunch(
     script: (CHECK_SCRIPTS as readonly (string | null)[]).includes(script)
       ? (script as CheckScript)
       : null,
-    seedsDemo: firstText(read(CHECK_ARGUMENTS.seed)) === 'demo',
+    seedsDemo: seed === 'demo' || seed === 'gardens',
+    seedsGardens: seed === 'gardens',
     autoSwipe: firstText(read(CHECK_ARGUMENTS.autoSwipe)) === '1',
     voiceProof: firstText(read(CHECK_ARGUMENTS.voiceProof)) === '1',
   };
@@ -122,12 +134,21 @@ export function checkAddress({ screen, page }: CheckLaunch): string {
       return '/(tabs)/profile';
     case 'settings':
       return '/settings';
+    case 'gardens':
+      return '/my-gardens';
+    case 'khatma':
+      return `/khatma-complete?khatm=${CHECK_CELEBRATED_KHATMA}`;
   }
 }
 
 /** Whether the screen sits over the tabs (pushed), so the tabs are put behind it first. */
 export function isPushedOverTabs({ screen }: CheckLaunch): boolean {
   return (
-    screen === 'reader' || screen === 'listening' || screen === 'friend' || screen === 'settings'
+    screen === 'reader' ||
+    screen === 'listening' ||
+    screen === 'friend' ||
+    screen === 'settings' ||
+    screen === 'gardens' ||
+    screen === 'khatma'
   );
 }

@@ -63,7 +63,9 @@ appelle ; un test de l'appli le vérifie). Cette version comprend des arguments 
 (`xcrun simctl launch … -screenCheckGo reader -screenCheckPage 3 -screenCheckScript imlaei
 -screenCheckSeed demo`) qui ouvrent un écran précis, sautent l'animation de lancement et, avec
 `demo`, remplissent l'appli (historique de lecture, temps passé, proches de démonstration
-connectés). L'adresse `/onboarding?page=N` (de 1 à 16) n'est lue que dans cette version. Sans la
+connectés) ; avec `gardens`, l'historique est une khatma terminée et la suivante en cours, pour le
+niveau, les badges, « Mes jardins » (`-screenCheckGo gardens`) et la célébration
+(`-screenCheckGo khatma`) (D46). L'adresse `/onboarding?page=N` (de 1 à 16) n'est lue que dans cette version. Sans la
 variable, rien de cela n'existe dans le paquet (`src/features/screen-check/door.ts`) : les
 arguments et le paramètre sont ignorés. L'écoute s'ouvre sans lancer le micro, comme pour tout
 lien. Les pages de l'introduction se photographient avant le remplissage (ensuite l'introduction
