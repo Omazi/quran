@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -222,14 +222,16 @@ export function ReaderBottomBar({
       ]}
     >
       <View style={[styles.bottomBarContent, !isVisible && styles.hidden]}>
-        <ReaderSegmented
-          label={t('script.label')}
-          options={scripts}
-          value={script}
-          onChange={onChooseScript}
-          fitsContent
-          testID="reader-script"
-        />
+        <BarControl caption={t('script.label')}>
+          <ReaderSegmented
+            label={t('script.label')}
+            options={scripts}
+            value={script}
+            onChange={onChooseScript}
+            fitsContent
+            testID="reader-script"
+          />
+        </BarControl>
         <View style={styles.barMiddle}>
           <Pressable
             accessibilityRole="button"
@@ -245,26 +247,51 @@ export function ReaderBottomBar({
             <Icon symbol={MICROPHONE_SYMBOL} textStyle="title2" color="onAction" />
           </Pressable>
         </View>
-        <View style={styles.barEnd}>
-          <ToolButton
-            symbol={TEXT_SMALLER_SYMBOL}
-            label={t('textSize.smaller')}
-            value={textSizeValue}
-            isEnabled={canShrinkText}
-            onPress={onShrinkText}
-            testID="reader-text-smaller"
-          />
-          <ToolButton
-            symbol={TEXT_LARGER_SYMBOL}
-            label={t('textSize.larger')}
-            value={textSizeValue}
-            isEnabled={canEnlargeText}
-            onPress={onEnlargeText}
-            testID="reader-text-larger"
-          />
-        </View>
+        <BarControl caption={t('textSize.label')}>
+          <View style={styles.barEnd}>
+            <ToolButton
+              symbol={TEXT_SMALLER_SYMBOL}
+              label={t('textSize.smaller')}
+              value={textSizeValue}
+              isEnabled={canShrinkText}
+              onPress={onShrinkText}
+              testID="reader-text-smaller"
+            />
+            <ToolButton
+              symbol={TEXT_LARGER_SYMBOL}
+              label={t('textSize.larger')}
+              value={textSizeValue}
+              isEnabled={canEnlargeText}
+              onPress={onEnlargeText}
+              testID="reader-text-larger"
+            />
+          </View>
+        </BarControl>
       </View>
     </SafeAreaView>
+  );
+}
+
+/**
+ * A control of the bottom bar with its name in words above it (owner's report: the script choice
+ * and the text size could be taken for each other). The name is for the eye only: VoiceOver hears
+ * it on the control itself (its group label, or each button's label), not twice.
+ */
+function BarControl({ caption, children }: { caption: string; children: ReactNode }) {
+  return (
+    <View style={styles.barControl}>
+      <AppText
+        variant="footnote"
+        color="inkSecondary"
+        align="center"
+        numberOfLines={1}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        {caption}
+      </AppText>
+      {children}
+    </View>
   );
 }
 
@@ -468,6 +495,7 @@ const styles = StyleSheet.create({
   // As in the mockup: the script choice at the start, the tools at the end, the microphone in the
   // middle of the room between them.
   barMiddle: { flex: 1, alignItems: 'center' },
+  barControl: { alignItems: 'center', rowGap: spacing.xs },
   // Twelve points between the two targets (accessibility.md › Mobility; charter).
   barEnd: { flexDirection: 'row', gap: spacing.sm + spacing.xs },
   tool: {

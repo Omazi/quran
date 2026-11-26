@@ -85,6 +85,7 @@
     "imlaei": "إملائي"
   },
   "textSize": {
+    "label": "حجم النص",
     "smaller": "تصغير النص",
     "larger": "تكبير النص",
     "value": "الحجم {{step}} من {{count}}"

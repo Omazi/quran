@@ -102,7 +102,6 @@ function OpenReader({
         actions={actions}
         fontStatus={fontStatus}
         texts={texts}
-        initialPage={initialPage}
         openContents={navigation.openContents}
         close={navigation.close}
         follow={follow}

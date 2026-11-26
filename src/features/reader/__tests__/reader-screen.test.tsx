@@ -75,7 +75,6 @@ function Reader({ page, fontStatus = 'ready' }: { page: number; fontStatus?: Qur
       actions={actions}
       fontStatus={fontStatus}
       texts={texts}
-      initialPage={page}
       openContents={openContents}
       close={close}
       follow={follow}
@@ -527,6 +526,36 @@ describe('the bottom bar: script, microphone, text size (mockup, D41)', () => {
     expect(store.getState().settings.readerScript).toBe('uthmani');
   });
 
+  it('keeps the page being read when the script changes, instead of going back to the page opened', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 293);
+    await layOutPage(293, 0, 1200);
+    await layOutPage(294, 1200, 1200);
+    await scrollTo(1200);
+    expect(store.getState().settings.lastOpenedPage).toBe(294);
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Simple' }));
+    const simple = (await quranRepository.getVerse('18:10', 'imlaei')).text;
+    await waitFor(() => expect(screen.getByTestId('page-section-294')).toBeOnTheScreen());
+    // The scroll starts again at the page being read, in the simple text.
+    expect(screen.queryByTestId('page-cell-293')).toBeNull();
+    expect(screen.getByTestId('verse-18:10').props.children).toBe(simple);
+  });
+
+  it('names each control of the bar in words on screen, not only for VoiceOver', async () => {
+    await openReader(createTestAppStore(), 293);
+    const bar = screen.getByTestId('reader-bottom-bar');
+    // Visible captions: the script choice and the text size cannot be mistaken for each other.
+    expect(within(bar).getByText('Écriture', { includeHiddenElements: true })).toBeOnTheScreen();
+    expect(
+      within(bar).getByText('Taille du texte', { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
+    // VoiceOver hears each name once, on its control, not again on the caption.
+    expect(within(bar).queryByText('Écriture')).toBeNull();
+    expect(within(bar).queryByText('Taille du texte')).toBeNull();
+    expect(screen.getByTestId('reader-script')).toHaveProp('accessibilityLabel', 'Écriture');
+  });
+
   it('names the two scripts in Arabic too', async () => {
     await showLanguage('ar');
     await openReader(createTestAppStore(), 293);
@@ -759,7 +788,6 @@ describe('what the pill names (owner, 25 November 2026)', () => {
           actions={noActions}
           fontStatus="loading"
           texts={{ status: 'loading' }}
-          initialPage={20}
           openContents={openContents}
           close={close}
           follow={IDLE_FOLLOW}

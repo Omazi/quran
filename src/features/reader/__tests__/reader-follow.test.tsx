@@ -71,7 +71,6 @@ function Reader({ page, from }: { page: number; from: VerseRef | null }) {
       actions={actions}
       fontStatus="ready"
       texts={texts}
-      initialPage={page}
       openContents={jest.fn()}
       close={jest.fn()}
       follow={follow}

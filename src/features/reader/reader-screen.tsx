@@ -44,8 +44,6 @@ export interface ReaderScreenProps {
   actions: ReaderActions;
   fontStatus: QuranFontStatus;
   texts: ScriptTexts;
-  /** The page the reader opened on: the scroll starts there. */
-  initialPage: number;
   /** Leaves the reader for the table of contents. */
   openContents: () => void;
   /** Leaves the reader for where the person came from. */
@@ -73,7 +71,6 @@ export function ReaderScreen({
   actions,
   fontStatus,
   texts,
-  initialPage,
   openContents,
   close,
   follow,
@@ -179,7 +176,9 @@ export function ReaderScreen({
           </View>
         ) : (
           <ReaderScroll
-            initialPage={initialPage}
+            // The page being read: the page opened at first, and after a change of script (whose
+            // text is loaded, then drawn in a new scroll) the place reached, not the page opened.
+            initialPage={model.page}
             script={texts.script}
             textScale={model.textScale}
             textOf={texts.textOf}

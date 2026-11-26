@@ -73,6 +73,7 @@
     "imlaei": "Simple"
   },
   "textSize": {
+    "label": "Text Size",
     "smaller": "Smaller Text",
     "larger": "Larger Text",
     "value": "Size {{step}} of {{count}}"
