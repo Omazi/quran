@@ -93,6 +93,7 @@ export function OnboardingScreen({
           onPageChange={actions.showPage}
           axis="vertical"
           pageMotion="still"
+          release="projected"
           settleSpring={STORY_MOTION.pagingSettle}
           testID="onboarding-pager"
           onTouchStart={onTouchStart}

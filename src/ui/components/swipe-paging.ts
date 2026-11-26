@@ -217,3 +217,123 @@ export function swapOpacity({ page, pageCount, position }: SwapInput): number {
   if (page === to) return along < 0.5 ? 0 : 2 * along - 1;
   return 0;
 }
+
+// --- The projected pager ------------------------------------------------------------------------
+//
+// The first launch's pager (docs/specs/ui-lot1.md, the motion spec of the "voix" direction, §1):
+// the finger is followed one for one, with a rubber band past the ends; when it lifts, the page
+// nearest to where the flick would stop is chosen (Apple's projection, deceleration 0.998), at
+// most one page from where the gesture started, and a critically damped spring takes over from the
+// finger's speed, capped so that it never crosses the page (no flicker of the next page).
+
+/** The deceleration of Apple's scroll views, from which a flick's resting point is projected. */
+const DECELERATION = 0.998;
+
+export const PROJECTED_PAGING = {
+  /** Critically damped, response 0.45 s: ω = 2π / 0.45, stiffness ω², damping 2ω, mass 1. */
+  spring: { mass: 1, stiffness: 195, damping: 27.9 },
+  /** The rubber band's coefficient past the first and the last page (`c`). */
+  rubberCoefficient: 0.55,
+  /** How far a flick goes, in seconds of its speed: 0.998 / (1 − 0.998) / 1000 = 0.499 s. */
+  projectionS: DECELERATION / (1 - DECELERATION) / 1000,
+  /** A finger that rested this long before lifting has no speed. */
+  restMs: 40,
+  /** The travel before a touch at rest is a swipe (a tap on an option stays a tap). */
+  activationDistance: 8,
+  /** Below this speed (pages a second) a touch does not catch the spring: it starts a new drag. */
+  catchSpeed: 0.05,
+} as const;
+
+/** The rubber band: `x·d·c / (d + c·|x|)`, which never reaches `d` (a whole page). */
+export function rubberBand(
+  distance: number,
+  dimension: number,
+  coefficient: number = PROJECTED_PAGING.rubberCoefficient,
+): number {
+  'worklet';
+  return (distance * dimension * coefficient) / (dimension + coefficient * Math.abs(distance));
+}
+
+export interface ProjectedDragInput {
+  /** The position when the drag took the pages. */
+  readonly start: number;
+  /** How far the finger moved toward the next page since then, in points. */
+  readonly forwards: number;
+  /** The size of a page along the axis. */
+  readonly length: number;
+  readonly pageCount: number;
+}
+
+/** The position under the finger: 1:1, with the rubber band past the first and the last page. */
+export function projectedDragPosition({
+  start,
+  forwards,
+  length,
+  pageCount,
+}: ProjectedDragInput): number {
+  'worklet';
+  assertPager(length, pageCount);
+  const raw = start + forwards / length;
+  const last = pageCount - 1;
+  if (raw < 0) return -rubberBand(-raw * length, length) / length;
+  if (raw > last) return last + rubberBand((raw - last) * length, length) / length;
+  return raw;
+}
+
+export interface ProjectedTargetInput {
+  readonly position: number;
+  /** The release speed toward the next page, in pages a second. */
+  readonly velocity: number;
+  /** The page the gesture started on, or the spring's target when it was caught. */
+  readonly anchor: number;
+  readonly pageCount: number;
+}
+
+/** The page a release settles on: the nearest to the projection, one page at most from the anchor. */
+export function projectedTarget({
+  position,
+  velocity,
+  anchor,
+  pageCount,
+}: ProjectedTargetInput): number {
+  'worklet';
+  const projected = position + velocity * PROJECTED_PAGING.projectionS;
+  const page = clamp(Math.round(projected), anchor - 1, anchor + 1);
+  return clamp(page, 0, pageCount - 1);
+}
+
+/**
+ * The speed handed to the spring: toward the target, at most `ω·distance`, so that a critically
+ * damped spring arrives without crossing it; away from the target, as it is (the spring turns it).
+ */
+export function cappedReleaseVelocity({
+  position,
+  target,
+  velocity,
+  omega,
+}: {
+  position: number;
+  target: number;
+  velocity: number;
+  omega: number;
+}): number {
+  'worklet';
+  const toward = target - position;
+  if (velocity === 0 || Math.sign(velocity) !== Math.sign(toward)) return velocity;
+  return Math.sign(velocity) * Math.min(Math.abs(velocity), omega * Math.abs(toward));
+}
+
+/** The finger's speed as the release takes it: none after a rest of 40 ms, none when canceled. */
+export function releaseVelocity({
+  velocity,
+  restedMs,
+  canceled,
+}: {
+  velocity: number;
+  restedMs: number;
+  canceled: boolean;
+}): number {
+  'worklet';
+  if (canceled || restedMs > PROJECTED_PAGING.restMs) return 0;
+  return velocity;
+}

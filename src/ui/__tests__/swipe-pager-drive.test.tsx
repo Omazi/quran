@@ -144,4 +144,78 @@ describe('a pager that something else can drive (the iOS check)', () => {
     });
     expect(onTouchStart).toHaveBeenCalledTimes(1);
   });
+
+  describe('released by projection (the first launch)', () => {
+    async function renderProjected(onPageChange: (page: number) => void, page = 3) {
+      const driven: { drive?: PagerDrive } = {};
+      await render(
+        <SwipePager
+          pageCount={16}
+          page={page}
+          axis="vertical"
+          pageMotion="still"
+          release="projected"
+          settleSpring={{ mass: 1, stiffness: 195, damping: 27.9 }}
+          onPageChange={onPageChange}
+          renderPage={(index) => <Text>{`page ${index}`}</Text>}
+          renderDriver={(drive) => {
+            driven.drive = drive;
+            return null;
+          }}
+          testID="pager"
+        />,
+      );
+      await fireEvent(screen.getByTestId('pager-pages'), 'layout', {
+        nativeEvent: { layout: { x: 0, y: 0, width: WIDTH, height: HEIGHT } },
+      });
+      const drive = driven.drive;
+      if (drive === undefined) throw new Error('no drive');
+      return drive;
+    }
+
+    it('turns the page with a short quick flick up', async () => {
+      const onPageChange = jest.fn();
+      const drive = await renderProjected(onPageChange);
+      await act(async () => {
+        drive.begin();
+        drive.move(-0.1 * HEIGHT);
+        drive.end(-900, false);
+      });
+      expect(onPageChange).toHaveBeenCalledWith(4);
+    });
+
+    it('springs back after a slow short drag', async () => {
+      const onPageChange = jest.fn();
+      const drive = await renderProjected(onPageChange);
+      await act(async () => {
+        drive.begin();
+        drive.move(-0.15 * HEIGHT);
+        drive.end(-40, false);
+      });
+      expect(onPageChange).not.toHaveBeenCalled();
+    });
+
+    it('turns one page at most, even dragged over two', async () => {
+      const onPageChange = jest.fn();
+      const drive = await renderProjected(onPageChange);
+      await act(async () => {
+        drive.begin();
+        drive.move(-2.2 * HEIGHT);
+        drive.end(-3000, false);
+      });
+      expect(onPageChange).toHaveBeenCalledTimes(1);
+      expect(onPageChange).toHaveBeenCalledWith(4);
+    });
+
+    it('goes back a page with a flick down, and not before the first page', async () => {
+      const onPageChange = jest.fn();
+      const drive = await renderProjected(onPageChange, 0);
+      await act(async () => {
+        drive.begin();
+        drive.move(0.4 * HEIGHT);
+        drive.end(2000, false);
+      });
+      expect(onPageChange).not.toHaveBeenCalled();
+    });
+  });
 });

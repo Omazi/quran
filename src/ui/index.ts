@@ -76,10 +76,17 @@ export {
   type PageMotion,
   type PagerAxis,
   type PagerDrive,
+  type PagerRelease,
   type SettleSpring,
   type SwipePagerProps,
 } from './components/swipe-pager';
-export { SWIPE_PAGING, crossfade, stageLayerOpacity, swapOpacity } from './components/swipe-paging';
+export {
+  PROJECTED_PAGING,
+  SWIPE_PAGING,
+  crossfade,
+  stageLayerOpacity,
+  swapOpacity,
+} from './components/swipe-paging';
 export {
   ActionButton,
   type ActionButtonProps,

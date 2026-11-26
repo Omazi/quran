@@ -9,11 +9,10 @@
  */
 export const STORY_MOTION = {
   /**
-   * The paging settle, after a swipe and after a step asked by VoiceOver: a critically damped
-   * spring (no bounce), seeded with the finger's speed (coordinator, 25 November 2026; to be
-   * replaced by the motion spec's value).
+   * The paging settle, after a swipe and after a step asked by VoiceOver: the motion spec's `pager`
+   * spring (§1), critically damped with a response of 0.45 s, seeded with the finger's speed.
    */
-  pagingSettle: { duration: 520, dampingRatio: 1 },
+  pagingSettle: { mass: 1, stiffness: 195, damping: 27.9 },
   /** A page's own visual leaves before the next one arrives (`presence`): 1 / 1.85 of a page. */
   presenceRate: 1.85,
   /** A page's words fade over 1 / 2.2 of a page either side (`pins`). */

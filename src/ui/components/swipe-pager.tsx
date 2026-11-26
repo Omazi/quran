@@ -18,7 +18,16 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { useReducedMotion } from '../device-settings';
 import { getWritingDirection } from '../direction';
-import { SWIPE_PAGING, draggedPosition, settledPage } from './swipe-paging';
+import {
+  PROJECTED_PAGING,
+  SWIPE_PAGING,
+  cappedReleaseVelocity,
+  draggedPosition,
+  projectedDragPosition,
+  projectedTarget,
+  releaseVelocity,
+  settledPage,
+} from './swipe-paging';
 
 /** The direction the pages turn in: sideways (the default) or up and down. */
 export type PagerAxis = 'horizontal' | 'vertical';
@@ -30,10 +39,28 @@ export type PagerAxis = 'horizontal' | 'vertical';
  */
 export type PageMotion = 'slide' | 'still';
 
-/** A spring as Reanimated takes it: how long it takes to settle, and how much it bounces. */
-export interface SettleSpring {
-  readonly duration: number;
-  readonly dampingRatio: number;
+/**
+ * A spring as Reanimated takes it: how long it takes to settle and how much it bounces, or its
+ * physical values (mass, stiffness, damping).
+ */
+export type SettleSpring =
+  | { readonly duration: number; readonly dampingRatio: number }
+  | { readonly mass: number; readonly stiffness: number; readonly damping: number };
+
+/**
+ * How a release chooses its page. `threshold`: the neighbour, past 16 % of a page or a quick
+ * flick (the system pager). `projected`: the page nearest to where the flick would stop (Apple's
+ * projection), one page at most from where the gesture started, the finger followed 1:1 with a
+ * rubber band past the ends, a touch catching the spring where it is (the first launch's motion
+ * spec, §1).
+ */
+export type PagerRelease = 'threshold' | 'projected';
+
+/** The natural pulsation of a spring, for the release speed's cap (`ω = √(k / m)`). */
+function omegaOf(spring: SettleSpring | undefined): number {
+  if (spring !== undefined && 'stiffness' in spring)
+    return Math.sqrt(spring.stiffness / spring.mass);
+  return Math.sqrt(PROJECTED_PAGING.spring.stiffness / PROJECTED_PAGING.spring.mass);
 }
 
 export interface SwipePagerProps {
@@ -64,6 +91,8 @@ export interface SwipePagerProps {
    * the sheet curve after a step (`SWIPE_PAGING`).
    */
   settleSpring?: SettleSpring;
+  /** Defaults to `threshold`. */
+  release?: PagerRelease;
   /** What stays in place over the pages: the page dots, a button. Receives the position too. */
   renderOverlay?: (position: SharedValue<number>) => ReactNode;
   /**
@@ -140,6 +169,7 @@ export function SwipePager({
   axis = 'horizontal',
   pageMotion = 'slide',
   settleSpring,
+  release = 'threshold',
   testID,
 }: SwipePagerProps) {
   if (!Number.isInteger(page) || page < 0 || page >= pageCount) {
@@ -182,15 +212,59 @@ export function SwipePager({
     onPageChange(next);
   };
 
+  const isProjected = release === 'projected';
+  const omega = omegaOf(isProjected ? (settleSpring ?? PROJECTED_PAGING.spring) : settleSpring);
+  /** Projected pager: whether the touch caught a moving spring, and the drag's dead zone. */
+  const caught = useSharedValue(false);
+  const deadZone = useSharedValue(0);
+  const isDragging = useSharedValue(false);
+  const lastMoveAt = useSharedValue(0);
+  const lastTranslation = useSharedValue(0);
+
   // The three steps of a drag. The pan gesture below calls them on the UI thread; so does the
   // iOS check's driver, which is how it takes the same path as a finger (without the touch).
   const begin = () => {
     'worklet';
+    // A touch on pages still settling catches them where they are (gestures skill).
+    caught.set(Math.abs(position.get() - target.get()) > 0.001);
     cancelAnimation(position);
     dragStart.set(position.get());
+    deadZone.set(0);
+    lastTranslation.set(0);
+    lastMoveAt.set(Date.now());
+    isDragging.set(true);
+  };
+  /**
+   * The gesture has travelled far enough to be a swipe. On pages at rest the travel it took is a
+   * dead zone (a tap stays a tap, and the page does not jump); pages caught while moving follow
+   * the finger from the touch.
+   */
+  const activate = (translation: number) => {
+    'worklet';
+    if (!isProjected) return;
+    if (!caught.get()) {
+      deadZone.set(translation);
+      dragStart.set(position.get());
+    }
   };
   const move = (translation: number) => {
     'worklet';
+    if (Math.abs(translation - lastTranslation.get()) > 0.5) {
+      lastMoveAt.set(Date.now());
+      lastTranslation.set(translation);
+    }
+    if (isProjected) {
+      const moved = translation - deadZone.get();
+      position.set(
+        projectedDragPosition({
+          start: dragStart.get(),
+          forwards: isVertical || !isRightToLeft ? -moved : moved,
+          length,
+          pageCount,
+        }),
+      );
+      return;
+    }
     position.set(
       draggedPosition({
         anchor: target.get(),
@@ -202,35 +276,71 @@ export function SwipePager({
       }),
     );
   };
-  const end = (velocity: number, canceled: boolean) => {
+  const settleTo = (next: number, forwardsSpeed: number) => {
     'worklet';
-    const next = settledPage({
-      anchor: target.get(),
-      position: position.get(),
-      velocity: canceled ? 0 : velocity,
-      width: length,
-      isRightToLeft,
-      pageCount,
-    });
-    const forwardsSpeed = (isRightToLeft ? velocity : -velocity) / length;
     position.set(
       isMotionReduced
         ? withTiming(next, { duration: SWIPE_PAGING.reducedSettleMs })
         : withSpring(next, {
-            ...(settleSpring ?? SWIPE_PAGING.releaseSpring),
+            ...(settleSpring ??
+              (isProjected ? PROJECTED_PAGING.spring : SWIPE_PAGING.releaseSpring)),
             velocity: forwardsSpeed,
           }),
     );
+  };
+  const end = (velocity: number, canceled: boolean) => {
+    'worklet';
+    isDragging.set(false);
+    let next: number;
+    let forwardsSpeed: number;
+    if (isProjected) {
+      const speed = releaseVelocity({
+        velocity,
+        restedMs: Date.now() - lastMoveAt.get(),
+        canceled,
+      });
+      const forwards = (isVertical || !isRightToLeft ? -speed : speed) / length;
+      next = projectedTarget({
+        position: position.get(),
+        velocity: forwards,
+        anchor: target.get(),
+        pageCount,
+      });
+      forwardsSpeed = cappedReleaseVelocity({
+        position: position.get(),
+        target: next,
+        velocity: forwards,
+        omega,
+      });
+    } else {
+      next = settledPage({
+        anchor: target.get(),
+        position: position.get(),
+        velocity: canceled ? 0 : velocity,
+        width: length,
+        isRightToLeft,
+        pageCount,
+      });
+      forwardsSpeed = (isRightToLeft ? velocity : -velocity) / length;
+    }
+    settleTo(next, forwardsSpeed);
     if (next !== target.get()) {
       target.set(next);
       scheduleOnRN(report, next);
     }
   };
+  /** A touch that never became a swipe: caught pages go on to where they were going. */
+  const finalize = () => {
+    'worklet';
+    if (!isDragging.get()) return;
+    isDragging.set(false);
+    if (position.get() !== target.get()) settleTo(target.get(), 0);
+  };
 
-  const activation: [number, number] = [
-    -SWIPE_PAGING.activationDistance,
-    SWIPE_PAGING.activationDistance,
-  ];
+  const distance = isProjected
+    ? PROJECTED_PAGING.activationDistance
+    : SWIPE_PAGING.activationDistance;
+  const activation: [number, number] = [-distance, distance];
   const crossFail: [number, number] = [
     -SWIPE_PAGING.verticalFailDistance,
     SWIPE_PAGING.verticalFailDistance,
@@ -244,9 +354,19 @@ export function SwipePager({
     failOffsetY: isVertical ? undefined : crossFail,
     activeOffsetY: isVertical ? activation : undefined,
     failOffsetX: isVertical ? crossFail : undefined,
-    onActivate: () => begin(),
+    // The projected pager takes the pages at the touch (to catch them), the other at the swipe.
+    onBegin: () => {
+      if (isProjected) begin();
+    },
+    onActivate: (event) => {
+      if (!isProjected) begin();
+      else activate(isVertical ? event.translationY : event.translationX);
+    },
     onUpdate: (event) => move(isVertical ? event.translationY : event.translationX),
     onDeactivate: (event) => end(isVertical ? event.velocityY : event.velocityX, event.canceled),
+    onFinalize: () => {
+      if (isProjected) finalize();
+    },
   });
 
   const onLayout = (event: LayoutChangeEvent) => {
