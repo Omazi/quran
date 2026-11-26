@@ -1,0 +1,2486 @@
+{
+  "about": "Level 2 garden 'Oasis' (tools/garden-3d/levels/make_levels.py). Metres; x east, z south, y up.",
+  "version": 2,
+  "level": 2,
+  "style": "oasis",
+  "name": "Oasis",
+  "idea": "Un disque de sable adoss\u00e9 \u00e0 des dunes. Une source sort au pied de la grande dune, un ruisseau rejoint le bassin, et la vie s'installe autour : palmiers-dattiers, vergers \u00e0 leur ombre, roseaux, puis un campement sous une paillote.",
+  "plot": {
+    "shape": "round",
+    "half": 10.6,
+    "slab": 0.7,
+    "top": "#e6cd9a",
+    "topDry": "#d9c7a6",
+    "side": "#c9a46c",
+    "border": null
+  },
+  "colors": {
+    "water": "#5fc0cc",
+    "waterLow": "#86b9b5",
+    "dryBed": "#d2bd98",
+    "lawnDry": "#d9c38d"
+  },
+  "catalogue": [
+    {
+      "hizb": 1,
+      "id": "channels",
+      "kind": "channels",
+      "label": "La source, son ruisseau et le bassin de l'oasis"
+    },
+    {
+      "hizb": 2,
+      "id": "paving",
+      "kind": "paving",
+      "label": "Les all\u00e9es de pierre de sable"
+    },
+    {
+      "hizb": 3,
+      "id": "bed-1",
+      "kind": "bed",
+      "label": "La palmeraie de l'est, sur la rive"
+    },
+    {
+      "hizb": 4,
+      "id": "bed-2",
+      "kind": "bed",
+      "label": "Le verger de l'ouest, \u00e0 l'ombre"
+    },
+    {
+      "hizb": 5,
+      "id": "tree-1",
+      "kind": "pomegranate",
+      "label": "Grenadier \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 6,
+      "id": "bed-3",
+      "kind": "bed",
+      "label": "La rive verte au pied des dunes"
+    },
+    {
+      "hizb": 7,
+      "id": "tree-2",
+      "kind": "date-palm",
+      "label": "Palmier-dattier"
+    },
+    {
+      "hizb": 8,
+      "id": "bed-4",
+      "kind": "bed",
+      "label": "Le pr\u00e9 de l'entr\u00e9e"
+    },
+    {
+      "hizb": 9,
+      "id": "tree-3",
+      "kind": "olive",
+      "label": "Jeune palmier"
+    },
+    {
+      "hizb": 10,
+      "id": "stepping-stones",
+      "kind": "stepping-stones",
+      "label": "Des pierres plates pour passer le ruisseau"
+    },
+    {
+      "hizb": 11,
+      "id": "tree-4",
+      "kind": "fig",
+      "label": "Figuier \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 12,
+      "id": "flowers-1",
+      "kind": "flowers",
+      "label": "Des fleurs sur la rive du sud"
+    },
+    {
+      "hizb": 13,
+      "id": "tree-5",
+      "kind": "cypress",
+      "label": "Palmier-dattier \u00e9lanc\u00e9"
+    },
+    {
+      "hizb": 14,
+      "id": "tree-6",
+      "kind": "orange",
+      "label": "Oranger \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 15,
+      "id": "flowers-2",
+      "kind": "flowers",
+      "label": "Des fleurs sur la rive de l'ouest"
+    },
+    {
+      "hizb": 16,
+      "id": "tree-7",
+      "kind": "pomegranate",
+      "label": "Grenadier \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 17,
+      "id": "tree-8",
+      "kind": "date-palm",
+      "label": "Palmier-dattier"
+    },
+    {
+      "hizb": 18,
+      "id": "flowers-3",
+      "kind": "flowers",
+      "label": "Des fleurs autour de la source"
+    },
+    {
+      "hizb": 19,
+      "id": "tree-9",
+      "kind": "olive",
+      "label": "Jeune palmier"
+    },
+    {
+      "hizb": 20,
+      "id": "fountain",
+      "kind": "fountain",
+      "label": "La vasque de l'ouest, o\u00f9 l'on puise l'eau"
+    },
+    {
+      "hizb": 21,
+      "id": "tree-10",
+      "kind": "fig",
+      "label": "Figuier \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 22,
+      "id": "flowers-4",
+      "kind": "flowers",
+      "label": "Des fleurs sur la rive du nord"
+    },
+    {
+      "hizb": 23,
+      "id": "tree-11",
+      "kind": "cypress",
+      "label": "Palmier-dattier \u00e9lanc\u00e9"
+    },
+    {
+      "hizb": 24,
+      "id": "springs",
+      "kind": "springs",
+      "label": "Deux suintements entre les rochers, au pied des dunes"
+    },
+    {
+      "hizb": 25,
+      "id": "tree-12",
+      "kind": "orange",
+      "label": "Oranger \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 26,
+      "id": "tree-13",
+      "kind": "pomegranate",
+      "label": "Grenadier \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 27,
+      "id": "birds-1",
+      "kind": "birds",
+      "label": "Des oiseaux (aucun mod\u00e8le)"
+    },
+    {
+      "hizb": 28,
+      "id": "tree-14",
+      "kind": "date-palm",
+      "label": "Palmier-dattier"
+    },
+    {
+      "hizb": 29,
+      "id": "tree-15",
+      "kind": "olive",
+      "label": "Jeune palmier"
+    },
+    {
+      "hizb": 30,
+      "id": "wall-north",
+      "kind": "wall",
+      "label": "Le mur de terre du nord, derri\u00e8re les dunes"
+    },
+    {
+      "hizb": 31,
+      "id": "wall-west",
+      "kind": "wall",
+      "label": "Le mur de terre de l'ouest"
+    },
+    {
+      "hizb": 32,
+      "id": "tree-16",
+      "kind": "fig",
+      "label": "Figuier \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 33,
+      "id": "tree-17",
+      "kind": "cypress",
+      "label": "Palmier-dattier \u00e9lanc\u00e9"
+    },
+    {
+      "hizb": 34,
+      "id": "trellis",
+      "kind": "trellis",
+      "label": "Un auvent de toile, pour l'ombre du campement"
+    },
+    {
+      "hizb": 35,
+      "id": "tree-18",
+      "kind": "orange",
+      "label": "Oranger \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 36,
+      "id": "tree-19",
+      "kind": "pomegranate",
+      "label": "Grenadier \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 37,
+      "id": "birds-2",
+      "kind": "birds",
+      "label": "Des oiseaux (aucun mod\u00e8le)"
+    },
+    {
+      "hizb": 38,
+      "id": "tree-20",
+      "kind": "date-palm",
+      "label": "Palmier-dattier"
+    },
+    {
+      "hizb": 39,
+      "id": "tree-21",
+      "kind": "olive",
+      "label": "Jeune palmier"
+    },
+    {
+      "hizb": 40,
+      "id": "gate-north",
+      "kind": "gate",
+      "label": "L'arche du nord"
+    },
+    {
+      "hizb": 41,
+      "id": "gate-west",
+      "kind": "gate",
+      "label": "L'arche de l'ouest"
+    },
+    {
+      "hizb": 42,
+      "id": "tree-22",
+      "kind": "fig",
+      "label": "Figuier \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 43,
+      "id": "tree-23",
+      "kind": "cypress",
+      "label": "Palmier-dattier \u00e9lanc\u00e9"
+    },
+    {
+      "hizb": 44,
+      "id": "lanterns",
+      "kind": "lanterns",
+      "label": "Les lanternes des all\u00e9es"
+    },
+    {
+      "hizb": 45,
+      "id": "tree-24",
+      "kind": "orange",
+      "label": "Oranger \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 46,
+      "id": "tree-25",
+      "kind": "pomegranate",
+      "label": "Grenadier \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 47,
+      "id": "butterflies",
+      "kind": "butterflies",
+      "label": "Des papillons (aucun mod\u00e8le)"
+    },
+    {
+      "hizb": 48,
+      "id": "tree-26",
+      "kind": "date-palm",
+      "label": "Palmier-dattier"
+    },
+    {
+      "hizb": 49,
+      "id": "tree-27",
+      "kind": "olive",
+      "label": "Jeune palmier"
+    },
+    {
+      "hizb": 50,
+      "id": "pavilion",
+      "kind": "pavilion",
+      "label": "La tente du campement"
+    },
+    {
+      "hizb": 51,
+      "id": "tree-28",
+      "kind": "fig",
+      "label": "Figuier \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 52,
+      "id": "carpets",
+      "kind": "carpets",
+      "label": "Le tapis sous l'auvent"
+    },
+    {
+      "hizb": 53,
+      "id": "tree-29",
+      "kind": "cypress",
+      "label": "Palmier-dattier \u00e9lanc\u00e9"
+    },
+    {
+      "hizb": 54,
+      "id": "cushions",
+      "kind": "cushions",
+      "label": "Des coussins sur le tapis"
+    },
+    {
+      "hizb": 55,
+      "id": "tree-30",
+      "kind": "orange",
+      "label": "Oranger \u00e0 l'ombre des palmiers"
+    },
+    {
+      "hizb": 56,
+      "id": "lectern",
+      "kind": "lectern",
+      "label": "Une table basse et ses livres, devant la tente"
+    },
+    {
+      "hizb": 57,
+      "id": "birds-3",
+      "kind": "birds",
+      "label": "Des oiseaux (aucun mod\u00e8le)"
+    },
+    {
+      "hizb": 58,
+      "id": "roses",
+      "kind": "roses",
+      "label": "Des buissons en fleurs le long des murs"
+    },
+    {
+      "hizb": 59,
+      "id": "waterfall",
+      "kind": "waterfall",
+      "label": "La chute d'eau entre les rochers de la grande dune"
+    },
+    {
+      "hizb": 60,
+      "id": "full-bloom",
+      "kind": "full-bloom",
+      "label": "La pleine floraison : roseaux, plantes du d\u00e9sert, n\u00e9nuphars, jarres"
+    }
+  ],
+  "neutral": [
+    {
+      "element": null,
+      "kind": "mound",
+      "at": [-4.972, 0, -4.972],
+      "r": [3.842, 1.15, 2.373],
+      "yaw": 45,
+      "color": "#e9d09e",
+      "textured": true,
+      "cast": true
+    },
+    {
+      "element": null,
+      "kind": "mound",
+      "at": [-7.797, 0, -1.017],
+      "r": [2.147, 0.7, 1.469],
+      "yaw": 80,
+      "color": "#e9d09e",
+      "textured": true,
+      "cast": true
+    },
+    {
+      "element": null,
+      "kind": "mound",
+      "at": [-1.017, 0, -7.797],
+      "r": [2.147, 0.7, 1.469],
+      "yaw": 10,
+      "color": "#e9d09e",
+      "textured": true,
+      "cast": true
+    },
+    {
+      "element": null,
+      "kind": "mound",
+      "at": [6.328, 0, -6.102],
+      "r": [1.695, 0.45, 1.13],
+      "yaw": 135,
+      "color": "#e9d09e",
+      "textured": true,
+      "cast": true
+    },
+    {
+      "element": null,
+      "kind": "mound",
+      "at": [-6.328, 0, 5.876],
+      "r": [1.582, 0.4, 1.13],
+      "yaw": 45,
+      "color": "#e9d09e",
+      "textured": true,
+      "cast": true
+    },
+    {
+      "element": "channels",
+      "kind": "poly",
+      "points": [
+        [4.479, -1.993],
+        [4.738, -1.678],
+        [4.937, -1.314],
+        [5.074, -0.906],
+        [5.144, -0.461],
+        [5.148, 0.014],
+        [5.085, 0.508],
+        [4.956, 1.016],
+        [4.764, 1.528],
+        [4.511, 2.035],
+        [4.202, 2.528],
+        [3.844, 2.999],
+        [3.441, 3.441],
+        [2.999, 3.844],
+        [2.528, 4.202],
+        [2.035, 4.511],
+        [1.528, 4.764],
+        [1.016, 4.956],
+        [0.508, 5.085],
+        [0.014, 5.148],
+        [-0.461, 5.144],
+        [-0.906, 5.074],
+        [-1.314, 4.937],
+        [-1.678, 4.738],
+        [-1.993, 4.479],
+        [-2.252, 4.164],
+        [-2.451, 3.8],
+        [-2.588, 3.392],
+        [-2.658, 2.947],
+        [-2.662, 2.472],
+        [-2.599, 1.977],
+        [-2.47, 1.47],
+        [-2.278, 0.958],
+        [-2.025, 0.451],
+        [-1.716, -0.042],
+        [-1.358, -0.513],
+        [-0.955, -0.955],
+        [-0.513, -1.358],
+        [-0.042, -1.716],
+        [0.451, -2.025],
+        [0.958, -2.278],
+        [1.47, -2.47],
+        [1.977, -2.599],
+        [2.472, -2.662],
+        [2.947, -2.658],
+        [3.392, -2.588],
+        [3.8, -2.451],
+        [4.164, -2.252]
+      ],
+      "y": 0,
+      "h": 0.05,
+      "color": "#d6bf92"
+    },
+    {
+      "element": "channels",
+      "kind": "poly",
+      "points": [
+        [4.199, -1.713],
+        [4.424, -1.437],
+        [4.595, -1.116],
+        [4.709, -0.755],
+        [4.762, -0.358],
+        [4.756, 0.064],
+        [4.689, 0.508],
+        [4.564, 0.965],
+        [4.382, 1.426],
+        [4.146, 1.884],
+        [3.86, 2.33],
+        [3.53, 2.758],
+        [3.161, 3.161],
+        [2.758, 3.53],
+        [2.33, 3.86],
+        [1.884, 4.146],
+        [1.426, 4.382],
+        [0.965, 4.564],
+        [0.508, 4.689],
+        [0.064, 4.756],
+        [-0.358, 4.762],
+        [-0.755, 4.709],
+        [-1.116, 4.595],
+        [-1.437, 4.424],
+        [-1.713, 4.199],
+        [-1.938, 3.923],
+        [-2.109, 3.602],
+        [-2.223, 3.241],
+        [-2.276, 2.844],
+        [-2.27, 2.422],
+        [-2.203, 1.977],
+        [-2.078, 1.521],
+        [-1.896, 1.06],
+        [-1.66, 0.602],
+        [-1.374, 0.156],
+        [-1.044, -0.272],
+        [-0.675, -0.675],
+        [-0.272, -1.044],
+        [0.156, -1.374],
+        [0.602, -1.66],
+        [1.06, -1.896],
+        [1.521, -2.078],
+        [1.977, -2.203],
+        [2.422, -2.27],
+        [2.844, -2.276],
+        [3.241, -2.223],
+        [3.602, -2.109],
+        [3.923, -1.938]
+      ],
+      "y": 0.05,
+      "h": 0.012,
+      "color": "#5fc0cc",
+      "water": true
+    },
+    {
+      "element": "channels",
+      "kind": "poly",
+      "points": [
+        [-3.421, -2.704],
+        [-3.369, -2.597],
+        [-3.296, -2.435],
+        [-3.201, -2.228],
+        [-3.084, -2.0],
+        [-2.938, -1.766],
+        [-2.75, -1.54],
+        [-2.521, -1.356],
+        [-2.291, -1.229],
+        [-2.085, -1.139],
+        [-1.912, -1.066],
+        [-1.785, -1.003],
+        [-1.703, -0.946],
+        [-1.616, -0.858],
+        [-1.507, -0.722],
+        [-1.396, -0.565],
+        [-1.29, -0.406],
+        [-1.196, -0.259],
+        [-1.121, -0.149],
+        [-0.235, -0.755],
+        [-0.301, -0.85],
+        [-0.392, -0.992],
+        [-0.511, -1.173],
+        [-0.652, -1.371],
+        [-0.815, -1.572],
+        [-1.009, -1.766],
+        [-1.236, -1.926],
+        [-1.461, -2.04],
+        [-1.659, -2.124],
+        [-1.819, -2.194],
+        [-1.931, -2.253],
+        [-1.996, -2.302],
+        [-2.061, -2.387],
+        [-2.148, -2.528],
+        [-2.237, -2.701],
+        [-2.32, -2.88],
+        [-2.394, -3.048],
+        [-2.455, -3.172]
+      ],
+      "y": 0,
+      "h": 0.03,
+      "color": "#d6bf92"
+    },
+    {
+      "element": "channels",
+      "kind": "poly",
+      "points": [
+        [-3.192, -2.815],
+        [-3.138, -2.703],
+        [-3.066, -2.54],
+        [-2.973, -2.34],
+        [-2.862, -2.126],
+        [-2.73, -1.913],
+        [-2.572, -1.72],
+        [-2.381, -1.568],
+        [-2.179, -1.458],
+        [-1.983, -1.372],
+        [-1.806, -1.296],
+        [-1.655, -1.222],
+        [-1.538, -1.14],
+        [-1.426, -1.026],
+        [-1.305, -0.876],
+        [-1.186, -0.709],
+        [-1.078, -0.545],
+        [-0.983, -0.399],
+        [-0.911, -0.293],
+        [-0.445, -0.611],
+        [-0.512, -0.71],
+        [-0.605, -0.853],
+        [-0.721, -1.028],
+        [-0.854, -1.217],
+        [-1.005, -1.402],
+        [-1.174, -1.572],
+        [-1.366, -1.707],
+        [-1.568, -1.809],
+        [-1.759, -1.89],
+        [-1.931, -1.965],
+        [-2.07, -2.041],
+        [-2.174, -2.122],
+        [-2.269, -2.24],
+        [-2.37, -2.404],
+        [-2.466, -2.589],
+        [-2.552, -2.774],
+        [-2.625, -2.94],
+        [-2.684, -3.061]
+      ],
+      "y": 0.03,
+      "h": 0.012,
+      "color": "#5fc0cc",
+      "water": true
+    },
+    {
+      "element": "channels",
+      "kind": "cyl",
+      "at": [-2.938, 0, -2.938],
+      "r": 0.85,
+      "h": 0.14,
+      "color": "#d8c398"
+    },
+    {
+      "element": "channels",
+      "kind": "disc",
+      "at": [-2.938, 0.142, -2.938],
+      "r": 0.66,
+      "color": "#5fc0cc",
+      "water": true
+    },
+    {
+      "element": "paving",
+      "kind": "poly",
+      "points": [
+        [7.752, 6.712],
+        [6.17, 5.13],
+        [4.249, 3.209],
+        [3.209, 4.249],
+        [5.13, 6.17],
+        [6.712, 7.752]
+      ],
+      "y": 0,
+      "h": 0.045,
+      "color": "#efe3c8"
+    },
+    {
+      "element": "paving",
+      "kind": "poly",
+      "points": [
+        [4.427, -0.725],
+        [5.795, -2.321],
+        [6.825, -3.695],
+        [5.831, -4.441],
+        [4.827, -3.103],
+        [3.483, -1.535]
+      ],
+      "y": 0,
+      "h": 0.045,
+      "color": "#efe3c8"
+    },
+    {
+      "element": "paving",
+      "kind": "poly",
+      "points": [
+        [4.919, -2.433],
+        [5.226, -2.062],
+        [5.466, -1.635],
+        [5.633, -1.159],
+        [5.725, -0.642],
+        [5.74, -0.093],
+        [5.678, 0.48],
+        [5.54, 1.066],
+        [5.33, 1.654],
+        [5.049, 2.235],
+        [4.703, 2.8],
+        [4.297, 3.338],
+        [3.84, 3.84],
+        [3.338, 4.297],
+        [2.8, 4.703],
+        [2.235, 5.049],
+        [1.654, 5.33],
+        [1.066, 5.54],
+        [0.48, 5.678],
+        [-0.093, 5.74],
+        [-0.642, 5.725],
+        [-1.159, 5.633],
+        [-1.635, 5.466],
+        [-2.062, 5.226],
+        [-2.433, 4.919],
+        [-2.74, 4.548],
+        [-2.98, 4.121],
+        [-3.147, 3.645],
+        [-3.239, 3.128],
+        [-3.254, 2.579],
+        [-3.192, 2.006],
+        [-3.054, 1.42],
+        [-2.844, 0.832],
+        [-2.563, 0.251],
+        [-2.217, -0.314],
+        [-1.811, -0.852],
+        [-1.354, -1.354],
+        [-0.852, -1.811],
+        [-0.314, -2.217],
+        [0.251, -2.563],
+        [0.832, -2.844],
+        [1.42, -3.054],
+        [2.006, -3.192],
+        [2.579, -3.254],
+        [3.128, -3.239],
+        [3.645, -3.147],
+        [4.121, -2.98],
+        [4.548, -2.74]
+      ],
+      "y": 0,
+      "h": 0.04,
+      "color": "#efe3c8"
+    },
+    {
+      "element": "bed-1",
+      "kind": "poly",
+      "points": [
+        [7.546, -2.486],
+        [7.652, -2.258],
+        [7.716, -2.009],
+        [7.736, -1.746],
+        [7.712, -1.472],
+        [7.646, -1.193],
+        [7.538, -0.912],
+        [7.39, -0.636],
+        [7.204, -0.367],
+        [6.985, -0.112],
+        [6.734, 0.125],
+        [6.457, 0.342],
+        [6.158, 0.533],
+        [5.843, 0.696],
+        [5.518, 0.828],
+        [5.187, 0.925],
+        [4.856, 0.989],
+        [4.53, 1.016],
+        [4.216, 1.006],
+        [3.919, 0.958],
+        [3.644, 0.876],
+        [3.396, 0.759],
+        [3.178, 0.61],
+        [2.994, 0.432],
+        [2.85, 0.226],
+        [2.744, -0.002],
+        [2.68, -0.251],
+        [2.66, -0.514],
+        [2.684, -0.788],
+        [2.75, -1.067],
+        [2.858, -1.348],
+        [3.006, -1.624],
+        [3.192, -1.893],
+        [3.411, -2.148],
+        [3.662, -2.385],
+        [3.939, -2.602],
+        [4.237, -2.793],
+        [4.553, -2.956],
+        [4.878, -3.088],
+        [5.209, -3.185],
+        [5.54, -3.249],
+        [5.866, -3.276],
+        [6.18, -3.266],
+        [6.477, -3.218],
+        [6.752, -3.136],
+        [7.0, -3.019],
+        [7.218, -2.87],
+        [7.401, -2.692]
+      ],
+      "y": 0,
+      "h": 0.02,
+      "color": "#a9c06f",
+      "lawn": true,
+      "dryColor": "#d9c38d"
+    },
+    {
+      "element": "bed-2",
+      "kind": "poly",
+      "points": [
+        [-0.791, 2.879],
+        [-0.574, 3.034],
+        [-0.385, 3.23],
+        [-0.228, 3.462],
+        [-0.107, 3.729],
+        [-0.023, 4.025],
+        [0.025, 4.344],
+        [0.032, 4.682],
+        [0.0, 5.033],
+        [-0.07, 5.39],
+        [-0.179, 5.748],
+        [-0.322, 6.1],
+        [-0.498, 6.441],
+        [-0.705, 6.764],
+        [-0.939, 7.065],
+        [-1.194, 7.337],
+        [-1.469, 7.577],
+        [-1.757, 7.78],
+        [-2.053, 7.943],
+        [-2.353, 8.061],
+        [-2.651, 8.136],
+        [-2.943, 8.164],
+        [-3.223, 8.145],
+        [-3.486, 8.079],
+        [-3.729, 7.969],
+        [-3.946, 7.814],
+        [-4.135, 7.618],
+        [-4.292, 7.386],
+        [-4.413, 7.119],
+        [-4.497, 6.823],
+        [-4.545, 6.504],
+        [-4.552, 6.166],
+        [-4.52, 5.815],
+        [-4.45, 5.458],
+        [-4.341, 5.1],
+        [-4.198, 4.748],
+        [-4.022, 4.407],
+        [-3.815, 4.084],
+        [-3.581, 3.783],
+        [-3.326, 3.511],
+        [-3.051, 3.271],
+        [-2.763, 3.068],
+        [-2.467, 2.905],
+        [-2.167, 2.787],
+        [-1.869, 2.712],
+        [-1.577, 2.684],
+        [-1.297, 2.703],
+        [-1.034, 2.768]
+      ],
+      "y": 0,
+      "h": 0.02,
+      "color": "#a9c06f",
+      "lawn": true,
+      "dryColor": "#d9c38d"
+    },
+    {
+      "element": "bed-3",
+      "kind": "poly",
+      "points": [
+        [0.51, -4.126],
+        [0.646, -3.949],
+        [0.74, -3.736],
+        [0.791, -3.491],
+        [0.798, -3.216],
+        [0.76, -2.917],
+        [0.678, -2.599],
+        [0.554, -2.268],
+        [0.389, -1.929],
+        [0.186, -1.588],
+        [-0.051, -1.25],
+        [-0.318, -0.922],
+        [-0.609, -0.609],
+        [-0.922, -0.318],
+        [-1.25, -0.051],
+        [-1.588, 0.186],
+        [-1.929, 0.389],
+        [-2.268, 0.554],
+        [-2.599, 0.678],
+        [-2.917, 0.76],
+        [-3.216, 0.798],
+        [-3.491, 0.791],
+        [-3.736, 0.74],
+        [-3.949, 0.646],
+        [-4.126, 0.51],
+        [-4.262, 0.333],
+        [-4.356, 0.12],
+        [-4.407, -0.125],
+        [-4.414, -0.4],
+        [-4.376, -0.699],
+        [-4.294, -1.017],
+        [-4.17, -1.348],
+        [-4.005, -1.687],
+        [-3.802, -2.028],
+        [-3.565, -2.366],
+        [-3.298, -2.694],
+        [-3.007, -3.007],
+        [-2.694, -3.298],
+        [-2.366, -3.565],
+        [-2.028, -3.802],
+        [-1.687, -4.005],
+        [-1.348, -4.17],
+        [-1.017, -4.294],
+        [-0.699, -4.376],
+        [-0.4, -4.414],
+        [-0.125, -4.407],
+        [0.12, -4.356],
+        [0.333, -4.262]
+      ],
+      "y": 0,
+      "h": 0.02,
+      "color": "#a9c06f",
+      "lawn": true,
+      "dryColor": "#d9c38d"
+    },
+    {
+      "element": "bed-4",
+      "kind": "poly",
+      "points": [
+        [4.859, 6.102],
+        [4.841, 6.309],
+        [4.786, 6.511],
+        [4.695, 6.708],
+        [4.571, 6.893],
+        [4.415, 7.065],
+        [4.231, 7.221],
+        [4.019, 7.357],
+        [3.785, 7.472],
+        [3.534, 7.563],
+        [3.268, 7.63],
+        [2.992, 7.67],
+        [2.712, 7.684],
+        [2.432, 7.67],
+        [2.156, 7.63],
+        [1.89, 7.563],
+        [1.638, 7.472],
+        [1.405, 7.357],
+        [1.193, 7.221],
+        [1.009, 7.065],
+        [0.853, 6.893],
+        [0.729, 6.708],
+        [0.638, 6.511],
+        [0.583, 6.309],
+        [0.565, 6.102],
+        [0.583, 5.895],
+        [0.638, 5.693],
+        [0.729, 5.496],
+        [0.853, 5.311],
+        [1.009, 5.139],
+        [1.193, 4.983],
+        [1.405, 4.847],
+        [1.638, 4.732],
+        [1.89, 4.641],
+        [2.156, 4.574],
+        [2.432, 4.534],
+        [2.712, 4.52],
+        [2.992, 4.534],
+        [3.268, 4.574],
+        [3.534, 4.641],
+        [3.785, 4.732],
+        [4.019, 4.847],
+        [4.231, 4.983],
+        [4.415, 5.139],
+        [4.571, 5.311],
+        [4.695, 5.496],
+        [4.786, 5.693],
+        [4.841, 5.895]
+      ],
+      "y": 0,
+      "h": 0.02,
+      "color": "#a9c06f",
+      "lawn": true,
+      "dryColor": "#d9c38d"
+    },
+    {
+      "element": "springs",
+      "kind": "cyl",
+      "at": [-7.91, 0, 2.712],
+      "r": 0.62,
+      "h": 0.1,
+      "color": "#d6bf92"
+    },
+    {
+      "element": "springs",
+      "kind": "disc",
+      "at": [-7.91, 0.102, 2.712],
+      "r": 0.45,
+      "color": "#5fc0cc",
+      "water": true
+    },
+    {
+      "element": "springs",
+      "kind": "cyl",
+      "at": [2.712, 0, -7.91],
+      "r": 0.62,
+      "h": 0.1,
+      "color": "#d6bf92"
+    },
+    {
+      "element": "springs",
+      "kind": "disc",
+      "at": [2.712, 0.102, -7.91],
+      "r": 0.45,
+      "color": "#5fc0cc",
+      "water": true
+    },
+    {
+      "element": "waterfall",
+      "kind": "sheet",
+      "at": [-3.367, 0.66, -3.367],
+      "size": [0.62, 1.3],
+      "yaw": 45,
+      "color": "#8fd6df",
+      "water": true
+    }
+  ],
+  "items": [
+    {
+      "element": "tree-1",
+      "role": "tree.fruit",
+      "x": 4.859,
+      "z": -0.452,
+      "y": 0.02,
+      "yaw": 137.5,
+      "variant": 1,
+      "size": {
+        "h": 2.1,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-2",
+      "role": "tree.palm",
+      "x": -2.826,
+      "z": -0.094,
+      "y": 0.0,
+      "yaw": 275.0,
+      "variant": 2,
+      "size": {
+        "h": 4.0,
+        "wmax": 3.4
+      }
+    },
+    {
+      "element": "tree-3",
+      "role": "tree.palm-young",
+      "x": -0.094,
+      "z": -2.826,
+      "y": 0.0,
+      "yaw": 52.5,
+      "variant": 3,
+      "size": {
+        "h": 2.3,
+        "wmax": 2.6
+      }
+    },
+    {
+      "element": "tree-4",
+      "role": "tree.fruit-dark",
+      "x": -2.034,
+      "z": 4.859,
+      "y": 0.02,
+      "yaw": 190.0,
+      "variant": 4,
+      "size": {
+        "h": 2.1,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-5",
+      "role": "tree.palm",
+      "x": -3.857,
+      "z": 2.95,
+      "y": 0.0,
+      "yaw": 327.5,
+      "variant": 5,
+      "size": {
+        "h": 4.5,
+        "wmax": 3.4
+      }
+    },
+    {
+      "element": "tree-6",
+      "role": "tree.fruit",
+      "x": -2.712,
+      "z": 6.328,
+      "y": 0.02,
+      "yaw": 105.0,
+      "variant": 6,
+      "size": {
+        "h": 2.3,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-7",
+      "role": "tree.fruit",
+      "x": 6.102,
+      "z": -1.808,
+      "y": 0.02,
+      "yaw": 242.5,
+      "variant": 7,
+      "size": {
+        "h": 2.1,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-8",
+      "role": "tree.palm",
+      "x": 2.931,
+      "z": -3.745,
+      "y": 0.0,
+      "yaw": 20.0,
+      "variant": 8,
+      "size": {
+        "h": 4.0,
+        "wmax": 3.4
+      }
+    },
+    {
+      "element": "tree-9",
+      "role": "tree.palm-young",
+      "x": -4.859,
+      "z": -1.469,
+      "y": 0.0,
+      "yaw": 157.5,
+      "variant": 9,
+      "size": {
+        "h": 2.3,
+        "wmax": 2.6
+      }
+    },
+    {
+      "element": "tree-10",
+      "role": "tree.fruit-dark",
+      "x": -1.13,
+      "z": -2.486,
+      "y": 0.02,
+      "yaw": 295.0,
+      "variant": 10,
+      "size": {
+        "h": 2.1,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-11",
+      "role": "tree.palm",
+      "x": -1.469,
+      "z": -4.859,
+      "y": 0.0,
+      "yaw": 72.5,
+      "variant": 11,
+      "size": {
+        "h": 4.5,
+        "wmax": 3.4
+      }
+    },
+    {
+      "element": "tree-12",
+      "role": "tree.fruit",
+      "x": 4.068,
+      "z": -1.921,
+      "y": 0.02,
+      "yaw": 210.0,
+      "variant": 12,
+      "size": {
+        "h": 2.3,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-13",
+      "role": "tree.fruit",
+      "x": -3.616,
+      "z": 4.52,
+      "y": 0.02,
+      "yaw": 347.5,
+      "variant": 13,
+      "size": {
+        "h": 2.1,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-14",
+      "role": "tree.palm",
+      "x": -2.4,
+      "z": 5.94,
+      "y": 0.0,
+      "yaw": 125.0,
+      "variant": 14,
+      "size": {
+        "h": 4.0,
+        "wmax": 3.4
+      }
+    },
+    {
+      "element": "tree-15",
+      "role": "tree.palm-young",
+      "x": 6.363,
+      "z": -1.746,
+      "y": 0.0,
+      "yaw": 262.5,
+      "variant": 15,
+      "size": {
+        "h": 2.3,
+        "wmax": 2.6
+      }
+    },
+    {
+      "element": "tree-16",
+      "role": "tree.fruit-dark",
+      "x": -2.712,
+      "z": -0.791,
+      "y": 0.02,
+      "yaw": 40.0,
+      "variant": 16,
+      "size": {
+        "h": 2.1,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-17",
+      "role": "tree.palm",
+      "x": 7.119,
+      "z": 1.017,
+      "y": 0.0,
+      "yaw": 177.5,
+      "variant": 17,
+      "size": {
+        "h": 4.5,
+        "wmax": 3.4
+      }
+    },
+    {
+      "element": "tree-18",
+      "role": "tree.fruit",
+      "x": 2.26,
+      "z": 6.667,
+      "y": 0.02,
+      "yaw": 315.0,
+      "variant": 18,
+      "size": {
+        "h": 2.3,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-19",
+      "role": "tree.fruit",
+      "x": 6.328,
+      "z": 0.113,
+      "y": 0.02,
+      "yaw": 92.5,
+      "variant": 19,
+      "size": {
+        "h": 2.1,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-20",
+      "role": "tree.palm",
+      "x": -0.452,
+      "z": 7.91,
+      "y": 0.0,
+      "yaw": 230.0,
+      "variant": 20,
+      "size": {
+        "h": 4.0,
+        "wmax": 3.4
+      }
+    },
+    {
+      "element": "tree-21",
+      "role": "tree.palm-young",
+      "x": -7.232,
+      "z": 2.712,
+      "y": 0.0,
+      "yaw": 7.5,
+      "variant": 21,
+      "size": {
+        "h": 2.3,
+        "wmax": 2.6
+      }
+    },
+    {
+      "element": "tree-22",
+      "role": "tree.fruit-dark",
+      "x": -1.017,
+      "z": 6.102,
+      "y": 0.02,
+      "yaw": 145.0,
+      "variant": 22,
+      "size": {
+        "h": 2.1,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-23",
+      "role": "tree.palm",
+      "x": 2.938,
+      "z": -7.458,
+      "y": 0.0,
+      "yaw": 282.5,
+      "variant": 23,
+      "size": {
+        "h": 4.5,
+        "wmax": 3.4
+      }
+    },
+    {
+      "element": "tree-24",
+      "role": "tree.fruit",
+      "x": -3.842,
+      "z": 6.328,
+      "y": 0.02,
+      "yaw": 60.0,
+      "variant": 24,
+      "size": {
+        "h": 2.3,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-25",
+      "role": "tree.fruit",
+      "x": 3.39,
+      "z": 5.537,
+      "y": 0.02,
+      "yaw": 197.5,
+      "variant": 25,
+      "size": {
+        "h": 2.1,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-26",
+      "role": "tree.palm",
+      "x": 5.989,
+      "z": 3.842,
+      "y": 0.0,
+      "yaw": 335.0,
+      "variant": 26,
+      "size": {
+        "h": 4.0,
+        "wmax": 3.4
+      }
+    },
+    {
+      "element": "tree-27",
+      "role": "tree.palm-young",
+      "x": 1.356,
+      "z": 8.362,
+      "y": 0.0,
+      "yaw": 112.5,
+      "variant": 27,
+      "size": {
+        "h": 2.3,
+        "wmax": 2.6
+      }
+    },
+    {
+      "element": "tree-28",
+      "role": "tree.fruit-dark",
+      "x": 4.972,
+      "z": -2.938,
+      "y": 0.02,
+      "yaw": 250.0,
+      "variant": 28,
+      "size": {
+        "h": 2.1,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "tree-29",
+      "role": "tree.palm",
+      "x": 8.362,
+      "z": 1.808,
+      "y": 0.0,
+      "yaw": 27.5,
+      "variant": 29,
+      "size": {
+        "h": 4.5,
+        "wmax": 3.4
+      }
+    },
+    {
+      "element": "tree-30",
+      "role": "tree.fruit",
+      "x": -0.452,
+      "z": -1.808,
+      "y": 0.02,
+      "yaw": 165.0,
+      "variant": 30,
+      "size": {
+        "h": 2.3,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "stepping-stones",
+      "role": "stepping-stones",
+      "x": -2.361,
+      "z": -1.029,
+      "y": 0.035,
+      "yaw": 45,
+      "variant": 0,
+      "size": {
+        "w": 0.55
+      }
+    },
+    {
+      "element": "stepping-stones",
+      "role": "stepping-stones",
+      "x": -1.921,
+      "z": -1.469,
+      "y": 0.035,
+      "yaw": 45,
+      "variant": 1,
+      "size": {
+        "w": 0.55
+      }
+    },
+    {
+      "element": "stepping-stones",
+      "role": "stepping-stones",
+      "x": -1.481,
+      "z": -1.909,
+      "y": 0.035,
+      "yaw": 45,
+      "variant": 2,
+      "size": {
+        "w": 0.55
+      }
+    },
+    {
+      "element": "stepping-stones",
+      "role": "stepping-stones",
+      "x": 3.0,
+      "z": 4.207,
+      "y": 0.04,
+      "yaw": 355.0,
+      "variant": 3,
+      "size": {
+        "w": 0.7
+      }
+    },
+    {
+      "element": "stepping-stones",
+      "role": "stepping-stones",
+      "x": 2.164,
+      "z": 4.767,
+      "y": 0.04,
+      "yaw": 132.5,
+      "variant": 4,
+      "size": {
+        "w": 0.7
+      }
+    },
+    {
+      "element": "stepping-stones",
+      "role": "stepping-stones",
+      "x": 1.287,
+      "z": 5.174,
+      "y": 0.04,
+      "yaw": 270.0,
+      "variant": 5,
+      "size": {
+        "w": 0.7
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": 4.947,
+      "z": 1.551,
+      "y": 0.04,
+      "yaw": 47.5,
+      "variant": 37,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": 4.582,
+      "z": 2.259,
+      "y": 0.04,
+      "yaw": 185.0,
+      "variant": 38,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": 4.114,
+      "z": 2.936,
+      "y": 0.04,
+      "yaw": 322.5,
+      "variant": 39,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": 0.131,
+      "z": 5.334,
+      "y": 0.04,
+      "yaw": 100.0,
+      "variant": 40,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": -0.539,
+      "z": 5.343,
+      "y": 0.04,
+      "yaw": 237.5,
+      "variant": 41,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": -1.156,
+      "z": 5.226,
+      "y": 0.04,
+      "yaw": 15.0,
+      "variant": 42,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": -3.729,
+      "z": -2.486,
+      "y": 0.04,
+      "yaw": 152.5,
+      "variant": 43,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": -2.373,
+      "z": -3.842,
+      "y": 0.04,
+      "yaw": 290.0,
+      "variant": 44,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": -3.503,
+      "z": -3.729,
+      "y": 0.04,
+      "yaw": 67.5,
+      "variant": 45,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": -2.637,
+      "z": 3.923,
+      "y": 0.04,
+      "yaw": 205.0,
+      "variant": 46,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": -2.814,
+      "z": 3.341,
+      "y": 0.04,
+      "yaw": 342.5,
+      "variant": 47,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 3.923,
+      "z": -2.637,
+      "y": 0.04,
+      "yaw": 120.0,
+      "variant": 48,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 4.424,
+      "z": -2.341,
+      "y": 0.04,
+      "yaw": 257.5,
+      "variant": 49,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "fountain",
+      "role": "fountain",
+      "x": -5.537,
+      "z": 4.068,
+      "y": 0,
+      "yaw": 0,
+      "variant": 50,
+      "size": {
+        "w": 1.5
+      }
+    },
+    {
+      "element": "springs",
+      "role": "rock",
+      "x": -8.757,
+      "z": 2.373,
+      "y": 0,
+      "yaw": 172.5,
+      "variant": 0,
+      "size": {
+        "w": 0.75
+      }
+    },
+    {
+      "element": "springs",
+      "role": "rock",
+      "x": -8.192,
+      "z": 1.808,
+      "y": 0,
+      "yaw": 310.0,
+      "variant": 1,
+      "size": {
+        "w": 0.6
+      }
+    },
+    {
+      "element": "springs",
+      "role": "rock",
+      "x": -7.288,
+      "z": 2.091,
+      "y": 0,
+      "yaw": 87.5,
+      "variant": 2,
+      "size": {
+        "w": 0.5
+      }
+    },
+    {
+      "element": "springs",
+      "role": "rock",
+      "x": 2.373,
+      "z": -8.757,
+      "y": 0,
+      "yaw": 225.0,
+      "variant": 0,
+      "size": {
+        "w": 0.75
+      }
+    },
+    {
+      "element": "springs",
+      "role": "rock",
+      "x": 1.808,
+      "z": -8.192,
+      "y": 0,
+      "yaw": 2.5,
+      "variant": 1,
+      "size": {
+        "w": 0.6
+      }
+    },
+    {
+      "element": "springs",
+      "role": "rock",
+      "x": 2.091,
+      "z": -7.288,
+      "y": 0,
+      "yaw": 140.0,
+      "variant": 2,
+      "size": {
+        "w": 0.5
+      }
+    },
+    {
+      "element": "wall-north",
+      "role": "wall",
+      "size": {
+        "h": 1.25
+      },
+      "y": 0,
+      "line": {
+        "from": [-2.712, -9.831],
+        "to": [4.972, -9.153]
+      },
+      "gap": {
+        "at": [1.13, -9.492],
+        "width": 1.6
+      }
+    },
+    {
+      "element": "wall-west",
+      "role": "wall",
+      "size": {
+        "h": 1.25
+      },
+      "y": 0,
+      "line": {
+        "from": [-9.831, -2.712],
+        "to": [-9.153, 4.972]
+      },
+      "gap": {
+        "at": [-9.492, 1.13],
+        "width": 1.6
+      }
+    },
+    {
+      "element": "gate-north",
+      "role": "gate",
+      "x": 1.13,
+      "z": -9.492,
+      "y": 0.0,
+      "yaw": -5,
+      "variant": 57,
+      "size": {
+        "w": 1.6,
+        "hmax": 1.9
+      }
+    },
+    {
+      "element": "gate-west",
+      "role": "gate",
+      "x": -9.492,
+      "z": 1.13,
+      "y": 0.0,
+      "yaw": 95,
+      "variant": 58,
+      "size": {
+        "w": 1.6,
+        "hmax": 1.9
+      }
+    },
+    {
+      "element": "trellis",
+      "role": "canopy",
+      "x": 4.181,
+      "z": -3.616,
+      "y": 0.0,
+      "yaw": 45,
+      "variant": 59,
+      "size": {
+        "w": 2.3,
+        "hmax": 2.0
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lantern",
+      "x": 6.102,
+      "z": 7.232,
+      "y": 0.0,
+      "yaw": 0,
+      "variant": 60,
+      "size": {
+        "h": 1.35
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lantern",
+      "x": 4.068,
+      "z": 5.198,
+      "y": 0.0,
+      "yaw": 0,
+      "variant": 61,
+      "size": {
+        "h": 1.35
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lantern",
+      "x": 4.52,
+      "z": -1.921,
+      "y": 0.0,
+      "yaw": 0,
+      "variant": 62,
+      "size": {
+        "h": 1.35
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lantern",
+      "x": 7.006,
+      "z": -3.39,
+      "y": 0.0,
+      "yaw": 0,
+      "variant": 63,
+      "size": {
+        "h": 1.35
+      }
+    },
+    {
+      "element": "pavilion",
+      "role": "pavilion",
+      "x": 5.876,
+      "z": -5.198,
+      "y": 0.0,
+      "yaw": -25,
+      "variant": 64,
+      "size": {
+        "w": 2.8,
+        "hmax": 2.2
+      }
+    },
+    {
+      "element": "carpets",
+      "role": "carpet",
+      "x": 4.181,
+      "z": -3.616,
+      "y": 0.0,
+      "yaw": 45,
+      "variant": 65,
+      "size": {
+        "w": 1.9
+      }
+    },
+    {
+      "element": "cushions",
+      "role": "cushion",
+      "x": 3.559,
+      "z": -3.559,
+      "y": 0.012,
+      "yaw": 30,
+      "variant": 0,
+      "size": {
+        "w": 0.5
+      }
+    },
+    {
+      "element": "cushions",
+      "role": "cushion",
+      "x": 4.294,
+      "z": -4.294,
+      "y": 0.012,
+      "yaw": 70,
+      "variant": 1,
+      "size": {
+        "w": 0.5
+      }
+    },
+    {
+      "element": "cushions",
+      "role": "cushion",
+      "x": 4.802,
+      "z": -3.446,
+      "y": 0.012,
+      "yaw": 110,
+      "variant": 2,
+      "size": {
+        "w": 0.5
+      }
+    },
+    {
+      "element": "lectern",
+      "role": "lectern",
+      "x": 5.537,
+      "z": -3.503,
+      "y": 0.0,
+      "yaw": -30,
+      "variant": 69,
+      "size": {
+        "w": 0.65,
+        "hmax": 0.55
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": -1.13,
+      "z": -9.04,
+      "y": 0.371,
+      "yaw": 265.0,
+      "variant": 0,
+      "size": {
+        "h": 0.85,
+        "wmax": 1.1
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": 3.39,
+      "z": -8.588,
+      "y": 0.0,
+      "yaw": 42.5,
+      "variant": 1,
+      "size": {
+        "h": 0.85,
+        "wmax": 1.1
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": -9.04,
+      "z": -1.13,
+      "y": 0.371,
+      "yaw": 180.0,
+      "variant": 2,
+      "size": {
+        "h": 0.85,
+        "wmax": 1.1
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": -8.588,
+      "z": 3.39,
+      "y": 0.0,
+      "yaw": 317.5,
+      "variant": 3,
+      "size": {
+        "h": 0.85,
+        "wmax": 1.1
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": 7.684,
+      "z": -2.26,
+      "y": 0.0,
+      "yaw": 95.0,
+      "variant": 4,
+      "size": {
+        "h": 0.85,
+        "wmax": 1.1
+      }
+    },
+    {
+      "element": "waterfall",
+      "role": "rock-tall",
+      "x": -4.237,
+      "z": -3.559,
+      "y": 0.0,
+      "yaw": 30,
+      "variant": 75,
+      "size": {
+        "h": 1.7,
+        "wmax": 1.3
+      }
+    },
+    {
+      "element": "waterfall",
+      "role": "rock-tall",
+      "x": -3.559,
+      "z": -4.237,
+      "y": 0.0,
+      "yaw": 200,
+      "variant": 76,
+      "size": {
+        "h": 1.5,
+        "wmax": 1.2
+      }
+    },
+    {
+      "element": "waterfall",
+      "role": "rock",
+      "x": -4.237,
+      "z": -4.237,
+      "y": 0.9,
+      "yaw": 60,
+      "variant": 77,
+      "size": {
+        "w": 1.3
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 4.656,
+      "z": -1.596,
+      "y": 0.05,
+      "yaw": 285.0,
+      "variant": 0,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 5.013,
+      "z": -0.22,
+      "y": 0.05,
+      "yaw": 62.5,
+      "variant": 1,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 4.606,
+      "z": 1.45,
+      "y": 0.05,
+      "yaw": 200.0,
+      "variant": 2,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 3.52,
+      "z": 3.079,
+      "y": 0.05,
+      "yaw": 337.5,
+      "variant": 3,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 1.972,
+      "z": 4.337,
+      "y": 0.05,
+      "yaw": 115.0,
+      "variant": 4,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 0.277,
+      "z": 4.967,
+      "y": 0.05,
+      "yaw": 252.5,
+      "variant": 5,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -1.223,
+      "z": 4.845,
+      "y": 0.05,
+      "yaw": 30.0,
+      "variant": 6,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -2.223,
+      "z": 3.993,
+      "y": 0.05,
+      "yaw": 167.5,
+      "variant": 7,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -2.522,
+      "z": 2.584,
+      "y": 0.05,
+      "yaw": 305.0,
+      "variant": 8,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -2.059,
+      "z": 0.904,
+      "y": 0.05,
+      "yaw": 82.5,
+      "variant": 9,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -0.928,
+      "z": -0.707,
+      "y": 0.05,
+      "yaw": 220.0,
+      "variant": 10,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 0.643,
+      "z": -1.924,
+      "y": 0.05,
+      "yaw": 357.5,
+      "variant": 11,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 2.336,
+      "z": -2.5,
+      "y": 0.05,
+      "yaw": 135.0,
+      "variant": 12,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 3.807,
+      "z": -2.318,
+      "y": 0.05,
+      "yaw": 272.5,
+      "variant": 13,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": 0.124,
+      "z": 3.001,
+      "y": 0.062,
+      "yaw": 50.0,
+      "variant": 0,
+      "size": {
+        "w": 0.5
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": 1.722,
+      "z": -0.195,
+      "y": 0.062,
+      "yaw": 187.5,
+      "variant": 1,
+      "size": {
+        "w": 0.5
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": 2.122,
+      "z": 1.802,
+      "y": 0.062,
+      "yaw": 325.0,
+      "variant": 2,
+      "size": {
+        "w": 0.5
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": 3.4,
+      "z": -0.115,
+      "y": 0.062,
+      "yaw": 102.5,
+      "variant": 3,
+      "size": {
+        "w": 0.5
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": -0.115,
+      "z": 1.323,
+      "y": 0.062,
+      "yaw": 240.0,
+      "variant": 4,
+      "size": {
+        "w": 0.5
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "plant",
+      "x": -6.328,
+      "z": 0.904,
+      "y": 0.0,
+      "yaw": 17.5,
+      "variant": 0,
+      "size": {
+        "w": 0.9
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "plant",
+      "x": 0.904,
+      "z": -6.328,
+      "y": 0.0,
+      "yaw": 155.0,
+      "variant": 1,
+      "size": {
+        "w": 0.9
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "plant",
+      "x": 7.458,
+      "z": 3.616,
+      "y": 0.0,
+      "yaw": 292.5,
+      "variant": 2,
+      "size": {
+        "w": 0.9
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "plant",
+      "x": -2.938,
+      "z": 8.588,
+      "y": 0.0,
+      "yaw": 70.0,
+      "variant": 3,
+      "size": {
+        "w": 0.9
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "plant",
+      "x": 8.362,
+      "z": -0.904,
+      "y": 0.0,
+      "yaw": 207.5,
+      "variant": 4,
+      "size": {
+        "w": 0.9
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "plant",
+      "x": -8.362,
+      "z": -4.068,
+      "y": 0.0,
+      "yaw": 345.0,
+      "variant": 5,
+      "size": {
+        "w": 0.9
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "pot",
+      "x": 4.859,
+      "z": -6.328,
+      "y": 0,
+      "yaw": 122.5,
+      "variant": 0,
+      "size": {
+        "w": 0.7
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "pot",
+      "x": 5.537,
+      "z": -6.667,
+      "y": 0,
+      "yaw": 260.0,
+      "variant": 1,
+      "size": {
+        "w": 0.5
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "pot",
+      "x": -6.328,
+      "z": 4.972,
+      "y": 0,
+      "yaw": 37.5,
+      "variant": 2,
+      "size": {
+        "w": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "bush",
+      "x": 7.684,
+      "z": 4.972,
+      "y": 0,
+      "yaw": 175.0,
+      "variant": 0,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.9
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "bush",
+      "x": -4.972,
+      "z": 7.684,
+      "y": 0,
+      "yaw": 312.5,
+      "variant": 1,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.9
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "bush",
+      "x": 8.362,
+      "z": 2.034,
+      "y": 0,
+      "yaw": 90.0,
+      "variant": 2,
+      "size": {
+        "h": 0.6,
+        "wmax": 0.9
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "tree.palm-young",
+      "x": 3.842,
+      "z": 8.588,
+      "y": 0,
+      "yaw": 227.5,
+      "variant": 0,
+      "size": {
+        "h": 1.8,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "tree.palm-young",
+      "x": 8.588,
+      "z": 3.842,
+      "y": 0,
+      "yaw": 5.0,
+      "variant": 1,
+      "size": {
+        "h": 1.6,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "tree.palm-young",
+      "x": -3.39,
+      "z": 9.266,
+      "y": 0,
+      "yaw": 142.5,
+      "variant": 2,
+      "size": {
+        "h": 1.5,
+        "wmax": 2.0
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "tree.palm-young",
+      "x": 9.266,
+      "z": -2.938,
+      "y": 0,
+      "yaw": 280.0,
+      "variant": 3,
+      "size": {
+        "h": 1.7,
+        "wmax": 2.0
+      }
+    }
+  ]
+}

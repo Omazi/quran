@@ -1,0 +1,2389 @@
+{
+  "about": "Level 7 garden 'Jardin de nuit' (tools/garden-3d/levels/make_levels.py). Metres; x east, z south, y up.",
+  "version": 2,
+  "level": 7,
+  "style": "night-garden",
+  "name": "Jardin de nuit",
+  "idea": "Un jardin sous la lune : un long canal d'eau sombre m\u00e8ne \u00e0 un bassin rond, des all\u00e9es de pierre p\u00e2le, des haies et des cypr\u00e8s en silhouette ; les lanternes s'allument, les fleurs blanches qui s'ouvrent la nuit luisent doucement.",
+  "plot": {
+    "shape": "square",
+    "half": 9.0,
+    "slab": 0.7,
+    "top": "#7d7487",
+    "topDry": "#7a7177",
+    "side": "#5f5869",
+    "border": {
+      "w": 0.32,
+      "h": 0.24,
+      "color": "#d8d3e0"
+    }
+  },
+  "colors": {
+    "water": "#34597c",
+    "waterLow": "#4a6378",
+    "dryBed": "#8a8394",
+    "lawnDry": "#a99f80"
+  },
+  "light": {
+    "sky": {
+      "color": 10334428,
+      "ground": 2895944,
+      "intensity": 1.05
+    },
+    "sun": {
+      "color": 13228287,
+      "intensity": 1.05,
+      "position": [18, 30, -8]
+    },
+    "shadowIntensity": 0.62
+  },
+  "catalogue": [
+    {
+      "hizb": 1,
+      "id": "channels",
+      "kind": "channels",
+      "label": "Le canal d'eau sombre et son bassin rond, sous la lune"
+    },
+    {
+      "hizb": 2,
+      "id": "paving",
+      "kind": "paving",
+      "label": "Les all\u00e9es de pierre p\u00e2le le long du canal"
+    },
+    {
+      "hizb": 3,
+      "id": "bed-1",
+      "kind": "bed",
+      "label": "La pelouse de l'est"
+    },
+    {
+      "hizb": 4,
+      "id": "bed-2",
+      "kind": "bed",
+      "label": "La pelouse de devant"
+    },
+    {
+      "hizb": 5,
+      "id": "tree-1",
+      "kind": "pomegranate",
+      "label": "Arbre aux fleurs blanches"
+    },
+    {
+      "hizb": 6,
+      "id": "bed-3",
+      "kind": "bed",
+      "label": "La pelouse de l'ouest"
+    },
+    {
+      "hizb": 7,
+      "id": "tree-2",
+      "kind": "date-palm",
+      "label": "Palmier sous la lune"
+    },
+    {
+      "hizb": 8,
+      "id": "bed-4",
+      "kind": "bed",
+      "label": "La pelouse du fond"
+    },
+    {
+      "hizb": 9,
+      "id": "tree-3",
+      "kind": "olive",
+      "label": "Olivier sombre"
+    },
+    {
+      "hizb": 10,
+      "id": "stepping-stones",
+      "kind": "stepping-stones",
+      "label": "Des pas japonais dans la pelouse de devant"
+    },
+    {
+      "hizb": 11,
+      "id": "tree-4",
+      "kind": "fig",
+      "label": "Figuier sombre"
+    },
+    {
+      "hizb": 12,
+      "id": "flowers-1",
+      "kind": "flowers",
+      "label": "Des belles-de-nuit, \u00e0 l'est"
+    },
+    {
+      "hizb": 13,
+      "id": "tree-5",
+      "kind": "cypress",
+      "label": "Cypr\u00e8s dans la nuit"
+    },
+    {
+      "hizb": 14,
+      "id": "tree-6",
+      "kind": "orange",
+      "label": "Oranger en fleurs blanches"
+    },
+    {
+      "hizb": 15,
+      "id": "flowers-2",
+      "kind": "flowers",
+      "label": "Des belles-de-nuit, \u00e0 l'ouest"
+    },
+    {
+      "hizb": 16,
+      "id": "tree-7",
+      "kind": "pomegranate",
+      "label": "Arbre aux fleurs blanches"
+    },
+    {
+      "hizb": 17,
+      "id": "tree-8",
+      "kind": "date-palm",
+      "label": "Palmier sous la lune"
+    },
+    {
+      "hizb": 18,
+      "id": "flowers-3",
+      "kind": "flowers",
+      "label": "Des belles-de-nuit, au fond"
+    },
+    {
+      "hizb": 19,
+      "id": "tree-9",
+      "kind": "olive",
+      "label": "Olivier sombre"
+    },
+    {
+      "hizb": 20,
+      "id": "fountain",
+      "kind": "fountain",
+      "label": "La fontaine au bout du canal"
+    },
+    {
+      "hizb": 21,
+      "id": "tree-10",
+      "kind": "fig",
+      "label": "Figuier sombre"
+    },
+    {
+      "hizb": 22,
+      "id": "flowers-4",
+      "kind": "flowers",
+      "label": "Des belles-de-nuit, devant"
+    },
+    {
+      "hizb": 23,
+      "id": "tree-11",
+      "kind": "cypress",
+      "label": "Cypr\u00e8s dans la nuit"
+    },
+    {
+      "hizb": 24,
+      "id": "springs",
+      "kind": "springs",
+      "label": "Deux vasques d'eau dans les pelouses"
+    },
+    {
+      "hizb": 25,
+      "id": "tree-12",
+      "kind": "orange",
+      "label": "Oranger en fleurs blanches"
+    },
+    {
+      "hizb": 26,
+      "id": "tree-13",
+      "kind": "pomegranate",
+      "label": "Arbre aux fleurs blanches"
+    },
+    {
+      "hizb": 27,
+      "id": "birds-1",
+      "kind": "birds",
+      "label": "Des oiseaux (aucun mod\u00e8le)"
+    },
+    {
+      "hizb": 28,
+      "id": "tree-14",
+      "kind": "date-palm",
+      "label": "Palmier sous la lune"
+    },
+    {
+      "hizb": 29,
+      "id": "tree-15",
+      "kind": "olive",
+      "label": "Olivier sombre"
+    },
+    {
+      "hizb": 30,
+      "id": "wall-north",
+      "kind": "wall",
+      "label": "La haie sombre du nord"
+    },
+    {
+      "hizb": 31,
+      "id": "wall-west",
+      "kind": "wall",
+      "label": "La haie sombre de l'ouest"
+    },
+    {
+      "hizb": 32,
+      "id": "tree-16",
+      "kind": "fig",
+      "label": "Figuier sombre"
+    },
+    {
+      "hizb": 33,
+      "id": "tree-17",
+      "kind": "cypress",
+      "label": "Cypr\u00e8s dans la nuit"
+    },
+    {
+      "hizb": 34,
+      "id": "trellis",
+      "kind": "trellis",
+      "label": "La pergola de jasmin"
+    },
+    {
+      "hizb": 35,
+      "id": "tree-18",
+      "kind": "orange",
+      "label": "Oranger en fleurs blanches"
+    },
+    {
+      "hizb": 36,
+      "id": "tree-19",
+      "kind": "pomegranate",
+      "label": "Arbre aux fleurs blanches"
+    },
+    {
+      "hizb": 37,
+      "id": "birds-2",
+      "kind": "birds",
+      "label": "Des oiseaux (aucun mod\u00e8le)"
+    },
+    {
+      "hizb": 38,
+      "id": "tree-20",
+      "kind": "date-palm",
+      "label": "Palmier sous la lune"
+    },
+    {
+      "hizb": 39,
+      "id": "tree-21",
+      "kind": "olive",
+      "label": "Olivier sombre"
+    },
+    {
+      "hizb": 40,
+      "id": "gate-north",
+      "kind": "gate",
+      "label": "Le passage dans la haie du nord"
+    },
+    {
+      "hizb": 41,
+      "id": "gate-west",
+      "kind": "gate",
+      "label": "Le passage dans la haie de l'ouest"
+    },
+    {
+      "hizb": 42,
+      "id": "tree-22",
+      "kind": "fig",
+      "label": "Figuier sombre"
+    },
+    {
+      "hizb": 43,
+      "id": "tree-23",
+      "kind": "cypress",
+      "label": "Cypr\u00e8s dans la nuit"
+    },
+    {
+      "hizb": 44,
+      "id": "lanterns",
+      "kind": "lanterns",
+      "label": "Les lanternes allum\u00e9es le long du canal, et leur lumi\u00e8re sur la pierre"
+    },
+    {
+      "hizb": 45,
+      "id": "tree-24",
+      "kind": "orange",
+      "label": "Oranger en fleurs blanches"
+    },
+    {
+      "hizb": 46,
+      "id": "tree-25",
+      "kind": "pomegranate",
+      "label": "Arbre aux fleurs blanches"
+    },
+    {
+      "hizb": 47,
+      "id": "butterflies",
+      "kind": "butterflies",
+      "label": "Des papillons (aucun mod\u00e8le)"
+    },
+    {
+      "hizb": 48,
+      "id": "tree-26",
+      "kind": "date-palm",
+      "label": "Palmier sous la lune"
+    },
+    {
+      "hizb": 49,
+      "id": "tree-27",
+      "kind": "olive",
+      "label": "Olivier sombre"
+    },
+    {
+      "hizb": 50,
+      "id": "pavilion",
+      "kind": "pavilion",
+      "label": "Le pavillon de pierre, au fond du jardin"
+    },
+    {
+      "hizb": 51,
+      "id": "tree-28",
+      "kind": "fig",
+      "label": "Figuier sombre"
+    },
+    {
+      "hizb": 52,
+      "id": "carpets",
+      "kind": "carpets",
+      "label": "Un tapis rond dans le pavillon"
+    },
+    {
+      "hizb": 53,
+      "id": "tree-29",
+      "kind": "cypress",
+      "label": "Cypr\u00e8s dans la nuit"
+    },
+    {
+      "hizb": 54,
+      "id": "cushions",
+      "kind": "cushions",
+      "label": "Des coussins et des bougies dans le pavillon"
+    },
+    {
+      "hizb": 55,
+      "id": "tree-30",
+      "kind": "orange",
+      "label": "Oranger en fleurs blanches"
+    },
+    {
+      "hizb": 56,
+      "id": "lectern",
+      "kind": "lectern",
+      "label": "Une petite table et ses livres, \u00e0 la lueur des bougies"
+    },
+    {
+      "hizb": 57,
+      "id": "birds-3",
+      "kind": "birds",
+      "label": "Des oiseaux (aucun mod\u00e8le)"
+    },
+    {
+      "hizb": 58,
+      "id": "roses",
+      "kind": "roses",
+      "label": "Des buissons aux fleurs blanches"
+    },
+    {
+      "hizb": 59,
+      "id": "waterfall",
+      "kind": "waterfall",
+      "label": "La chute d'eau qui nourrit le canal"
+    },
+    {
+      "hizb": 60,
+      "id": "full-bloom",
+      "kind": "full-bloom",
+      "label": "La pleine floraison : n\u00e9nuphars sur le canal, herbes, petites lanternes au sol"
+    }
+  ],
+  "neutral": [
+    {
+      "element": "channels",
+      "kind": "cyl",
+      "at": [0, 0, 0],
+      "r": 2.25,
+      "h": 0.16,
+      "color": "#d6d0dc",
+      "segments": 56
+    },
+    {
+      "element": "channels",
+      "kind": "disc",
+      "at": [0, 0.162, 0],
+      "r": 1.95,
+      "color": "#34597c",
+      "water": true,
+      "segments": 56
+    },
+    {
+      "element": "channels",
+      "kind": "poly",
+      "points": [
+        [0.18, -0.88],
+        [0.205, -0.846],
+        [0.221, -0.804],
+        [0.227, -0.753],
+        [0.222, -0.696],
+        [0.208, -0.633],
+        [0.185, -0.565],
+        [0.152, -0.493],
+        [0.111, -0.419],
+        [0.062, -0.344],
+        [0.006, -0.269],
+        [-0.056, -0.195],
+        [-0.124, -0.124],
+        [-0.195, -0.056],
+        [-0.269, 0.006],
+        [-0.344, 0.062],
+        [-0.419, 0.111],
+        [-0.493, 0.152],
+        [-0.565, 0.185],
+        [-0.633, 0.208],
+        [-0.696, 0.222],
+        [-0.753, 0.227],
+        [-0.804, 0.221],
+        [-0.846, 0.205],
+        [-0.88, 0.18],
+        [-0.905, 0.146],
+        [-0.921, 0.104],
+        [-0.927, 0.053],
+        [-0.922, -0.004],
+        [-0.908, -0.067],
+        [-0.885, -0.135],
+        [-0.852, -0.207],
+        [-0.811, -0.281],
+        [-0.762, -0.356],
+        [-0.706, -0.431],
+        [-0.644, -0.505],
+        [-0.576, -0.576],
+        [-0.505, -0.644],
+        [-0.431, -0.706],
+        [-0.356, -0.762],
+        [-0.281, -0.811],
+        [-0.207, -0.852],
+        [-0.135, -0.885],
+        [-0.067, -0.908],
+        [-0.004, -0.922],
+        [0.053, -0.927],
+        [0.104, -0.921],
+        [0.146, -0.905]
+      ],
+      "y": 0.164,
+      "h": 0.002,
+      "color": "#c9d8f0",
+      "opacity": 0.55,
+      "emissive": "#8fa6cc",
+      "emissiveIntensity": 0.8,
+      "onlyWet": true,
+      "cast": false
+    },
+    {
+      "element": "channels",
+      "kind": "box",
+      "at": [-3.6415999231107197, 0, -3.6415999231107197],
+      "size": [2.2, 0.14, 6.300000000000001],
+      "yaw": 45,
+      "color": "#d6d0dc"
+    },
+    {
+      "element": "channels",
+      "kind": "box",
+      "at": [-3.6415999231107197, 0.14, -3.6415999231107197],
+      "size": [0.9, 0.012, 6.3500000000000005],
+      "yaw": 45,
+      "color": "#34597c",
+      "water": true
+    },
+    {
+      "element": "channels",
+      "kind": "box",
+      "at": [3.6415999231107197, 0, 3.6415999231107197],
+      "size": [2.2, 0.14, 6.300000000000001],
+      "yaw": 45,
+      "color": "#d6d0dc"
+    },
+    {
+      "element": "channels",
+      "kind": "box",
+      "at": [3.6415999231107197, 0.14, 3.6415999231107197],
+      "size": [0.9, 0.012, 6.3500000000000005],
+      "yaw": 45,
+      "color": "#34597c",
+      "water": true
+    },
+    {
+      "element": "paving",
+      "kind": "poly",
+      "points": [
+        [-2.51, -0.884],
+        [-6.611, -4.985],
+        [-7.46, -4.137],
+        [-3.359, -0.035]
+      ],
+      "y": 0,
+      "h": 0.05,
+      "color": "#d9d4e2"
+    },
+    {
+      "element": "paving",
+      "kind": "poly",
+      "points": [
+        [-0.035, -3.359],
+        [-4.137, -7.46],
+        [-4.985, -6.611],
+        [-0.884, -2.51]
+      ],
+      "y": 0,
+      "h": 0.05,
+      "color": "#d9d4e2"
+    },
+    {
+      "element": "paving",
+      "kind": "poly",
+      "points": [
+        [0.035, 3.359],
+        [4.137, 7.46],
+        [4.985, 6.611],
+        [0.884, 2.51]
+      ],
+      "y": 0,
+      "h": 0.05,
+      "color": "#d9d4e2"
+    },
+    {
+      "element": "paving",
+      "kind": "poly",
+      "points": [
+        [2.51, 0.884],
+        [6.611, 4.985],
+        [7.46, 4.137],
+        [3.359, 0.035]
+      ],
+      "y": 0,
+      "h": 0.05,
+      "color": "#d9d4e2"
+    },
+    {
+      "element": "paving",
+      "kind": "poly",
+      "points": [
+        [3.0, 0.0],
+        [2.981, 0.336],
+        [2.925, 0.668],
+        [2.832, 0.991],
+        [2.703, 1.302],
+        [2.54, 1.596],
+        [2.345, 1.87],
+        [2.121, 2.121],
+        [1.87, 2.345],
+        [1.596, 2.54],
+        [1.302, 2.703],
+        [0.991, 2.832],
+        [0.668, 2.925],
+        [0.336, 2.981],
+        [0.0, 3.0],
+        [-0.336, 2.981],
+        [-0.668, 2.925],
+        [-0.991, 2.832],
+        [-1.302, 2.703],
+        [-1.596, 2.54],
+        [-1.87, 2.345],
+        [-2.121, 2.121],
+        [-2.345, 1.87],
+        [-2.54, 1.596],
+        [-2.703, 1.302],
+        [-2.832, 0.991],
+        [-2.925, 0.668],
+        [-2.981, 0.336],
+        [-3.0, 0.0],
+        [-2.981, -0.336],
+        [-2.925, -0.668],
+        [-2.832, -0.991],
+        [-2.703, -1.302],
+        [-2.54, -1.596],
+        [-2.345, -1.87],
+        [-2.121, -2.121],
+        [-1.87, -2.345],
+        [-1.596, -2.54],
+        [-1.302, -2.703],
+        [-0.991, -2.832],
+        [-0.668, -2.925],
+        [-0.336, -2.981],
+        [-0.0, -3.0],
+        [0.336, -2.981],
+        [0.668, -2.925],
+        [0.991, -2.832],
+        [1.302, -2.703],
+        [1.596, -2.54],
+        [1.87, -2.345],
+        [2.121, -2.121],
+        [2.345, -1.87],
+        [2.54, -1.596],
+        [2.703, -1.302],
+        [2.832, -0.991],
+        [2.925, -0.668],
+        [2.981, -0.336]
+      ],
+      "y": 0,
+      "h": 0.045,
+      "color": "#d9d4e2"
+    },
+    {
+      "element": "paving",
+      "kind": "poly",
+      "points": [
+        [-2.44, 1.662],
+        [-6.329, 5.551],
+        [-5.551, 6.329],
+        [-1.662, 2.44]
+      ],
+      "y": 0,
+      "h": 0.05,
+      "color": "#d9d4e2"
+    },
+    {
+      "element": "paving",
+      "kind": "poly",
+      "points": [
+        [2.44, -1.662],
+        [6.329, -5.551],
+        [5.551, -6.329],
+        [1.662, -2.44]
+      ],
+      "y": 0,
+      "h": 0.05,
+      "color": "#d9d4e2"
+    },
+    {
+      "element": "bed-1",
+      "kind": "poly",
+      "points": [
+        [7.973, -8.68],
+        [1.344, -2.051],
+        [-5.286, -8.68]
+      ],
+      "y": 0,
+      "h": 0.03,
+      "color": "#5f8c6c",
+      "lawn": true,
+      "dryColor": "#a99f80"
+    },
+    {
+      "element": "bed-2",
+      "kind": "poly",
+      "points": [
+        [8.68, -7.973],
+        [2.051, -1.344],
+        [8.68, 5.286]
+      ],
+      "y": 0,
+      "h": 0.03,
+      "color": "#5f8c6c",
+      "lawn": true,
+      "dryColor": "#a99f80"
+    },
+    {
+      "element": "bed-3",
+      "kind": "poly",
+      "points": [
+        [-7.973, 8.68],
+        [-1.344, 2.051],
+        [5.286, 8.68]
+      ],
+      "y": 0,
+      "h": 0.03,
+      "color": "#5f8c6c",
+      "lawn": true,
+      "dryColor": "#a99f80"
+    },
+    {
+      "element": "bed-4",
+      "kind": "poly",
+      "points": [
+        [-8.68, 7.973],
+        [-2.051, 1.344],
+        [-8.68, -5.286]
+      ],
+      "y": 0,
+      "h": 0.03,
+      "color": "#5f8c6c",
+      "lawn": true,
+      "dryColor": "#a99f80"
+    },
+    {
+      "element": "springs",
+      "kind": "cyl",
+      "at": [3.8183766184073566, 0, -5.232590180780452],
+      "r": 0.55,
+      "h": 0.12,
+      "color": "#d6d0dc"
+    },
+    {
+      "element": "springs",
+      "kind": "disc",
+      "at": [3.8183766184073566, 0.122, -5.232590180780452],
+      "r": 0.42,
+      "color": "#34597c",
+      "water": true
+    },
+    {
+      "element": "springs",
+      "kind": "cyl",
+      "at": [-3.8183766184073566, 0, 5.232590180780452],
+      "r": 0.55,
+      "h": 0.12,
+      "color": "#d6d0dc"
+    },
+    {
+      "element": "springs",
+      "kind": "disc",
+      "at": [-3.8183766184073566, 0.122, 5.232590180780452],
+      "r": 0.42,
+      "color": "#34597c",
+      "water": true
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [-5.267945519839778, 0.075, -1.803122292025696],
+      "r": 1.2,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [-5.267945519839778, 0.077, -1.803122292025696],
+      "r": 0.816,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [-5.267945519839778, 0.079, -1.803122292025696],
+      "r": 0.456,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [-3.429467888754755, 0.075, 0.03535533905932756],
+      "r": 1.2,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [-3.429467888754755, 0.077, 0.03535533905932756],
+      "r": 0.816,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [-3.429467888754755, 0.079, 0.03535533905932756],
+      "r": 0.456,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [-0.03535533905932756, 0.075, 3.429467888754755],
+      "r": 1.2,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [-0.03535533905932756, 0.077, 3.429467888754755],
+      "r": 0.816,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [-0.03535533905932756, 0.079, 3.429467888754755],
+      "r": 0.456,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [1.803122292025696, 0.075, 5.267945519839778],
+      "r": 1.2,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [1.803122292025696, 0.077, 5.267945519839778],
+      "r": 0.816,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [1.803122292025696, 0.079, 5.267945519839778],
+      "r": 0.456,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [-1.803122292025696, 0.075, -5.267945519839778],
+      "r": 1.2,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [-1.803122292025696, 0.077, -5.267945519839778],
+      "r": 0.816,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [-1.803122292025696, 0.079, -5.267945519839778],
+      "r": 0.456,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [0.03535533905932756, 0.075, -3.429467888754755],
+      "r": 1.2,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [0.03535533905932756, 0.077, -3.429467888754755],
+      "r": 0.816,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [0.03535533905932756, 0.079, -3.429467888754755],
+      "r": 0.456,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [3.429467888754755, 0.075, -0.03535533905932756],
+      "r": 1.2,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [3.429467888754755, 0.077, -0.03535533905932756],
+      "r": 0.816,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [3.429467888754755, 0.079, -0.03535533905932756],
+      "r": 0.456,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [5.267945519839778, 0.075, 1.803122292025696],
+      "r": 1.2,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [5.267945519839778, 0.077, 1.803122292025696],
+      "r": 0.816,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "lanterns",
+      "kind": "glow",
+      "at": [5.267945519839778, 0.079, 1.803122292025696],
+      "r": 0.456,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "pavilion",
+      "kind": "box",
+      "at": [-7.7781745930520225, 0, 0.141421356237309],
+      "size": [2.6, 0.18, 2.6],
+      "yaw": 45,
+      "color": "#d6d0dc"
+    },
+    {
+      "element": "cushions",
+      "kind": "glow",
+      "at": [-7.228174593052023, 0.19, 0.691421356237309],
+      "r": 0.75,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "cushions",
+      "kind": "glow",
+      "at": [-7.228174593052023, 0.192, 0.691421356237309],
+      "r": 0.51,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "cushions",
+      "kind": "glow",
+      "at": [-7.228174593052023, 0.194, 0.691421356237309],
+      "r": 0.285,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "waterfall",
+      "kind": "sheet",
+      "at": [-6.98, 0.3, -6.98],
+      "size": [0.6, 0.55],
+      "yaw": 45,
+      "color": "#4d7aa0",
+      "water": true
+    },
+    {
+      "element": "full-bloom",
+      "kind": "glow",
+      "at": [2.262741699796952, 0.05, -3.676955262170047],
+      "r": 0.7,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "full-bloom",
+      "kind": "glow",
+      "at": [2.262741699796952, 0.052000000000000005, -3.676955262170047],
+      "r": 0.476,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "full-bloom",
+      "kind": "glow",
+      "at": [2.262741699796952, 0.054000000000000006, -3.676955262170047],
+      "r": 0.266,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "full-bloom",
+      "kind": "glow",
+      "at": [-2.262741699796952, 0.05, 3.676955262170047],
+      "r": 0.7,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "full-bloom",
+      "kind": "glow",
+      "at": [-2.262741699796952, 0.052000000000000005, 3.676955262170047],
+      "r": 0.476,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "full-bloom",
+      "kind": "glow",
+      "at": [-2.262741699796952, 0.054000000000000006, 3.676955262170047],
+      "r": 0.266,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "full-bloom",
+      "kind": "glow",
+      "at": [9.050966799187808, 0.05, 0.5656854249492379],
+      "r": 0.7,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "full-bloom",
+      "kind": "glow",
+      "at": [9.050966799187808, 0.052000000000000005, 0.5656854249492379],
+      "r": 0.476,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "full-bloom",
+      "kind": "glow",
+      "at": [9.050966799187808, 0.054000000000000006, 0.5656854249492379],
+      "r": 0.266,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "full-bloom",
+      "kind": "glow",
+      "at": [0.5656854249492379, 0.05, 9.050966799187808],
+      "r": 0.7,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "full-bloom",
+      "kind": "glow",
+      "at": [0.5656854249492379, 0.052000000000000005, 9.050966799187808],
+      "r": 0.476,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    },
+    {
+      "element": "full-bloom",
+      "kind": "glow",
+      "at": [0.5656854249492379, 0.054000000000000006, 9.050966799187808],
+      "r": 0.266,
+      "color": "#ffc979",
+      "opacity": 0.2,
+      "emissive": "#ffb04a",
+      "emissiveIntensity": 1.2,
+      "segments": 32
+    }
+  ],
+  "items": [
+    {
+      "element": "tree-1",
+      "role": "tree.moon",
+      "x": -0.141,
+      "z": -6.647,
+      "y": 0.03,
+      "yaw": 137.5,
+      "variant": 0,
+      "size": {
+        "h": 2.4,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-2",
+      "role": "tree.palm",
+      "x": -6.647,
+      "z": -0.141,
+      "y": 0.03,
+      "yaw": 275.0,
+      "variant": 1,
+      "size": {
+        "h": 3.6,
+        "wmax": 3.0
+      }
+    },
+    {
+      "element": "tree-3",
+      "role": "tree.dark",
+      "x": 6.505,
+      "z": 0.0,
+      "y": 0.03,
+      "yaw": 52.5,
+      "variant": 2,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-4",
+      "role": "tree.dark",
+      "x": 0.0,
+      "z": 6.505,
+      "y": 0.03,
+      "yaw": 190.0,
+      "variant": 3,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-5",
+      "role": "tree.cypress",
+      "x": -6.753,
+      "z": -2.581,
+      "y": 0.03,
+      "yaw": 327.5,
+      "variant": 4,
+      "size": {
+        "h": 3.2,
+        "wmax": 1.4
+      }
+    },
+    {
+      "element": "tree-6",
+      "role": "tree.moon",
+      "x": 3.253,
+      "z": -6.081,
+      "y": 0.03,
+      "yaw": 105.0,
+      "variant": 5,
+      "size": {
+        "h": 2.4,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-7",
+      "role": "tree.moon",
+      "x": -6.081,
+      "z": 3.253,
+      "y": 0.03,
+      "yaw": 242.5,
+      "variant": 6,
+      "size": {
+        "h": 2.4,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-8",
+      "role": "tree.palm",
+      "x": 6.081,
+      "z": -2.97,
+      "y": 0.03,
+      "yaw": 20.0,
+      "variant": 7,
+      "size": {
+        "h": 3.6,
+        "wmax": 3.0
+      }
+    },
+    {
+      "element": "tree-9",
+      "role": "tree.dark",
+      "x": -2.97,
+      "z": 6.081,
+      "y": 0.03,
+      "yaw": 157.5,
+      "variant": 8,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-10",
+      "role": "tree.dark",
+      "x": 1.273,
+      "z": -4.101,
+      "y": 0.03,
+      "yaw": 295.0,
+      "variant": 9,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-11",
+      "role": "tree.cypress",
+      "x": -4.632,
+      "z": -0.46,
+      "y": 0.03,
+      "yaw": 72.5,
+      "variant": 10,
+      "size": {
+        "h": 3.2,
+        "wmax": 1.4
+      }
+    },
+    {
+      "element": "tree-12",
+      "role": "tree.moon",
+      "x": -4.101,
+      "z": 1.273,
+      "y": 0.03,
+      "yaw": 210.0,
+      "variant": 11,
+      "size": {
+        "h": 2.4,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-13",
+      "role": "tree.moon",
+      "x": 3.818,
+      "z": -3.818,
+      "y": 0.03,
+      "yaw": 347.5,
+      "variant": 12,
+      "size": {
+        "h": 2.4,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-14",
+      "role": "tree.palm",
+      "x": -3.818,
+      "z": 3.818,
+      "y": 0.03,
+      "yaw": 125.0,
+      "variant": 13,
+      "size": {
+        "h": 3.6,
+        "wmax": 3.0
+      }
+    },
+    {
+      "element": "tree-15",
+      "role": "tree.dark",
+      "x": 4.101,
+      "z": -1.273,
+      "y": 0.03,
+      "yaw": 262.5,
+      "variant": 14,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-16",
+      "role": "tree.dark",
+      "x": -1.273,
+      "z": 4.101,
+      "y": 0.03,
+      "yaw": 40.0,
+      "variant": 15,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-17",
+      "role": "tree.cypress",
+      "x": 0.46,
+      "z": 4.632,
+      "y": 0.03,
+      "yaw": 177.5,
+      "variant": 16,
+      "size": {
+        "h": 3.2,
+        "wmax": 1.4
+      }
+    },
+    {
+      "element": "tree-18",
+      "role": "tree.moon",
+      "x": -1.697,
+      "z": -8.202,
+      "y": 0.03,
+      "yaw": 315.0,
+      "variant": 17,
+      "size": {
+        "h": 2.4,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-19",
+      "role": "tree.moon",
+      "x": -8.202,
+      "z": -1.697,
+      "y": 0.03,
+      "yaw": 92.5,
+      "variant": 18,
+      "size": {
+        "h": 2.4,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-20",
+      "role": "tree.palm",
+      "x": 8.202,
+      "z": -1.414,
+      "y": 0.03,
+      "yaw": 230.0,
+      "variant": 19,
+      "size": {
+        "h": 3.6,
+        "wmax": 3.0
+      }
+    },
+    {
+      "element": "tree-21",
+      "role": "tree.dark",
+      "x": -1.414,
+      "z": 8.202,
+      "y": 0.03,
+      "yaw": 7.5,
+      "variant": 20,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-22",
+      "role": "tree.dark",
+      "x": 1.838,
+      "z": -8.627,
+      "y": 0.03,
+      "yaw": 145.0,
+      "variant": 21,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-23",
+      "role": "tree.cypress",
+      "x": 2.581,
+      "z": 6.753,
+      "y": 0.03,
+      "yaw": 282.5,
+      "variant": 22,
+      "size": {
+        "h": 3.2,
+        "wmax": 1.4
+      }
+    },
+    {
+      "element": "tree-24",
+      "role": "tree.moon",
+      "x": -8.627,
+      "z": 1.838,
+      "y": 0.03,
+      "yaw": 60.0,
+      "variant": 23,
+      "size": {
+        "h": 2.4,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-25",
+      "role": "tree.moon",
+      "x": 7.212,
+      "z": 1.838,
+      "y": 0.03,
+      "yaw": 197.5,
+      "variant": 24,
+      "size": {
+        "h": 2.4,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-26",
+      "role": "tree.palm",
+      "x": 1.838,
+      "z": 7.212,
+      "y": 0.03,
+      "yaw": 335.0,
+      "variant": 25,
+      "size": {
+        "h": 3.6,
+        "wmax": 3.0
+      }
+    },
+    {
+      "element": "tree-27",
+      "role": "tree.dark",
+      "x": 5.798,
+      "z": -5.233,
+      "y": 0.03,
+      "yaw": 112.5,
+      "variant": 26,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-28",
+      "role": "tree.dark",
+      "x": -5.233,
+      "z": 5.798,
+      "y": 0.03,
+      "yaw": 250.0,
+      "variant": 27,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-29",
+      "role": "tree.cypress",
+      "x": -2.581,
+      "z": -6.753,
+      "y": 0.03,
+      "yaw": 27.5,
+      "variant": 28,
+      "size": {
+        "h": 3.2,
+        "wmax": 1.4
+      }
+    },
+    {
+      "element": "tree-30",
+      "role": "tree.moon",
+      "x": -0.46,
+      "z": -4.632,
+      "y": 0.03,
+      "yaw": 165.0,
+      "variant": 29,
+      "size": {
+        "h": 2.4,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "stepping-stones",
+      "role": "stepping-stones",
+      "x": 3.96,
+      "z": -0.283,
+      "y": 0.035,
+      "yaw": 302.5,
+      "variant": 0,
+      "size": {
+        "w": 0.6
+      }
+    },
+    {
+      "element": "stepping-stones",
+      "role": "stepping-stones",
+      "x": 4.808,
+      "z": -0.283,
+      "y": 0.035,
+      "yaw": 80.0,
+      "variant": 1,
+      "size": {
+        "w": 0.6
+      }
+    },
+    {
+      "element": "stepping-stones",
+      "role": "stepping-stones",
+      "x": 5.515,
+      "z": -0.424,
+      "y": 0.035,
+      "yaw": 217.5,
+      "variant": 2,
+      "size": {
+        "w": 0.6
+      }
+    },
+    {
+      "element": "stepping-stones",
+      "role": "stepping-stones",
+      "x": 6.223,
+      "z": -0.707,
+      "y": 0.035,
+      "yaw": 355.0,
+      "variant": 3,
+      "size": {
+        "w": 0.6
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": -0.141,
+      "z": -4.95,
+      "y": 0.03,
+      "yaw": 132.5,
+      "variant": 35,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": 0.409,
+      "z": -4.65,
+      "y": 0.03,
+      "yaw": 270.0,
+      "variant": 36,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": -0.441,
+      "z": -4.35,
+      "y": 0.03,
+      "yaw": 47.5,
+      "variant": 37,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": 0.309,
+      "z": -5.4,
+      "y": 0.03,
+      "yaw": 185.0,
+      "variant": 38,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": 0.0,
+      "z": 4.808,
+      "y": 0.03,
+      "yaw": 322.5,
+      "variant": 39,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": 0.55,
+      "z": 5.108,
+      "y": 0.03,
+      "yaw": 100.0,
+      "variant": 40,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": -0.3,
+      "z": 5.408,
+      "y": 0.03,
+      "yaw": 237.5,
+      "variant": 41,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": 0.45,
+      "z": 4.358,
+      "y": 0.03,
+      "yaw": 15.0,
+      "variant": 42,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": -4.95,
+      "z": -0.141,
+      "y": 0.03,
+      "yaw": 152.5,
+      "variant": 43,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": -4.4,
+      "z": 0.159,
+      "y": 0.03,
+      "yaw": 290.0,
+      "variant": 44,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": -5.25,
+      "z": 0.459,
+      "y": 0.03,
+      "yaw": 67.5,
+      "variant": 45,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": -4.5,
+      "z": -0.591,
+      "y": 0.03,
+      "yaw": 205.0,
+      "variant": 46,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 7.92,
+      "z": 0.0,
+      "y": 0.03,
+      "yaw": 342.5,
+      "variant": 47,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 8.47,
+      "z": 0.3,
+      "y": 0.03,
+      "yaw": 120.0,
+      "variant": 48,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 7.62,
+      "z": 0.6,
+      "y": 0.03,
+      "yaw": 257.5,
+      "variant": 49,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 8.37,
+      "z": -0.45,
+      "y": 0.03,
+      "yaw": 35.0,
+      "variant": 50,
+      "size": {
+        "h": 0.5,
+        "wmax": 0.65
+      }
+    },
+    {
+      "element": "fountain",
+      "role": "fountain",
+      "x": -5.95,
+      "z": -5.95,
+      "y": 0,
+      "yaw": 45,
+      "variant": 51,
+      "size": {
+        "w": 1.6
+      }
+    },
+    {
+      "element": "wall-north",
+      "role": "hedge",
+      "size": {
+        "h": 1.0
+      },
+      "y": 0.03,
+      "line": {
+        "from": [-8.4, -8.45],
+        "to": [8.4, -8.45]
+      },
+      "gap": {
+        "at": [3.5, -8.45],
+        "width": 1.6
+      }
+    },
+    {
+      "element": "wall-west",
+      "role": "hedge",
+      "size": {
+        "h": 1.0
+      },
+      "y": 0.03,
+      "line": {
+        "from": [-8.45, 8.4],
+        "to": [-8.45, -8.4]
+      },
+      "gap": {
+        "at": [-8.45, 3.5],
+        "width": 1.6
+      }
+    },
+    {
+      "element": "gate-north",
+      "role": "hedge-gate",
+      "x": 3.5,
+      "z": -8.45,
+      "y": 0.03,
+      "yaw": 0,
+      "variant": 52,
+      "size": {
+        "w": 1.6,
+        "hmax": 1.1
+      }
+    },
+    {
+      "element": "gate-west",
+      "role": "hedge-gate",
+      "x": -8.45,
+      "z": 3.5,
+      "y": 0.03,
+      "yaw": 90,
+      "variant": 53,
+      "size": {
+        "w": 1.6,
+        "hmax": 1.1
+      }
+    },
+    {
+      "element": "trellis",
+      "role": "pergola",
+      "x": 0.141,
+      "z": -8.061,
+      "y": 0.03,
+      "yaw": 45,
+      "variant": 54,
+      "size": {
+        "w": 2.1,
+        "hmax": 2.1
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lamp",
+      "x": -5.268,
+      "z": -1.803,
+      "y": 0.05,
+      "yaw": 45,
+      "variant": 55,
+      "size": {
+        "h": 1.5
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lamp",
+      "x": -3.429,
+      "z": 0.035,
+      "y": 0.05,
+      "yaw": 45,
+      "variant": 56,
+      "size": {
+        "h": 1.5
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lamp",
+      "x": -0.035,
+      "z": 3.429,
+      "y": 0.05,
+      "yaw": 45,
+      "variant": 57,
+      "size": {
+        "h": 1.5
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lamp",
+      "x": 1.803,
+      "z": 5.268,
+      "y": 0.05,
+      "yaw": 45,
+      "variant": 58,
+      "size": {
+        "h": 1.5
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lamp",
+      "x": -1.803,
+      "z": -5.268,
+      "y": 0.05,
+      "yaw": 45,
+      "variant": 59,
+      "size": {
+        "h": 1.5
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lamp",
+      "x": 0.035,
+      "z": -3.429,
+      "y": 0.05,
+      "yaw": 45,
+      "variant": 60,
+      "size": {
+        "h": 1.5
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lamp",
+      "x": 3.429,
+      "z": -0.035,
+      "y": 0.05,
+      "yaw": 45,
+      "variant": 61,
+      "size": {
+        "h": 1.5
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lamp",
+      "x": 5.268,
+      "z": 1.803,
+      "y": 0.05,
+      "yaw": 45,
+      "variant": 62,
+      "size": {
+        "h": 1.5
+      }
+    },
+    {
+      "element": "pavilion",
+      "role": "pavilion",
+      "x": -7.778,
+      "z": 0.141,
+      "y": 0.18,
+      "yaw": 45,
+      "variant": 63,
+      "size": {
+        "w": 2.1,
+        "hmax": 2.8
+      }
+    },
+    {
+      "element": "carpets",
+      "role": "carpet",
+      "x": -7.778,
+      "z": 0.141,
+      "y": 0.18,
+      "yaw": 0,
+      "variant": 64,
+      "size": {
+        "w": 1.5
+      }
+    },
+    {
+      "element": "cushions",
+      "role": "cushion",
+      "x": -8.128,
+      "z": 0.391,
+      "y": 0.192,
+      "yaw": 0,
+      "variant": 0,
+      "size": {
+        "w": 0.45
+      }
+    },
+    {
+      "element": "cushions",
+      "role": "cushion",
+      "x": -7.478,
+      "z": -0.159,
+      "y": 0.192,
+      "yaw": 90,
+      "variant": 1,
+      "size": {
+        "w": 0.45
+      }
+    },
+    {
+      "element": "cushions",
+      "role": "candles",
+      "x": -7.228,
+      "z": 0.691,
+      "y": 0.18,
+      "yaw": 0,
+      "variant": 67,
+      "size": {
+        "w": 0.3
+      }
+    },
+    {
+      "element": "lectern",
+      "role": "lectern",
+      "x": -7.528,
+      "z": 0.541,
+      "y": 0.18,
+      "yaw": 45,
+      "variant": 68,
+      "size": {
+        "w": 0.5,
+        "hmax": 0.45
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": 0.481,
+      "z": -8.415,
+      "y": 0.03,
+      "yaw": 127.5,
+      "variant": 0,
+      "size": {
+        "h": 0.8,
+        "wmax": 1.0
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": -8.415,
+      "z": 0.481,
+      "y": 0.03,
+      "yaw": 265.0,
+      "variant": 1,
+      "size": {
+        "h": 0.8,
+        "wmax": 1.0
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": 8.535,
+      "z": -0.601,
+      "y": 0.03,
+      "yaw": 42.5,
+      "variant": 2,
+      "size": {
+        "h": 0.8,
+        "wmax": 1.0
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": -0.601,
+      "z": 8.535,
+      "y": 0.03,
+      "yaw": 180.0,
+      "variant": 3,
+      "size": {
+        "h": 0.8,
+        "wmax": 1.0
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": -3.065,
+      "z": -6.551,
+      "y": 0.03,
+      "yaw": 317.5,
+      "variant": 4,
+      "size": {
+        "h": 0.8,
+        "wmax": 1.0
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": -6.551,
+      "z": -3.065,
+      "y": 0.03,
+      "yaw": 95.0,
+      "variant": 5,
+      "size": {
+        "h": 0.8,
+        "wmax": 1.0
+      }
+    },
+    {
+      "element": "waterfall",
+      "role": "cascade",
+      "x": -7.4,
+      "z": -7.4,
+      "y": 0,
+      "yaw": 45,
+      "variant": 75,
+      "size": {
+        "w": 1.2,
+        "hmax": 0.6
+      }
+    },
+    {
+      "element": "waterfall",
+      "role": "rock",
+      "x": -8.0,
+      "z": -6.9,
+      "y": 0,
+      "yaw": 10.0,
+      "variant": 0,
+      "size": {
+        "w": 0.8
+      }
+    },
+    {
+      "element": "waterfall",
+      "role": "rock",
+      "x": -6.9,
+      "z": -8.0,
+      "y": 0,
+      "yaw": 147.5,
+      "variant": 1,
+      "size": {
+        "w": 0.7
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": -4.632,
+      "z": -4.702,
+      "y": 0.152,
+      "yaw": 285.0,
+      "variant": 0,
+      "size": {
+        "w": 0.45
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": -3.147,
+      "z": -3.076,
+      "y": 0.152,
+      "yaw": 62.5,
+      "variant": 1,
+      "size": {
+        "w": 0.45
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": 2.44,
+      "z": 2.369,
+      "y": 0.152,
+      "yaw": 200.0,
+      "variant": 2,
+      "size": {
+        "w": 0.45
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": 3.924,
+      "z": 3.995,
+      "y": 0.152,
+      "yaw": 337.5,
+      "variant": 3,
+      "size": {
+        "w": 0.45
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": 5.127,
+      "z": 5.056,
+      "y": 0.152,
+      "yaw": 115.0,
+      "variant": 4,
+      "size": {
+        "w": 0.45
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": 1.464,
+      "z": -0.064,
+      "y": 0.172,
+      "yaw": 252.5,
+      "variant": 5,
+      "size": {
+        "w": 0.45
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": -1.464,
+      "z": -0.064,
+      "y": 0.172,
+      "yaw": 30.0,
+      "variant": 6,
+      "size": {
+        "w": 0.45
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "lantern-small",
+      "x": 2.263,
+      "z": -3.677,
+      "y": 0.03,
+      "yaw": 45,
+      "variant": 85,
+      "size": {
+        "h": 0.4
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "lantern-small",
+      "x": -2.263,
+      "z": 3.677,
+      "y": 0.03,
+      "yaw": 45,
+      "variant": 86,
+      "size": {
+        "h": 0.4
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "lantern-small",
+      "x": 9.051,
+      "z": 0.566,
+      "y": 0.03,
+      "yaw": 45,
+      "variant": 87,
+      "size": {
+        "h": 0.4
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "lantern-small",
+      "x": 0.566,
+      "z": 9.051,
+      "y": 0.03,
+      "yaw": 45,
+      "variant": 88,
+      "size": {
+        "h": 0.4
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": -6.043,
+      "z": -0.199,
+      "y": 0.03,
+      "yaw": 357.5,
+      "variant": 3,
+      "size": {
+        "h": 0.4,
+        "wmax": 0.55
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": 3.594,
+      "z": -3.939,
+      "y": 0.03,
+      "yaw": 135.0,
+      "variant": 8,
+      "size": {
+        "h": 0.4,
+        "wmax": 0.55
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": 3.09,
+      "z": -4.481,
+      "y": 0.03,
+      "yaw": 272.5,
+      "variant": 9,
+      "size": {
+        "h": 0.4,
+        "wmax": 0.55
+      }
+    }
+  ]
+}

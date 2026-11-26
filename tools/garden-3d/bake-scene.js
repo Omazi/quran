@@ -123,12 +123,21 @@ function matte(src, override) {
   }
   if (override) {
     if (override.color) m.color.set(override.color);
+    // One plain colour instead of a kit's colour map: a lantern of grey stone, a dark hedge.
+    if (override.flat) m.map = null;
     if (override.alphaTest !== undefined) m.alphaTest = override.alphaTest;
     if (override.doubleSided) m.side = THREE.DoubleSide;
     if (override.opacity !== undefined) {
       m.transparent = true;
       m.opacity = override.opacity;
       m.depthWrite = false;
+    }
+    // A light of the night garden (D46): the material glows, in proportion to its own colours
+    // when `emissiveMap` (the panes of a lantern glow, its metal stays dark).
+    if (override.emissive) {
+      m.emissive.set(override.emissive);
+      m.emissiveIntensity = override.emissiveIntensity ?? 1;
+      if (override.emissiveMap) m.userData.emissiveMap = true;
     }
   }
   return m;
@@ -695,6 +704,309 @@ function collectStage({ count, water: waterLevel, foliage: foliageStage }, emit)
   });
 }
 
+// ---------------------------------------------------------------------------------------------
+// The gardens of levels 2 to 7 (D46): the same stages, a ground the layout describes
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Roles of living plants in a level garden: their colours fade with the foliage (the picture
+ * tool's wilt), and the trees among them (`tree.`) lose their leaves in a drought.
+ */
+const LIVING_LEVEL = /^(tree\.|flowers|roses|grass|bush|lily|plant|reeds|petals|hedge)/;
+
+const hex = (value) => (typeof value === 'string' ? parseInt(value.replace('#', ''), 16) : value);
+
+/** A flat polygon of the ground, `points` [[x, z], ...], from `y` to `y + h`. */
+function polygonGeometry(points, y, h) {
+  const shape = new THREE.Shape(points.map(([x, z]) => new THREE.Vector2(x, -z)));
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: Math.max(h, 0.002),
+    bevelEnabled: false,
+    curveSegments: 1,
+  });
+  geometry.rotateX(-Math.PI / 2);
+  geometry.translate(0, y, 0);
+  return geometry;
+}
+
+/** A ring of the ground, between radii `r1` and `r2`, from `y` to `y + h`. */
+function ringGeometry(r1, r2, y, h, segments = 72) {
+  const shape = new THREE.Shape().absarc(0, 0, r2, 0, Math.PI * 2, false);
+  shape.holes.push(new THREE.Path().absarc(0, 0, r1, 0, Math.PI * 2, true));
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: h,
+    bevelEnabled: false,
+    curveSegments: segments,
+  });
+  geometry.rotateX(-Math.PI / 2);
+  geometry.translate(0, y, 0);
+  return geometry;
+}
+
+/** The geometry of one shape of a level's ground (layout `neutral`), lowered by `dy`. */
+function shapeGeometry(s, dy) {
+  const [x, y, z] = s.at ?? [0, 0, 0];
+  switch (s.kind) {
+    case 'poly':
+      return polygonGeometry(s.points, (s.y ?? 0) + dy, s.h ?? 0.02);
+    case 'box':
+      return new THREE.BoxGeometry(...s.size)
+        .rotateY(THREE.MathUtils.degToRad(s.yaw ?? 0))
+        .translate(x, y + s.size[1] / 2 + dy, z);
+    case 'cyl':
+      return new THREE.CylinderGeometry(s.r, s.r2 ?? s.r, s.h, s.segments ?? 40).translate(
+        x,
+        y + s.h / 2 + dy,
+        z,
+      );
+    case 'ring':
+      return ringGeometry(s.r1, s.r2, y + dy, s.h).translate(x, 0, z);
+    case 'disc':
+    case 'glow':
+      return new THREE.CircleGeometry(s.r, s.segments ?? 40)
+        .rotateX(-Math.PI / 2)
+        .translate(x, y + dy, z);
+    case 'mound':
+      return new THREE.SphereGeometry(1, 36, 12, 0, Math.PI * 2, 0, Math.PI / 2)
+        .scale(...s.r)
+        .rotateY(THREE.MathUtils.degToRad(s.yaw ?? 0))
+        .translate(x, y + dy, z);
+    case 'sheet':
+      return new THREE.PlaneGeometry(s.size[0], s.size[1])
+        .rotateY(THREE.MathUtils.degToRad(s.yaw ?? 0))
+        .translate(x, y, z);
+    default:
+      throw new Error(`Unknown ground shape "${s.kind}"`);
+  }
+}
+
+/**
+ * Records the pieces of one stage of a level garden (layout version 2): the plot, the shapes of
+ * its ground and water (`neutral`), then the models (`items`), each with its element. Water
+ * shapes change with the water level (flowing, low and paler, dry bed); lawns dry with the
+ * foliage; the earth dies with the garden; trees lose their leaves, flowers fade.
+ */
+function collectLevelStage({ count, water: waterLevel, foliage: foliageStage }, emit) {
+  const { layout, templates } = state;
+  const C = Object.fromEntries(
+    Object.entries({ ...COLORS, ...(layout.colors ?? {}) }).map(([k, v]) => [k, hex(v)]),
+  );
+  const opts = { ...FOLIAGE[foliageStage], water: WATER[waterLevel] };
+  const wet = opts.water !== false;
+  const low = opts.water === 'low';
+  const unlocked = new Set(layout.catalogue.filter((e) => e.hizb <= count).map((e) => e.id));
+  const has = (id) => id === null || id === undefined || unlocked.has(id);
+  const P = layout.plot;
+
+  const neutral = (key, make, material, flags, shape = []) =>
+    emit(
+      `n|${key}|${JSON.stringify(material)}|${shape.map((v) => Math.round(v * 1e4)).join(',')}`,
+      () => ({ kind: 'neutral', make, material, ...flags }),
+    );
+
+  // The plot: its sides, its top of mottled earth (dead once the garden has died), its border.
+  const sides = { color: hex(P.side) };
+  const top = {
+    color: hex(P.top),
+    colorAlt: hex(P.topDry ?? C.earthDry),
+    textured: true,
+    repeat: P.shape === 'round' ? 2 : 2,
+    tint: 'dead',
+  };
+  if (P.shape === 'round') {
+    const make = () =>
+      new THREE.CylinderGeometry(P.half, P.half, P.slab, 96).translate(0, -P.slab / 2, 0);
+    neutral('slab-sides', () => onlyGroup(make(), 0), sides, {
+      cast: false,
+      receive: true,
+    });
+    neutral('slab-top', () => onlyGroup(make(), 1), top, { cast: false, receive: true });
+    if (P.border) {
+      neutral(
+        'border',
+        () => ringGeometry(P.half - P.border.w, P.half, 0, P.border.h, 96),
+        { color: hex(P.border.color) },
+        { cast: true, receive: true },
+      );
+    }
+  } else {
+    const H = P.half;
+    const make = () => new THREE.BoxGeometry(2 * H, P.slab, 2 * H).translate(0, -P.slab / 2, 0);
+    neutral('slab-sides', () => withoutGroup(make(), 2), sides, { cast: false, receive: true });
+    neutral('slab-top', () => onlyGroup(make(), 2), top, { cast: false, receive: true });
+    if (P.border) {
+      const bw = P.border.w,
+        bh = P.border.h;
+      [
+        [2 * H, bw, 0, H - bw / 2],
+        [2 * H, bw, 0, -H + bw / 2],
+        [bw, 2 * H - 2 * bw, H - bw / 2, 0],
+        [bw, 2 * H - 2 * bw, -H + bw / 2, 0],
+      ].forEach(([w, d, x, z], k) =>
+        neutral(
+          'border' + k,
+          () => new THREE.BoxGeometry(w, bh, d).translate(x, bh / 2, z),
+          { color: hex(P.border.color) },
+          { cast: true, receive: true },
+          [w, bh, d, x, z],
+        ),
+      );
+    }
+  }
+
+  // The ground and the water.
+  (layout.neutral ?? []).forEach((s, index) => {
+    if (!has(s.element)) return;
+    let color = hex(s.color);
+    let dy = 0;
+    if (s.water) {
+      const drop = s.drop ?? 0.03;
+      if (s.kind === 'sheet' && !wet) return; // a waterfall without water is only its rocks
+      if (!wet) {
+        color = hex(s.dryColor ?? C.dryBed);
+        dy = -drop;
+      } else if (low) {
+        color = hex(s.lowColor ?? C.waterLow);
+        dy = s.kind === 'sheet' ? 0 : -drop / 2;
+      }
+    }
+    if (s.onlyWet && !wet) return;
+    const isFlat = ['poly', 'disc', 'glow', 'sheet'].includes(s.kind);
+    const material = {
+      color,
+      ...(s.lawn
+        ? { textured: true, repeat: 1 / 9, tint: 'wilt', colorAlt: hex(s.dryColor ?? C.lawnDry) }
+        : s.textured
+          ? { textured: true, repeat: 1 / 9 }
+          : {}),
+      ...(s.opacity !== undefined ? { opacity: s.opacity } : {}),
+      ...(s.emissive
+        ? { emissive: hex(s.emissive), emissiveIntensity: s.emissiveIntensity ?? 1 }
+        : {}),
+      ...(s.kind === 'sheet' ? { doubleSided: true } : {}),
+    };
+    neutral(
+      `s${index}`,
+      () => shapeGeometry(s, dy),
+      material,
+      {
+        cast: s.cast ?? (!isFlat && !s.water),
+        receive: s.receive ?? s.kind !== 'glow',
+      },
+      [dy],
+    );
+  });
+
+  // Models.
+  const pick = (role, variant) => {
+    const list = templates.get(role);
+    return list ? list[variant % list.length] : null;
+  };
+  const place = (key, t, role, x, y, z, yawRad, scale, { leafless, dry, living }) => {
+    const matrix = new THREE.Matrix4().compose(
+      new THREE.Vector3(x, y + (t.entry.dy ?? 0), z),
+      new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yawRad),
+      scale,
+    );
+    const mk = matrixKey(matrix);
+    t.meshes.forEach(({ mesh, matrix: local }, meshIndex) => {
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      materials.forEach((material, slot) => {
+        if (leafless && isLeaf(material)) return;
+        if (dry && !Array.isArray(mesh.material) && isWater(material)) return;
+        emit(`t|${key}|${role}|${mk}|${meshIndex}|${slot}|${living ? 1 : 0}`, () => ({
+          kind: 'model',
+          part: `${t.id}|${meshIndex}|${slot}|${living ? 1 : 0}`,
+          mesh,
+          slot,
+          material,
+          placement: matrix.clone(),
+          local: local.clone(),
+          matrix: matrix.clone().multiply(local),
+          living,
+          cast: true,
+          receive: true,
+        }));
+      });
+    });
+  };
+  const trees = layout.items.filter((i) => /^tree\./.test(i.role));
+  const bare = new Set(
+    trees.filter(
+      (_, k) => (k * 7) % trees.length < Math.round((opts.leafless ?? 0) * trees.length),
+    ),
+  );
+  const waterDy = !wet ? -0.03 : low ? -0.015 : 0;
+  layout.items.forEach((item, itemIndex) => {
+    if (!has(item.element)) return;
+    const t = pick(item.role, item.variant || 0);
+    if (!t) return;
+    if (item.role.startsWith('lily') && !wet) return;
+    if (item.onlyWet && !wet) return;
+    const living = LIVING_LEVEL.test(item.role);
+    const key = 'item' + itemIndex;
+    const stretch = item.stretch ?? [1, 1, 1];
+    if (item.line) {
+      const lineScale = fitScale(t, item.size, t.entry);
+      const axis = t.entry.lengthAxis || (t.size.x >= t.size.z ? 'x' : 'z');
+      const len = t.size[axis] * lineScale;
+      const from = new THREE.Vector2(...item.line.from),
+        to = new THREE.Vector2(...item.line.to);
+      const dir = to.clone().sub(from);
+      const total = dir.length();
+      dir.normalize();
+      let runs = [[0, total]];
+      if (item.gap) {
+        const gapC = new THREE.Vector2(...item.gap.at).sub(from).dot(dir);
+        runs = [
+          [0, gapC - item.gap.width / 2],
+          [gapC + item.gap.width / 2, total],
+        ];
+      }
+      const baseYaw = Math.atan2(-dir.y, dir.x) + (axis === 'z' ? Math.PI / 2 : 0);
+      runs.forEach(([a, b], run) => {
+        const L = b - a;
+        if (L < len * 0.4) return;
+        const n = Math.max(1, Math.round(L / len));
+        const along = L / (n * len);
+        for (let k = 0; k < n; k += 1) {
+          const c = a + (k + 0.5) * (L / n);
+          const scale = new THREE.Vector3(lineScale, lineScale * stretch[1], lineScale);
+          if (axis === 'x') scale.x *= along;
+          else scale.z *= along;
+          place(
+            `${key}-${run}-${k}`,
+            t,
+            item.role,
+            from.x + dir.x * c,
+            item.y ?? 0,
+            from.y + dir.y * c,
+            baseYaw + THREE.MathUtils.degToRad(t.entry.yaw ?? 0),
+            scale,
+            { leafless: false, dry: !wet, living },
+          );
+        }
+      });
+      return;
+    }
+    const s = fitScale(t, t.entry.fit || item.size, t.entry);
+    const y = (item.y ?? 0) + (item.onWater ? waterDy : 0);
+    const leafless =
+      bare.has(item) || ((opts.leafless ?? 0) >= 1 && /^(flowers|roses)/.test(item.role));
+    place(
+      key,
+      t,
+      item.role,
+      item.x,
+      y,
+      item.z,
+      THREE.MathUtils.degToRad((item.yaw ?? 0) + (t.entry.yaw ?? 0)),
+      new THREE.Vector3(s * stretch[0], s * stretch[1], s * stretch[2]),
+      { leafless, dry: !wet, living },
+    );
+  });
+}
+
 /** A box geometry without the faces of one group (the top of the plot, which has its own colour). */
 function withoutGroup(geometry, groupIndex) {
   const keep = geometry.groups.filter((_, i) => i !== groupIndex);
@@ -720,11 +1032,13 @@ function subsetOfGroups(geometry, groups) {
 function collectAllStages() {
   const pieces = new Map();
   const stride = WATER_LEVELS * FOLIAGE_STAGES;
+  // Level 1 keeps the picture builder's own ground; the gardens of levels 2 to 7 describe theirs.
+  const collect = state.layout.version === 2 ? collectLevelStage : collectStage;
   for (let count = 0; count <= MAX_COUNT; count += 1) {
     for (let water = 0; water < WATER_LEVELS; water += 1) {
       for (let foliage = 0; foliage < FOLIAGE_STAGES; foliage += 1) {
         const combo = comboOf(water, foliage);
-        collectStage({ count, water, foliage }, (key, spec) => {
+        collect({ count, water, foliage }, (key, spec) => {
           let piece = pieces.get(key);
           if (!piece) {
             piece = { key, spec: spec(), stages: new Uint8Array((MAX_COUNT + 1) * stride) };
@@ -770,16 +1084,16 @@ function materialOf(spec) {
             ? 'earth'
             : 'ground-' + m.color.toString(16).padStart(6, '0'),
       color: m.color,
-      colorAlt: m.tint === 'wilt' ? COLORS.lawnDry : (m.colorAlt ?? null),
+      colorAlt: m.tint === 'wilt' ? (m.colorAlt ?? COLORS.lawnDry) : (m.colorAlt ?? null),
       tint: m.tint ?? null,
       texture: m.textured ? 'mottled' : null,
       uvScale: m.repeat ?? 1,
       alphaTest: 0,
-      doubleSided: false,
-      transparent: false,
-      opacity: 1,
-      emissive: 0,
-      emissiveIntensity: 0,
+      doubleSided: !!m.doubleSided,
+      transparent: m.opacity !== undefined && m.opacity < 1,
+      opacity: m.opacity ?? 1,
+      emissive: m.emissive ?? 0,
+      emissiveIntensity: m.emissiveIntensity ?? 0,
       vertexColors: false,
       wilts: false,
       cast: spec.cast,
@@ -805,6 +1119,7 @@ function materialOf(spec) {
     wilts: spec.living,
     cast: spec.cast,
     receive: spec.receive,
+    ...(m.userData?.emissiveMap ? { emissiveMap: true } : {}),
   };
   return { ...material, key: materialKey(material) };
 }
@@ -825,6 +1140,7 @@ function materialKey(m) {
     m.wilts,
     m.cast,
     m.receive,
+    ...(m.emissiveMap ? ['emissiveMap'] : []),
   ]);
 }
 
@@ -1033,9 +1349,15 @@ async function bake(layout, pack, sourcePrefix) {
   const meshes = [];
   for (const group of merged.values()) {
     group.pieces.sort(byStages);
+    // A model placed once is merged where it stands (its world matrix); the plain shapes are made
+    // in place already.
     const parts = group.pieces.map((piece) => ({
       piece,
-      geometry: geometryOf(piece.spec, group.material, new THREE.Matrix4()),
+      geometry: geometryOf(
+        piece.spec,
+        group.material,
+        piece.spec.kind === 'model' ? piece.spec.matrix : new THREE.Matrix4(),
+      ),
     }));
     meshes.push({ kind: 'merged', material: group.material, parts });
   }
@@ -1119,7 +1441,7 @@ async function bake(layout, pack, sourcePrefix) {
     extensionsUsed: ['KHR_mesh_quantization', 'EXT_mesh_gpu_instancing'],
     extensionsRequired: ['KHR_mesh_quantization'],
     scene: 0,
-    scenes: [{ name: 'garden-level-1', nodes: [] }],
+    scenes: [{ name: `garden-level-${layout.level ?? 1}`, nodes: [] }],
     nodes: [],
     meshes: [],
     materials: [],
@@ -1131,6 +1453,8 @@ async function bake(layout, pack, sourcePrefix) {
         version: 2,
         textures: [],
         stages: { counts: MAX_COUNT + 1, water: WATER_LEVELS, foliage: FOLIAGE_STAGES },
+        // A garden with a light of its own (the night garden): the app uses it instead of the day's.
+        ...(layout.light ? { light: layout.light } : {}),
       },
     },
   };
@@ -1257,6 +1581,7 @@ async function bake(layout, pack, sourcePrefix) {
         emissiveIntensity: m.emissiveIntensity,
         vertexColors: m.vertexColors,
         wilts: m.wilts,
+        ...(m.emissiveMap ? { emissiveMap: true } : {}),
       },
     });
     json.meshes.push({

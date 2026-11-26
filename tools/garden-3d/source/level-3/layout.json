@@ -1,0 +1,2669 @@
+{
+  "about": "Level 3 garden 'Verger au bord de l'eau' (tools/garden-3d/levels/make_levels.py). Metres; x east, z south, y up.",
+  "version": 2,
+  "level": 3,
+  "style": "waterside-orchard",
+  "name": "Verger au bord de l'eau",
+  "idea": "Une rivi\u00e8re traverse le terrain. Un chemin la franchit par un pont de bois ; de part et d'autre, des arbres fruitiers en rangs, des peupliers le long de l'eau, des pr\u00e9s fleuris, et un moulin sur la berge.",
+  "plot": {
+    "shape": "square",
+    "half": 9.0,
+    "slab": 0.7,
+    "top": "#b89a70",
+    "side": "#9c7c55",
+    "border": {
+      "w": 0.3,
+      "h": 0.2,
+      "color": "#cbbd9e"
+    }
+  },
+  "colors": {
+    "water": "#5bb8d0",
+    "waterLow": "#7fb0b8",
+    "dryBed": "#bda98a",
+    "lawnDry": "#cfb978"
+  },
+  "catalogue": [
+    {
+      "hizb": 1,
+      "id": "channels",
+      "kind": "channels",
+      "label": "La rivi\u00e8re, d'un bord \u00e0 l'autre du terrain"
+    },
+    {
+      "hizb": 2,
+      "id": "paving",
+      "kind": "paving",
+      "label": "Le chemin du verger et son pont de bois"
+    },
+    {
+      "hizb": 3,
+      "id": "bed-1",
+      "kind": "bed",
+      "label": "Le pr\u00e9 du fond, c\u00f4t\u00e9 est"
+    },
+    {
+      "hizb": 4,
+      "id": "bed-2",
+      "kind": "bed",
+      "label": "Le pr\u00e9 de devant, c\u00f4t\u00e9 est"
+    },
+    {
+      "hizb": 5,
+      "id": "tree-1",
+      "kind": "pomegranate",
+      "label": "Grenadier"
+    },
+    {
+      "hizb": 6,
+      "id": "bed-3",
+      "kind": "bed",
+      "label": "Le pr\u00e9 du fond, c\u00f4t\u00e9 ouest"
+    },
+    {
+      "hizb": 7,
+      "id": "tree-2",
+      "kind": "date-palm",
+      "label": "Noyer, le grand arbre du verger"
+    },
+    {
+      "hizb": 8,
+      "id": "bed-4",
+      "kind": "bed",
+      "label": "Le pr\u00e9 de devant, c\u00f4t\u00e9 ouest"
+    },
+    {
+      "hizb": 9,
+      "id": "tree-3",
+      "kind": "olive",
+      "label": "Olivier"
+    },
+    {
+      "hizb": 10,
+      "id": "stepping-stones",
+      "kind": "stepping-stones",
+      "label": "Un gu\u00e9 de pierres plates, en aval"
+    },
+    {
+      "hizb": 11,
+      "id": "tree-4",
+      "kind": "fig",
+      "label": "Figuier"
+    },
+    {
+      "hizb": 12,
+      "id": "flowers-1",
+      "kind": "flowers",
+      "label": "Des fleurs des pr\u00e9s, \u00e0 l'ouest"
+    },
+    {
+      "hizb": 13,
+      "id": "tree-5",
+      "kind": "cypress",
+      "label": "Peuplier au bord de l'eau"
+    },
+    {
+      "hizb": 14,
+      "id": "tree-6",
+      "kind": "orange",
+      "label": "Oranger"
+    },
+    {
+      "hizb": 15,
+      "id": "flowers-2",
+      "kind": "flowers",
+      "label": "Des fleurs des pr\u00e9s, au fond"
+    },
+    {
+      "hizb": 16,
+      "id": "tree-7",
+      "kind": "pomegranate",
+      "label": "Grenadier"
+    },
+    {
+      "hizb": 17,
+      "id": "tree-8",
+      "kind": "date-palm",
+      "label": "Noyer, le grand arbre du verger"
+    },
+    {
+      "hizb": 18,
+      "id": "flowers-3",
+      "kind": "flowers",
+      "label": "Des fleurs des pr\u00e9s, devant"
+    },
+    {
+      "hizb": 19,
+      "id": "tree-9",
+      "kind": "olive",
+      "label": "Olivier"
+    },
+    {
+      "hizb": 20,
+      "id": "fountain",
+      "kind": "fountain",
+      "label": "L'abreuvoir de pierre pr\u00e8s du chemin"
+    },
+    {
+      "hizb": 21,
+      "id": "tree-10",
+      "kind": "fig",
+      "label": "Figuier"
+    },
+    {
+      "hizb": 22,
+      "id": "flowers-4",
+      "kind": "flowers",
+      "label": "Des fleurs des pr\u00e9s, \u00e0 l'est"
+    },
+    {
+      "hizb": 23,
+      "id": "tree-11",
+      "kind": "cypress",
+      "label": "Peuplier au bord de l'eau"
+    },
+    {
+      "hizb": 24,
+      "id": "springs",
+      "kind": "springs",
+      "label": "Les sources qui grossissent la rivi\u00e8re"
+    },
+    {
+      "hizb": 25,
+      "id": "tree-12",
+      "kind": "orange",
+      "label": "Oranger"
+    },
+    {
+      "hizb": 26,
+      "id": "tree-13",
+      "kind": "pomegranate",
+      "label": "Grenadier"
+    },
+    {
+      "hizb": 27,
+      "id": "birds-1",
+      "kind": "birds",
+      "label": "Des oiseaux (aucun mod\u00e8le)"
+    },
+    {
+      "hizb": 28,
+      "id": "tree-14",
+      "kind": "date-palm",
+      "label": "Noyer, le grand arbre du verger"
+    },
+    {
+      "hizb": 29,
+      "id": "tree-15",
+      "kind": "olive",
+      "label": "Olivier"
+    },
+    {
+      "hizb": 30,
+      "id": "wall-north",
+      "kind": "wall",
+      "label": "La barri\u00e8re de bois du nord"
+    },
+    {
+      "hizb": 31,
+      "id": "wall-west",
+      "kind": "wall",
+      "label": "La barri\u00e8re de bois de l'ouest"
+    },
+    {
+      "hizb": 32,
+      "id": "tree-16",
+      "kind": "fig",
+      "label": "Figuier"
+    },
+    {
+      "hizb": 33,
+      "id": "tree-17",
+      "kind": "cypress",
+      "label": "Peuplier au bord de l'eau"
+    },
+    {
+      "hizb": 34,
+      "id": "trellis",
+      "kind": "trellis",
+      "label": "La pergola o\u00f9 grimpe la vigne"
+    },
+    {
+      "hizb": 35,
+      "id": "tree-18",
+      "kind": "orange",
+      "label": "Oranger"
+    },
+    {
+      "hizb": 36,
+      "id": "tree-19",
+      "kind": "pomegranate",
+      "label": "Grenadier"
+    },
+    {
+      "hizb": 37,
+      "id": "birds-2",
+      "kind": "birds",
+      "label": "Des oiseaux (aucun mod\u00e8le)"
+    },
+    {
+      "hizb": 38,
+      "id": "tree-20",
+      "kind": "date-palm",
+      "label": "Noyer, le grand arbre du verger"
+    },
+    {
+      "hizb": 39,
+      "id": "tree-21",
+      "kind": "olive",
+      "label": "Olivier"
+    },
+    {
+      "hizb": 40,
+      "id": "gate-north",
+      "kind": "gate",
+      "label": "Le portillon du nord"
+    },
+    {
+      "hizb": 41,
+      "id": "gate-west",
+      "kind": "gate",
+      "label": "Le portillon de l'ouest"
+    },
+    {
+      "hizb": 42,
+      "id": "tree-22",
+      "kind": "fig",
+      "label": "Figuier"
+    },
+    {
+      "hizb": 43,
+      "id": "tree-23",
+      "kind": "cypress",
+      "label": "Peuplier au bord de l'eau"
+    },
+    {
+      "hizb": 44,
+      "id": "lanterns",
+      "kind": "lanterns",
+      "label": "Des lanternes aux deux bouts du pont et sur le chemin"
+    },
+    {
+      "hizb": 45,
+      "id": "tree-24",
+      "kind": "orange",
+      "label": "Oranger"
+    },
+    {
+      "hizb": 46,
+      "id": "tree-25",
+      "kind": "pomegranate",
+      "label": "Grenadier"
+    },
+    {
+      "hizb": 47,
+      "id": "butterflies",
+      "kind": "butterflies",
+      "label": "Des papillons (aucun mod\u00e8le)"
+    },
+    {
+      "hizb": 48,
+      "id": "tree-26",
+      "kind": "date-palm",
+      "label": "Noyer, le grand arbre du verger"
+    },
+    {
+      "hizb": 49,
+      "id": "tree-27",
+      "kind": "olive",
+      "label": "Olivier"
+    },
+    {
+      "hizb": 50,
+      "id": "pavilion",
+      "kind": "pavilion",
+      "label": "Le moulin et sa roue, sur la berge"
+    },
+    {
+      "hizb": 51,
+      "id": "tree-28",
+      "kind": "fig",
+      "label": "Figuier"
+    },
+    {
+      "hizb": 52,
+      "id": "carpets",
+      "kind": "carpets",
+      "label": "Une couverture de pique-nique sous les arbres"
+    },
+    {
+      "hizb": 53,
+      "id": "tree-29",
+      "kind": "cypress",
+      "label": "Peuplier au bord de l'eau"
+    },
+    {
+      "hizb": 54,
+      "id": "cushions",
+      "kind": "cushions",
+      "label": "Des coussins sur la couverture"
+    },
+    {
+      "hizb": 55,
+      "id": "tree-30",
+      "kind": "orange",
+      "label": "Oranger"
+    },
+    {
+      "hizb": 56,
+      "id": "lectern",
+      "kind": "lectern",
+      "label": "Une petite table et ses livres, face \u00e0 la rivi\u00e8re"
+    },
+    {
+      "hizb": 57,
+      "id": "birds-3",
+      "kind": "birds",
+      "label": "Des oiseaux (aucun mod\u00e8le)"
+    },
+    {
+      "hizb": 58,
+      "id": "roses",
+      "kind": "roses",
+      "label": "Des buissons en fleurs le long des barri\u00e8res"
+    },
+    {
+      "hizb": 59,
+      "id": "waterfall",
+      "kind": "waterfall",
+      "label": "Le seuil de pierre o\u00f9 la rivi\u00e8re cascade"
+    },
+    {
+      "hizb": 60,
+      "id": "full-bloom",
+      "kind": "full-bloom",
+      "label": "La pleine floraison : herbes, roseaux, n\u00e9nuphars, la barque et la r\u00e9colte"
+    }
+  ],
+  "neutral": [
+    {
+      "element": "channels",
+      "kind": "poly",
+      "points": [
+        [8.68, -5.756],
+        [8.371, -5.756],
+        [7.915, -5.747],
+        [7.441, -5.723],
+        [6.956, -5.678],
+        [6.465, -5.605],
+        [5.984, -5.493],
+        [5.539, -5.347],
+        [5.13, -5.18],
+        [4.745, -4.995],
+        [4.383, -4.798],
+        [4.04, -4.593],
+        [3.716, -4.385],
+        [3.406, -4.178],
+        [3.109, -3.975],
+        [2.823, -3.78],
+        [2.538, -3.588],
+        [2.24, -3.389],
+        [1.932, -3.181],
+        [1.624, -2.966],
+        [1.314, -2.745],
+        [1.003, -2.517],
+        [0.693, -2.281],
+        [0.382, -2.036],
+        [0.072, -1.783],
+        [-0.237, -1.519],
+        [-0.542, -1.248],
+        [-0.843, -0.969],
+        [-1.143, -0.682],
+        [-1.444, -0.386],
+        [-1.742, -0.082],
+        [-2.038, 0.228],
+        [-2.329, 0.545],
+        [-2.615, 0.867],
+        [-2.895, 1.193],
+        [-3.166, 1.522],
+        [-3.421, 1.845],
+        [-3.66, 2.154],
+        [-3.9, 2.462],
+        [-4.144, 2.781],
+        [-4.39, 3.115],
+        [-4.635, 3.464],
+        [-4.873, 3.831],
+        [-5.102, 4.22],
+        [-5.316, 4.631],
+        [-5.51, 5.068],
+        [-5.681, 5.543],
+        [-5.816, 6.062],
+        [-5.908, 6.597],
+        [-5.968, 7.128],
+        [-6.005, 7.65],
+        [-6.024, 8.155],
+        [-6.033, 8.631],
+        [-6.033, 8.68],
+        [-2.933, 8.68],
+        [-2.933, 8.669],
+        [-2.926, 8.245],
+        [-2.909, 7.818],
+        [-2.881, 7.407],
+        [-2.839, 7.029],
+        [-2.784, 6.709],
+        [-2.719, 6.457],
+        [-2.634, 6.225],
+        [-2.524, 5.977],
+        [-2.392, 5.724],
+        [-2.239, 5.465],
+        [-2.065, 5.199],
+        [-1.874, 4.925],
+        [-1.666, 4.644],
+        [-1.444, 4.354],
+        [-1.212, 4.055],
+        [-0.979, 3.755],
+        [-0.752, 3.467],
+        [-0.521, 3.187],
+        [-0.28, 2.905],
+        [-0.031, 2.625],
+        [0.225, 2.347],
+        [0.486, 2.073],
+        [0.75, 1.804],
+        [1.015, 1.543],
+        [1.281, 1.289],
+        [1.542, 1.048],
+        [1.8, 0.818],
+        [2.059, 0.597],
+        [2.322, 0.382],
+        [2.589, 0.172],
+        [2.859, -0.033],
+        [3.132, -0.234],
+        [3.409, -0.432],
+        [3.688, -0.626],
+        [3.97, -0.817],
+        [4.262, -1.012],
+        [4.563, -1.214],
+        [4.859, -1.417],
+        [5.142, -1.61],
+        [5.412, -1.791],
+        [5.672, -1.957],
+        [5.921, -2.106],
+        [6.16, -2.237],
+        [6.39, -2.348],
+        [6.612, -2.439],
+        [6.816, -2.507],
+        [7.039, -2.558],
+        [7.322, -2.6],
+        [7.658, -2.63],
+        [8.024, -2.649],
+        [8.404, -2.656],
+        [8.68, -2.656]
+      ],
+      "y": 0,
+      "h": 0.055,
+      "color": "#cdbf9c"
+    },
+    {
+      "element": "channels",
+      "kind": "poly",
+      "points": [
+        [8.68, -5.356],
+        [8.375, -5.356],
+        [7.929, -5.347],
+        [7.469, -5.324],
+        [7.003, -5.281],
+        [6.539, -5.212],
+        [6.091, -5.108],
+        [5.677, -4.972],
+        [5.292, -4.815],
+        [4.928, -4.639],
+        [4.581, -4.45],
+        [4.251, -4.253],
+        [3.935, -4.05],
+        [3.63, -3.847],
+        [3.335, -3.645],
+        [3.048, -3.449],
+        [2.76, -3.256],
+        [2.463, -3.057],
+        [2.159, -2.851],
+        [1.854, -2.639],
+        [1.549, -2.421],
+        [1.243, -2.196],
+        [0.937, -1.964],
+        [0.632, -1.724],
+        [0.328, -1.475],
+        [0.026, -1.218],
+        [-0.273, -0.951],
+        [-0.569, -0.677],
+        [-0.865, -0.395],
+        [-1.16, -0.103],
+        [-1.455, 0.196],
+        [-1.746, 0.502],
+        [-2.033, 0.813],
+        [-2.314, 1.13],
+        [-2.588, 1.45],
+        [-2.855, 1.773],
+        [-3.106, 2.092],
+        [-3.344, 2.399],
+        [-3.583, 2.706],
+        [-3.824, 3.022],
+        [-4.065, 3.348],
+        [-4.303, 3.688],
+        [-4.533, 4.042],
+        [-4.753, 4.414],
+        [-4.956, 4.805],
+        [-5.139, 5.217],
+        [-5.299, 5.661],
+        [-5.425, 6.145],
+        [-5.512, 6.652],
+        [-5.57, 7.164],
+        [-5.605, 7.672],
+        [-5.625, 8.167],
+        [-5.633, 8.636],
+        [-5.633, 8.68],
+        [-3.333, 8.68],
+        [-3.333, 8.664],
+        [-3.325, 8.233],
+        [-3.308, 7.797],
+        [-3.279, 7.371],
+        [-3.235, 6.973],
+        [-3.176, 6.626],
+        [-3.101, 6.339],
+        [-3.005, 6.075],
+        [-2.884, 5.803],
+        [-2.741, 5.53],
+        [-2.579, 5.254],
+        [-2.397, 4.975],
+        [-2.199, 4.692],
+        [-1.986, 4.404],
+        [-1.761, 4.11],
+        [-1.528, 3.809],
+        [-1.294, 3.508],
+        [-1.064, 3.216],
+        [-0.828, 2.929],
+        [-0.581, 2.642],
+        [-0.327, 2.356],
+        [-0.067, 2.073],
+        [0.199, 1.795],
+        [0.467, 1.522],
+        [0.737, 1.256],
+        [1.007, 0.998],
+        [1.273, 0.751],
+        [1.537, 0.516],
+        [1.803, 0.29],
+        [2.072, 0.07],
+        [2.344, -0.145],
+        [2.62, -0.354],
+        [2.898, -0.558],
+        [3.179, -0.759],
+        [3.462, -0.955],
+        [3.747, -1.149],
+        [4.04, -1.344],
+        [4.339, -1.545],
+        [4.633, -1.747],
+        [4.918, -1.941],
+        [5.193, -2.126],
+        [5.462, -2.297],
+        [5.723, -2.454],
+        [5.978, -2.593],
+        [6.228, -2.713],
+        [6.473, -2.814],
+        [6.709, -2.892],
+        [6.965, -2.952],
+        [7.275, -2.997],
+        [7.63, -3.029],
+        [8.01, -3.048],
+        [8.4, -3.056],
+        [8.68, -3.056]
+      ],
+      "y": 0.055,
+      "h": 0.012,
+      "color": "#5bb8d0",
+      "water": true
+    },
+    {
+      "element": "paving",
+      "kind": "poly",
+      "points": [
+        [-7.024, -6.176],
+        [-1.578, -0.73],
+        [-0.73, -1.578],
+        [-6.176, -7.024]
+      ],
+      "y": 0,
+      "h": 0.066,
+      "color": "#dcc59a"
+    },
+    {
+      "element": "paving",
+      "kind": "poly",
+      "points": [
+        [1.109, 1.957],
+        [7.976, 8.824],
+        [8.824, 7.976],
+        [1.957, 1.109]
+      ],
+      "y": 0,
+      "h": 0.066,
+      "color": "#dcc59a"
+    },
+    {
+      "element": "bed-1",
+      "kind": "poly",
+      "points": [
+        [8.68, -8.68],
+        [8.68, -4.206],
+        [8.387, -4.206],
+        [7.97, -4.198],
+        [7.549, -4.177],
+        [7.139, -4.139],
+        [6.752, -4.082],
+        [6.4, -4.0],
+        [6.075, -3.893],
+        [5.76, -3.764],
+        [5.453, -3.616],
+        [5.152, -3.452],
+        [4.856, -3.275],
+        [4.564, -3.088],
+        [4.274, -2.894],
+        [3.984, -2.696],
+        [3.693, -2.497],
+        [3.4, -2.3],
+        [3.105, -2.103],
+        [2.81, -1.903],
+        [2.516, -1.699],
+        [2.223, -1.49],
+        [1.931, -1.275],
+        [1.641, -1.054],
+        [1.352, -0.827],
+        [1.066, -0.593],
+        [0.781, -0.351],
+        [0.5, -0.1],
+        [0.219, 0.16],
+        [0.189, 0.189],
+        [-8.68, -8.68],
+        [-8.68, -8.68]
+      ],
+      "y": 0,
+      "h": 0.05,
+      "color": "#a4c56f",
+      "lawn": true,
+      "dryColor": "#cfb978"
+    },
+    {
+      "element": "bed-2",
+      "kind": "poly",
+      "points": [
+        [8.68, 8.68],
+        [8.68, 8.68],
+        [8.68, -4.206],
+        [8.387, -4.206],
+        [7.97, -4.198],
+        [7.549, -4.177],
+        [7.139, -4.139],
+        [6.752, -4.082],
+        [6.4, -4.0],
+        [6.075, -3.893],
+        [5.76, -3.764],
+        [5.453, -3.616],
+        [5.152, -3.452],
+        [4.856, -3.275],
+        [4.564, -3.088],
+        [4.274, -2.894],
+        [3.984, -2.696],
+        [3.693, -2.497],
+        [3.4, -2.3],
+        [3.105, -2.103],
+        [2.81, -1.903],
+        [2.516, -1.699],
+        [2.223, -1.49],
+        [1.931, -1.275],
+        [1.641, -1.054],
+        [1.352, -0.827],
+        [1.066, -0.593],
+        [0.781, -0.351],
+        [0.5, -0.1],
+        [0.219, 0.16],
+        [0.189, 0.189]
+      ],
+      "y": 0,
+      "h": 0.05,
+      "color": "#a4c56f",
+      "lawn": true,
+      "dryColor": "#cfb978"
+    },
+    {
+      "element": "bed-3",
+      "kind": "poly",
+      "points": [
+        [-8.68, -8.68],
+        [0.189, 0.189],
+        [-0.064, 0.43],
+        [-0.347, 0.709],
+        [-0.628, 0.995],
+        [-0.906, 1.287],
+        [-1.18, 1.585],
+        [-1.448, 1.886],
+        [-1.708, 2.19],
+        [-1.959, 2.495],
+        [-2.2, 2.8],
+        [-2.436, 3.104],
+        [-2.672, 3.408],
+        [-2.905, 3.713],
+        [-3.132, 4.02],
+        [-3.35, 4.331],
+        [-3.556, 4.648],
+        [-3.747, 4.972],
+        [-3.92, 5.304],
+        [-4.072, 5.646],
+        [-4.2, 6.0],
+        [-4.3, 6.386],
+        [-4.374, 6.813],
+        [-4.424, 7.267],
+        [-4.457, 7.734],
+        [-4.475, 8.2],
+        [-4.483, 8.65],
+        [-4.483, 8.68],
+        [-8.68, 8.68],
+        [-8.68, -8.68]
+      ],
+      "y": 0,
+      "h": 0.05,
+      "color": "#a4c56f",
+      "lawn": true,
+      "dryColor": "#cfb978"
+    },
+    {
+      "element": "bed-4",
+      "kind": "poly",
+      "points": [
+        [8.68, 8.68],
+        [8.68, 8.68],
+        [0.189, 0.189],
+        [-0.064, 0.43],
+        [-0.347, 0.709],
+        [-0.628, 0.995],
+        [-0.906, 1.287],
+        [-1.18, 1.585],
+        [-1.448, 1.886],
+        [-1.708, 2.19],
+        [-1.959, 2.495],
+        [-2.2, 2.8],
+        [-2.436, 3.104],
+        [-2.672, 3.408],
+        [-2.905, 3.713],
+        [-3.132, 4.02],
+        [-3.35, 4.331],
+        [-3.556, 4.648],
+        [-3.747, 4.972],
+        [-3.92, 5.304],
+        [-4.072, 5.646],
+        [-4.2, 6.0],
+        [-4.3, 6.386],
+        [-4.374, 6.813],
+        [-4.424, 7.267],
+        [-4.457, 7.734],
+        [-4.475, 8.2],
+        [-4.483, 8.65],
+        [-4.483, 8.68]
+      ],
+      "y": 0,
+      "h": 0.05,
+      "color": "#a4c56f",
+      "lawn": true,
+      "dryColor": "#cfb978"
+    },
+    {
+      "element": "springs",
+      "kind": "cyl",
+      "at": [-7.4, 0, 3.6],
+      "r": 0.6,
+      "h": 0.11,
+      "color": "#cdbf9c"
+    },
+    {
+      "element": "springs",
+      "kind": "disc",
+      "at": [-7.4, 0.112, 3.6],
+      "r": 0.44,
+      "color": "#5bb8d0",
+      "water": true
+    },
+    {
+      "element": "springs",
+      "kind": "cyl",
+      "at": [7.0, 0, -6.0],
+      "r": 0.6,
+      "h": 0.11,
+      "color": "#cdbf9c"
+    },
+    {
+      "element": "springs",
+      "kind": "disc",
+      "at": [7.0, 0.112, -6.0],
+      "r": 0.44,
+      "color": "#5bb8d0",
+      "water": true
+    },
+    {
+      "element": "waterfall",
+      "kind": "box",
+      "at": [7.1392, 0.0, -4.139200000000001],
+      "size": [2.0, 0.24, 0.32],
+      "yaw": 98.45189817645188,
+      "color": "#b7ad98"
+    },
+    {
+      "element": "waterfall",
+      "kind": "sheet",
+      "at": [6.9649149999999995, 0.17, -4.1133025000000005],
+      "size": [1.7, 0.2],
+      "yaw": 188.4518981764519,
+      "color": "#86d3e0",
+      "water": true
+    }
+  ],
+  "items": [
+    {
+      "element": "paving",
+      "role": "bridge",
+      "x": 0.19,
+      "z": 0.19,
+      "y": 0.0,
+      "yaw": -45,
+      "variant": 1,
+      "size": {
+        "w": 1.5
+      },
+      "stretch": [2.15, 1, 1]
+    },
+    {
+      "element": "tree-1",
+      "role": "tree.round",
+      "x": -7.518,
+      "z": 3.513,
+      "y": 0.05,
+      "yaw": 275.0,
+      "variant": 0,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-2",
+      "role": "tree.tall",
+      "x": -7.483,
+      "z": 0.791,
+      "y": 0.05,
+      "yaw": 52.5,
+      "variant": 1,
+      "size": {
+        "h": 3.3,
+        "wmax": 2.6
+      }
+    },
+    {
+      "element": "tree-3",
+      "role": "tree.dark",
+      "x": -7.447,
+      "z": -1.932,
+      "y": 0.05,
+      "yaw": 190.0,
+      "variant": 2,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-4",
+      "role": "tree.spread",
+      "x": -7.412,
+      "z": -4.654,
+      "y": 0.05,
+      "yaw": 327.5,
+      "variant": 3,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-5",
+      "role": "tree.poplar",
+      "x": 7.87,
+      "z": -6.195,
+      "y": 0.05,
+      "yaw": 105.0,
+      "variant": 4,
+      "size": {
+        "h": 4.0,
+        "wmax": 1.7
+      }
+    },
+    {
+      "element": "tree-6",
+      "role": "tree.round",
+      "x": -1.755,
+      "z": 6.518,
+      "y": 0.05,
+      "yaw": 242.5,
+      "variant": 5,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-7",
+      "role": "tree.round",
+      "x": 0.967,
+      "z": 6.483,
+      "y": 0.05,
+      "yaw": 20.0,
+      "variant": 6,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-8",
+      "role": "tree.tall",
+      "x": 3.69,
+      "z": 6.447,
+      "y": 0.05,
+      "yaw": 157.5,
+      "variant": 7,
+      "size": {
+        "h": 3.3,
+        "wmax": 2.6
+      }
+    },
+    {
+      "element": "tree-9",
+      "role": "tree.dark",
+      "x": 5.033,
+      "z": 7.791,
+      "y": 0.05,
+      "yaw": 295.0,
+      "variant": 8,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-10",
+      "role": "tree.spread",
+      "x": -6.139,
+      "z": 2.134,
+      "y": 0.05,
+      "yaw": 72.5,
+      "variant": 9,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-11",
+      "role": "tree.poplar",
+      "x": 3.952,
+      "z": -0.261,
+      "y": 0.05,
+      "yaw": 210.0,
+      "variant": 10,
+      "size": {
+        "h": 4.0,
+        "wmax": 1.7
+      }
+    },
+    {
+      "element": "tree-12",
+      "role": "tree.round",
+      "x": -0.588,
+      "z": -6.104,
+      "y": 0.05,
+      "yaw": 347.5,
+      "variant": 11,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-13",
+      "role": "tree.round",
+      "x": -6.068,
+      "z": -3.311,
+      "y": 0.05,
+      "yaw": 125.0,
+      "variant": 12,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-14",
+      "role": "tree.tall",
+      "x": -4.654,
+      "z": -7.412,
+      "y": 0.05,
+      "yaw": 262.5,
+      "variant": 13,
+      "size": {
+        "h": 3.3,
+        "wmax": 2.6
+      }
+    },
+    {
+      "element": "tree-15",
+      "role": "tree.dark",
+      "x": -0.376,
+      "z": 5.139,
+      "y": 0.05,
+      "yaw": 40.0,
+      "variant": 14,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-16",
+      "role": "tree.spread",
+      "x": 2.346,
+      "z": 5.104,
+      "y": 0.05,
+      "yaw": 177.5,
+      "variant": 15,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-17",
+      "role": "tree.poplar",
+      "x": -2.675,
+      "z": 0.256,
+      "y": 0.05,
+      "yaw": 315.0,
+      "variant": 16,
+      "size": {
+        "h": 4.0,
+        "wmax": 1.7
+      }
+    },
+    {
+      "element": "tree-18",
+      "role": "tree.round",
+      "x": 6.447,
+      "z": 3.69,
+      "y": 0.05,
+      "yaw": 92.5,
+      "variant": 17,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-19",
+      "role": "tree.round",
+      "x": 7.791,
+      "z": 5.033,
+      "y": 0.05,
+      "yaw": 230.0,
+      "variant": 18,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-20",
+      "role": "tree.tall",
+      "x": -4.76,
+      "z": 0.755,
+      "y": 0.05,
+      "yaw": 7.5,
+      "variant": 19,
+      "size": {
+        "h": 3.3,
+        "wmax": 2.6
+      }
+    },
+    {
+      "element": "tree-21",
+      "role": "tree.dark",
+      "x": 0.791,
+      "z": -7.483,
+      "y": 0.05,
+      "yaw": 145.0,
+      "variant": 20,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-22",
+      "role": "tree.spread",
+      "x": -1.932,
+      "z": -7.447,
+      "y": 0.05,
+      "yaw": 282.5,
+      "variant": 21,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-23",
+      "role": "tree.poplar",
+      "x": -2.092,
+      "z": 6.116,
+      "y": 0.05,
+      "yaw": 60.0,
+      "variant": 22,
+      "size": {
+        "h": 4.0,
+        "wmax": 1.7
+      }
+    },
+    {
+      "element": "tree-24",
+      "role": "tree.round",
+      "x": 1.003,
+      "z": 3.76,
+      "y": 0.05,
+      "yaw": 197.5,
+      "variant": 23,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-25",
+      "role": "tree.round",
+      "x": 6.483,
+      "z": 0.967,
+      "y": 0.05,
+      "yaw": 335.0,
+      "variant": 24,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-26",
+      "role": "tree.tall",
+      "x": -3.381,
+      "z": -0.624,
+      "y": 0.05,
+      "yaw": 112.5,
+      "variant": 25,
+      "size": {
+        "h": 3.3,
+        "wmax": 2.6
+      }
+    },
+    {
+      "element": "tree-27",
+      "role": "tree.dark",
+      "x": 3.76,
+      "z": 1.003,
+      "y": 0.05,
+      "yaw": 250.0,
+      "variant": 26,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-28",
+      "role": "tree.spread",
+      "x": -0.624,
+      "z": -3.381,
+      "y": 0.05,
+      "yaw": 27.5,
+      "variant": 27,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "tree-29",
+      "role": "tree.poplar",
+      "x": -6.483,
+      "z": 8.638,
+      "y": 0.05,
+      "yaw": 165.0,
+      "variant": 28,
+      "size": {
+        "h": 4.0,
+        "wmax": 1.7
+      }
+    },
+    {
+      "element": "tree-30",
+      "role": "tree.round",
+      "x": 5.139,
+      "z": -0.376,
+      "y": 0.05,
+      "yaw": 302.5,
+      "variant": 29,
+      "size": {
+        "h": 2.5,
+        "wmax": 2.2
+      }
+    },
+    {
+      "element": "stepping-stones",
+      "role": "stepping-stones",
+      "x": -2.436,
+      "z": 4.508,
+      "y": 0.06,
+      "yaw": 80.0,
+      "variant": 0,
+      "size": {
+        "w": 0.62
+      }
+    },
+    {
+      "element": "stepping-stones",
+      "role": "stepping-stones",
+      "x": -3.132,
+      "z": 4.02,
+      "y": 0.06,
+      "yaw": 217.5,
+      "variant": 1,
+      "size": {
+        "w": 0.62
+      }
+    },
+    {
+      "element": "stepping-stones",
+      "role": "stepping-stones",
+      "x": -3.828,
+      "z": 3.532,
+      "y": 0.06,
+      "yaw": 355.0,
+      "variant": 2,
+      "size": {
+        "w": 0.62
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": -4.992,
+      "z": 1.03,
+      "y": 0.05,
+      "yaw": 132.5,
+      "variant": 35,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": -6.955,
+      "z": 1.992,
+      "y": 0.05,
+      "yaw": 270.0,
+      "variant": 36,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": -5.569,
+      "z": 2.809,
+      "y": 0.05,
+      "yaw": 47.5,
+      "variant": 37,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": -4.918,
+      "z": 2.296,
+      "y": 0.05,
+      "yaw": 185.0,
+      "variant": 38,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": -6.159,
+      "z": 2.21,
+      "y": 0.05,
+      "yaw": 322.5,
+      "variant": 39,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": -6.793,
+      "z": 2.191,
+      "y": 0.05,
+      "yaw": 100.0,
+      "variant": 40,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": -7.082,
+      "z": 2.141,
+      "y": 0.05,
+      "yaw": 237.5,
+      "variant": 41,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": -5.597,
+      "z": 2.895,
+      "y": 0.05,
+      "yaw": 15.0,
+      "variant": 42,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-1",
+      "role": "flowers",
+      "x": -6.015,
+      "z": 1.737,
+      "y": 0.05,
+      "yaw": 152.5,
+      "variant": 43,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": 5.112,
+      "z": -6.309,
+      "y": 0.05,
+      "yaw": 290.0,
+      "variant": 44,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": 5.326,
+      "z": -6.319,
+      "y": 0.05,
+      "yaw": 67.5,
+      "variant": 45,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": 6.937,
+      "z": -6.507,
+      "y": 0.05,
+      "yaw": 205.0,
+      "variant": 46,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": 5.607,
+      "z": -5.507,
+      "y": 0.05,
+      "yaw": 342.5,
+      "variant": 47,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": 5.717,
+      "z": -6.39,
+      "y": 0.05,
+      "yaw": 120.0,
+      "variant": 48,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": 7.108,
+      "z": -5.885,
+      "y": 0.05,
+      "yaw": 257.5,
+      "variant": 49,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": 4.798,
+      "z": -6.718,
+      "y": 0.05,
+      "yaw": 35.0,
+      "variant": 50,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": 4.698,
+      "z": -6.756,
+      "y": 0.05,
+      "yaw": 172.5,
+      "variant": 51,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-2",
+      "role": "flowers",
+      "x": 6.918,
+      "z": -7.56,
+      "y": 0.05,
+      "yaw": 310.0,
+      "variant": 52,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": 2.722,
+      "z": 6.239,
+      "y": 0.05,
+      "yaw": 87.5,
+      "variant": 53,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": 1.124,
+      "z": 6.727,
+      "y": 0.05,
+      "yaw": 225.0,
+      "variant": 54,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": 1.741,
+      "z": 6.162,
+      "y": 0.05,
+      "yaw": 2.5,
+      "variant": 55,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": 0.741,
+      "z": 6.582,
+      "y": 0.05,
+      "yaw": 140.0,
+      "variant": 56,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": -0.022,
+      "z": 6.699,
+      "y": 0.05,
+      "yaw": 277.5,
+      "variant": 57,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": 1.676,
+      "z": 5.645,
+      "y": 0.05,
+      "yaw": 55.0,
+      "variant": 58,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": 0.549,
+      "z": 5.786,
+      "y": 0.05,
+      "yaw": 192.5,
+      "variant": 59,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": 2.006,
+      "z": 5.871,
+      "y": 0.05,
+      "yaw": 330.0,
+      "variant": 60,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-3",
+      "role": "flowers",
+      "x": 0.704,
+      "z": 5.539,
+      "y": 0.05,
+      "yaw": 107.5,
+      "variant": 61,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 5.921,
+      "z": 1.56,
+      "y": 0.05,
+      "yaw": 245.0,
+      "variant": 62,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 5.493,
+      "z": 1.963,
+      "y": 0.05,
+      "yaw": 22.5,
+      "variant": 63,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 6.356,
+      "z": 0.141,
+      "y": 0.05,
+      "yaw": 160.0,
+      "variant": 64,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 6.52,
+      "z": 0.073,
+      "y": 0.05,
+      "yaw": 297.5,
+      "variant": 65,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 5.806,
+      "z": 0.537,
+      "y": 0.05,
+      "yaw": 75.0,
+      "variant": 66,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 6.709,
+      "z": 1.397,
+      "y": 0.05,
+      "yaw": 212.5,
+      "variant": 67,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 6.613,
+      "z": 0.171,
+      "y": 0.05,
+      "yaw": 350.0,
+      "variant": 68,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 6.975,
+      "z": 1.943,
+      "y": 0.05,
+      "yaw": 127.5,
+      "variant": 69,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "flowers-4",
+      "role": "flowers",
+      "x": 5.768,
+      "z": 1.844,
+      "y": 0.05,
+      "yaw": 265.0,
+      "variant": 70,
+      "size": {
+        "h": 0.55,
+        "wmax": 0.7
+      }
+    },
+    {
+      "element": "fountain",
+      "role": "fountain",
+      "x": 5.0,
+      "z": 3.0,
+      "y": 0.05,
+      "yaw": 45,
+      "variant": 71,
+      "size": {
+        "w": 1.5
+      }
+    },
+    {
+      "element": "springs",
+      "role": "rock",
+      "x": -8.0,
+      "z": 3.1,
+      "y": 0.05,
+      "yaw": 180.0,
+      "variant": 0,
+      "size": {
+        "w": 0.7
+      }
+    },
+    {
+      "element": "springs",
+      "role": "rock",
+      "x": -6.9,
+      "z": 3.05,
+      "y": 0.05,
+      "yaw": 317.5,
+      "variant": 1,
+      "size": {
+        "w": 0.55
+      }
+    },
+    {
+      "element": "springs",
+      "role": "rock",
+      "x": -8.1,
+      "z": 3.95,
+      "y": 0.05,
+      "yaw": 95.0,
+      "variant": 2,
+      "size": {
+        "w": 0.5
+      }
+    },
+    {
+      "element": "springs",
+      "role": "rock",
+      "x": 6.4,
+      "z": -6.5,
+      "y": 0.05,
+      "yaw": 232.5,
+      "variant": 0,
+      "size": {
+        "w": 0.7
+      }
+    },
+    {
+      "element": "springs",
+      "role": "rock",
+      "x": 7.5,
+      "z": -6.55,
+      "y": 0.05,
+      "yaw": 10.0,
+      "variant": 1,
+      "size": {
+        "w": 0.55
+      }
+    },
+    {
+      "element": "springs",
+      "role": "rock",
+      "x": 6.3,
+      "z": -5.65,
+      "y": 0.05,
+      "yaw": 147.5,
+      "variant": 2,
+      "size": {
+        "w": 0.5
+      }
+    },
+    {
+      "element": "wall-north",
+      "role": "fence",
+      "size": {
+        "h": 0.75
+      },
+      "y": 0.05,
+      "line": {
+        "from": [-8.4, -8.4],
+        "to": [8.4, -8.4]
+      },
+      "gap": {
+        "at": [1.5, -8.4],
+        "width": 1.0
+      }
+    },
+    {
+      "element": "wall-west",
+      "role": "fence",
+      "size": {
+        "h": 0.75
+      },
+      "y": 0.05,
+      "line": {
+        "from": [-8.4, 8.4],
+        "to": [-8.4, -8.4]
+      },
+      "gap": {
+        "at": [-8.4, -1.5],
+        "width": 1.0
+      }
+    },
+    {
+      "element": "gate-north",
+      "role": "gate",
+      "x": 1.5,
+      "z": -8.4,
+      "y": 0.05,
+      "yaw": 0,
+      "variant": 78,
+      "size": {
+        "w": 1.0
+      }
+    },
+    {
+      "element": "gate-west",
+      "role": "gate",
+      "x": -8.4,
+      "z": -1.5,
+      "y": 0.05,
+      "yaw": 90,
+      "variant": 79,
+      "size": {
+        "w": 1.0
+      }
+    },
+    {
+      "element": "trellis",
+      "role": "pergola",
+      "x": -5.6,
+      "z": -1.6,
+      "y": 0.05,
+      "yaw": 15,
+      "variant": 80,
+      "size": {
+        "w": 2.6,
+        "hmax": 2.4
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lantern",
+      "x": -2.038,
+      "z": -0.694,
+      "y": 0.066,
+      "yaw": 0,
+      "variant": 81,
+      "size": {
+        "h": 1.45
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lantern",
+      "x": 2.417,
+      "z": 1.073,
+      "y": 0.066,
+      "yaw": 0,
+      "variant": 82,
+      "size": {
+        "h": 1.45
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lantern",
+      "x": -5.2,
+      "z": -4.6,
+      "y": 0.066,
+      "yaw": 0,
+      "variant": 83,
+      "size": {
+        "h": 1.45
+      }
+    },
+    {
+      "element": "lanterns",
+      "role": "lantern",
+      "x": 6.6,
+      "z": 7.4,
+      "y": 0.066,
+      "yaw": 0,
+      "variant": 84,
+      "size": {
+        "h": 1.45
+      }
+    },
+    {
+      "element": "pavilion",
+      "role": "mill",
+      "x": 2.722,
+      "z": -5.165,
+      "y": 0.05,
+      "yaw": -55.7,
+      "variant": 85,
+      "size": {
+        "w": 3.2,
+        "hmax": 2.6
+      }
+    },
+    {
+      "element": "carpets",
+      "role": "carpet",
+      "x": -3.0,
+      "z": -4.9,
+      "y": 0.05,
+      "yaw": 30,
+      "variant": 86,
+      "size": {
+        "w": 1.8
+      }
+    },
+    {
+      "element": "cushions",
+      "role": "cushion",
+      "x": -3.5,
+      "z": -5.0,
+      "y": 0.062,
+      "yaw": 20,
+      "variant": 0,
+      "size": {
+        "w": 0.5
+      }
+    },
+    {
+      "element": "cushions",
+      "role": "cushion",
+      "x": -2.55,
+      "z": -4.7,
+      "y": 0.062,
+      "yaw": 80,
+      "variant": 1,
+      "size": {
+        "w": 0.5
+      }
+    },
+    {
+      "element": "lectern",
+      "role": "lectern",
+      "x": -2.2,
+      "z": -4.3,
+      "y": 0.05,
+      "yaw": -20,
+      "variant": 89,
+      "size": {
+        "w": 0.6,
+        "hmax": 0.55
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": -6.4,
+      "z": -7.7,
+      "y": 0.05,
+      "yaw": 135.0,
+      "variant": 0,
+      "size": {
+        "h": 0.85,
+        "wmax": 1.1
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": 4.4,
+      "z": -7.7,
+      "y": 0.05,
+      "yaw": 272.5,
+      "variant": 1,
+      "size": {
+        "h": 0.85,
+        "wmax": 1.1
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": -7.7,
+      "z": -6.0,
+      "y": 0.05,
+      "yaw": 50.0,
+      "variant": 2,
+      "size": {
+        "h": 0.85,
+        "wmax": 1.1
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": -7.7,
+      "z": 6.4,
+      "y": 0.05,
+      "yaw": 187.5,
+      "variant": 3,
+      "size": {
+        "h": 0.85,
+        "wmax": 1.1
+      }
+    },
+    {
+      "element": "roses",
+      "role": "roses",
+      "x": -3.6,
+      "z": -7.7,
+      "y": 0.05,
+      "yaw": 325.0,
+      "variant": 4,
+      "size": {
+        "h": 0.85,
+        "wmax": 1.1
+      }
+    },
+    {
+      "element": "waterfall",
+      "role": "rock",
+      "x": 7.352,
+      "z": -2.705,
+      "y": 0.04,
+      "yaw": 102.5,
+      "variant": 0,
+      "size": {
+        "w": 0.75
+      }
+    },
+    {
+      "element": "waterfall",
+      "role": "rock",
+      "x": 7.271,
+      "z": -3.249,
+      "y": 0.04,
+      "yaw": 240.0,
+      "variant": 1,
+      "size": {
+        "w": 0.6
+      }
+    },
+    {
+      "element": "waterfall",
+      "role": "rock",
+      "x": 7.007,
+      "z": -5.029,
+      "y": 0.04,
+      "yaw": 17.5,
+      "variant": 2,
+      "size": {
+        "w": 0.6
+      }
+    },
+    {
+      "element": "waterfall",
+      "role": "rock",
+      "x": 6.926,
+      "z": -5.573,
+      "y": 0.04,
+      "yaw": 155.0,
+      "variant": 3,
+      "size": {
+        "w": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 6.346,
+      "z": -2.548,
+      "y": 0.05,
+      "yaw": 292.5,
+      "variant": 99,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 6.104,
+      "z": -2.265,
+      "y": 0.05,
+      "yaw": 70.0,
+      "variant": 100,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 5.862,
+      "z": -1.981,
+      "y": 0.05,
+      "yaw": 207.5,
+      "variant": 101,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 2.651,
+      "z": -3.423,
+      "y": 0.05,
+      "yaw": 345.0,
+      "variant": 102,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 2.273,
+      "z": -3.352,
+      "y": 0.05,
+      "yaw": 122.5,
+      "variant": 103,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 1.895,
+      "z": -3.28,
+      "y": 0.05,
+      "yaw": 260.0,
+      "variant": 104,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 1.417,
+      "z": 0.891,
+      "y": 0.05,
+      "yaw": 37.5,
+      "variant": 105,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 1.238,
+      "z": 1.261,
+      "y": 0.05,
+      "yaw": 175.0,
+      "variant": 106,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": 1.058,
+      "z": 1.632,
+      "y": 0.05,
+      "yaw": 312.5,
+      "variant": 107,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -3.267,
+      "z": 1.973,
+      "y": 0.05,
+      "yaw": 90.0,
+      "variant": 108,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -3.621,
+      "z": 2.185,
+      "y": 0.05,
+      "yaw": 227.5,
+      "variant": 109,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -3.976,
+      "z": 2.397,
+      "y": 0.05,
+      "yaw": 5.0,
+      "variant": 110,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -3.032,
+      "z": 6.963,
+      "y": 0.05,
+      "yaw": 142.5,
+      "variant": 111,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -2.934,
+      "z": 7.434,
+      "y": 0.05,
+      "yaw": 280.0,
+      "variant": 112,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -2.835,
+      "z": 7.905,
+      "y": 0.05,
+      "yaw": 57.5,
+      "variant": 113,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -5.836,
+      "z": 9.429,
+      "y": 0.05,
+      "yaw": 195.0,
+      "variant": 114,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -5.99,
+      "z": 9.742,
+      "y": 0.05,
+      "yaw": 332.5,
+      "variant": 115,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "reeds",
+      "x": -6.143,
+      "z": 10.056,
+      "y": 0.05,
+      "yaw": 110.0,
+      "variant": 116,
+      "size": {
+        "h": 0.65,
+        "wmax": 0.8
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": 1.991,
+      "z": -0.854,
+      "y": 0.068,
+      "yaw": 247.5,
+      "variant": 0,
+      "size": {
+        "w": 0.55
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": -0.278,
+      "z": 1.195,
+      "y": 0.068,
+      "yaw": 25.0,
+      "variant": 1,
+      "size": {
+        "w": 0.55
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "lily",
+      "x": -3.206,
+      "z": 4.848,
+      "y": 0.068,
+      "yaw": 162.5,
+      "variant": 2,
+      "size": {
+        "w": 0.55
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "boat",
+      "x": -4.174,
+      "z": 6.813,
+      "y": 0.05,
+      "yaw": -6.378938765082125,
+      "variant": 120,
+      "size": {
+        "w": 2.0
+      },
+      "onWater": true
+    },
+    {
+      "element": "full-bloom",
+      "role": "crate",
+      "x": 4.2,
+      "z": 5.4,
+      "y": 0.05,
+      "yaw": 15,
+      "variant": 0,
+      "size": {
+        "w": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "crate",
+      "x": 4.9,
+      "z": 5.9,
+      "y": 0.05,
+      "yaw": 15,
+      "variant": 1,
+      "size": {
+        "w": 0.75
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": 7.49,
+      "z": -6.039,
+      "y": 0.05,
+      "yaw": 352.5,
+      "variant": 2,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": -3.896,
+      "z": -2.538,
+      "y": 0.05,
+      "yaw": 130.0,
+      "variant": 4,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": 6.145,
+      "z": 4.402,
+      "y": 0.05,
+      "yaw": 267.5,
+      "variant": 6,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": 1.283,
+      "z": -4.139,
+      "y": 0.05,
+      "yaw": 45.0,
+      "variant": 9,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": -7.483,
+      "z": 0.966,
+      "y": 0.05,
+      "yaw": 182.5,
+      "variant": 10,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": 7.077,
+      "z": 0.877,
+      "y": 0.05,
+      "yaw": 320.0,
+      "variant": 13,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": 4.681,
+      "z": -0.591,
+      "y": 0.05,
+      "yaw": 97.5,
+      "variant": 14,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": 4.84,
+      "z": -5.517,
+      "y": 0.05,
+      "yaw": 235.0,
+      "variant": 16,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": 5.086,
+      "z": 3.564,
+      "y": 0.05,
+      "yaw": 12.5,
+      "variant": 17,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": 2.028,
+      "z": -6.008,
+      "y": 0.05,
+      "yaw": 150.0,
+      "variant": 18,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": -7.216,
+      "z": 5.743,
+      "y": 0.05,
+      "yaw": 287.5,
+      "variant": 21,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": -5.352,
+      "z": -0.305,
+      "y": 0.05,
+      "yaw": 65.0,
+      "variant": 22,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": -1.381,
+      "z": -4.305,
+      "y": 0.05,
+      "yaw": 202.5,
+      "variant": 23,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": -3.994,
+      "z": 1.334,
+      "y": 0.05,
+      "yaw": 340.0,
+      "variant": 26,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": 1.581,
+      "z": 5.729,
+      "y": 0.05,
+      "yaw": 117.5,
+      "variant": 27,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    },
+    {
+      "element": "full-bloom",
+      "role": "grass",
+      "x": -7.405,
+      "z": 0.248,
+      "y": 0.05,
+      "yaw": 255.0,
+      "variant": 29,
+      "size": {
+        "h": 0.42,
+        "wmax": 0.6
+      }
+    }
+  ]
+}

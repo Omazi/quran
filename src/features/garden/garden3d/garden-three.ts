@@ -208,6 +208,7 @@ export function buildGardenThree(model: GardenModel): GardenThree {
     if (source.emissive !== 0 && source.emissiveIntensity > 0) {
       material.emissive.setHex(source.emissive);
       material.emissiveIntensity = source.emissiveIntensity;
+      if (source.emissiveMap) material.emissiveMap = material.map;
     }
     if (source.wilts || grows !== undefined) {
       material.onBeforeCompile = (shader) => {
@@ -296,8 +297,10 @@ export function buildGardenThree(model: GardenModel): GardenThree {
     }
   }
 
-  // The light of the pictures.
-  const { sky, sun: sunLight, shadow } = GARDEN_3D.light;
+  // The light of the pictures, or the garden's own (the night garden).
+  const { shadow } = GARDEN_3D.light;
+  const sky = model.light?.sky ?? GARDEN_3D.light.sky;
+  const sunLight = model.light?.sun ?? GARDEN_3D.light.sun;
   scene.add(new THREE.HemisphereLight(sky.color, sky.ground, sky.intensity));
   const sun = new THREE.DirectionalLight(sunLight.color, sunLight.intensity);
   sun.position.set(...sunLight.position);
@@ -308,7 +311,7 @@ export function buildGardenThree(model: GardenModel): GardenThree {
   sun.shadow.bias = shadow.bias;
   sun.shadow.normalBias = shadow.normalBias;
   sun.shadow.radius = shadow.radius;
-  sun.shadow.intensity = shadow.intensity;
+  sun.shadow.intensity = model.light?.shadowIntensity ?? shadow.intensity;
   scene.add(sun);
   scene.add(sun.target);
 

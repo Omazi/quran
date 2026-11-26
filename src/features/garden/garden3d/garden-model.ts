@@ -63,6 +63,26 @@ export interface ModelMaterial {
   readonly vertexColors: boolean;
   /** A living plant: its colours fade with the foliage (the picture tool's wilt). */
   readonly wilts: boolean;
+  /**
+   * The material glows in proportion to its own colours (a lantern of the night garden: its panes
+   * light up, its metal stays dark) rather than evenly.
+   */
+  readonly emissiveMap: boolean;
+}
+
+/**
+ * The light of a garden that has its own (the night garden, D46): a sky light and one sun (or
+ * moon) that casts the shadows. Colours as 0xRRGGBB. Other gardens have the pictures' daylight.
+ */
+export interface GardenLight {
+  readonly sky: { readonly color: number; readonly ground: number; readonly intensity: number };
+  readonly sun: {
+    readonly color: number;
+    readonly intensity: number;
+    readonly position: readonly [number, number, number];
+  };
+  /** How dark the shadows are, 0 to 1. */
+  readonly shadowIntensity: number;
 }
 
 /** A merged piece: `count` indices from `start`, drawn in the stages it names. */
@@ -128,6 +148,8 @@ export interface GardenModel {
    * at its size in metres.
    */
   readonly props: Readonly<Record<string, readonly ModelMesh[]>>;
+  /** The garden's own light, or null for the pictures' daylight (`GARDEN_3D.light`). */
+  readonly light: GardenLight | null;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -384,6 +406,38 @@ function materialOf(extras: unknown, name: string): ModelMaterial {
     emissiveIntensity: numberOf(extras, 'emissiveIntensity'),
     vertexColors: extras.vertexColors === true,
     wilts: extras.wilts === true,
+    emissiveMap: extras.emissiveMap === true,
+  };
+}
+
+function colorOf(record: Record<string, unknown>, key: string): number {
+  const value = numberOf(record, key);
+  if (!Number.isInteger(value) || value < 0 || value > 0xffffff) {
+    throw new GardenModelError(`"${key}" is not a colour.`);
+  }
+  return value;
+}
+
+/** The light of `extras.garden.light`, or null when the garden has the daylight of the pictures. */
+function lightOf(value: unknown): GardenLight | null {
+  if (value === undefined) return null;
+  if (!isRecord(value) || !isRecord(value.sky) || !isRecord(value.sun)) {
+    throw new GardenModelError('The light of the garden is not described.');
+  }
+  const position = numbersOf(value.sun, 'position');
+  if (position.length !== 3) throw new GardenModelError('The sun has no position.');
+  return {
+    sky: {
+      color: colorOf(value.sky, 'color'),
+      ground: colorOf(value.sky, 'ground'),
+      intensity: numberOf(value.sky, 'intensity'),
+    },
+    sun: {
+      color: colorOf(value.sun, 'color'),
+      intensity: numberOf(value.sun, 'intensity'),
+      position: [position[0] as number, position[1] as number, position[2] as number],
+    },
+    shadowIntensity: numberOf(value, 'shadowIntensity'),
   };
 }
 
@@ -487,5 +541,5 @@ export function readGardenModel(glb: Glb): GardenModel {
     if (typeof prop === 'string') (props[prop] ??= []).push(modelMesh);
     else meshes.push(modelMesh);
   }
-  return { meshes, textures, props };
+  return { meshes, textures, props, light: lightOf(garden.light) };
 }
