@@ -668,6 +668,7 @@ describe('reminder settings', () => {
       <SettingsHarness
         notifications={notifications}
         direction={createFixedDirection(false).platform}
+        confirm={jest.fn()}
         openSystemSettings={jest.fn()}
         openIntroduction={jest.fn()}
       />,

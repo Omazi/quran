@@ -6,10 +6,20 @@
  * value read when its module loads) could disagree with the rest of the screen.
  */
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+// The project compiles without Node's type definitions: the functions needed are typed here.
+const { readdirSync, readFileSync, statSync } = jest.requireActual<{
+  readdirSync: (path: string) => string[];
+  readFileSync: (path: string, encoding: 'utf8') => string;
+  statSync: (path: string) => { isDirectory: () => boolean };
+}>('node:fs');
+const { join, relative, resolve } = jest.requireActual<{
+  join: (...segments: string[]) => string;
+  relative: (from: string, to: string) => string;
+  resolve: (...segments: string[]) => string;
+}>('node:path');
 
-const SRC = join(__dirname, '../../..');
+/** The `src` folder, from this test file. */
+const SRC = resolve(expect.getState().testPath ?? '', '../../../..');
 
 /** Every source file of the app, tests and test support left out. */
 function sourceFiles(directory: string = SRC): string[] {
@@ -53,7 +63,9 @@ describe('the writing direction of the interface', () => {
     const atModuleLevel = files.filter(({ text }) =>
       text
         .split('\n')
-        .some((line) => /^(export\s+)?(const|let|var)\b.*getWritingDirection\(\)/.test(line)),
+        .some((line: string) =>
+          /^(export\s+)?(const|let|var)\b.*getWritingDirection\(\)/.test(line),
+        ),
     );
     expect(atModuleLevel.map(({ path }) => path)).toEqual([]);
   });
