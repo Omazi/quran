@@ -103,6 +103,12 @@
     "close": "Fermer",
     "shareMessage": "J’ai terminé le hizb {{hizb}} : un nouvel élément pousse dans mon jardin."
   },
+  "invitation": {
+    "title": "Ton jardin est prêt.",
+    "text": "Crée un compte pour le retrouver sur tous tes appareils.",
+    "later": "Plus tard",
+    "close": "Fermer"
+  },
   "neighbours": {
     "title": "Jardins voisins",
     "seeAll": "Tout voir",

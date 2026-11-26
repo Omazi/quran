@@ -18,8 +18,10 @@ import type { ReminderSettings } from './types';
  * is read like this one when its settings and journal pass the checks (a newer version only adds
  * parts); otherwise, like a document of an unknown version, it is discarded. A build of version 5
  * thus reads a version 6 document, without the reader's two choices.
+ * Version 7 adds `settings.goalKind`, how the goal was chosen (1 month, 3 months, 1 year, own
+ * pace): required, so a version 6 document takes `own-pace`, which is what its daily goal was.
  */
-export const STORED_DATA_VERSION = 6;
+export const STORED_DATA_VERSION = 7;
 
 /** The key of the stored document. */
 export const STORED_DATA_KEY = 'app-data';
@@ -85,6 +87,9 @@ export const DAILY_GOAL_RANGE = { min: 1, max: 60 } as const;
  * The person changes it in the first-launch flow or in the settings.
  */
 export const DEFAULT_DAILY_GOAL_PAGES = 5;
+
+/** The goal kind of a first launch, and of a document from before the goal kinds: an own pace. */
+export const DEFAULT_GOAL_KIND = 'own-pace';
 
 /**
  * The reminders proposed at the first launch: the two about the person's own reading, and the

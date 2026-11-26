@@ -13,6 +13,7 @@ import { MAX_PAUSES, MAX_TIME_DAYS, STORED_DATE_RANGE } from './config';
 import {
   isBookmarkList,
   isDailyGoalPages,
+  isGoalKind,
   isLastOpenedPage,
   isReaderScript,
   isReaderTextSize,
@@ -34,6 +35,8 @@ export const SYNC_RULES: SyncRules = Object.freeze({
         value === null || (typeof value === 'string' && isSupportedLanguage(value)),
     },
     dailyGoalPages: { rule: 'latest', isValid: isDailyGoalPages },
+    // How the goal was chosen (1 month, own pace...): travels with the daily goal it explains.
+    goalKind: { rule: 'latest', isValid: isGoalKind },
     onboardingCompleted: {
       rule: 'true-wins',
       isValid: (value: unknown) => typeof value === 'boolean',
@@ -61,6 +64,7 @@ export function toSyncedValues({ settings, journal, timeSpent }: AppData): Synce
     settings: {
       language: settings.language,
       dailyGoalPages: settings.dailyGoalPages,
+      goalKind: settings.goalKind,
       onboardingCompleted: settings.onboardingCompleted,
       userSeed: settings.userSeed,
       lastOpenedPage: settings.lastOpenedPage,
@@ -94,6 +98,7 @@ export function fromSyncedValues(current: AppData, values: SyncedValues): AppDat
       ...current.settings,
       language: keep('language', SYNC_RULES.settings.language!.isValid),
       dailyGoalPages: keep('dailyGoalPages', isDailyGoalPages),
+      goalKind: keep('goalKind', isGoalKind),
       onboardingCompleted: keep('onboardingCompleted', (value) => typeof value === 'boolean'),
       userSeed: keep('userSeed', isUserSeed),
       lastOpenedPage: keep('lastOpenedPage', isLastOpenedPage),

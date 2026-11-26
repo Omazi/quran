@@ -3,6 +3,7 @@ import type { LocalDate } from '@/domain/shared/local-date';
 import type { SecondsByDay } from '@/domain/stats';
 import type { SyncEvent, SyncMeta } from '@/domain/sync';
 import type { QuietHours, ReminderSettings, TimeOfDay } from '@/domain/reminders';
+import type { Goal, GoalKind, ReadingMoment } from '@/domain/goal-plan';
 import type { AppLanguage } from '@/i18n';
 
 /**
@@ -24,6 +25,12 @@ export interface AppSettings {
   readonly language: AppLanguage | null;
   /** Pages to read each day: a whole number within `DAILY_GOAL_RANGE`. */
   readonly dailyGoalPages: number;
+  /**
+   * How the goal was chosen: a duration to finish the khatma in, or the person's own pace. For a
+   * duration, `dailyGoalPages` is the pages that duration asks for (`computeGoalPlan`); the
+   * stepper of the settings makes it `own-pace` again.
+   */
+  readonly goalKind: GoalKind;
   /** True once the first-launch flow has been finished. */
   readonly onboardingCompleted: boolean;
   /**
@@ -123,6 +130,18 @@ export interface AppState extends AppData, SyncActions {
   setLanguage: (language: AppLanguage | null) => void;
   /** Throws a `RangeError` outside `DAILY_GOAL_RANGE`. */
   setDailyGoalPages: (pages: number) => void;
+  /**
+   * Chooses the goal of the first-launch flow: its kind and the daily goal it means (the pages of
+   * a duration, or the own pace, 5 by default). Throws a `RangeError` for pages outside
+   * `DAILY_GOAL_RANGE` and a `TypeError` for an unknown kind.
+   */
+  setReadingGoal: (goal: Goal) => void;
+  /**
+   * Chooses the moment of the day the person reads: the daily reminder is switched on at its fixed
+   * time. The moment is read back from that time (`readingMomentAt`). Throws a `TypeError` for an
+   * unknown moment.
+   */
+  setReadingMoment: (moment: ReadingMoment) => void;
   /** Changes some of the reminder settings. Throws a `RangeError` for an impossible time. */
   updateReminders: (change: Partial<ReminderSettings>) => void;
   completeOnboarding: () => void;

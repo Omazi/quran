@@ -34,6 +34,7 @@ const JOURNAL: ReadingJournal = [1, 2, 3, 4].reduce(
 const SETTINGS: AppSettings = {
   language: 'en',
   dailyGoalPages: 9,
+  goalKind: 'own-pace',
   onboardingCompleted: true,
   userSeed: 31_337,
   lastOpenedPage: 4,
@@ -228,10 +229,10 @@ describe('builds of other versions', () => {
     store.getState().recordPageRead({ page: 1, date: DAY });
     await store.whenSaved();
     const text = storage.peek(STORED_DATA_KEY);
-    // Version 6 (D41) only adds the reader's two choices to the settings of version 5.
+    // Versions 6 (D41) and 7 only add settings (the reader's two choices, the goal kind).
     const written = JSON.parse(text ?? '{}');
     expect(written.version).toBe(STORED_DATA_VERSION);
-    expect(STORED_DATA_VERSION).toBe(6);
+    expect(STORED_DATA_VERSION).toBe(7);
     // A version 5 build reads its own device's newer document (`acceptNewer`) with its checks,
     // which look only at the settings they know: those are all there, and valid.
     for (const key of [

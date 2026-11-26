@@ -48,6 +48,7 @@ describe('first launch', () => {
     expect(store.getState().settings).toEqual({
       language: null,
       dailyGoalPages: DEFAULT_DAILY_GOAL_PAGES,
+      goalKind: 'own-pace',
       onboardingCompleted: false,
       userSeed: SEED,
       lastOpenedPage: null,
@@ -130,6 +131,7 @@ describe('changes', () => {
     expect(returning.store.getState().settings).toEqual({
       language: 'ar',
       dailyGoalPages: 20,
+      goalKind: 'own-pace',
       onboardingCompleted: true,
       userSeed: SEED,
       lastOpenedPage: 293,
@@ -425,6 +427,7 @@ describe('document written by version 1 of the app', () => {
     expect(discarded).toEqual([]);
     expect(store.getState().settings).toEqual({
       ...settings,
+      goalKind: 'own-pace',
       lastOpenedPage: null,
       bookmarks: [],
       readerScript: 'uthmani',
@@ -644,6 +647,7 @@ describe('telling the person, once, that something was lost', () => {
   const SOUND_SETTINGS = {
     language: 'fr',
     dailyGoalPages: 5,
+    goalKind: 'own-pace',
     onboardingCompleted: true,
     userSeed: 1,
     lastOpenedPage: null,

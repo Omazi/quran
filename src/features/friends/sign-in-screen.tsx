@@ -24,14 +24,14 @@ const SIGN_IN_GARDEN = previewGardenState({ hizbCompleted: 36 });
  * at night), Google outlined, the e-mail as green words. Apple comes first on iOS and is never
  * smaller than the others (sign-in-with-apple.md › Displaying buttons).
  */
-const KINDS: Readonly<Record<SignInProvider, ActionButtonVariant>> = {
+export const SIGN_IN_BUTTON_KINDS: Readonly<Record<SignInProvider, ActionButtonVariant>> = {
   apple: 'contrast',
   google: 'outline',
   email: 'plain',
 };
 
 /** The Apple logo, as the system draws it; iOS only (the other platforms have no such symbol). */
-const APPLE_LOGO: IconSymbol = { ios: 'apple.logo', android: 'person' };
+export const APPLE_LOGO: IconSymbol = { ios: 'apple.logo', android: 'person' };
 
 export interface SignInScreenProps {
   model: SignInModel;
@@ -80,7 +80,7 @@ export function SignInScreen({ model, actions }: SignInScreenProps) {
         {model.providers.map((provider) => (
           <ActionButton
             key={provider}
-            variant={KINDS[provider]}
+            variant={SIGN_IN_BUTTON_KINDS[provider]}
             symbol={provider === 'apple' && Platform.OS === 'ios' ? APPLE_LOGO : undefined}
             label={label[provider]}
             onPress={press[provider]}

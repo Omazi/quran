@@ -19,7 +19,11 @@ import { deviceLocalDate } from '../use-today';
 
 const mockLoadDevPreview = jest.fn();
 
-jest.mock('expo-router', () => ({ router: { push: jest.fn() }, useIsFocused: () => true }));
+jest.mock('expo-router', () => ({
+  router: { push: jest.fn() },
+  useIsFocused: () => true,
+  useLocalSearchParams: () => ({}),
+}));
 jest.mock('../dev-preview/dev-preview', () => {
   mockLoadDevPreview();
   throw new Error('The preview was loaded in a production bundle.');

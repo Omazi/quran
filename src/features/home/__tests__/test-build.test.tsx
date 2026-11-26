@@ -12,7 +12,11 @@ import { AppStoreProvider } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
 import { resetDeviceConditions } from '@/ui/test-support/environment';
 
-jest.mock('expo-router', () => ({ router: { push: jest.fn() }, useIsFocused: () => true }));
+jest.mock('expo-router', () => ({
+  router: { push: jest.fn() },
+  useIsFocused: () => true,
+  useLocalSearchParams: () => ({}),
+}));
 
 const devFlag = globalThis as { __DEV__?: boolean };
 let HomeRoute: ComponentType;

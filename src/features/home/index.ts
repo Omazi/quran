@@ -32,3 +32,9 @@ export {
 export { deviceLocalDate, useToday, type Clock } from './use-today';
 export { useHomeScreen, type HomeScreenData } from './use-home-screen';
 export type { NeighbourGarden, NeighbourGardens } from './neighbours';
+export {
+  AccountInvitation,
+  isAccountInvitationEnabled,
+  readAccountInvitationFlag,
+  type AccountInvitationProps,
+} from './account-invitation';

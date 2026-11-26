@@ -27,6 +27,7 @@ const SEED = 4242;
 const SETTINGS: AppSettings = {
   language: 'fr',
   dailyGoalPages: 8,
+  goalKind: 'own-pace',
   onboardingCompleted: true,
   userSeed: 77,
   lastOpenedPage: null,

@@ -1,5 +1,6 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
 
+import { goalPagesPerDay, readingMomentTime, READING_MOMENTS } from '@/domain/goal-plan';
 import { EMPTY_JOURNAL, recordPageRead } from '@/domain/khatm';
 import { PAGE_COUNT } from '@/domain/quran';
 import type { LocalDate } from '@/domain/shared/local-date';
@@ -19,6 +20,7 @@ import { isSupportedLanguage } from '@/i18n';
 import {
   DAILY_GOAL_RANGE,
   DEFAULT_DAILY_GOAL_PAGES,
+  DEFAULT_GOAL_KIND,
   DEFAULT_READER_SCRIPT,
   DEFAULT_READER_TEXT_SIZE,
   DEFAULT_REMINDERS,
@@ -130,6 +132,7 @@ export function createFirstLaunchSettings(userSeed: number): AppSettings {
   return {
     language: null,
     dailyGoalPages: DEFAULT_DAILY_GOAL_PAGES,
+    goalKind: DEFAULT_GOAL_KIND,
     onboardingCompleted: false,
     userSeed,
     lastOpenedPage: null,
@@ -301,7 +304,38 @@ export function createStateStore(
             `The daily goal must be a whole number from ${DAILY_GOAL_RANGE.min} to ${DAILY_GOAL_RANGE.max}, received ${pages}.`,
           );
         }
-        if (get().settings.dailyGoalPages !== pages) changeSettings({ dailyGoalPages: pages });
+        // The stepper is the own pace: a duration chosen before is no longer what the goal says.
+        const { dailyGoalPages, goalKind } = get().settings;
+        if (dailyGoalPages !== pages || goalKind !== 'own-pace') {
+          changeSettings({ dailyGoalPages: pages, goalKind: 'own-pace' });
+        }
+      },
+
+      setReadingGoal: (goal) => {
+        // The plan names what the goal means (and refuses an unknown kind or impossible pages);
+        // the store only keeps what its daily goal accepts.
+        const pagesPerDay = goalPagesPerDay(goal);
+        if (!isDailyGoalPages(pagesPerDay)) {
+          throw new RangeError(
+            `The daily goal must be a whole number from ${DAILY_GOAL_RANGE.min} to ${DAILY_GOAL_RANGE.max}, received ${pagesPerDay}.`,
+          );
+        }
+        const { dailyGoalPages, goalKind } = get().settings;
+        if (dailyGoalPages !== pagesPerDay || goalKind !== goal.kind) {
+          changeSettings({ dailyGoalPages: pagesPerDay, goalKind: goal.kind });
+        }
+      },
+
+      setReadingMoment: (moment) => {
+        if (!READING_MOMENTS.includes(moment)) {
+          throw new TypeError(`Unknown reading moment: ${JSON.stringify(moment)}.`);
+        }
+        const current = get().settings.reminders;
+        const reminders = withReminderChange(current, {
+          dailyEnabled: true,
+          dailyTime: readingMomentTime(moment),
+        });
+        if (!isSameReminders(current, reminders)) changeSettings({ reminders });
       },
 
       updateReminders: (change) => {

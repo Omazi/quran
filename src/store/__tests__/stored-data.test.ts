@@ -16,6 +16,7 @@ import type { AppData, AppSettings } from '../types';
 const SETTINGS: AppSettings = {
   language: 'ar',
   dailyGoalPages: 12,
+  goalKind: 'own-pace',
   onboardingCompleted: true,
   userSeed: 123_456_789,
   lastOpenedPage: 293,
@@ -532,10 +533,6 @@ describe('the bookmarks of the reader', () => {
 });
 
 describe('the script and the text size of the reader (D41)', () => {
-  it('is version 6 of the document', () => {
-    expect(STORED_DATA_VERSION).toBe(6);
-  });
-
   it('starts with the Uthmani script at the size of the text size setting', () => {
     expect(DEFAULT_READER_SCRIPT).toBe('uthmani');
     expect(DEFAULT_READER_TEXT_SIZE).toBeGreaterThanOrEqual(READER_TEXT_SIZE_RANGE.min);

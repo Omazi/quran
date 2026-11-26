@@ -22,7 +22,9 @@ export {
   type SocialClient,
   type SocialStore,
 } from './social-store';
-export { useSession } from './use-session';
+export { useSession, useSignIn } from './use-session';
+// The buttons of the sign-in, shared with the invitation that opens over a new garden.
+export { APPLE_LOGO, SIGN_IN_BUTTON_KINDS } from './sign-in-screen';
 // What the home screen's "Jardins voisins" reads: a friend's garden, their water, their colour.
 export { gardenStateOf, waterStatusOf } from './friend-garden';
 export { avatarIndexOf } from './friend-avatar';

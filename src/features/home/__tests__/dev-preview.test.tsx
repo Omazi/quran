@@ -8,7 +8,11 @@ import { renderOnIOS, resetDeviceConditions } from '@/ui/test-support/environmen
 
 import { getDevPreviewChoice, setDevPreviewChoice } from '../dev-preview/dev-preview';
 
-jest.mock('expo-router', () => ({ router: { push: jest.fn() }, useIsFocused: () => true }));
+jest.mock('expo-router', () => ({
+  router: { push: jest.fn() },
+  useIsFocused: () => true,
+  useLocalSearchParams: () => ({}),
+}));
 
 afterEach(async () => {
   setDevPreviewChoice('store');

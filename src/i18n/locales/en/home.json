@@ -103,6 +103,12 @@
     "close": "Close",
     "shareMessage": "I finished hizb {{hizb}}: something new is growing in my garden."
   },
+  "invitation": {
+    "title": "Your garden is ready.",
+    "text": "Create an account to find it on all your devices.",
+    "later": "Later",
+    "close": "Close"
+  },
   "neighbours": {
     "title": "Neighbouring Gardens",
     "seeAll": "See All",
