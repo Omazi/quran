@@ -104,9 +104,11 @@ describe('while it listens', () => {
     await act(async () => hand.act({ voice: true }));
     expect(title()).toBe('Je t’entends');
     expect(screen.queryByTestId('listening-heard')).toBeNull();
-    await act(async () => hand.act({ transcribing: true, partial: ['قل', 'هو', 'الله'] }));
+    // Two words, too few to name a passage: the words not final yet are searched too (D45), and
+    // « قل هو الله » alone would already name Al-Ikhlas.
+    await act(async () => hand.act({ transcribing: true, partial: ['قل', 'هو'] }));
     expect(title()).toBe('Je cherche le passage…');
-    expect(screen.getByTestId('listening-heard')).toHaveTextContent('قل هو الله');
+    expect(screen.getByTestId('listening-heard')).toHaveTextContent('قل هو');
     expect(screen.getByTestId('listening-heard').props.accessibilityLanguage).toBe('ar');
   });
 });
