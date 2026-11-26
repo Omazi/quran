@@ -304,6 +304,7 @@ export function SwipePager({
         position: position.get(),
         velocity: forwards,
         anchor: target.get(),
+        start: dragStart.get(),
         pageCount,
       });
       forwardsSpeed = cappedReleaseVelocity({
