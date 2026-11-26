@@ -4,7 +4,7 @@
  * vérification).
  */
 
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import { AppState, Linking } from 'react-native';
 
 import { DEMO_GROUP_ID, DEMO_USERS } from '@/data/social';
@@ -242,8 +242,42 @@ describe("a friend's page", () => {
         <FriendPage userId={DEMO_USERS.sarah} goBack={jest.fn()} openReader={openReader} />,
       ),
     );
-    await fireEvent.press(await screen.findByRole('button', { name: 'Lire et arroser' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Lire avec Sarah' }));
     expect(openReader).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives the streak, the verses read and the level in the card, side by side', async () => {
+    setDeviceConditions({ fontScale: 1 });
+    await showLanguage('fr');
+    const { store, demo } = await signedInDemoForTest();
+    const view = await demo.repository.getPersonView(DEMO_USERS.mustapha);
+    if (view?.kind !== 'friend' || view.level === null || view.garden === null) {
+      throw new Error('Mustapha shares his garden and his level');
+    }
+    await render(withStore(store, <FriendPage userId={DEMO_USERS.mustapha} goBack={jest.fn()} />));
+    const card = await screen.findByTestId('friend-card');
+    const stats = within(card).getByTestId('friend-stats');
+    expect(stats).toHaveStyle({ flexDirection: 'row' });
+    expect(within(stats).getByTestId('friend-streak')).toHaveProp(
+      'accessibilityLabel',
+      `Série, ${view.garden.streakDays} jours`,
+    );
+    expect(within(stats).getByTestId('friend-streak')).toHaveTextContent(
+      `${view.garden.streakDays} jSérie`,
+    );
+    expect(within(stats).getByTestId('friend-verses')).toHaveTextContent(
+      new RegExp(
+        `^${escaped(new Intl.NumberFormat('fr-u-nu-latn').format(view.level.versesRead))}Versets lus$`,
+      ),
+    );
+    expect(within(stats).getByTestId('friend-level')).toHaveTextContent(
+      `${view.level.level}Niveau`,
+    );
+    // The two buttons of the visit, the soft one first (maquettes 2026-11-26, "friend").
+    expect(within(card).getByRole('button', { name: 'Encourager Mustapha' })).toBeOnTheScreen();
+    expect(within(card).getByRole('button', { name: 'Lire avec Mustapha' })).toHaveTextContent(
+      'Lire avec Mustapha',
+    );
   });
 
   it('puts removing and blocking in the More menu of the bar when the route gives one', async () => {

@@ -63,7 +63,6 @@
     "streakValue_one": "{{count}} jour",
     "streakValue_other": "{{count}} jours",
     "level": "Niveau",
-    "levelValue": "Khatma {{count}}",
     "badges": "Khatmas terminées",
     "gardenHidden": "{{name}} ne partage pas son jardin.",
     "readingTitle": "Sa lecture",
@@ -90,10 +89,12 @@
     "hizbOutOf_one": "{{count}} hizb sur 60",
     "hizbOutOf_other": "{{count}} hizb sur 60",
     "hizbProgress": "Hizb lus",
-    "read": "Lire et arroser",
     "readHint": "Ouvre le Coran où tu t’es arrêté.",
     "options": "Plus d’options",
-    "encourageShort": "Encourager"
+    "encourageShort": "Encourager",
+    "readWith": "Lire avec {{name}}",
+    "streakShort_one": "{{count}} j",
+    "streakShort_other": "{{count}} j"
   },
   "add": {
     "title": "Ajouter un proche",

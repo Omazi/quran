@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ComponentRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
@@ -26,6 +26,7 @@ import type { FriendPageModel } from './friends-model';
 import type { ShownRefusal } from './refusal';
 import { FriendsUnavailable } from './screen-states';
 import type { FriendPageActions } from './use-friends';
+import { useVisibleArea } from './visible-area';
 
 const HEART: IconSymbol = { ios: 'heart', android: 'favorite_border' };
 const HEART_FILLED: IconSymbol = { ios: 'heart.fill', android: 'favorite' };
@@ -49,7 +50,7 @@ export interface FriendScreenProps {
   model: FriendPageModel;
   refusal: ShownRefusal | null;
   actions: FriendPageActions;
-  /** "Lire et arroser": the reader, where the person left off. */
+  /** "Lire avec …": the person's own reader, where they left off. */
   openReader?: () => void;
   /**
    * Draws the More menu in the navigation bar (the route does, with the system's menu). Without
@@ -64,17 +65,19 @@ function formatNumber(value: number, language: string): string {
 }
 
 /**
- * A friend's page: the visit of the validated mockup (docs/design/visite.png), followed
- * faithfully (owner's rule of 25 November 2026). The garden in the middle of a warm sky, then at
- * the bottom of the first screen a white card: the friend's initial and name, the line "38 hizb
- * sur 60, arrosé depuis 21 jours", sixty dots for the sixty hizb, and two capsule buttons side by
- * side, "Encourager" soft and the green one (buttons.md › Style: style, not size, tells the
- * preferred one). The title and back button are the system's navigation bar; the ellipsis is the
- * system's More menu (pull-down-buttons.md › Mobile), whose items, both destructive, still ask
- * with an action sheet (› Best practices; action-sheets.md › Best practices).
+ * A friend's page, as the owner validated it (maquettes 2026-11-26, "friend", after visite.png).
+ * The first screen is the part the bars leave visible (`useVisibleArea`; layout.md › Guides and
+ * safe areas): the garden fills it edge to edge down to the card, which rests just above the tab
+ * bar, so both buttons show without scrolling and no empty band is left. The card: the friend's
+ * initial and name, the line "42 hizb sur 60, arrosé depuis 21 jours", sixty dots for the sixty
+ * hizb, three figures side by side (the streak, the verses read, the level), and two capsule
+ * buttons, "Encourager" soft and "Lire avec …" green (buttons.md › Style: style, not size, tells
+ * the preferred one). The title and back button are the system's navigation bar; the ellipsis is
+ * the system's More menu (pull-down-buttons.md › Mobile), whose items, both destructive, still
+ * ask with an action sheet (› Best practices; action-sheets.md › Best practices).
  *
- * Below the first screen, what the friend shares beyond the mockup: streak, level, khatmas and
- * reading counters (D23, D37), in a card of the same kind.
+ * Below the first screen, the rest of what the friend shares (D23, D37): khatmas, words and the
+ * hasanat as an estimate, in a card of the same kind.
  */
 export function FriendScreen({
   model,
@@ -85,12 +88,10 @@ export function FriendScreen({
 }: FriendScreenProps) {
   const { t, i18n } = useTranslation('friends');
   const sky = useSkyStyle('visit');
-  // The scroll view is measured after the first layout. Until then the garden area takes the
-  // height of the window, never nothing: a 3D garden asked to fill a flat area makes a context
-  // with no pixels and the page shows an empty space (iOS check of 683ad8d).
-  const [measuredHeight, setMeasuredHeight] = useState(0);
-  const windowHeight = useWindowDimensions().height;
-  const viewportHeight = measuredHeight > 0 ? measuredHeight : windowHeight;
+  // Measured after the first layout; until then the window under both bars, never nothing: a 3D
+  // garden asked to fill a flat area makes a context with no pixels (iOS check of 683ad8d).
+  const { area, ref: pageRef, onLayout } = useVisibleArea();
+  const { fontScale } = useWindowDimensions();
   const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
   const { encourage } = actions;
   // The iOS check's automatic run presses Encourager and scrolls the page through these; nothing
@@ -148,19 +149,21 @@ export function FriendScreen({
   };
 
   return (
-    <View style={[styles.screen, sky]} testID="friend">
+    <View ref={pageRef} onLayout={onLayout} style={[styles.screen, sky]} testID="friend">
       <ScrollView
         ref={scroller}
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={styles.content}
-        onLayout={(event) => setMeasuredHeight(event.nativeEvent.layout.height)}
+        // The page keeps clear of the bars itself, with the measured area: the first screen is
+        // then exactly what shows between them.
+        contentInsetAdjustmentBehavior="never"
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: area.top, paddingBottom: area.bottom + spacing.xl },
+        ]}
+        scrollIndicatorInsets={{ top: area.top, bottom: area.bottom }}
         testID="friend-scroll"
       >
         {/* The first screen: the garden, then the card resting at the bottom, as in the mockup. */}
-        <View
-          style={[styles.firstScreen, { minHeight: viewportHeight }]}
-          testID="friend-first-screen"
-        >
+        <View style={[styles.firstScreen, { minHeight: area.height }]} testID="friend-first-screen">
           <View style={styles.garden}>
             {card.garden === null ? (
               <Placeholder
@@ -178,7 +181,7 @@ export function FriendScreen({
               />
             )}
           </View>
-          <Card shape="sheet" style={styles.sheet}>
+          <Card style={styles.sheet} testID="friend-card">
             <View style={styles.who}>
               <Avatar content={{ initial: initialOf(name) }} color={colour} size="large" />
               <View style={styles.whoWords}>
@@ -200,6 +203,12 @@ export function FriendScreen({
                 testID="friend-hizb"
               />
             )}
+            <FriendStats
+              streakDays={streakDays}
+              level={level}
+              number={number}
+              isSideBySide={fontScale <= layout.sideBySideMaxFontScale}
+            />
             <FriendsButtonPair>
               <ActionButton
                 variant="tonal"
@@ -217,7 +226,7 @@ export function FriendScreen({
               <ActionButton
                 variant="filled"
                 symbol={BOOK}
-                label={t('friend.read')}
+                label={t('friend.readWith', { name })}
                 accessibilityHint={t('friend.readHint')}
                 onPress={() => openReader?.()}
                 grows
@@ -236,29 +245,15 @@ export function FriendScreen({
           <AppText variant="title2" color="heading">
             {t('friend.readingTitle')}
           </AppText>
-          <View style={styles.tiles}>
-            {streakDays === null ? null : (
+          {level === null ? null : (
+            <View style={styles.tiles}>
               <FriendsStat
-                value={t('friend.streakValue', { count: streakDays })}
-                label={t('friend.streak')}
-                testID="friend-streak"
+                value={number(level.badgeCount)}
+                label={t('friend.badges')}
+                testID="friend-badges"
               />
-            )}
-            {level === null ? null : (
-              <>
-                <FriendsStat
-                  value={t('friend.levelValue', { count: level.level })}
-                  label={t('friend.level')}
-                  testID="friend-level"
-                />
-                <FriendsStat
-                  value={number(level.badgeCount)}
-                  label={t('friend.badges')}
-                  testID="friend-badges"
-                />
-              </>
-            )}
-          </View>
+            </View>
+          )}
           {level === null ? (
             <AppText variant="subhead" color="muted" testID="friend-level-hidden">
               {t('friend.levelHidden', { name })}
@@ -269,12 +264,6 @@ export function FriendScreen({
                 label={t('friend.words')}
                 value={number(level.wordsRead)}
                 testID="friend-words"
-              />
-              <FriendsSeparator />
-              <FriendsRow
-                label={t('friend.verses')}
-                value={number(level.versesRead)}
-                testID="friend-verses"
               />
               <FriendsSeparator />
               <FriendsRow
@@ -307,6 +296,89 @@ export function FriendScreen({
         ) : null}
       </ScrollView>
       {renderOptions?.(menu)}
+    </View>
+  );
+}
+
+/**
+ * The three figures of the card, side by side on the page's cream (maquettes 2026-11-26,
+ * "friend"): the days in a row, the verses read, the level. Each is one element for VoiceOver,
+ * its name then its value; a figure the friend does not share is left out, and the row with it
+ * when none is shared. At large text sizes the figures stack, each on its own line
+ * (typography.md › Supporting Dynamic Type).
+ */
+function FriendStats({
+  streakDays,
+  level,
+  number,
+  isSideBySide,
+}: {
+  streakDays: number | null;
+  level: { readonly level: number; readonly versesRead: number } | null;
+  number: (value: number) => string;
+  isSideBySide: boolean;
+}) {
+  const { t } = useTranslation('friends');
+  const colors = useColors();
+  const figures = [
+    streakDays === null
+      ? null
+      : {
+          id: 'friend-streak',
+          value: t('friend.streakShort', { count: streakDays }),
+          spoken: t('friend.streakValue', { count: streakDays }),
+          label: t('friend.streak'),
+        },
+    level === null
+      ? null
+      : {
+          id: 'friend-verses',
+          value: number(level.versesRead),
+          spoken: number(level.versesRead),
+          label: t('friend.verses'),
+        },
+    level === null
+      ? null
+      : {
+          id: 'friend-level',
+          value: number(level.level),
+          spoken: number(level.level),
+          label: t('friend.level'),
+        },
+  ].filter((figure) => figure !== null);
+  if (figures.length === 0) return null;
+  return (
+    <View
+      style={[
+        styles.stats,
+        isSideBySide ? styles.statsRow : styles.statsColumn,
+        { backgroundColor: colors.field },
+      ]}
+      testID="friend-stats"
+    >
+      {figures.map((figure, index) => (
+        <View
+          key={figure.id}
+          accessible
+          accessibilityLabel={`${figure.label}, ${figure.spoken}`}
+          style={[
+            styles.stat,
+            index === 0
+              ? null
+              : isSideBySide
+                ? { borderStartWidth: layout.outlineWidth, borderColor: colors.divider }
+                : { borderTopWidth: layout.outlineWidth, borderColor: colors.divider },
+          ]}
+          testID={figure.id}
+        >
+          <AppText variant="headline" color="heading" align="center">
+            {figure.value}
+          </AppText>
+          <AppText variant="footnote" color="muted" align="center">
+            {figure.label}
+          </AppText>
+        </View>
+      ))}
     </View>
   );
 }
@@ -345,14 +417,19 @@ const styles = StyleSheet.create({
     aspectRatio: GARDEN_PICTURE_ASPECT_RATIO,
     marginHorizontal: layout.screenMargin,
   },
+  // 14 points above the tab bar in the mockup: the gap between two controls.
   sheet: {
-    marginHorizontal: spacing.sm,
-    marginBottom: spacing.sm,
-    gap: spacing.md + spacing.xs,
+    marginHorizontal: layout.screenMargin,
+    marginBottom: layout.controlGap,
+    gap: spacing.md,
   },
+  stats: { borderRadius: radius.lg, paddingVertical: layout.controlGap },
+  statsRow: { flexDirection: 'row' },
+  statsColumn: { flexDirection: 'column', paddingVertical: spacing.none },
+  stat: { flex: 1, paddingHorizontal: spacing.xs, paddingVertical: spacing.xs / 2 },
   who: { flexDirection: 'row', alignItems: 'center', gap: layout.controlGap },
   whoWords: { flex: 1, gap: spacing.xs / 2 },
-  more: { marginHorizontal: spacing.sm },
+  more: { marginHorizontal: layout.screenMargin },
   manage: { gap: spacing.none, paddingVertical: spacing.sm },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   tile: {

@@ -83,7 +83,6 @@
     "streakValue_many": "{{count}} يومًا",
     "streakValue_other": "{{count}} يوم",
     "level": "المستوى",
-    "levelValue": "الختمة {{count}}",
     "badges": "الختمات المكتملة",
     "gardenHidden": "لا يشارك {{name}} حديقته.",
     "readingTitle": "قراءته",
@@ -114,10 +113,16 @@
     "hizbOutOf_many": "{{count}} من 60 حزبًا",
     "hizbOutOf_other": "{{count}} من 60 حزبًا",
     "hizbProgress": "الأحزاب المقروءة",
-    "read": "اقرأ واسقِ",
     "readHint": "يفتح المصحف حيث توقفت.",
     "options": "خيارات أخرى",
-    "encourageShort": "تشجيع"
+    "encourageShort": "تشجيع",
+    "readWith": "اقرأ مع {{name}}",
+    "streakShort_zero": "{{count}} ي",
+    "streakShort_one": "{{count}} ي",
+    "streakShort_two": "{{count}} ي",
+    "streakShort_few": "{{count}} ي",
+    "streakShort_many": "{{count}} ي",
+    "streakShort_other": "{{count}} ي"
   },
   "add": {
     "title": "إضافة حبيب",
