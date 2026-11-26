@@ -1,9 +1,11 @@
 # Onglet Proches (`src/features/friends`)
 
-Connexion, proches et leurs jardins, page d'un proche, ajout d'un proche (D36) par le nom, par
-un code ou par un QR code, groupes et classements. Sur les fausses données de `src/data/social`
-(D33) : la liste le dit une fois, sous le titre de l'onglet, tant que `isDemonstration` est vrai
-(et l'écran de connexion dit que la connexion est une démonstration). **Pas d'écran de connexion
+Connexion, proches et leurs jardins, page d'un proche, ajout d'un proche (D36) par un code ou
+par un QR code (plus de recherche par nom : décision du propriétaire, 26 novembre 2026), groupes
+et classements. Sur les fausses données de `src/data/social` (D33) : la liste le dit une fois,
+dans la carte « Ajoute tes proches », à côté du code, tant que `isDemonstration` est vrai (« les
+codes ne relient pas encore deux téléphones »), et marque chaque jardin « Exemple »
+(`gardensAreExamples`) ; l'écran de connexion dit que la connexion est une démonstration. **Pas d'écran de connexion
 pour l'instant** (décision du propriétaire) : le drapeau `friendsSignIn` d'`app.json`
 (`expo.extra.features`, `sign-in-flag.ts`) reste à `false` tant que les vrais comptes ne sont pas
 configurés ; l'onglet ouvre alors seul la session de la démonstration (`useTabSession`) et va droit
@@ -33,20 +35,32 @@ dans son champ, sans l'accepter seul.
 
 ## Apparence (règle du propriétaire, 25 novembre 2026)
 
-Les maquettes validées sont la référence. La page d'un proche suit `docs/design/visite.png` : le
-jardin dans le ciel, puis la carte blanche (initiale, nom, « 38 hizb sur 60, arrosé depuis 21
-jours », soixante points, « Encourager » et « Lire et arroser »). Les « … » de la barre sont le
-menu Plus du système (iOS et Android ; sur le web, les deux boutons rouges restent en bas de la
-page). La liste, l'ajout, les groupes, la connexion et le scanner reprennent les cartes de
-`accueil.png` et les boutons de `bienvenue.png`. Restent ceux du système : la barre d'onglets, la
-barre de navigation et son retour, le menu, les feuilles d'action, le partage, la caméra et le
-contrôle segmenté.
+Les maquettes validées sont la référence : depuis le 26 novembre 2026,
+`docs/design/maquettes-2026-11-26/` (« friend », « friends », « addSheet ») pour cet onglet ;
+écarts 142 à 148 de `docs/design/SKILLS.md`.
+
+- **Liste** : le titre, puis la carte « Ajoute tes proches » (tuiles « Scanner » et « Mon QR
+  code », mon code et « Partager »), les demandes, « Leurs jardins » (marqués « Exemple » dans la
+  démonstration, avec une phrase qui le dit), les groupes.
+- **Ajouter un proche** : une feuille (`presentation: 'modal'`), fermée par sa croix ; mon QR code
+  et mon code, puis son code avec « Scanner » à côté. La feuille se ferme avant d'ouvrir le
+  scanner ou la page du nouveau proche (`sheets.md › Best practices`).
+- **Page d'un proche** : le premier écran est la place que laissent les barres (`useVisibleArea`) ;
+  le jardin la remplit jusqu'à la carte, posée juste au-dessus de la barre d'onglets : initiale,
+  nom, « 42 hizb sur 60, arrosé depuis 21 jours », soixante points, « Série / Versets lus /
+  Niveau », « Encourager » et « Lire avec <prénom> ». Les « … » de la barre sont le
+  menu Plus du système (iOS et Android ; sur le web, les deux boutons rouges restent en bas de la
+  page). La liste, l'ajout, les groupes, la connexion et le scanner reprennent les cartes de
+  `accueil.png` et les boutons de `bienvenue.png`. Restent ceux du système : la barre d'onglets, la
+  barre de navigation et son retour, le menu, les feuilles d'action, le partage, la caméra et le
+  contrôle segmenté.
 
 ## QR code (D36)
 
-- **Le mien** : `QrCode` (`src/ui`) dessine `inviteLink(code)` avec `uqr` (matrice) et
+- **Le mien** : dans la feuille « Ajouter un proche » (la tuile « Mon QR code » l'ouvre).
+  `QrCode` (`src/ui`) dessine `inviteLink(code)` avec `uqr` (matrice) et
   `react-native-svg`, noir sur blanc dans les deux apparences, marge de quatre modules (écart 56).
-- **Le sien** : « Scanner un QR code » pose la question de la caméra au toucher, et seulement là
+- **Le sien** : « Scanner » (tuile de la liste, ou bouton de la feuille) pose la question de la caméra au toucher, et seulement là
   (`privacy.md › Requesting permission`), puis ouvre le scanner. Le texte lu passe par
   `parseInviteLink`, puis par la même acceptation qu'un code tapé. Une page poussée dans la pile,
   barre d'onglets visible (écart 57).
@@ -58,6 +72,12 @@ false`, `recordAudioAndroid: false`).
   d'`expo-camera` embarque aussi du code Apache-2.0 et BSD-3-Clause).
 
 ## Ce qui manque
+
+- **Le code entre deux téléphones** : il faut l'identité anonyme sur le serveur (pas encore
+  branchée) ; d'ici là, la démonstration le dit. Les jardins « Exemple » n'existent que dans la
+  démonstration : avec le vrai serveur et aucun proche, la liste montre l'état vide.
+- **« Pages ce mois »** de la maquette : non montré (règle 4 de `docs/specs/social.md`), remplacé
+  par les versets lus (écart 142).
 
 - **Pas vérifié sur un iPhone** : l'aperçu de la caméra, la lecture réelle d'un QR code, le
   texte d'autorisation affiché par iOS dans chaque langue, le retour depuis Réglages.
