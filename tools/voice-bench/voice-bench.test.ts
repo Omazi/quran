@@ -84,7 +84,9 @@ interface BenchConfig {
 
 const QURAN_PROMPT = 'بسم الله الرحمن الرحيم';
 const CONFIGS: Readonly<Record<string, BenchConfig>> = {
-  app: { model: 'ggml-quran-tiny-q8_0.bin', decoding: APP_DECODING, engine: {} },
+  app: { model: 'ggml-quran-base-q5_1.bin', decoding: APP_DECODING, engine: {} },
+  /** The app before D47: Whisper tiny. */
+  tiny: { model: 'ggml-quran-tiny-q8_0.bin', decoding: APP_DECODING, engine: {} },
   /** The app before D45: whisper.cpp's temperature fallback left on. */
   before: {
     model: 'ggml-quran-tiny-q8_0.bin',
@@ -802,7 +804,15 @@ describeBench('voice benchmark', () => {
     );
     const groups = new Map<
       string,
-      { right: number; wrong: number; wrongIfLeftOut: number; n: number; app: number; both: number; bothWrong: number }
+      {
+        right: number;
+        wrong: number;
+        wrongIfLeftOut: number;
+        n: number;
+        app: number;
+        both: number;
+        bothWrong: number;
+      }
     >();
     const byClip = new Map(clips.map((clip) => [clip.id, clip]));
     for (const record of records) {
@@ -811,7 +821,9 @@ describeBench('voice benchmark', () => {
       const truthOf = (candidate: AudioCheckCandidate) => isRight(candidate.passage, clip.truth);
       const decision = decideByAudio(index, record.candidates, record.readings, record.free);
       // The same, with the right passage taken out: anything announced then is wrong.
-      const kept = record.candidates.map((c, i) => [c, record.readings[i]!] as const).filter(([c]) => !truthOf(c));
+      const kept = record.candidates
+        .map((c, i) => [c, record.readings[i]!] as const)
+        .filter(([c]) => !truthOf(c));
       const leftOut = decideByAudio(
         index,
         kept.map(([c]) => c),

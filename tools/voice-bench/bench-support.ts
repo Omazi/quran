@@ -175,7 +175,9 @@ export function createWhisperDriver(
               `minletters=${options.minLetters} freecost=${options.freeLetterCost} ` +
               `firsts=${options.firstChoices} margin=${options.margin} texts=${body.length}\n`;
             waiting.push((line) => resolve(JSON.parse(line) as HeldAnswer));
-            process().stdin.write(NodeBufferClass.concat([NodeBufferClass.from(header), body, bytes]));
+            process().stdin.write(
+              NodeBufferClass.concat([NodeBufferClass.from(header), body, bytes]),
+            );
           }),
       );
       queue = reading.catch(() => undefined);

@@ -2,7 +2,7 @@
  * Config plugin of the voice module (docs/DECISIONS.md, D42): puts the Whisper model in the iOS
  * app while `npx expo prebuild` generates the project.
  *
- * The model (43.5 MB) is not in the repository. It is downloaded once from the addresses of
+ * The model (59.7 MB, D47) is not in the repository. It is downloaded once from the addresses of
  * `voice-model.json`, kept in a cache, and checked against its SHA-256 before it is used: a file
  * that does not match is refused and the build stops. Two environment variables help offline:
  * - `VOICE_MODEL_FILE`: a copy already on disk, used instead of downloading (still checked);

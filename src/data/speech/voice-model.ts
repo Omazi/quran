@@ -1,6 +1,7 @@
 /**
- * The Whisper model of the app (docs/DECISIONS.md, D42): Tarteel's Whisper tiny fine-tuned on
- * Quran recitation, in the GGML format of whisper.cpp. The file is not in the repository: the
+ * The Whisper model of the app (docs/DECISIONS.md, D42, then D47): Tarteel's Whisper base
+ * fine-tuned on Quran recitation, in the GGML format of whisper.cpp (q5_1, 59.7 MB; before D47,
+ * tiny q8_0: `voice-model.tiny.json` is the way back). The file is not in the repository: the
  * config plugin of `modules/voice-capture` downloads it while the iOS project is generated,
  * checks its SHA-256 and puts it in the app, where Whisper finds it by name.
  */
