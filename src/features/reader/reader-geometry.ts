@@ -1,9 +1,9 @@
 /**
  * Where the reader's floating pieces lie on the screen (validated mockup of 27 November 2026,
  * `.rd-top`, `.rd-bar`, `.rd-toast`, `.rd-scroll`'s mask): the text runs the full height of the
- * screen and fades under the glass controls; the pill of the drop sits above the bottom bar, or
- * under the top controls (`READER_CONFIG.dropPill.position`). Pure: the window and the safe area
- * are parameters; every length is a token of the design system.
+ * screen and fades under the glass controls; the pill of the drop sits above the bottom bar (owner's
+ * decision of 27 November 2026). Pure: the window and the safe area are parameters; every length
+ * is a token of the design system.
  */
 
 import { readerShapes, spacing } from '@/ui';
@@ -13,7 +13,6 @@ import { READER_CONFIG } from './config';
 export interface ReaderGeometryInput {
   readonly windowHeight: number;
   readonly insets: { readonly top: number; readonly bottom: number };
-  readonly pillPosition: 'bottom' | 'top';
 }
 
 export interface ReaderGeometry {
@@ -31,7 +30,7 @@ export interface ReaderGeometry {
   readonly fadeTopEnd: number;
   readonly fadeBottomStart: number;
   readonly fadeBottomEnd: number;
-  /** The pill: its distance to the bottom (or top) of the screen, and the height of its middle. */
+  /** The pill: its distance to the bottom of the screen, and the height of its middle. */
   readonly pillOffset: number;
   readonly pillCenterY: number;
   /** The highest and lowest points a drop starts from: in the clear text, above the pill. */
@@ -39,11 +38,7 @@ export interface ReaderGeometry {
   readonly dropMaxY: number;
 }
 
-export function readerGeometry({
-  windowHeight,
-  insets,
-  pillPosition,
-}: ReaderGeometryInput): ReaderGeometry {
+export function readerGeometry({ windowHeight, insets }: ReaderGeometryInput): ReaderGeometry {
   const {
     glassControl,
     glassBarHeight,
@@ -63,20 +58,10 @@ export function readerGeometry({
   const fadeTopEnd = fadeTopStart + fadeTop;
   const fadeBottomEnd = bottomBarTop + glassBarHeight / 2 - glassBottomGap;
   const fadeBottomStart = fadeBottomEnd - fadeBottom;
-  const pillOffset =
-    pillPosition === 'bottom'
-      ? bottomBarOffset + glassBarHeight + dropPillGap
-      : topBarBottom + dropPillGap;
-  const pillCenterY =
-    pillPosition === 'bottom'
-      ? windowHeight - pillOffset - dropPillHeight / 2
-      : pillOffset + dropPillHeight / 2;
-  const { minimumFallPoints } = READER_CONFIG.drop;
+  const pillOffset = bottomBarOffset + glassBarHeight + dropPillGap;
+  const pillCenterY = windowHeight - pillOffset - dropPillHeight / 2;
   const dropMinY = fadeTopEnd;
-  const dropMaxY =
-    pillPosition === 'bottom'
-      ? Math.max(dropMinY, pillCenterY - minimumFallPoints)
-      : fadeBottomStart;
+  const dropMaxY = Math.max(dropMinY, pillCenterY - READER_CONFIG.drop.minimumFallPoints);
   return {
     topBarTop,
     topBarBottom,

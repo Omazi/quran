@@ -61,9 +61,8 @@ export const READER_CONFIG = Object.freeze({
   },
 
   /**
-   * The glass pill the drop falls into (shots 21, 22). Where it shows: at the bottom, above the
-   * controls, or at the top under the title. The owner has not chosen yet (README of the mockup,
-   * question 4; its author advises the bottom): this one constant moves it. How long it stays
+   * The glass pill the drop falls into (shots 21, 22), at the bottom above the controls: the
+   * owner's decision of 27 November 2026, where the drop falls the way water falls. How long it stays
    * once the drop has landed: 4 s, the time of the pill it replaces (deviation 64), where the
    * mockup waits 2.4 s, short for two lines read with VoiceOver or at a large text size. Its small
    * bounce when the drop lands (the mockup's 420 ms to 106 %, curve (0.34, 1.56, 0.64, 1)).
@@ -76,7 +75,6 @@ export const READER_CONFIG = Object.freeze({
   counterMs: 420,
 
   dropPill: {
-    position: 'bottom' as 'bottom' | 'top',
     visibleSeconds: 4,
     bounceMs: 420,
     bounceScale: 1.06,

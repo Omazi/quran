@@ -125,9 +125,9 @@ function overshoot(t: number): number {
 
 /**
  * The drop `elapsedMs` after it started forming at `from` (the end of the thread) on its way to
- * `to` (the pill's ring): it swells with an overshoot, waits, then falls, drawn sideways with an
- * ease-in-out and down with gravity (up with an ease-out when the pill is above), stretching with
- * its speed. A worklet: the screen draws it on the UI thread.
+ * `to` (the pill's ring, below it): it swells with an overshoot, waits, then falls, drawn sideways
+ * with an ease-in-out and down with gravity, stretching with its speed. A worklet: the screen draws
+ * it on the UI thread.
  */
 export function dropFrame(
   elapsedMs: number,
@@ -150,12 +150,10 @@ export function dropFrame(
   const fallStart = timings.formMs + timings.holdMs;
   if (elapsedMs <= fallStart) return { x: start.x, y: start.y, scaleX: 1, scaleY: 1 };
   const k = Math.min(1, (elapsedMs - fallStart) / timings.fallMs);
-  const isFalling = to.y >= start.y;
-  // Down: free fall (k²). Up, to a pill at the top: drawn like a bead, fast then slow.
-  const along = isFalling ? k * k : 1 - (1 - k) * (1 - k);
+  // Free fall: the distance grows with the square of the time.
+  const along = k * k;
   const sideways = 0.5 - Math.cos(Math.PI * k) / 2;
-  const speedPerFrame =
-    (Math.abs(to.y - start.y) * (isFalling ? 2 * k : 2 * (1 - k)) * FRAME_MS) / timings.fallMs;
+  const speedPerFrame = (Math.abs(to.y - start.y) * 2 * k * FRAME_MS) / timings.fallMs;
   const stretch = 1 + Math.min(maxStretch, speedPerFrame * stretchPerPointPerFrame);
   return {
     x: start.x + (to.x - start.x) * sideways,

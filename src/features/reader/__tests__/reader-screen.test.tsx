@@ -56,6 +56,15 @@ jest.mock('expo-haptics', () => ({
 
 jest.mock('../feedback-events', () => ({ playFeedback: jest.fn() }));
 
+// The system status bar batches its updates on timers that fake ones would hold: a stand-in that
+// shows the style asked.
+jest.mock('expo-status-bar', () => {
+  const { View } = jest.requireActual<typeof import('react-native')>('react-native');
+  return {
+    StatusBar: ({ style }: { style: string }) => <View testID={`status-bar-${style}`} />,
+  };
+});
+
 const WIDTH = 390;
 /** The height of the scroll on screen, in points. */
 const HEIGHT = 700;
@@ -191,6 +200,14 @@ async function letTheDropLand() {
   });
 }
 
+/** Plays what the fake timers still hold (the pill leaving), then gives the real ones back. */
+async function backToRealTimers() {
+  await act(async () => {
+    jest.runOnlyPendingTimers();
+  });
+  jest.useRealTimers();
+}
+
 /** The pages of hizb 1, where page 10 belongs: the pill counts them. */
 const HIZB_1_PAGES =
   quranStructure.hizbPageRange(1).lastPage - quranStructure.hizbPageRange(1).firstPage + 1;
@@ -263,7 +280,7 @@ describe('a continuous vertical scroll, not a book (owner, 25 November 2026)', (
     expect(within(section).getByRole('header', { name: /سورة الكهف/ })).toBeOnTheScreen();
     const basmala = within(section).getByTestId('basmala');
     expect(basmala).toHaveTextContent((await quranRepository.getVerse('1:1')).text);
-    expect(within(section).getByTestId('page-footer-293')).toHaveTextContent('293');
+    expect(within(section).getByTestId('page-footer-293')).toHaveTextContent('page 293');
   });
 });
 
@@ -326,13 +343,18 @@ describe('a page counts once its section was seen long enough (spec 3, D8, D41)'
         'accessibilityLabel',
         `Les canaux ont avancé, 1 page sur ${HIZB_1_PAGES} du hizb 1`,
       );
+      await act(async () => {
+        jest.advanceTimersByTime(READER_CONFIG.dropPill.visibleSeconds * SECOND);
+      });
     } finally {
-      jest.useRealTimers();
+      await backToRealTimers();
     }
   });
 
   it('tells VoiceOver too, once the drop has landed', async () => {
     const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility');
+    // React Native's mock keeps the calls of earlier tests.
+    announce.mockClear();
     await openReader(createTestAppStore(), 10);
     jest.useFakeTimers();
     try {
@@ -341,12 +363,11 @@ describe('a page counts once its section was seen long enough (spec 3, D8, D41)'
       await scrollTo(1);
       expect(announce).not.toHaveBeenCalled();
       await letTheDropLand();
-      expect(announce).toHaveBeenCalledTimes(1);
-      expect(announce).toHaveBeenCalledWith(
+      expect(announce).toHaveBeenLastCalledWith(
         `Les canaux ont avancé, 1 page sur ${HIZB_1_PAGES} du hizb 1`,
       );
     } finally {
-      jest.useRealTimers();
+      await backToRealTimers();
     }
   });
 
@@ -464,7 +485,7 @@ describe('a page counts once its section was seen long enough (spec 3, D8, D41)'
         /^Hizb 1 terminé, Nouveau dans ton jardin : \S/,
       );
     } finally {
-      jest.useRealTimers();
+      await backToRealTimers();
     }
   });
 });
@@ -720,20 +741,20 @@ describe('the drop and the glass pill: the moment a page counts (maquette-wow, s
       expect(playFeedback).toHaveBeenCalledTimes(2);
       expect(playFeedback).toHaveBeenLastCalledWith('drop-received');
     } finally {
-      jest.useRealTimers();
+      await backToRealTimers();
     }
   });
 
-  it('puts the pill above the bottom bar, as the owner’s default (one constant moves it)', async () => {
-    expect(READER_CONFIG.dropPill.position).toBe('bottom');
+  it('puts the pill above the bottom bar (owner’s decision, 27 November 2026)', async () => {
     await openReader(createTestAppStore(), 10);
     jest.useFakeTimers();
     try {
       await countPage10();
-      const room = screen.getByTestId('reader-feedback-motion').parent?.parent;
-      expect(styleOf(room as Parameters<typeof styleOf>[0]).bottom).toBeGreaterThan(0);
+      const room = styleOf(screen.getByTestId('reader-feedback-room'));
+      expect(room.bottom).toBeGreaterThan(0);
+      expect(room.top).toBeUndefined();
     } finally {
-      jest.useRealTimers();
+      await backToRealTimers();
     }
   });
 
@@ -753,7 +774,7 @@ describe('the drop and the glass pill: the moment a page counts (maquette-wow, s
       });
       expect(screen.queryByTestId('reader-feedback')).toBeNull();
     } finally {
-      jest.useRealTimers();
+      await backToRealTimers();
     }
   });
 
@@ -778,10 +799,9 @@ describe('the drop and the glass pill: the moment a page counts (maquette-wow, s
     jest.useFakeTimers();
     try {
       await countPage10();
-      const room = screen.getByTestId('reader-feedback-motion').parent;
-      expect(room?.props.pointerEvents).toBe('none');
+      expect(screen.getByTestId('reader-feedback-room').props.pointerEvents).toBe('none');
     } finally {
-      jest.useRealTimers();
+      await backToRealTimers();
     }
   });
 });
@@ -895,13 +915,16 @@ describe('the paper by day, the night page at night (owner, 27 November 2026)', 
   }
 
   const pageColor = () => styleOf(screen.getByTestId('reader-page')).backgroundColor;
-  const ink = () => styleOf(screen.getByTestId('verses-2-60')).color;
+  const firstVerse = quranStructure.firstVerseOfPage(10);
+  const ink = () =>
+    styleOf(screen.getByTestId(`verses-${firstVerse.surah}-${firstVerse.verse}`)).color;
 
   it('is the cream paper by day, the phone in its light appearance', async () => {
     setDeviceConditions({ os: 'android' });
     await openAt(10);
     expect(pageColor()).toBe(backdropGradients.readerPage.light[1]?.[1]);
     expect(ink()).toBe(appColors.ink.light);
+    expect(screen.getByTestId('status-bar-dark')).toBeTruthy();
   });
 
   it('is the warm night page in the evening, even with the phone light', async () => {
@@ -909,6 +932,8 @@ describe('the paper by day, the night page at night (owner, 27 November 2026)', 
     await openAt(20);
     expect(pageColor()).toBe(backdropGradients.readerPage.dark[1]?.[1]);
     expect(ink()).toBe(appColors.ink.dark);
+    // Light status bar text on the night page.
+    expect(screen.getByTestId('status-bar-light')).toBeTruthy();
   });
 
   it('is the night page whenever the phone is dark', async () => {
@@ -994,8 +1019,8 @@ describe('what the pill names (owner, 25 November 2026; maquette-wow)', () => {
         <ReaderScreen
           model={model}
           actions={noActions}
-          fontStatus="loading"
-          texts={{ status: 'loading' }}
+          fontStatus="ready"
+          texts={{ status: 'error' }}
           openContents={openContents}
           close={close}
           follow={IDLE_FOLLOW}
@@ -1041,15 +1066,15 @@ describe('what the pill names (owner, 25 November 2026; maquette-wow)', () => {
     'in %s, names the %s with its own grammar',
     async (language, kind, falling, received) => {
       await showLanguage(language);
+      // While the drop falls.
+      const view = await pillFor(kind);
+      expect(pill()).toBe(falling);
+      await view.unmount();
+      // Once it landed: with Reduce Motion the pill says it at once.
+      jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
+      await changeReducedMotion(true);
       await pillFor(kind);
-      jest.useFakeTimers();
-      try {
-        expect(pill()).toBe(language === 'ar' ? falling.replace('، ', ', ') : falling);
-        await letTheDropLand();
-        expect(pill()).toBe(language === 'ar' ? received.replace('، ', ', ') : received);
-      } finally {
-        jest.useRealTimers();
-      }
+      expect(pill()).toBe(received);
     },
   );
 

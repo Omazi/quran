@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AccessibilityInfo,
   Platform,
@@ -36,7 +36,7 @@ import { READER_CONFIG } from './config';
 import type { Point } from './drop-moment';
 import { pillCopy } from './drop-pill-copy';
 import { DropOverlay } from './drop-overlay';
-import { DropPill, usePillLine } from './drop-pill';
+import { DropPill, usePillLine, usePillSpoken } from './drop-pill';
 import { followStartVerse, verseLook } from './follow-model';
 import { ReaderBottomBar, ReaderTopBar, TextSizePanel } from './reader-chrome';
 import { dropStartY, readerGeometry, type ReaderGeometry } from './reader-geometry';
@@ -110,10 +110,9 @@ function ReaderPage({
   const isMotionReduced = useReducedMotion();
   const insets = useSafeInsets();
   const { width, height } = useWindowDimensions();
-  const pillPosition = READER_CONFIG.dropPill.position;
   const geometry = useMemo(
-    () => readerGeometry({ windowHeight: height, insets, pillPosition }),
-    [height, insets, pillPosition],
+    () => readerGeometry({ windowHeight: height, insets }),
+    [height, insets],
   );
   const [isTextSizeOpen, setTextSizeOpen] = useState(false);
   const [ringX, setRingX] = useState<number | null>(null);
@@ -168,13 +167,9 @@ function ReaderPage({
 
   // Heard once, when the drop has landed (feedback.md › Make sure all feedback is accessible).
   const lineOf = usePillLine();
-  const spoken =
-    moment.phase === 'received'
-      ? (() => {
-          const copy = pillCopy(moment.feedback, 'received');
-          return `${lineOf(copy.title)}, ${lineOf(copy.detail)}`;
-        })()
-      : null;
+  const spokenOf = usePillSpoken();
+  const landed = moment.phase === 'received' ? pillCopy(moment.feedback, 'received') : null;
+  const spoken = landed === null ? null : spokenOf(lineOf(landed.title), lineOf(landed.detail));
   useEffect(() => {
     if (spoken !== null) AccessibilityInfo.announceForAccessibility(spoken);
   }, [spoken]);
@@ -205,7 +200,7 @@ function ReaderPage({
 
   return (
     <View style={styles.root} testID="reader">
-      <StatusBar style={model.paper === 'night' ? 'light' : 'dark'} />
+      <PageStatusBar isNight={model.paper === 'night'} />
       <PageBackground />
       <View style={styles.text} testID="reader-text">
         {texts.status === 'error' ? (
@@ -290,7 +285,6 @@ function ReaderPage({
       {moment.phase !== 'idle' ? (
         <DropPill
           moment={moment}
-          position={pillPosition}
           offset={geometry.pillOffset}
           isMotionReduced={isMotionReduced}
           onRingLayout={setRingX}
@@ -333,6 +327,14 @@ function ReaderPage({
     </View>
   );
 }
+
+/**
+ * Light status bar text on the night page, dark on the paper. Drawn again only when the paper
+ * changes: the system status bar is updated on every render of its component.
+ */
+const PageStatusBar = memo(function PageStatusBar({ isNight }: { isNight: boolean }) {
+  return <StatusBar style={isNight ? 'light' : 'dark'} />;
+});
 
 /** The page under the text: the cream paper by day, the warm night page at night. */
 function PageBackground() {

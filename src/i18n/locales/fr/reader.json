@@ -170,6 +170,7 @@
     "today_one": "{{count}} page aujourd’hui",
     "today_other": "{{count}} pages aujourd’hui",
     "hizbCompleted": "Hizb {{hizb}} terminé",
-    "newElement": "Nouveau dans ton jardin : {{element}}"
+    "newElement": "Nouveau dans ton jardin : {{element}}",
+    "spoken": "{{title}}, {{detail}}"
   }
 }

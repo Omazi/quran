@@ -204,6 +204,7 @@
     "today_many": "صفحات اليوم: {{count}}",
     "today_other": "صفحات اليوم: {{count}}",
     "hizbCompleted": "اكتمل الحزب {{hizb}}",
-    "newElement": "جديد في حديقتك: {{element}}"
+    "newElement": "جديد في حديقتك: {{element}}",
+    "spoken": "{{title}}، {{detail}}"
   }
 }

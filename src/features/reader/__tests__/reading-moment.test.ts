@@ -263,8 +263,6 @@ describe('the drop and the glass pill: one moment per page that counts (shots 21
       totalMs: formMs + holdMs + fallBaseMs + 100 * fallMsPerPoint,
     });
     expect(dropTimings(0, 5000).fallMs).toBe(fallBaseMs + fallExtraMaxMs);
-    // Upwards, when the pill is at the top: the same time for the same distance.
-    expect(dropTimings(700, 600).fallMs).toBe(dropTimings(600, 700).fallMs);
   });
 
   it('forms at the end of the thread, swelling, then falls with gravity into the ring', () => {
@@ -359,24 +357,18 @@ describe('what the glass pill says (shots 21, 22)', () => {
 
 describe('where the floating pieces lie (shots 14, 21, 22)', () => {
   const insets = { top: 47, bottom: 34 };
-  const { glassControl, glassBarHeight, dropPillHeight, dropPillGap } = readerShapes;
+  const { glassBarHeight, dropPillHeight, dropPillGap } = readerShapes;
 
-  it('puts the pill just above the bottom bar by default, the drop starting well above it', () => {
-    const geometry = readerGeometry({ windowHeight: 852, insets, pillPosition: 'bottom' });
+  it('puts the pill just above the bottom bar (owner’s decision), the drop starting well above it', () => {
+    const geometry = readerGeometry({ windowHeight: 852, insets });
     const pillBottom = geometry.pillCenterY + dropPillHeight / 2;
     expect(geometry.bottomBarTop - pillBottom).toBe(dropPillGap);
     expect(geometry.pillCenterY - geometry.dropMaxY).toBe(READER_CONFIG.drop.minimumFallPoints);
     expect(geometry.bottomBarTop + glassBarHeight + geometry.bottomBarOffset).toBe(852);
   });
 
-  it('puts it under the top controls when the owner chooses the top', () => {
-    const geometry = readerGeometry({ windowHeight: 852, insets, pillPosition: 'top' });
-    expect(geometry.pillCenterY - dropPillHeight / 2 - geometry.topBarBottom).toBe(dropPillGap);
-    expect(geometry.topBarBottom - geometry.topBarTop).toBe(glassControl);
-  });
-
   it('lets the text fade in under the top controls and out above the bottom bar', () => {
-    const geometry = readerGeometry({ windowHeight: 852, insets, pillPosition: 'bottom' });
+    const geometry = readerGeometry({ windowHeight: 852, insets });
     expect(geometry.fadeTopStart).toBeGreaterThan(geometry.topBarTop);
     expect(geometry.fadeTopEnd).toBeGreaterThan(geometry.topBarBottom);
     expect(geometry.fadeBottomStart).toBeLessThan(geometry.bottomBarTop);
@@ -385,7 +377,7 @@ describe('where the floating pieces lie (shots 14, 21, 22)', () => {
   });
 
   it('starts a drop at the end of its page, kept in the clear text', () => {
-    const geometry = readerGeometry({ windowHeight: 852, insets, pillPosition: 'bottom' });
+    const geometry = readerGeometry({ windowHeight: 852, insets });
     expect(dropStartY(400, geometry)).toBe(400);
     expect(dropStartY(-200, geometry)).toBe(geometry.dropMinY);
     expect(dropStartY(5000, geometry)).toBe(geometry.dropMaxY);

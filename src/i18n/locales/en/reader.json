@@ -170,6 +170,7 @@
     "today_one": "{{count}} page today",
     "today_other": "{{count}} pages today",
     "hizbCompleted": "Hizb {{hizb}} complete",
-    "newElement": "New in your garden: {{element}}"
+    "newElement": "New in your garden: {{element}}",
+    "spoken": "{{title}}, {{detail}}"
   }
 }

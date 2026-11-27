@@ -21,6 +21,12 @@ const { dropPillHeight, dropPillLeading, dropPillTrailing } = readerShapes;
 /** The bounce when the drop lands (the mockup's curve, cubic-bezier(0.34, 1.56, 0.64, 1)). */
 const BOUNCE_EASING = Easing.bezier(0.34, 1.56, 0.64, 1);
 
+/** The pill as VoiceOver hears it: its two lines, joined as the language joins them. */
+export function usePillSpoken(): (title: string, detail: string) => string {
+  const { t } = useTranslation('reader');
+  return (title, detail) => t('drop.spoken', { title, detail });
+}
+
 /** The words of a line of the pill, from the locale files. */
 export function usePillLine(): (line: PillLine) => string {
   const { t } = useTranslation(['reader', 'garden']);
@@ -42,9 +48,7 @@ export function usePillLine(): (line: PillLine) => string {
 
 export interface DropPillProps {
   moment: Exclude<DropMoment, { phase: 'idle' }>;
-  /** `bottom`: above the bottom bar. `top`: under the top controls (`READER_CONFIG.dropPill`). */
-  position: 'bottom' | 'top';
-  /** Its distance to the bottom (or top) of the screen. */
+  /** Its distance to the bottom of the screen: above the bottom bar (owner's decision). */
   offset: number;
   isMotionReduced: boolean;
   /** Where the middle of its ring is across the screen, so the drop can fall into it. */
@@ -61,14 +65,9 @@ export interface DropPillProps {
  * Make motion optional). VoiceOver hears it once, when the drop has landed (the screen announces
  * it).
  */
-export function DropPill({
-  moment,
-  position,
-  offset,
-  isMotionReduced,
-  onRingLayout,
-}: DropPillProps) {
+export function DropPill({ moment, offset, isMotionReduced, onRingLayout }: DropPillProps) {
   const lineOf = usePillLine();
+  const spokenOf = usePillSpoken();
   const copy = pillCopy(moment.feedback, moment.phase);
   const title = lineOf(copy.title);
   const detail = lineOf(copy.detail);
@@ -97,11 +96,11 @@ export function DropPill({
     );
   }, [bounce, bounceMs, bounceScale, isMotionReduced, isReceived]);
 
-  const rise = position === 'bottom' ? 1 : -1;
+  // It rises a little into place, as in the mockup.
   const motion = useAnimatedStyle(() => ({
     opacity: Math.min(1, entrance.value),
     transform: [
-      { translateY: rise * spacing.sm * (1 - entrance.value) },
+      { translateY: spacing.sm * (1 - entrance.value) },
       { scale: (fromScale + (1 - fromScale) * entrance.value) * bounce.value },
     ],
   }));
@@ -109,7 +108,8 @@ export function DropPill({
   return (
     <View
       pointerEvents="none"
-      style={[styles.room, position === 'bottom' ? { bottom: offset } : { top: offset }]}
+      style={[styles.room, { bottom: offset }]}
+      testID="reader-feedback-room"
     >
       <Animated.View
         exiting={isMotionReduced ? undefined : FadeOut.duration(READER_CONFIG.sizePanelMs)}
@@ -123,7 +123,7 @@ export function DropPill({
         <GlassSurface radius={dropPillHeight / 2} style={styles.pill} testID="reader-feedback">
           <View
             accessible
-            accessibilityLabel={`${title}, ${detail}`}
+            accessibilityLabel={spokenOf(title, detail)}
             style={styles.content}
             testID="reader-feedback-content"
           >

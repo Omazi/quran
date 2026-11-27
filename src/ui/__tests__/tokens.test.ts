@@ -495,6 +495,8 @@ describe('text styles', () => {
       headline: 'headline',
       body: 'body',
       callout: 'callout',
+      // The title of a glass pill, 16 points like Callout, scales as Callout.
+      pillTitle: 'callout',
       subhead: 'subheadline',
       subheadEmphasized: 'subheadline',
       footnote: 'footnote',

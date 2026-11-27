@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   cancelAnimation,
@@ -17,6 +17,8 @@ import { useThreadState } from './thread-store';
 
 const { threadWidth, threadBead, threadHighlight, threadInset } = readerShapes;
 const FLOW_EASING = Easing.linear;
+/** Passes of the light per run: a run starts again while the page keeps gathering time. */
+const FLOW_PASSES = 2;
 
 /**
  * The water thread of one page, in the outer margin (validated mockup of 27 November 2026, shots
@@ -50,20 +52,25 @@ export function PageThreadView({ page }: { page: number }) {
       : withTiming(target, { duration: READER_CONFIG.thread.followMs });
   }, [fill, isMotionReduced, target]);
 
-  // The light runs down the water only while the page is being read, never with Reduce Motion.
+  // The light runs down the water while the page gathers time (each new share keeps it going),
+  // and stops when the reading stops; never with Reduce Motion.
   const isFlowing = isFilling && !isMotionReduced && target > 0;
+  const runsUntil = useRef(0);
   useEffect(() => {
     if (!isFlowing) {
       cancelAnimation(flow);
       flow.value = 0;
+      runsUntil.current = 0;
       return;
     }
-    flow.value = withRepeat(
-      withTiming(1, { duration: READER_CONFIG.thread.flowMs, easing: FLOW_EASING }),
-      -1,
-    );
-    return () => cancelAnimation(flow);
-  }, [flow, isFlowing]);
+    const now = Date.now();
+    if (now < runsUntil.current) return;
+    const { flowMs } = READER_CONFIG.thread;
+    runsUntil.current = now + flowMs * FLOW_PASSES;
+    flow.value = 0;
+    flow.value = withRepeat(withTiming(1, { duration: flowMs, easing: FLOW_EASING }), FLOW_PASSES);
+  }, [flow, isFlowing, target]);
+  useEffect(() => () => cancelAnimation(flow), [flow]);
 
   const fillStyle = useAnimatedStyle(() => ({ height: height * fill.value }));
   const beadStyle = useAnimatedStyle(() => ({
