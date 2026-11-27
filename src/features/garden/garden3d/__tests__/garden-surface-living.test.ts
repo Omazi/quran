@@ -196,3 +196,32 @@ describe('a tap on the line of what grows looks at the plant (maquette-wow, #gro
     expect(onGlideChange).toHaveBeenLastCalledWith(false);
   });
 });
+
+describe('the light follows the phone (owner, 27 November 2026)', () => {
+  it('shifts with the tilt in the render loop, smoothly', () => {
+    const { view, frames } = homeSurface();
+    view.setTiltSample({ x: 0, y: -0.7 });
+    frames.advance(1000);
+    view.setTiltSample({ x: 0.3, y: -0.7 });
+    frames.advance(300);
+    expect(view.shownTilt.x).toBeGreaterThan(0.2);
+  });
+
+  it('comes back to its place of the hour when the screen is left', () => {
+    const { view, frames } = homeSurface();
+    view.setTiltSample({ x: 0, y: -0.7 });
+    frames.advance(1000);
+    view.setTiltSample({ x: 0.3, y: -0.7 });
+    frames.advance(300);
+    view.setActive(false);
+    expect(view.shownTilt).toEqual({ x: 0, y: 0 });
+  });
+
+  it('does not follow the phone with Reduce Motion: no loop, the light stays', () => {
+    const { view, frames } = homeSurface();
+    view.setMotionReduced(true);
+    view.setTiltSample({ x: 0.5, y: 0 });
+    frames.advance(500);
+    expect(view.shownTilt).toEqual({ x: 0, y: 0 });
+  });
+});

@@ -197,6 +197,16 @@ describe('the living garden (maquette-wow, validated 27 November 2026)', () => {
     expect(garden.setSky(skyStateAt(9))).toBe(true);
   });
 
+  it('moves the sun a little with the tilt, and says how far from where the shadows were drawn', () => {
+    const garden = buildGardenThree(MODEL);
+    garden.setSky(skyStateAt(13));
+    expect(garden.setTilt({ x: 0, y: 0 })).toBe(0);
+    const moved = garden.setTilt({ x: 0.5, y: 0 });
+    expect(moved).toBeCloseTo(4.5, 3);
+    garden.markShadowsDrawn();
+    expect(garden.setTilt({ x: 0.5, y: 0 })).toBe(0);
+  });
+
   it('knows where the growing element stands, for the return glide', () => {
     const garden = buildGardenThree(MODEL);
     expect(garden.growthFocus()).toBeNull();

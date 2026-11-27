@@ -22,6 +22,8 @@ export interface LivingUniforms {
   readonly uNight: { value: number };
   /** The water's colour under the sky (`SkyState.water`). */
   readonly uSkyTint: { value: THREE.Color };
+  /** The phone's tilt (tilt.ts): the glints on the water move with it, as a reflection does. */
+  readonly uTilt: { value: THREE.Vector2 };
 }
 
 export function newLivingUniforms(): LivingUniforms {
@@ -30,6 +32,7 @@ export function newLivingUniforms(): LivingUniforms {
     uLife: { value: 0 },
     uNight: { value: 0 },
     uSkyTint: { value: new THREE.Color(0xbfdff0) },
+    uTilt: { value: new THREE.Vector2(0, 0) },
   };
 }
 
@@ -84,7 +87,8 @@ if (uLife > 0.0) {
   float f = fract(along * 0.55 - uTime * 0.38 + wobble);
   float band = smoothstep(0.0, 0.12, f) * smoothstep(0.42, 0.12, f);
   float caustic = sin(p.x * 3.3 + uTime * 1.3) * sin(p.y * 2.9 - uTime * 1.1);
-  float glint = pow(max(sin(p.x * 5.0 + uTime * 1.6) * sin(p.y * 6.0 - uTime * 1.3), 0.0), 10.0);
+  vec2 seen = p + uTilt * 0.6;
+  float glint = pow(max(sin(seen.x * 5.0 + uTime * 1.6) * sin(seen.y * 6.0 - uTime * 1.3), 0.0), 10.0);
   diffuseColor.rgb = mix(diffuseColor.rgb, uSkyTint, 0.22 * uLife);
   diffuseColor.rgb += vec3(0.86, 0.97, 1.0) * (band * 0.13 + max(caustic, 0.0) * 0.06 + glint * 0.12) * uLife;
 }`;
@@ -116,10 +120,11 @@ export function injectLiving(
   if (!options.isWater) return;
   shader.uniforms.uNight = uniforms.uNight;
   shader.uniforms.uSkyTint = uniforms.uSkyTint;
+  shader.uniforms.uTilt = uniforms.uTilt;
   shader.fragmentShader = shader.fragmentShader
     .replace(
       '#include <common>',
-      '#include <common>\nuniform float uTime;\nuniform float uLife;\nuniform float uNight;\nuniform vec3 uSkyTint;\nvarying vec3 vLivingPosition;',
+      '#include <common>\nuniform float uTime;\nuniform float uLife;\nuniform float uNight;\nuniform vec3 uSkyTint;\nuniform vec2 uTilt;\nvarying vec3 vLivingPosition;',
     )
     .replace('#include <color_fragment>', WATER_FRAGMENT)
     .replace('#include <emissivemap_fragment>', WATER_GLOW);

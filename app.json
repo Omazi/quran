@@ -75,6 +75,12 @@
           "recordAudioAndroid": false
         }
       ],
+      [
+        "expo-sensors",
+        {
+          "motionPermission": false
+        }
+      ],
       "./modules/voice-capture/app.plugin.js"
     ],
     "extra": {

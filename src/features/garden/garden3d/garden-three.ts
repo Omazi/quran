@@ -35,6 +35,9 @@ import {
   type ModelTexture,
 } from './garden-model';
 
+/** How far the phone's tilt moves the sun, in metres (maquette-wow `garden.js`: 9 and 7). */
+const TILT_SUN_SHIFT = { x: 9, z: 7 } as const;
+
 export interface GardenThree {
   readonly scene: THREE.Scene;
   readonly camera: THREE.OrthographicCamera;
@@ -69,6 +72,14 @@ export interface GardenThree {
   setSky(sky: SkyState): boolean;
   /** What lives in the garden (`gardenLifeOf`). */
   setLife(life: GardenLife): void;
+  /**
+   * The phone's tilt (tilt.ts): the sun moves a little around its place of the hour, and the
+   * glints on the water with it. Returns how far the sun moved since the shadows were last drawn,
+   * in metres, so that the caller redraws them only when it shows.
+   */
+  setTilt(tilt: { readonly x: number; readonly y: number }): number;
+  /** The shadows were drawn again for the sun where it is now. */
+  markShadowsDrawn(): void;
   /** The view in points and the drawing buffer's pixels per point. */
   setView(width: number, height: number, pixelRatio: number): void;
   /** Moves the living garden to `time` seconds of life, `dt` after the last frame. */
@@ -368,6 +379,10 @@ export function buildGardenThree(model: GardenModel): GardenThree {
   const skyView = buildSkyView();
   let isLiving = false;
   let sunKey = '';
+  const sunBase = new THREE.Vector3(...GARDEN_3D.light.sun.position);
+  const tiltShift = new THREE.Vector3();
+  const shadowSun = new THREE.Vector3(...GARDEN_3D.light.sun.position);
+  const placeSun = () => sun.position.copy(sunBase).add(tiltShift);
   let shownKey = '';
   let shownStage: GardenStage | null = null;
   // The growing element: built for one stage and one hizb, moved with the growth.
@@ -434,8 +449,19 @@ export function buildGardenThree(model: GardenModel): GardenThree {
       const key = `${x.toFixed(1)},${y.toFixed(1)},${z.toFixed(1)}`;
       if (key === sunKey) return false;
       sunKey = key;
-      sun.position.set(x, y, z);
+      sunBase.set(x, y, z);
+      placeSun();
+      shadowSun.copy(sun.position);
       return true;
+    },
+    setTilt(tilt) {
+      tiltShift.set(tilt.x * TILT_SUN_SHIFT.x, 0, -tilt.y * TILT_SUN_SHIFT.z);
+      living.uTilt.value.set(tilt.x, tilt.y);
+      placeSun();
+      return sun.position.distanceTo(shadowSun);
+    },
+    markShadowsDrawn() {
+      shadowSun.copy(sun.position);
     },
     setLife(next) {
       life.setLife(next);
