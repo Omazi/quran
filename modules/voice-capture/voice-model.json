@@ -3,7 +3,7 @@
   "bytes": 59707625,
   "sha256": "acc1f03c8b1468b674b4fab50e0b2312cff982ba0001cd16fe36ca23862b6536",
   "urls": [
-    "https://github.com/Omazi/quran/raw/voice-model/ggml-quran-base-q5_1.bin",
+    "https://raw.githubusercontent.com/Omazi/quran/voice-model/ggml-quran-base-q5_1.bin",
     "https://github.com/mano270699/watazawwadu-models/releases/download/quran-whisper-base-v1/ggml-quran-base-q5_1.bin"
   ],
   "model": "tarteel-ai/whisper-base-ar-quran",
