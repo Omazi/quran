@@ -25,11 +25,17 @@ export interface GrowthPlayerOptions {
 /** Two segments (a plant ends, the next starts) never take longer than this together. */
 export const MAX_PLAY_MS = 3200;
 
-/** How long each segment takes: its own duration, all shortened together past `MAX_PLAY_MS`. */
-export function segmentDurations(segments: readonly GrowthSegment[]): number[] {
+/**
+ * How long each segment takes: its own duration, all shortened together past `maxMs`
+ * (`MAX_PLAY_MS` unless a shorter time is asked, as during the return glide).
+ */
+export function segmentDurations(
+  segments: readonly GrowthSegment[],
+  maxMs: number = MAX_PLAY_MS,
+): number[] {
   const wanted = segments.map((segment) => growthDurationMs(segment.from, segment.to));
   const total = wanted.reduce((sum, ms) => sum + ms, 0);
-  const scale = total > MAX_PLAY_MS ? MAX_PLAY_MS / total : 1;
+  const scale = total > maxMs ? maxMs / total : 1;
   return wanted.map((ms) => Math.round(ms * scale));
 }
 
@@ -61,6 +67,7 @@ export class GrowthPlayer {
   private durations: number[] = [];
   private startTime = 0;
   private frame: number | null = null;
+  private onPlayed: (() => void) | null = null;
   private readonly frames: FrameScheduler;
 
   constructor(private readonly options: GrowthPlayerOptions) {
@@ -76,12 +83,19 @@ export class GrowthPlayer {
     return this.isPlaying ? (this.segments[this.segments.length - 1] ?? null) : null;
   }
 
-  /** Plays `segments` from their start; whatever was playing stops where it is. */
-  play(segments: readonly GrowthSegment[]): void {
+  /**
+   * Plays `segments` from their start; whatever was playing stops where it is. `maxMs` shortens
+   * the whole; `onPlayed` is told once the growth has reached its end (not when it is stopped).
+   */
+  play(
+    segments: readonly GrowthSegment[],
+    options: { readonly maxMs?: number; readonly onPlayed?: () => void } = {},
+  ): void {
     this.stop();
     if (segments.length === 0) return;
     this.segments = segments;
-    this.durations = segmentDurations(segments);
+    this.durations = segmentDurations(segments, options.maxMs);
+    this.onPlayed = options.onPlayed ?? null;
     this.startTime = this.frames.now();
     // Playing from its first frame on: what that frame draws can depend on it.
     this.frame = this.frames.request(this.tick);
@@ -92,6 +106,13 @@ export class GrowthPlayer {
   stop(): void {
     if (this.frame !== null) this.frames.cancel(this.frame);
     this.frame = null;
+    this.onPlayed = null;
+  }
+
+  /** The last frame of what plays (or played last): where the growth ends. */
+  get lastFrame(): ShownGrowthFrame | null {
+    const last = this.segments[this.segments.length - 1];
+    return last === undefined ? null : { hizb: last.hizb, growth: last.to };
   }
 
   private readonly tick = (time: number): void => {
@@ -99,7 +120,10 @@ export class GrowthPlayer {
     if (frame !== null) this.options.onFrame(frame);
     if (isOver) {
       this.frame = null;
+      const played = this.onPlayed;
+      this.onPlayed = null;
       this.options.onDone?.();
+      played?.();
       return;
     }
     this.frame = this.frames.request(this.tick);

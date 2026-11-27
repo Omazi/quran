@@ -7,6 +7,7 @@ import { readGardenModel } from '../garden-model';
 import { buildGardenThree } from '../garden-three';
 import { parseGlb } from '../glb';
 import { shippedGardenBytes } from '../test-support/shipped-model';
+import { skyStateAt } from '../../sky/sky-state';
 
 // Building the scene needs no GL context: only drawing does.
 const MODEL = readGardenModel(parseGlb(shippedGardenBytes()));
@@ -17,10 +18,16 @@ const stage = (count: number, water: 0 | 1 | 2, foliage: 0 | 1 | 2 | 3): GardenS
   foliage,
 });
 
+/** The garden's own meshes: not those of its life (fireflies, leaves, birds: life-three.ts). */
 function meshes(scene: THREE.Scene): THREE.Mesh[] {
   const found: THREE.Mesh[] = [];
+  const life = scene.getObjectByName('garden-life');
   scene.traverse((object) => {
-    if (object instanceof THREE.Mesh) found.push(object);
+    let inLife = false;
+    object.traverseAncestors((ancestor) => {
+      if (ancestor === life) inLife = true;
+    });
+    if (object instanceof THREE.Mesh && object !== life && !inLife) found.push(object);
   });
   return found;
 }
@@ -163,5 +170,61 @@ describe('the element growing with the hizb in progress', () => {
     expect(three.showGrowth({ hizb: 5, growth: 0.4 })).toBe(true);
     expect(three.showGrowth({ hizb: 5, growth: 0.4 })).toBe(false);
     three.dispose();
+  });
+});
+
+describe('the living garden (maquette-wow, validated 27 November 2026)', () => {
+  it('is still by default: the garden of the pictures, no life, no sky drawn behind it', () => {
+    const garden = buildGardenThree(MODEL);
+    expect(garden.scene.getObjectByName('garden-life')?.visible).toBe(false);
+    expect(garden.backdrop.isVisible()).toBe(false);
+  });
+
+  it('comes alive on the home screen: its life shows and the sky is drawn behind it', () => {
+    const garden = buildGardenThree(MODEL);
+    garden.setLiving(true);
+    expect(garden.scene.getObjectByName('garden-life')?.visible).toBe(true);
+    expect(garden.backdrop.isVisible()).toBe(true);
+  });
+
+  it('takes the light of the hour, and asks for new shadows only when the sun moved', () => {
+    const garden = buildGardenThree(MODEL);
+    const night = skyStateAt(22.5);
+    expect(garden.setSky(night)).toBe(true);
+    const hemisphere = garden.scene.children.find((c) => c instanceof THREE.HemisphereLight);
+    expect((hemisphere as THREE.HemisphereLight).intensity).toBeCloseTo(night.hemiIntensity);
+    expect(garden.setSky(night)).toBe(false);
+    expect(garden.setSky(skyStateAt(9))).toBe(true);
+  });
+
+  it('knows where the growing element stands, for the return glide', () => {
+    const garden = buildGardenThree(MODEL);
+    expect(garden.growthFocus()).toBeNull();
+    garden.showStage({ count: 4, water: 2, foliage: 0 });
+    garden.showGrowth({ hizb: 5, growth: 0.3 });
+    const focus = garden.growthFocus();
+    expect(focus).not.toBeNull();
+    expect(focus?.[1]).toBe(0);
+    // Inside the 18 m plot.
+    expect(Math.abs(focus?.[0] ?? 99)).toBeLessThan(9);
+    expect(Math.abs(focus?.[2] ?? 99)).toBeLessThan(9);
+  });
+
+  it('moves with time without throwing, its life and its sky', () => {
+    const garden = buildGardenThree(MODEL);
+    garden.setLiving(true);
+    garden.setSky(skyStateAt(22.5));
+    garden.setLife({ fireflies: 34, leaves: 9, butterflies: 4, birds: 5 });
+    garden.setView(393, 852, 3);
+    for (let k = 1; k <= 120; k += 1) garden.tick(k / 60, 1 / 60);
+    expect(garden.isRippling()).toBe(false);
+    garden.showStage({ count: 4, water: 2, foliage: 0 });
+    garden.showGrowth({ hizb: 5, growth: 0.3 });
+    garden.rippleAtGrowth(2);
+    garden.tick(2.1, 0.1);
+    expect(garden.isRippling()).toBe(true);
+    garden.tick(5, 0.05);
+    expect(garden.isRippling()).toBe(false);
+    garden.dispose();
   });
 });

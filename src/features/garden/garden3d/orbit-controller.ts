@@ -21,6 +21,7 @@ import {
   type Orbit,
 } from './camera-rig';
 import { GARDEN_3D } from './config';
+import { interpolateOrbit } from './glide';
 
 export interface FrameScheduler {
   readonly now: () => number;
@@ -51,11 +52,31 @@ export interface OrbitControllerOptions {
   readonly isMotionReduced: () => boolean;
   /** Where the picture's frame rests in a taller view. Bottom if not given. */
   readonly anchor?: () => FrameAnchor;
+  /** A finger touched the garden (before anything else happens): a glide in progress stops. */
+  readonly onFingerDown?: () => void;
   readonly frames?: FrameScheduler;
 }
 
+/** A cubic-bezier curve, for a glide along a set path. */
+export interface GlideCurve {
+  readonly x1: number;
+  readonly y1: number;
+  readonly x2: number;
+  readonly y2: number;
+}
+
 type Motion =
-  { readonly kind: 'spin'; velocity: number } | { readonly kind: 'settle'; readonly target: Orbit };
+  | { readonly kind: 'spin'; velocity: number }
+  | { readonly kind: 'settle'; readonly target: Orbit }
+  | {
+      readonly kind: 'tween';
+      readonly from: Orbit;
+      readonly to: Orbit;
+      readonly start: number;
+      readonly durationMs: number;
+      readonly curve: GlideCurve;
+      readonly onDone: () => void;
+    };
 
 /** Whether every number of an orbit is a number: a NaN camera would glide, and draw, forever. */
 function isFiniteOrbit(orbit: Orbit): boolean {
@@ -129,9 +150,55 @@ export class OrbitController {
     this.frame = null;
   }
 
+  /** A finger comes down on the garden: what moves stops, and a glide in progress is told. */
+  fingerDown(): void {
+    this.touch();
+    this.options.onFingerDown?.();
+  }
+
   dispose(): void {
     this.isDisposed = true;
     this.touch();
+  }
+
+  /**
+   * Glides to `target` in `durationMs` along `curve` (the return glide of the home garden), then
+   * calls `onDone`. A touch stops it where it is, without `onDone`. With Reduce Motion, jumps.
+   */
+  glideTo(
+    target: Orbit,
+    durationMs: number,
+    curve: GlideCurve,
+    onDone: () => void = () => {},
+  ): void {
+    this.touch();
+    if (this.isDisposed || !isFiniteOrbit(target)) return;
+    if (this.options.isMotionReduced() || durationMs <= 0) {
+      this.set(target);
+      onDone();
+      return;
+    }
+    this.animate({
+      kind: 'tween',
+      from: this.orbit,
+      to: target,
+      start: this.frames.now(),
+      durationMs,
+      curve,
+      onDone,
+    });
+  }
+
+  /** Goes back to `target` the way a release does (an approach any touch interrupts). */
+  settleTo(target: Orbit): void {
+    if (this.isDisposed) return;
+    this.goTo(target);
+  }
+
+  /** Puts the camera at `target` at once. */
+  jumpTo(target: Orbit): void {
+    this.touch();
+    this.set(target);
   }
 
   // Drag: turn around the vertical axis, tilt within limits -----------------------------------
@@ -256,6 +323,10 @@ export class OrbitController {
       motion.velocity = decayVelocity(motion.velocity, elapsed);
       if (!isSpinning(motion.velocity))
         this.motion = { kind: 'settle', target: clampOrbit(this.orbit) };
+    } else if (motion.kind === 'tween') {
+      const t = Math.min(1, Math.max(0, (time - motion.start) / motion.durationMs));
+      this.orbit = interpolateOrbit(motion.from, motion.to, t, motion.curve);
+      if (t >= 1) this.motion = null;
     } else {
       this.orbit = approachOrbit(this.orbit, motion.target, elapsed);
       if (sameOrbit(this.orbit, motion.target)) this.motion = null;
@@ -269,5 +340,6 @@ export class OrbitController {
     }
     this.options.onChange();
     this.frame = this.motion === null ? null : this.frames.request(this.tick);
+    if (motion.kind === 'tween' && this.motion === null) motion.onDone();
   };
 }

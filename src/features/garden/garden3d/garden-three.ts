@@ -18,8 +18,14 @@ import {
   type Orbit,
 } from './camera-rig';
 import { GARDEN_3D } from './config';
+import type { GardenLife } from '../living/life-rules';
+import type { SkyState } from '../sky/sky-state';
 import { buildGrowthView, injectGrowth, type GrowthView, type GrowUniforms } from './growth-three';
+import { buildLifeView } from './life-three';
+import { injectLiving, isWaterMaterial, newLivingUniforms, swayOfRole } from './living-three';
+import { buildSkyView } from './sky-three';
 import {
+  roleOfMaterial,
   visibleInstances,
   visibleRanges,
   type GardenModel,
@@ -46,7 +52,40 @@ export interface GardenThree {
    * when something fades.
    */
   readonly fade: GardenFade;
+  /**
+   * The lights of the sky (sun, moon, stars, clouds), drawn before the garden, behind it: only
+   * while the garden is alive.
+   */
+  readonly backdrop: GardenBackdrop;
+  /**
+   * Alive (the home garden: water flowing, leaves swaying, the sky's lights and the garden's
+   * life) or still (the pictures' garden). Still by default.
+   */
+  setLiving(isLiving: boolean): void;
+  /**
+   * The light of the hour (living-three, sky-state). Returns true when the sun moved, so that
+   * the shadows must be drawn again.
+   */
+  setSky(sky: SkyState): boolean;
+  /** What lives in the garden (`gardenLifeOf`). */
+  setLife(life: GardenLife): void;
+  /** The view in points and the drawing buffer's pixels per point. */
+  setView(width: number, height: number, pixelRatio: number): void;
+  /** Moves the living garden to `time` seconds of life, `dt` after the last frame. */
+  tick(time: number, dt: number): void;
+  /** Where the growing element is, on the ground, or null when nothing grows. */
+  growthFocus(): readonly [number, number, number] | null;
+  /** A ripple of light at the growing element, from `time` seconds. */
+  rippleAtGrowth(time: number): void;
+  /** Whether something of the living garden still plays (a ripple). */
+  readonly isRippling: () => boolean;
   dispose(): void;
+}
+
+export interface GardenBackdrop {
+  readonly scene: THREE.Scene;
+  readonly camera: THREE.Camera;
+  readonly isVisible: () => boolean;
 }
 
 export interface GardenFade {
@@ -191,6 +230,7 @@ export function buildGardenThree(model: GardenModel): GardenThree {
    * The material of a model mesh, made once. With `grows`, a material of its own whose vertices
    * move with the growth (growth-three.ts): the caller disposes of it.
    */
+  const living = newLivingUniforms();
   const materialOf = (source: ModelMaterial, grows?: GrowUniforms): THREE.MeshLambertMaterial => {
     const cached = grows === undefined ? materialCache.get(source) : undefined;
     if (cached !== undefined) return cached;
@@ -209,19 +249,23 @@ export function buildGardenThree(model: GardenModel): GardenThree {
       material.emissive.setHex(source.emissive);
       material.emissiveIntensity = source.emissiveIntensity;
     }
-    if (source.wilts || grows !== undefined) {
-      material.onBeforeCompile = (shader) => {
-        if (source.wilts) {
-          shader.uniforms.uWilt = wilt;
-          shader.fragmentShader = shader.fragmentShader
-            .replace('#include <common>', '#include <common>\nuniform float uWilt;')
-            .replace('#include <color_fragment>', WILT_CHUNK);
-        }
-        if (grows !== undefined) injectGrowth(shader, grows);
-      };
-      const key = `garden${source.wilts ? '-wilt' : ''}${grows === undefined ? '' : '-grow'}`;
-      material.customProgramCacheKey = () => key;
-    }
+    // The life (living-three.ts) is in every material; `uLife` at 0 keeps the pictures' garden.
+    const sway = swayOfRole(roleOfMaterial(source));
+    const isWater = isWaterMaterial(source.name);
+    material.onBeforeCompile = (shader) => {
+      if (source.wilts) {
+        shader.uniforms.uWilt = wilt;
+        shader.fragmentShader = shader.fragmentShader
+          .replace('#include <common>', '#include <common>\nuniform float uWilt;')
+          .replace('#include <color_fragment>', WILT_CHUNK);
+      }
+      if (grows !== undefined) injectGrowth(shader, grows);
+      injectLiving(shader, living, { sway, isWater });
+    };
+    const key = `garden${source.wilts ? '-wilt' : ''}${grows === undefined ? '' : '-grow'}${
+      sway > 0 ? '-sway' : ''
+    }${isWater ? '-water' : ''}`;
+    material.customProgramCacheKey = () => key;
     if (grows !== undefined) return material;
     if (source.tint !== null) tinted.push({ material, source });
     materialCache.set(source, material);
@@ -298,7 +342,8 @@ export function buildGardenThree(model: GardenModel): GardenThree {
 
   // The light of the pictures.
   const { sky, sun: sunLight, shadow } = GARDEN_3D.light;
-  scene.add(new THREE.HemisphereLight(sky.color, sky.ground, sky.intensity));
+  const hemisphere = new THREE.HemisphereLight(sky.color, sky.ground, sky.intensity);
+  scene.add(hemisphere);
   const sun = new THREE.DirectionalLight(sunLight.color, sunLight.intensity);
   sun.position.set(...sunLight.position);
   sun.castShadow = true;
@@ -317,6 +362,12 @@ export function buildGardenThree(model: GardenModel): GardenThree {
   const target = new THREE.Vector3(...GARDEN_3D.picture.target);
 
   const fade = buildFade(disposables);
+  const life = buildLifeView();
+  life.group.visible = false;
+  scene.add(life.group);
+  const skyView = buildSkyView();
+  let isLiving = false;
+  let sunKey = '';
   let shownKey = '';
   let shownStage: GardenStage | null = null;
   // The growing element: built for one stage and one hizb, moved with the growth.
@@ -355,13 +406,61 @@ export function buildGardenThree(model: GardenModel): GardenThree {
         growthValue = -1;
       }
       const value = fits ? growing.growth : -1;
+      life.setGrowthRing(growth?.view?.focus ?? null);
       if (value === growthValue) return false;
       growthValue = value;
       growth?.view?.update(value);
       return true;
     },
+    backdrop: { scene: skyView.scene, camera: skyView.camera, isVisible: () => isLiving },
+    setLiving(next) {
+      isLiving = next;
+      living.uLife.value = next ? 1 : 0;
+      life.group.visible = next;
+    },
+    setSky(state) {
+      hemisphere.color.set(state.hemiSky);
+      hemisphere.groundColor.set(state.hemiGround);
+      hemisphere.intensity = state.hemiIntensity;
+      sun.color.set(state.sunColor);
+      sun.intensity = state.sunIntensity;
+      sun.shadow.intensity = state.shadow;
+      living.uNight.value = state.night;
+      living.uSkyTint.value.set(state.water);
+      life.setNight(state.night);
+      skyView.setSky(state);
+      // The shadows are drawn again only when the sun has really moved (a tenth of a metre).
+      const [x, y, z] = state.sunDirection;
+      const key = `${x.toFixed(1)},${y.toFixed(1)},${z.toFixed(1)}`;
+      if (key === sunKey) return false;
+      sunKey = key;
+      sun.position.set(x, y, z);
+      return true;
+    },
+    setLife(next) {
+      life.setLife(next);
+    },
+    setView(width, height, pixelRatio) {
+      skyView.setView(width, height, pixelRatio);
+      life.setPixelRatio(pixelRatio);
+    },
+    tick(time, dt) {
+      living.uTime.value = time;
+      life.update(time, dt, camera);
+      skyView.update(time, dt, Math.random);
+    },
+    growthFocus() {
+      const focus = growth?.view?.focus;
+      return focus === undefined ? null : [focus.x, focus.y, focus.z];
+    },
+    rippleAtGrowth(time) {
+      const focus = growth?.view?.focus;
+      if (focus !== undefined) life.ripple(focus, time);
+    },
+    isRippling: () => life.isRippling(),
     setOrbit(orbit, aspect, anchor = 'bottom') {
-      fade.setWidth(edgeFadeWidth(orbit.zoom), aspect);
+      // Full screen, the garden runs past the screen's edges at rest: nothing to dissolve.
+      fade.setWidth(anchor === 'stage' ? 0 : edgeFadeWidth(orbit.zoom), aspect);
       const frame = frustumOf(orbit, aspect, anchor);
       camera.left = frame.left;
       camera.right = frame.right;
@@ -380,6 +479,8 @@ export function buildGardenThree(model: GardenModel): GardenThree {
     dispose() {
       growth?.view?.dispose();
       growth = null;
+      life.dispose();
+      skyView.dispose();
       for (const item of disposables) item.dispose();
     },
   };

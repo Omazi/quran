@@ -142,9 +142,8 @@ export function skyStateAt(hour: number): SkyState {
   const { a, b, t } = bracket(h);
   const colour = (key: 'top' | 'mid' | 'low' | 'sunColor' | 'hemiSky' | 'hemiGround') =>
     mixHex(a[key], b[key], t);
-  const value = (
-    key: 'stars' | 'night' | 'sunIntensity' | 'hemiIntensity' | 'shadow',
-  ): number => a[key] + (b[key] - a[key]) * t;
+  const value = (key: 'stars' | 'night' | 'sunIntensity' | 'hemiIntensity' | 'shadow'): number =>
+    a[key] + (b[key] - a[key]) * t;
 
   const day = (h - SUN.rise) / SUN.span;
   const isSunUp = day > -0.05 && day < 1.05;
