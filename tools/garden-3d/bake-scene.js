@@ -860,7 +860,8 @@ function collectLevelStage({ count, water: waterLevel, foliage: foliageStage }, 
     let color = hex(s.color);
     let dy = 0;
     if (s.water) {
-      const drop = s.drop ?? 0.03;
+      // Water stays where it is: lowered, it would sink under its own bank.
+      const drop = s.drop ?? 0;
       if (s.kind === 'sheet' && !wet) return; // a waterfall without water is only its rocks
       if (!wet) {
         color = hex(s.dryColor ?? C.dryBed);
