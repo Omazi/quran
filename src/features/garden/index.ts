@@ -32,7 +32,7 @@ export {
   type GardenHintPlacement,
   type GardenView3DProps,
 } from './garden3d/garden-view-3d';
-export { type LivingGarden } from './garden3d/garden-view-3d';
+export { type GardenControls, type LivingGarden } from './garden3d/garden-view-3d';
 export {
   chromeAppearanceOf,
   hourOfDay,

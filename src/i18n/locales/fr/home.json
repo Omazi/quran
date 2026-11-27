@@ -8,7 +8,9 @@
     "pages_one": "{{count}} page sur {{total}}",
     "pages_other": "{{count}} pages sur {{total}}",
     "line": "Hizb {{hizb}} sur {{total}} · {{pages}}",
-    "lineAlone": "Hizb {{hizb}} sur {{total}}"
+    "lineAlone": "Hizb {{hizb}} sur {{total}}",
+    "ofHizb": "{{pages}} du hizb {{hizb}}",
+    "lookHint": "Montre l’endroit dans le jardin"
   },
   "progress": {
     "days_one": "{{count}} j",
@@ -31,7 +33,8 @@
     "hizbLeft_other": "Encore {{count}} pages pour finir le hizb {{hizb}}",
     "onePage": "Une page suffit pour que l’eau revienne",
     "resume": "Reprendre page {{page}}",
-    "start": "Commencer page {{page}}"
+    "start": "Commencer page {{page}}",
+    "ofGoal": "sur {{goal}}"
   },
   "actions": {
     "read": "Lire et arroser",
@@ -130,5 +133,9 @@
     "title": "Jardin indisponible",
     "description": "Impossible de calculer l’état du jardin. Réessaie, ou ferme l’appli puis rouvre-la.",
     "retry": "Réessayer"
+  },
+  "friendsChip": {
+    "label": "Proches : {{names}}",
+    "hint": "Ouvre le jardin de {{name}}"
   }
 }

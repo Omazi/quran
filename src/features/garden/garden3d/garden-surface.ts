@@ -111,6 +111,8 @@ export class GardenSurface {
   private sky: SkyState | null = null;
   private life: GardenLife | null = null;
   private glide: Glide | null = null;
+  /** Where the camera was before it went to look at the growing plant, while it looks. */
+  private lookingFrom: Orbit | null = null;
   private onGrow: (() => void) | undefined;
   private onGlideChange: ((isGliding: boolean) => void) | undefined;
   /**
@@ -136,7 +138,10 @@ export class GardenSurface {
       onUse: () => this.onUse(),
       isMotionReduced: () => this.motionReduced,
       anchor: () => options.anchor ?? 'bottom',
-      onFingerDown: () => this.interruptGlide(),
+      onFingerDown: () => {
+        this.interruptGlide();
+        this.stopLooking();
+      },
       frames: options.frames,
     });
   }
@@ -152,7 +157,11 @@ export class GardenSurface {
    */
   setActive(isActive: boolean): void {
     this.isActive = isActive;
-    if (!isActive) this.finishGlideAtOnce();
+    if (!isActive) {
+      this.finishGlideAtOnce();
+      if (this.lookingFrom !== null) this.controller.jumpTo(this.lookingFrom);
+      this.stopLooking();
+    }
     this.updateLoop();
   }
 
@@ -361,6 +370,41 @@ export class GardenSurface {
     if (last !== undefined) this.showGrowthFrame({ hizb: last.hizb, growth: last.to });
     this.endGlide(glide);
     this.controller.settleTo(glide.from);
+  }
+
+  /**
+   * A tap on the line of what grows (maquette-wow, `#growRow`): the camera goes to the plant;
+   * a second tap brings it back. Nothing while the return glide plays.
+   */
+  lookAtGrowth(): void {
+    if (this.glide !== null || !this.hasSize) return;
+    const { look, easeInOut } = GARDEN_3D.glide;
+    const from = this.lookingFrom;
+    if (from !== null) {
+      this.lookingFrom = null;
+      this.controller.glideTo(from, look.backMs, easeInOut, () => this.onGlideChange?.(false));
+      return;
+    }
+    const focus = this.engine?.three.growthFocus() ?? null;
+    if (focus === null) return;
+    this.lookingFrom = this.controller.orbit;
+    this.onGlideChange?.(true);
+    const aspect = this.size.width / this.size.height;
+    const target = focusOrbit(this.controller.orbit, focus, aspect, this.anchor, look.zoom);
+    this.controller.glideTo(target, look.toMs, easeInOut);
+    this.engine?.three.rippleAtGrowth(this.lifeTime);
+  }
+
+  /** Whether the camera is at the growing plant after a tap on its line. */
+  get isLookingAtGrowth(): boolean {
+    return this.lookingFrom !== null;
+  }
+
+  /** The person took the garden in hand while the camera looked at the plant: it stays theirs. */
+  private stopLooking(): void {
+    if (this.lookingFrom === null) return;
+    this.lookingFrom = null;
+    this.onGlideChange?.(false);
   }
 
   /** The screen goes (the reader opens): the glide ends where it would have, without moving. */

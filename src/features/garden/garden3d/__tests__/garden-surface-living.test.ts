@@ -172,3 +172,27 @@ describe('the return glide, when the garden grew (owner, 27 November 2026)', () 
     expect(still.onGrow).not.toHaveBeenCalled();
   });
 });
+
+describe('a tap on the line of what grows looks at the plant (maquette-wow, #growRow)', () => {
+  it('goes to the plant, and a second tap comes back', () => {
+    const { view, frames, onGlideChange } = homeSurface();
+    view.lookAtGrowth();
+    expect(view.isLookingAtGrowth).toBe(true);
+    expect(onGlideChange).toHaveBeenLastCalledWith(true);
+    frames.advance(GARDEN_3D.glide.look.toMs + 50);
+    expect(view.controller.orbit.zoom).toBeCloseTo(GARDEN_3D.glide.look.zoom, 3);
+    view.lookAtGrowth();
+    frames.advance(GARDEN_3D.glide.look.backMs + 50);
+    expect(view.isLookingAtGrowth).toBe(false);
+    expect(onGlideChange).toHaveBeenLastCalledWith(false);
+    expect(view.controller.orbit).toEqual(DEFAULT_ORBIT);
+  });
+
+  it('leaves the garden to the person who takes it in hand', () => {
+    const { view, onGlideChange } = homeSurface();
+    view.lookAtGrowth();
+    view.controller.fingerDown();
+    expect(view.isLookingAtGrowth).toBe(false);
+    expect(onGlideChange).toHaveBeenLastCalledWith(false);
+  });
+});

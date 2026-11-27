@@ -8,7 +8,9 @@
     "pages_one": "{{count}} page of {{total}}",
     "pages_other": "{{count}} pages of {{total}}",
     "line": "Hizb {{hizb}} of {{total}} · {{pages}}",
-    "lineAlone": "Hizb {{hizb}} of {{total}}"
+    "lineAlone": "Hizb {{hizb}} of {{total}}",
+    "ofHizb": "{{pages}} of hizb {{hizb}}",
+    "lookHint": "Shows the place in the garden"
   },
   "progress": {
     "days_one": "{{count}} d",
@@ -31,7 +33,8 @@
     "hizbLeft_other": "{{count}} more pages to finish hizb {{hizb}}",
     "onePage": "One page is enough to bring the water back",
     "resume": "Resume at page {{page}}",
-    "start": "Start at page {{page}}"
+    "start": "Start at page {{page}}",
+    "ofGoal": "of {{goal}}"
   },
   "actions": {
     "read": "Read and Water",
@@ -130,5 +133,9 @@
     "title": "Garden Unavailable",
     "description": "The garden’s state can’t be worked out. Try again, or close the app and open it again.",
     "retry": "Try Again"
+  },
+  "friendsChip": {
+    "label": "Friends: {{names}}",
+    "hint": "Opens {{name}}’s garden"
   }
 }

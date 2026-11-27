@@ -882,6 +882,8 @@ export const radius = {
  * it holds text; the shapes keep their size.
  */
 export const pieceSizes = {
+  /** The bars of the day's watering on the home garden's glass (maquette-wow `.segs`: 6 high). */
+  segmentHeight: 6,
   /** The ring of the day's watering. */
   ringLarge: 60,
   ringLargeStroke: 6,

@@ -51,10 +51,10 @@ export interface LivingGarden {
   /** The return glide starts or ends. */
   readonly onGlideChange?: (isGliding: boolean) => void;
   /**
-   * Given the function that stops the glide (null when the garden goes): a touch on what floats
-   * over the garden calls it.
+   * Given what the screen over the garden can ask of it (null when the garden goes): a touch on
+   * what floats over the garden stops the glide; the line of what grows looks at the plant.
    */
-  readonly onInterruptReady?: (interrupt: (() => void) | null) => void;
+  readonly onControlsReady?: (controls: GardenControls | null) => void;
 }
 
 export interface GardenView3DProps {
@@ -76,6 +76,14 @@ export interface GardenView3DProps {
   /** The home garden, full screen and alive; absent, the still garden of the pictures. */
   living?: LivingGarden;
   testID?: string;
+}
+
+/** What the home screen can ask of its garden. */
+export interface GardenControls {
+  /** Stops the return glide: the plant takes its size, the camera comes back. */
+  readonly interrupt: () => void;
+  /** Goes to look at the growing plant, or comes back from it. */
+  readonly lookAtGrowth: () => void;
 }
 
 /** Whether the app is in the foreground: the living garden stops in the background. */
@@ -188,12 +196,15 @@ export function GardenView3D({
     () => surface.setGlideListeners({ onGrow, onGlideChange }),
     [onGrow, onGlideChange, surface],
   );
-  const onInterruptReady = living?.onInterruptReady;
+  const onControlsReady = living?.onControlsReady;
   useEffect(() => {
-    if (onInterruptReady === undefined) return undefined;
-    onInterruptReady(() => surface.interruptGlide());
-    return () => onInterruptReady(null);
-  }, [onInterruptReady, surface]);
+    if (onControlsReady === undefined) return undefined;
+    onControlsReady({
+      interrupt: () => surface.interruptGlide(),
+      lookAtGrowth: () => surface.lookAtGrowth(),
+    });
+    return () => onControlsReady(null);
+  }, [onControlsReady, surface]);
   useEffect(() => surface.setOnUse(hint.retire), [hint.retire, surface]);
   // In the commit that removes the GL view, not after it (a passive effect runs later): from
   // then on no frame, gesture event or layout can draw into the context that leaves with it.

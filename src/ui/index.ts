@@ -17,6 +17,7 @@ export { QuranText, type QuranTextProps, type QuranTextRun } from './components/
 export { Screen, type ScreenBackground, type ScreenProps } from './components/screen';
 export { useHighContrast, useReducedMotion, useReducedTransparency } from './device-settings';
 export { GlassSurface, type GlassSurfaceProps } from './components/glass-surface';
+export { SegmentProgress, type SegmentProgressProps } from './components/segment-progress';
 export {
   ScrollEdgeVeil,
   SkyGradient,

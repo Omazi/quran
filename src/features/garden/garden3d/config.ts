@@ -124,6 +124,8 @@ export const GARDEN_3D = {
     backMs: 600,
     /** After a tap, the camera comes back this fast and the plant takes its size at once. */
     interruptedBackMs: 450,
+    /** A tap on "Un grenadier pousse": the camera goes to the plant, a second tap comes back. */
+    look: { zoom: 2.1, toMs: 900, backMs: 700 },
     easeInOut: { x1: 0.77, y1: 0, x2: 0.175, y2: 1 },
     easeOut: { x1: 0.23, y1: 1, x2: 0.32, y2: 1 },
   },
