@@ -3,7 +3,7 @@ import { createContext, useContext, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { getWritingDirection } from '../../direction';
-import { useAppearance, useColors } from '../../use-colors';
+import { useColors, useFixedAppearance } from '../../use-colors';
 
 /** True below a SwiftUI host: a control found there is drawn as it is, without a host of its own. */
 const InsideSwiftUI = createContext(false);
@@ -42,7 +42,7 @@ export function SwiftUIHost({ size, children }: SwiftUIHostProps) {
   const insideSwiftUI = useIsInsideSwiftUI();
   const colors = useColors();
   // Under an `AppearanceScope` (the reader's night page), SwiftUI takes the same appearance.
-  const appearance = useAppearance();
+  const appearance = useFixedAppearance() ?? undefined;
   if (insideSwiftUI) return <>{children}</>;
   return (
     <Host

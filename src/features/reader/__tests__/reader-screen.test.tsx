@@ -949,10 +949,8 @@ describe('the paper by day, the night page at night (owner, 27 November 2026)', 
 
   it('keeps every word of the night page in its night colour on an iPhone too', async () => {
     await openAt(20);
-    // The phone is light: the reader fixes its own appearance, the dynamic colour holds the night.
-    expect(ink()).toEqual(
-      expect.objectContaining({ dynamic: expect.objectContaining({ light: appColors.ink.dark }) }),
-    );
+    // The phone is light: the reader fixes its own appearance, so the night ink is given as it is.
+    expect(ink()).toBe(appColors.ink.dark);
   });
 });
 
