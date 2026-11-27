@@ -26,7 +26,11 @@ const DIST = join(ROOT, 'dist', 'garden-art');
 const MANIFEST = join(ROOT, 'src', 'data', 'garden-art', 'garden-art.json');
 const LEVELS = [2, 3, 4, 5, 6, 7];
 const SIZE = { width: 1170, height: 816 };
-const HOST = 'https://github.com/Omazi/quran/raw/garden-art/';
+// raw.githubusercontent.com first: github.com/raw answered 504 through some proxies (same as the voice model).
+const HOSTS = [
+  'https://raw.githubusercontent.com/Omazi/quran/garden-art/',
+  'https://github.com/Omazi/quran/raw/garden-art/',
+];
 
 const fail = (message) => {
   throw new Error(message);
@@ -117,7 +121,7 @@ function build() {
       file,
       bytes: pack.length,
       sha256: sha256(pack),
-      urls: [HOST + file],
+      urls: HOSTS.map((host) => host + file),
     };
     console.log(`level ${level}: ${files.length} files, ${(pack.length / 1e6).toFixed(1)} MB`);
   }
