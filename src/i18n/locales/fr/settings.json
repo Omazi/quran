@@ -65,6 +65,12 @@
       "none-enabled": "Sans rappel, l’appli ne t’envoie aucune notification."
     }
   },
+  "feedback": {
+    "title": "Sons et vibrations",
+    "sounds": "Sons",
+    "haptics": "Vibrations",
+    "note": "Les sons se taisent quand ton téléphone est en silencieux, et pendant l’écoute de ta récitation."
+  },
   "introduction": {
     "replay": "Revoir la présentation"
   },

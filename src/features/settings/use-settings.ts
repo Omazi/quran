@@ -1,5 +1,6 @@
 import type { NotificationPermissions } from '@/data/notifications';
 import type { Gender } from '@/domain/shared/gender';
+import { playFeedback } from '@/features/feedback';
 import {
   SUPPORTED_LANGUAGES,
   getTranslator,
@@ -48,6 +49,12 @@ export interface LanguageModel {
   readonly isDeviceLanguageMissing: boolean;
 }
 
+/** What the sound and vibration switches show. */
+export interface FeedbackSettingsModel {
+  readonly soundsEnabled: boolean;
+  readonly hapticsEnabled: boolean;
+}
+
 /** What the settings screen shows. */
 export interface SettingsModel {
   /**
@@ -60,6 +67,7 @@ export interface SettingsModel {
   readonly gender: Gender | null;
   readonly dailyGoal: DailyGoalModel;
   readonly reminders: RemindersModel;
+  readonly feedback: FeedbackSettingsModel;
 }
 
 /** What the person can do on the settings screen. */
@@ -71,6 +79,10 @@ export interface SettingsActions {
   restartApp: () => void;
   setDailyGoalPages: (pages: number) => void;
   changeReminders: (change: Partial<ReminderSettings>) => void;
+  /** Switches the interface sounds; switching them on plays one, so that the person hears them. */
+  setSoundsEnabled: (enabled: boolean) => void;
+  /** Switches the interface vibrations; switching them on gives one, so that the person feels it. */
+  setHapticsEnabled: (enabled: boolean) => void;
   /** Makes the system ask for the permission to notify, when it was never asked. */
   requestNotificationPermission: () => void;
   openSystemSettings: () => void;
@@ -110,6 +122,10 @@ export function useSettings({
   const saveLanguage = useAppStore((state) => state.setLanguage);
   const gender = useAppStore((state) => state.settings.gender);
   const setGender = useAppStore((state) => state.setGender);
+  const soundsEnabled = useAppStore((state) => state.settings.soundsEnabled);
+  const hapticsEnabled = useAppStore((state) => state.settings.hapticsEnabled);
+  const saveSoundsEnabled = useAppStore((state) => state.setSoundsEnabled);
+  const saveHapticsEnabled = useAppStore((state) => state.setHapticsEnabled);
   const dataResetNotice = useAppStore((state) => state.dataResetNotice);
   const dismissDataResetNotice = useAppStore((state) => state.dismissDataResetNotice);
   const dailyGoal = useDailyGoal();
@@ -136,6 +152,7 @@ export function useSettings({
       gender,
       dailyGoal: dailyGoal.model,
       reminders: reminders.model,
+      feedback: { soundsEnabled, hapticsEnabled },
     },
     actions: {
       dismissDataResetNotice,
@@ -183,6 +200,15 @@ export function useSettings({
       },
       setDailyGoalPages: dailyGoal.setPages,
       changeReminders: reminders.change,
+      setSoundsEnabled: (enabled) => {
+        // The store tells the feedback at once, so the sound that follows is heard.
+        saveSoundsEnabled(enabled);
+        if (enabled) playFeedback('drop');
+      },
+      setHapticsEnabled: (enabled) => {
+        saveHapticsEnabled(enabled);
+        if (enabled) playFeedback('select');
+      },
       requestNotificationPermission: () => {
         void reminders.requestPermission();
       },

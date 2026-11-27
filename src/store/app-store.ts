@@ -27,6 +27,8 @@ import {
   DEFAULT_REMINDERS,
   DEFAULT_GENDER,
   DEFAULT_GENDER_ASKED,
+  DEFAULT_HAPTICS_ENABLED,
+  DEFAULT_SOUNDS_ENABLED,
   DEFAULT_SHOW_LEVEL,
   EMPTY_TIME_SPENT,
   MAX_PAUSES,
@@ -148,6 +150,8 @@ export function createFirstLaunchSettings(userSeed: number): AppSettings {
     celebratedKhatm: NO_KHATMA_CELEBRATED,
     gender: DEFAULT_GENDER,
     genderAsked: DEFAULT_GENDER_ASKED,
+    soundsEnabled: DEFAULT_SOUNDS_ENABLED,
+    hapticsEnabled: DEFAULT_HAPTICS_ENABLED,
     pauses: [],
     reminders: DEFAULT_REMINDERS,
   };
@@ -413,6 +417,24 @@ export function createStateStore(
         if (settings.gender !== gender || !settings.genderAsked) {
           changeSettings({ gender, genderAsked: true });
         }
+      },
+
+      setSoundsEnabled: (soundsEnabled) => {
+        if (typeof soundsEnabled !== 'boolean') {
+          throw new TypeError(
+            `soundsEnabled must be true or false, received ${String(soundsEnabled)}.`,
+          );
+        }
+        if (get().settings.soundsEnabled !== soundsEnabled) changeSettings({ soundsEnabled });
+      },
+
+      setHapticsEnabled: (hapticsEnabled) => {
+        if (typeof hapticsEnabled !== 'boolean') {
+          throw new TypeError(
+            `hapticsEnabled must be true or false, received ${String(hapticsEnabled)}.`,
+          );
+        }
+        if (get().settings.hapticsEnabled !== hapticsEnabled) changeSettings({ hapticsEnabled });
       },
 
       markKhatmaCelebrated: (khatm) => {

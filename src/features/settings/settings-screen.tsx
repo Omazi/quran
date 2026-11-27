@@ -25,6 +25,7 @@ import { DiagnosticsSection } from '@/features/diagnostics';
 import { SyncStatusSection } from '@/features/sync';
 
 import { DailyGoalSection } from './daily-goal-section';
+import { FeedbackSection } from './feedback-section';
 import { RemindersSection } from './reminders-section';
 import type { SettingsActions, SettingsModel } from './use-settings';
 import { VersionSection } from './voice-diagnostics-section';
@@ -178,6 +179,12 @@ export function SettingsSections({ model, actions, title }: SettingsSectionsProp
         onChange={actions.changeReminders}
         onOpenSystemSettings={actions.openSystemSettings}
         onRequestPermission={actions.requestNotificationPermission}
+      />
+      <FeedbackSection
+        title={t('feedback.title')}
+        model={model.feedback}
+        onSoundsChange={actions.setSoundsEnabled}
+        onHapticsChange={actions.setHapticsEnabled}
       />
       <ListSection>
         <ListRow
