@@ -45,7 +45,7 @@ describe("encouraging from a friend's page never throws out of the button", () =
       throw new SocialRuleError('already-nudged-today', 'sent from another phone');
     });
     await fireEvent.press(button);
-    expect(await screen.findByRole('button', { name: 'Encouragé aujourd’hui' })).toBeDisabled();
+    expect(await screen.findByRole('button', { name: 'Encouragée aujourd’hui' })).toBeDisabled();
     expect(screen.queryByTestId('friend-refusal')).toBeNull();
   });
 });

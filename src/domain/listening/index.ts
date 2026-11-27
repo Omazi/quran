@@ -17,11 +17,23 @@ export { followRecitation, startFollowing } from './recitation-follow';
 export type { FollowState } from './recitation-follow';
 export type { PassageLocation } from './passage-location';
 export { SpeechEngineError, failureOf } from './types';
+export {
+  AUDIO_CHECK,
+  audioCheckCandidates,
+  decideByAudio,
+  followUpCandidates,
+  heldText,
+  minLettersFor,
+  wholeQuranText,
+} from './audio-check';
+export type { AudioCheckCandidate, AudioCheckDecision } from './audio-check';
 export type {
   MicrophonePermission,
   SpeechActivity,
   SpeechEndReason,
   SpeechEngine,
   SpeechFailure,
+  HeldCheck,
+  HeldReading,
   Unsubscribe,
 } from './types';

@@ -56,3 +56,10 @@ export const ELEMENT_SYMBOLS: Readonly<Record<GardenElementKind, IconSymbol>> = 
   waterfall: HOME_SYMBOLS.drop,
   'full-bloom': FLOWER,
 };
+
+/**
+ * The top of the home garden steps aside while the camera glides to the plant (maquette-wow,
+ * `growOnReturn`): out in 260 ms, back in 420 ms, rising 10 points (animate skill: under 300 ms
+ * out; the return, after the camera, a little slower).
+ */
+export const HOME_MOTION = { topOutMs: 260, topInMs: 420, topShift: 10 } as const;

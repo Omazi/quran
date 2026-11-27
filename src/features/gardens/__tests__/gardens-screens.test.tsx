@@ -71,7 +71,12 @@ describe('the khatma celebration', () => {
 
   it('marks the moment with a success haptic', async () => {
     jest.mocked(Haptics.notificationAsync).mockClear();
+    // The celebration of the earlier tests of this file was felt a moment ago: the feedback waits
+    // two seconds before it plays the same event again, so the clock moves on.
+    const now = Date.now();
+    const clock = jest.spyOn(Date, 'now').mockReturnValue(now + 10_000);
     await show();
+    clock.mockRestore();
     expect(Haptics.notificationAsync).toHaveBeenCalledWith(
       Haptics.NotificationFeedbackType.Success,
     );

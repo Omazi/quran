@@ -96,6 +96,11 @@ export interface ReaderScrollProps {
   followTarget?: TrackWord | null;
   /** With Reduce Motion, the scroll jumps a line at a time instead of gliding. */
   isMotionReduced?: boolean;
+  /**
+   * The room kept above the first page and below the last: the text runs the full height of the
+   * screen, under the floating controls, and rests clear of them (layout.md › Visual hierarchy).
+   */
+  contentInset?: { readonly top: number; readonly bottom: number };
 }
 
 /**
@@ -121,6 +126,7 @@ export function ReaderScroll({
   lookOfVerse = null,
   followTarget = null,
   isMotionReduced = false,
+  contentInset = NO_INSET,
 }: ReaderScrollProps) {
   const sections = sectionsOfTheMushaf();
   const [firstPage, setFirstPage] = useState(initialPage);
@@ -329,12 +335,14 @@ export function ReaderScroll({
         scrollEventThrottle={SCROLL_EVENT_INTERVAL_MS}
         onLayout={onLayout}
         removeClippedSubviews={Platform.OS === 'android'}
+        contentContainerStyle={{ paddingTop: contentInset.top, paddingBottom: contentInset.bottom }}
       />
     </CellRegistryContext.Provider>
   );
 }
 
 const MAINTAIN_POSITION = { minIndexForVisible: 0 } as const;
+const NO_INSET = { top: 0, bottom: 0 } as const;
 
 function keyOf(section: PageSection): string {
   return String(section.page);

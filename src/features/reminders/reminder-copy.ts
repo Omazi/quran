@@ -6,9 +6,10 @@
  * speaker of Arabic and by a person of knowledge).
  */
 import { quranStructure } from '@/data/quran';
+import type { Gender } from '@/domain/shared/gender';
 import { copyVariantIndex, type ReadingGoalOfDay, type ReminderKind } from '@/domain/reminders';
 import type { LocalDate } from '@/domain/shared/local-date';
-import { getTranslator, type AppLanguage } from '@/i18n';
+import { genderContext, getTranslator, type AppLanguage } from '@/i18n';
 
 import { AL_KAHF_PAGE } from './config';
 
@@ -114,6 +115,11 @@ export interface ReminderTextData {
   readonly resume: ReminderResume | null;
   /** The goal of the day of the reminder (only the daily reminder says it). */
   readonly goal: ReadingGoalOfDay;
+  /**
+   * What the person says they are (owner, 26 November 2026): the Arabic then agrees with them
+   * («متى شئتَ» / «متى شئتِ»). Null or absent: the plain wording, which says nothing of it.
+   */
+  readonly gender?: Gender | null;
 }
 
 export interface ReminderText {
@@ -135,7 +141,7 @@ export function reminderText(
   kind: ReminderKind,
   date: LocalDate,
   language: AppLanguage,
-  { resume, goal }: ReminderTextData,
+  { resume, goal, gender = null }: ReminderTextData,
 ): ReminderText {
   const t = getTranslator(language, 'notifications');
   const variant = copyVariantIndex(kind, date, REMINDER_COPY_SOURCES[kind].length) + 1;
@@ -146,6 +152,8 @@ export function reminderText(
         : t('where.at', { surah: surahName(resume.surah, language), page: resume.page }),
     goal: t(goal.hasStarted ? 'goal.left' : 'goal.today', { count: goal.pagesLeft }),
     page: AL_KAHF_PAGE,
+    // A text without a form for this gender (all of French and English) keeps its plain wording.
+    context: genderContext(gender),
   };
   return {
     title: t(`variants.${kind}.${variant}.title`, values),

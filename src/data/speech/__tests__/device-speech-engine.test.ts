@@ -1,4 +1,7 @@
+import { appSuppression } from '@/data/feedback';
+
 import {
+  preloadVoiceModel,
   checkModelFile,
   createDeviceSpeechEngine,
   createFileSpeechEngine,
@@ -50,6 +53,18 @@ describe('createDeviceSpeechEngine', () => {
     expect(native.start).toHaveBeenCalledTimes(1);
     await engine?.stop();
     expect(native.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the interface sounds and haptics silent while the microphone is open', async () => {
+    const engine = createDeviceSpeechEngine('search', {
+      findNative: () => native,
+      loadWhisper: () => whisper() as unknown as WhisperBinding,
+    });
+    expect(appSuppression.isSuppressed()).toBe(false);
+    await engine?.start();
+    expect(appSuppression.isSuppressed()).toBe(true);
+    await engine?.stop();
+    expect(appSuppression.isSuppressed()).toBe(false);
   });
 });
 
@@ -137,5 +152,11 @@ describe('the model file in the app', () => {
     });
     await expect(engine?.start()).rejects.toMatchObject({ failure: 'model-missing' });
     expect(binding.initWhisper).not.toHaveBeenCalled();
+  });
+});
+
+describe('preloadVoiceModel (D49)', () => {
+  it('does nothing on a build without the native module', async () => {
+    await expect(preloadVoiceModel({ findNative: () => null })).resolves.toBeUndefined();
   });
 });

@@ -99,5 +99,12 @@
     "minutes_other": "{{count}} minutes",
     "join": "{{hours}} {{minutes}}",
     "lessThanMinute": "less than a minute"
+  },
+  "genderQuestion": {
+    "title": "So the app speaks to you properly",
+    "text": "Are you a man or a woman? It’s optional, and you can change it in the settings. Your friends see it too.",
+    "male": "A man",
+    "female": "A woman",
+    "unspecified": "Prefer not to say"
   }
 }

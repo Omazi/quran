@@ -9,12 +9,22 @@ import type * as THREE from 'three';
 
 import type { GardenStage } from '../garden-picture';
 import type { GrowthSegment } from '../growth-motion';
-import type { FrameAnchor } from './camera-rig';
+import type { GardenLife } from '../living/life-rules';
+import { nextTilt, RESTING_TILT, type Tilt, type TiltState } from '../living/tilt';
+import type { SkyState } from '../sky/sky-state';
+import type { FrameAnchor, Orbit } from './camera-rig';
+import { GARDEN_3D } from './config';
 import type { GardenModel } from './garden-model';
 import type * as Renderer from './garden-renderer';
 import type * as Three from './garden-three';
+import { focusOrbit, shouldGlideOnGrowth } from './glide';
 import { GrowthPlayer, type ShownGrowthFrame } from './growth-player';
-import { OrbitController, type FrameScheduler, type ViewSize } from './orbit-controller';
+import {
+  OrbitController,
+  screenFrames,
+  type FrameScheduler,
+  type ViewSize,
+} from './orbit-controller';
 
 export interface GardenSurfaceOptions {
   /**
@@ -26,7 +36,41 @@ export interface GardenSurfaceOptions {
   readonly onFail: (error: unknown) => void;
   /** Where the picture rests in a taller view. Bottom if not given. */
   readonly anchor?: FrameAnchor;
+  /**
+   * The home garden: alive (water, wind, the sky's lights, fireflies, leaves, earned birds and
+   * butterflies), drawn every frame by one render loop while it is active. Off: drawn only when
+   * something changes, as the pictures' garden.
+   */
+  readonly living?: boolean;
+  /**
+   * The return glide (maquette-wow, owner's decision of 27 November 2026): a growth to play takes
+   * the camera to the plant, which grows one step with a ripple of light; then the camera comes
+   * back. A touch interrupts it.
+   */
+  readonly glides?: boolean;
+  /** The plant grows on screen during a glide: the moment for the sound and the light haptic. */
+  readonly onGrow?: () => void;
+  /** A glide starts (true) or ends (false): what floats over the garden can step aside. */
+  readonly onGlideChange?: (isGliding: boolean) => void;
   readonly frames?: FrameScheduler;
+}
+
+/** The longest frame the living garden moves by: back from the background, it does not jump. */
+const MAX_LIFE_STEP_S = 0.064;
+const MS_PER_SECOND = 1000;
+/**
+ * The shadows follow the tilted sun, but are drawn again only when it moved enough to show
+ * (metres) and at most this often (ms): a shadow map is the costly part of a frame.
+ */
+const TILT_SHADOW = { minMove: 0.25, minIntervalMs: 66 } as const;
+
+interface Glide {
+  /** Where the camera was: it comes back there. */
+  readonly from: Orbit;
+  readonly segments: readonly GrowthSegment[];
+  phase: 'to' | 'grow' | 'hold' | 'back';
+  /** The wait between the growth and the way back. */
+  holdFrame: number | null;
 }
 
 /**
@@ -62,6 +106,25 @@ export class GardenSurface {
   /** The element growing on screen, and how far: what the player or `setGrowth` last said. */
   private growth: ShownGrowthFrame | null = null;
   private readonly player: GrowthPlayer;
+  private readonly frames: FrameScheduler;
+  /** The screen is in front and the app in the foreground: the living garden may move. */
+  private isActive = true;
+  /** The render loop of the living garden, while it runs. */
+  private loopFrame: number | null = null;
+  private lastLoopTime = 0;
+  /** Seconds of life: the wind, the water, the fireflies. */
+  private lifeTime = 0;
+  private sky: SkyState | null = null;
+  private life: GardenLife | null = null;
+  private glide: Glide | null = null;
+  /** The latest tilt measured by the phone, or null without a sensor; and the filtered tilt. */
+  private tiltSample: Tilt | null = null;
+  private tilt: TiltState = RESTING_TILT;
+  private lastTiltShadow = 0;
+  /** Where the camera was before it went to look at the growing plant, while it looks. */
+  private lookingFrom: Orbit | null = null;
+  private onGrow: (() => void) | undefined;
+  private onGlideChange: ((isGliding: boolean) => void) | undefined;
   /**
    * Set when the view goes. A GL context that arrives later (expo-gl calls `onContextCreate`
    * from the native side, possibly after the screen closed) is never drawn into: the native
@@ -70,6 +133,9 @@ export class GardenSurface {
   private isDisposed = false;
 
   constructor(private readonly options: GardenSurfaceOptions) {
+    this.frames = options.frames ?? screenFrames;
+    this.onGrow = options.onGrow;
+    this.onGlideChange = options.onGlideChange;
     this.player = new GrowthPlayer({
       frames: options.frames,
       onFrame: (frame) => this.showGrowthFrame(frame),
@@ -82,12 +148,77 @@ export class GardenSurface {
       onUse: () => this.onUse(),
       isMotionReduced: () => this.motionReduced,
       anchor: () => options.anchor ?? 'bottom',
+      onFingerDown: () => {
+        this.interruptGlide();
+        this.stopLooking();
+      },
       frames: options.frames,
     });
   }
 
   setMotionReduced(isReduced: boolean): void {
     this.motionReduced = isReduced;
+    this.updateLoop();
+  }
+
+  /**
+   * The screen is in front and the app in the foreground (true), or not: the render loop stops,
+   * and a glide in progress ends at once.
+   */
+  setActive(isActive: boolean): void {
+    this.isActive = isActive;
+    if (!isActive) {
+      this.finishGlideAtOnce();
+      if (this.lookingFrom !== null) this.controller.jumpTo(this.lookingFrom);
+      this.stopLooking();
+    }
+    this.updateLoop();
+  }
+
+  /** Who is told of the return glide: the plant grows (feedback), the glide starts or ends. */
+  setGlideListeners(listeners: {
+    readonly onGrow?: () => void;
+    readonly onGlideChange?: (isGliding: boolean) => void;
+  }): void {
+    this.onGrow = listeners.onGrow;
+    this.onGlideChange = listeners.onGlideChange;
+  }
+
+  /** Whether the render loop of the living garden runs: for the tests and the screen check. */
+  get isLooping(): boolean {
+    return this.loopFrame !== null;
+  }
+
+  /** The sky of the hour: its light on the garden, its lights behind it. */
+  setSky(sky: SkyState): void {
+    this.sky = sky;
+    const engine = this.engine;
+    if (engine === null) return;
+    try {
+      if (engine.three.setSky(sky)) engine.renderer.shadowMap.needsUpdate = true;
+      this.draw();
+    } catch (error) {
+      this.fail(error);
+    }
+  }
+
+  /**
+   * The phone's tilt from gravity (`gravityTilt`), or null when the sensor stops: the light
+   * follows it in the render loop, smoothed (tilt.ts).
+   */
+  setTiltSample(sample: Tilt | null): void {
+    this.tiltSample = sample;
+  }
+
+  /** The filtered tilt the light follows: for the tests and the screen check. */
+  get shownTilt(): Tilt {
+    return this.tilt.tilt;
+  }
+
+  /** What lives in the garden. */
+  setLife(life: GardenLife): void {
+    this.life = life;
+    this.engine?.three.setLife(life);
   }
 
   setOnUse(onUse: () => void): void {
@@ -96,7 +227,17 @@ export class GardenSurface {
 
   setSize(size: ViewSize): void {
     this.size = size;
+    this.tellView();
     this.draw();
+  }
+
+  /** The view in points and in pixels: the sky's lights and the fireflies keep their size. */
+  private tellView(): void {
+    const engine = this.engine;
+    if (engine === null || this.size.width === 0) return;
+    const ratio =
+      engine.gl.drawingBufferWidth > 0 ? engine.gl.drawingBufferWidth / this.size.width : 1;
+    engine.three.setView(this.size.width, this.size.height, ratio);
   }
 
   /** The GL context is there: builds the scene of `model` and draws its first frame. */
@@ -111,9 +252,15 @@ export class GardenSurface {
       const stage = this.shownStage();
       if (stage !== null) three.showStage(stage);
       three.showGrowth(this.growth);
+      const isLiving = this.options.living === true;
+      three.setLiving(isLiving);
+      if (isLiving && this.sky !== null) three.setSky(this.sky);
+      if (isLiving && this.life !== null) three.setLife(this.life);
       this.engine = { gl, renderer, three, drawFrame: modules.renderer.drawFrame };
+      this.tellView();
       // Ready is told by the first frame that really draws, now or when the view has its size.
       this.draw();
+      this.updateLoop();
     } catch (error) {
       this.fail(error);
     }
@@ -130,6 +277,17 @@ export class GardenSurface {
    * playing towards the same place goes on; any other stops.
    */
   setGrowth(growth: ShownGrowthFrame | null): void {
+    // The same growth asked again while the camera glides to play it: the glide goes on.
+    const glidesTo = this.glide?.segments[this.glide.segments.length - 1];
+    if (
+      glidesTo !== undefined &&
+      growth !== null &&
+      glidesTo.hizb === growth.hizb &&
+      glidesTo.to === growth.growth
+    ) {
+      return;
+    }
+    this.finishGlideAtOnce();
     const destination = this.player.destination;
     if (
       destination !== null &&
@@ -143,10 +301,185 @@ export class GardenSurface {
     this.showGrowthFrame(growth);
   }
 
-  /** Plays a growth (growth-motion.ts `growthSegments`), drawn frame by frame. */
+  /**
+   * Plays a growth (growth-motion.ts `growthSegments`), drawn frame by frame. On the home garden,
+   * the camera first glides to the plant (`shouldGlideOnGrowth`).
+   */
   playGrowth(segments: readonly GrowthSegment[]): void {
-    this.player.play(segments);
+    this.finishGlideAtOnce();
+    const first = segments[0];
+    // The plant is built at its starting growth, so that the camera knows where it stands.
+    if (first !== undefined) this.showGrowthFrame({ hizb: first.hizb, growth: first.from });
+    const focus = this.engine?.three.growthFocus() ?? null;
+    const glides = shouldGlideOnGrowth({
+      segments: segments.length,
+      isMotionReduced: this.motionReduced,
+      isEnabled: this.options.glides === true && this.isActive && this.hasSize,
+      hasFocus: focus !== null,
+    });
+    if (!glides || focus === null) {
+      this.player.play(segments);
+      return;
+    }
+    const from = this.controller.orbit;
+    const glide: Glide = { from, segments, phase: 'to', holdFrame: null };
+    this.glide = glide;
+    this.onGlideChange?.(true);
+    const target = focusOrbit(from, focus, this.size.width / this.size.height, this.anchor);
+    const { toMs, easeInOut } = GARDEN_3D.glide;
+    this.controller.glideTo(target, toMs, easeInOut, () => this.growDuringGlide(glide));
   }
+
+  private get hasSize(): boolean {
+    return this.size.width > 0 && this.size.height > 0;
+  }
+
+  private get anchor(): FrameAnchor {
+    return this.options.anchor ?? 'bottom';
+  }
+
+  /** Arrived at the plant: it grows one step, with a ripple of light, then the camera goes back. */
+  private growDuringGlide(glide: Glide): void {
+    if (this.glide !== glide) return;
+    glide.phase = 'grow';
+    this.engine?.three.rippleAtGrowth(this.lifeTime);
+    this.onGrow?.();
+    this.player.play(glide.segments, {
+      maxMs: GARDEN_3D.glide.growMaxMs,
+      onPlayed: () => this.holdThenReturn(glide),
+    });
+  }
+
+  private holdThenReturn(glide: Glide): void {
+    if (this.glide !== glide) return;
+    glide.phase = 'hold';
+    const start = this.frames.now();
+    const wait = (time: number) => {
+      if (this.glide !== glide) return;
+      if (time - start < GARDEN_3D.glide.holdMs) {
+        glide.holdFrame = this.frames.request(wait);
+        return;
+      }
+      glide.holdFrame = null;
+      glide.phase = 'back';
+      const { backMs, easeOut } = GARDEN_3D.glide;
+      this.controller.glideTo(glide.from, backMs, easeOut, () => this.endGlide(glide));
+    };
+    glide.holdFrame = this.frames.request(wait);
+  }
+
+  private endGlide(glide: Glide): void {
+    if (this.glide !== glide) return;
+    if (glide.holdFrame !== null) this.frames.cancel(glide.holdFrame);
+    this.glide = null;
+    this.onGlideChange?.(false);
+  }
+
+  /** Whether the camera is on its return glide: for the tests and the screen check. */
+  get isGliding(): boolean {
+    return this.glide !== null;
+  }
+
+  /**
+   * A touch during a glide (on the garden or on what floats over it): the plant takes its new
+   * size at once, the camera comes back, and the person is free (motion.md › Let people cancel
+   * motion).
+   */
+  interruptGlide(): void {
+    const glide = this.glide;
+    if (glide === null) return;
+    this.player.stop();
+    const last = glide.segments[glide.segments.length - 1];
+    if (last !== undefined) this.showGrowthFrame({ hizb: last.hizb, growth: last.to });
+    this.endGlide(glide);
+    this.controller.settleTo(glide.from);
+  }
+
+  /**
+   * A tap on the line of what grows (maquette-wow, `#growRow`): the camera goes to the plant;
+   * a second tap brings it back. Nothing while the return glide plays.
+   */
+  lookAtGrowth(): void {
+    if (this.glide !== null || !this.hasSize) return;
+    const { look, easeInOut } = GARDEN_3D.glide;
+    const from = this.lookingFrom;
+    if (from !== null) {
+      this.lookingFrom = null;
+      this.controller.glideTo(from, look.backMs, easeInOut, () => this.onGlideChange?.(false));
+      return;
+    }
+    const focus = this.engine?.three.growthFocus() ?? null;
+    if (focus === null) return;
+    this.lookingFrom = this.controller.orbit;
+    this.onGlideChange?.(true);
+    const aspect = this.size.width / this.size.height;
+    const target = focusOrbit(this.controller.orbit, focus, aspect, this.anchor, look.zoom);
+    this.controller.glideTo(target, look.toMs, easeInOut);
+    this.engine?.three.rippleAtGrowth(this.lifeTime);
+  }
+
+  /** Whether the camera is at the growing plant after a tap on its line. */
+  get isLookingAtGrowth(): boolean {
+    return this.lookingFrom !== null;
+  }
+
+  /** The person took the garden in hand while the camera looked at the plant: it stays theirs. */
+  private stopLooking(): void {
+    if (this.lookingFrom === null) return;
+    this.lookingFrom = null;
+    this.onGlideChange?.(false);
+  }
+
+  /** The screen goes (the reader opens): the glide ends where it would have, without moving. */
+  private finishGlideAtOnce(): void {
+    const glide = this.glide;
+    if (glide === null) return;
+    this.player.stop();
+    const last = glide.segments[glide.segments.length - 1];
+    if (last !== undefined) this.showGrowthFrame({ hizb: last.hizb, growth: last.to });
+    this.endGlide(glide);
+    this.controller.jumpTo(glide.from);
+  }
+
+  /** Starts or stops the render loop: alive, active, attached, and motion not reduced. */
+  private updateLoop(): void {
+    const shouldRun =
+      this.options.living === true &&
+      this.isActive &&
+      !this.motionReduced &&
+      !this.isDisposed &&
+      this.engine !== null;
+    if (shouldRun && this.loopFrame === null) {
+      this.lastLoopTime = this.frames.now();
+      this.loopFrame = this.frames.request(this.loop);
+    } else if (!shouldRun && this.loopFrame !== null) {
+      this.frames.cancel(this.loopFrame);
+      this.loopFrame = null;
+      this.restTilt();
+      // The still garden where the life stopped.
+      this.drawNow();
+    }
+  }
+
+  private readonly loop = (time: number): void => {
+    const engine = this.engine;
+    if (engine === null || this.isDisposed) {
+      this.loopFrame = null;
+      return;
+    }
+    const dt = Math.min(MAX_LIFE_STEP_S, Math.max(0, (time - this.lastLoopTime) / MS_PER_SECOND));
+    this.lastLoopTime = time;
+    this.lifeTime += dt;
+    try {
+      engine.three.tick(this.lifeTime, dt);
+      this.followTilt(engine, time, dt * MS_PER_SECOND);
+    } catch (error) {
+      this.fail(error);
+      return;
+    }
+    this.loopFrame = this.frames.request(this.loop);
+    this.drawNow();
+  };
 
   /**
    * The stage to draw. While a plant whose hizb was just finished ends its growth, the stage
@@ -183,7 +516,39 @@ export class GardenSurface {
     }
   }
 
+  /** One frame of the light following the phone; the shadows follow when it shows. */
+  private followTilt(engine: Engine, time: number, dtMs: number): void {
+    this.tilt = nextTilt(this.tilt, this.tiltSample, dtMs);
+    const moved = engine.three.setTilt(this.tilt.tilt);
+    if (moved >= TILT_SHADOW.minMove && time - this.lastTiltShadow >= TILT_SHADOW.minIntervalMs) {
+      this.lastTiltShadow = time;
+      engine.renderer.shadowMap.needsUpdate = true;
+      engine.three.markShadowsDrawn();
+    }
+  }
+
+  /** The light back at its place of the hour, at once (the loop stopped). */
+  private restTilt(): void {
+    this.tilt = RESTING_TILT;
+    const engine = this.engine;
+    if (engine === null) return;
+    try {
+      if (engine.three.setTilt(this.tilt.tilt) > 0) {
+        engine.renderer.shadowMap.needsUpdate = true;
+        engine.three.markShadowsDrawn();
+      }
+    } catch (error) {
+      this.fail(error);
+    }
+  }
+
+  /** Draws now, or in the next frame of the render loop when it runs (one frame drawn per frame). */
   draw(): void {
+    if (this.loopFrame !== null) return;
+    this.drawNow();
+  }
+
+  private drawNow(): void {
     const engine = this.engine;
     if (engine === null || this.size.width === 0 || this.size.height === 0) return;
     try {
@@ -198,6 +563,7 @@ export class GardenSurface {
         engine.three.scene,
         engine.three.camera,
         engine.three.fade,
+        engine.three.backdrop,
       );
       if (isDrawn && !this.hasDrawnFrame) {
         this.hasDrawnFrame = true;
@@ -210,6 +576,11 @@ export class GardenSurface {
 
   dispose(): void {
     this.isDisposed = true;
+    if (this.loopFrame !== null) this.frames.cancel(this.loopFrame);
+    this.loopFrame = null;
+    if (this.glide !== null && this.glide.holdFrame !== null)
+      this.frames.cancel(this.glide.holdFrame);
+    this.glide = null;
     this.controller.dispose();
     this.player.stop();
     this.releaseEngine();

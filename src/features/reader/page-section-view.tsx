@@ -10,12 +10,14 @@ import {
 } from 'react-native';
 
 import { quranStructure } from '@/data/quran';
-import { splitVerseWords, WORD_SEPARATOR, type VerseRef } from '@/domain/quran';
+import { PAGE_COUNT, splitVerseWords, WORD_SEPARATOR, type VerseRef } from '@/domain/quran';
 import type { ReaderScript } from '@/store';
 import {
   AppText,
   ContentUnavailable,
+  Icon,
   layout,
+  readerShapes,
   spacing,
   useColors,
   useColorValues,
@@ -26,10 +28,13 @@ import { READER_CONFIG } from './config';
 import type { VerseLook, WordLook } from './follow-model';
 import { pageSection } from './reading-sections';
 import { scriptTextStyle } from './script-fonts';
+import { PageThreadView } from './page-thread-view';
 import { buildSectionBlocks, type SectionBlock, type SectionVerse } from './section-content';
 import { SurahCartouche } from './surah-cartouche';
 
 const ERROR_SYMBOL: IconSymbol = { ios: 'exclamationmark.triangle', android: 'warning' };
+/** The small star on each side of the page number (maquette-wow, `.pg-mark`). */
+const STAR_SYMBOL: IconSymbol = { ios: 'sparkle', android: 'star' };
 /**
  * Between the verse and its mark, the no-break space the publisher prints there (docs/DATA_SOURCES
  * .md, section 1): a mark never starts a line on its own.
@@ -62,9 +67,13 @@ type LookOfVerse = PageSectionViewProps['lookOfVerse'];
 /**
  * One page of the mushaf in the scroll (D41): its verses flowing as one paragraph per surah,
  * right to left and justified like a printed page, each followed by its mark; a surah that begins
- * here opens with its cartouche and the basmala; the page ends with its number between two
- * hairlines, the separator of reading sites' continuous mode (docs/specs/reader.md, comparison).
- * Memoised: the list draws a page once while the person reads around it.
+ * here opens with its framed gold title and the basmala; along the page, in the outer margin, its
+ * water thread; the page ends with "page n" between two small gold stars and two fading rules
+ * (validated mockup of 27 November 2026, shots 14 to 16, 20 to 22). Memoised: the list draws a
+ * page once while the person reads around it; its thread redraws alone.
+ *
+ * The page lays out left to right in every interface language, so that the outer margin and its
+ * thread stay on the left, where the Arabic lines end; the text inside reads right to left.
  */
 export const PageSectionView = memo(function PageSectionView({
   page,
@@ -120,32 +129,35 @@ export const PageSectionView = memo(function PageSectionView({
       testID={`page-section-${page}`}
       style={styles.section}
     >
-      {groups.map((group, index) => (
-        <View
-          key={group.surah}
-          testID={`page-${page}-segment-${index}`}
-          onLayout={(event: LayoutChangeEvent) =>
-            onSegmentLayout(page, index, group.surah, event.nativeEvent.layout)
-          }
-        >
-          {group.blocks.map((block, blockIndex) => (
-            <Block
-              key={blockIndex}
-              block={block}
-              script={script}
-              textSize={textSize}
-              lineHeight={lineHeight}
-              lookOfVerse={lookOfVerse}
-              onLayout={
-                block.kind === 'verses'
-                  ? (event: LayoutChangeEvent) =>
-                      onParagraphLayout(page, index, event.nativeEvent.layout)
-                  : undefined
-              }
-            />
-          ))}
-        </View>
-      ))}
+      <View style={styles.body}>
+        <PageThreadView page={page} />
+        {groups.map((group, index) => (
+          <View
+            key={group.surah}
+            testID={`page-${page}-segment-${index}`}
+            onLayout={(event: LayoutChangeEvent) =>
+              onSegmentLayout(page, index, group.surah, event.nativeEvent.layout)
+            }
+          >
+            {group.blocks.map((block, blockIndex) => (
+              <Block
+                key={blockIndex}
+                block={block}
+                script={script}
+                textSize={textSize}
+                lineHeight={lineHeight}
+                lookOfVerse={lookOfVerse}
+                onLayout={
+                  block.kind === 'verses'
+                    ? (event: LayoutChangeEvent) =>
+                        onParagraphLayout(page, index, event.nativeEvent.layout)
+                    : undefined
+                }
+              />
+            ))}
+          </View>
+        ))}
+      </View>
       <PageFooter page={page} />
     </Pressable>
   );
@@ -300,12 +312,16 @@ function ScriptText({
 }
 
 /**
- * The page number between two hairlines: where one page of the mushaf ends. The hairlines take the
- * light gold of the cartouche's inner rule, the one ornament of the scroll besides the headers.
+ * Where one page of the mushaf ends and the next begins: the number of the page that comes,
+ * "page 294", between two small gold stars, and two rules that fade towards the margins
+ * (maquette-wow, `.pg-mark`: the mark stands before the page it names), in the light gold of the
+ * surah's frame. After the last page, the rules and one star only. VoiceOver hears "Fin de la
+ * page 293". The rules take plain colours: they are gradients.
  */
 function PageFooter({ page }: { page: number }) {
   const { t } = useTranslation('reader');
-  const colors = useColors();
+  const { ornamentLine } = useColorValues();
+  const clear = `${ornamentLine}00`;
   return (
     <View
       style={styles.footer}
@@ -313,26 +329,47 @@ function PageFooter({ page }: { page: number }) {
       accessibilityLabel={t('page.footerSpoken', { page })}
       testID={`page-footer-${page}`}
     >
-      <View style={[styles.hairline, { backgroundColor: colors.frameInner }]} />
-      <AppText variant="footnote" color="inkSecondary" align="center">
-        {t('page.footer', { page })}
-      </AppText>
-      <View style={[styles.hairline, { backgroundColor: colors.frameInner }]} />
+      <View
+        style={[
+          styles.rule,
+          { backgroundImage: `linear-gradient(90deg, ${clear}, ${ornamentLine})` },
+        ]}
+      />
+      <Icon symbol={STAR_SYMBOL} textStyle="footnote" color="ornament" />
+      {page < PAGE_COUNT ? (
+        <>
+          <AppText variant="footnote" color="inkSecondary" align="center">
+            {t('page.footer', { page: page + 1 })}
+          </AppText>
+          <Icon symbol={STAR_SYMBOL} textStyle="footnote" color="ornament" />
+        </>
+      ) : null}
+      <View
+        style={[
+          styles.rule,
+          { backgroundImage: `linear-gradient(90deg, ${ornamentLine}, ${clear})` },
+        ]}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { paddingHorizontal: layout.screenMargin },
+  section: {
+    direction: 'ltr',
+    paddingLeft: readerShapes.pageMarginThread,
+    paddingRight: readerShapes.pageMarginOther,
+  },
+  body: { paddingVertical: spacing.xs },
   rightToLeft: { direction: 'rtl' },
   text: { writingDirection: 'rtl' },
   header: { paddingTop: spacing.lg, paddingBottom: spacing.sm },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.lg,
+    gap: spacing.sm + spacing.xs,
+    paddingVertical: spacing.md,
   },
-  hairline: { flex: 1, height: StyleSheet.hairlineWidth },
+  rule: { flex: 1, height: layout.outlineWidth },
   error: { paddingVertical: spacing.xl, paddingHorizontal: layout.screenMargin },
 });

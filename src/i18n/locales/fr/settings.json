@@ -25,6 +25,15 @@
       "cancel": "Annuler"
     }
   },
+  "gender": {
+    "label": "Je suis",
+    "options": {
+      "male": "Un homme",
+      "female": "Une femme",
+      "unspecified": "Préférer ne pas dire"
+    },
+    "note": "Pour s’adresser à toi correctement. Tes proches le voient aussi."
+  },
   "goal": {
     "title": "Objectif du jour",
     "pagesPerDay": "Pages par jour",
@@ -55,6 +64,12 @@
       "not-asked": "Ton téléphone ne t’a pas encore demandé si l’appli peut t’envoyer des notifications. D’ici là, tes rappels n’arrivent pas.",
       "none-enabled": "Sans rappel, l’appli ne t’envoie aucune notification."
     }
+  },
+  "feedback": {
+    "title": "Sons et vibrations",
+    "sounds": "Sons",
+    "haptics": "Vibrations",
+    "note": "Les sons se taisent quand ton téléphone est en silencieux, et pendant l’écoute de ta récitation."
   },
   "introduction": {
     "replay": "Revoir la présentation"

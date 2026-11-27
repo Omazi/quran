@@ -29,8 +29,11 @@ export const DEFAULT_ORBIT: Orbit = {
   panY: 0,
 };
 
-/** Where the picture's frame rests in a view taller than itself. */
-export type FrameAnchor = 'bottom' | 'center';
+/**
+ * Where the picture's frame rests in a view taller than itself: on its bottom edge, in its middle,
+ * or `stage`, the home garden full screen (`GARDEN_3D.stage`), wider than the view.
+ */
+export type FrameAnchor = 'bottom' | 'center' | 'stage';
 
 export interface Frustum {
   readonly left: number;
@@ -64,7 +67,7 @@ function elevationFit(elevation: number): number {
  * resting on the bottom edge of a taller view and centred in a wider one, as the pictures sit in
  * `GardenScene`.
  */
-function baseFrame(
+export function baseFrame(
   aspect: number,
   anchor: FrameAnchor,
 ): {
@@ -74,6 +77,18 @@ function baseFrame(
   height: number;
 } {
   const { width, height, centerX, centerY } = GARDEN_3D.frame;
+  if (anchor === 'stage') {
+    // The box spans `widthShare` of the view's width; its centre sits at `centerYShare` from the top.
+    const { widthShare, centerYShare } = GARDEN_3D.stage;
+    const stageWidth = width / widthShare;
+    const stageHeight = stageWidth / aspect;
+    return {
+      centerX,
+      centerY: centerY + (centerYShare - 0.5) * stageHeight,
+      width: stageWidth,
+      height: stageHeight,
+    };
+  }
   if (aspect >= width / height) {
     return { centerX, centerY, width: height * aspect, height };
   }

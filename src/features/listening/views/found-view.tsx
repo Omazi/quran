@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { useGenderedTranslation } from '@/features/gender';
 import { useQuranFont } from '@/features/reader';
 import { AppText, Button, layout, QuranText, spacing, useColors, type QuranTextRun } from '@/ui';
 
@@ -29,7 +29,7 @@ export function FoundView({
   onListenAgain,
   onClose,
 }: FoundViewProps) {
-  const { t, i18n } = useTranslation('listening');
+  const { t, i18n } = useGenderedTranslation('listening');
   const colors = useColors();
   const texts = useVerseTexts(passage.shownVerses, loadVerseText);
   const isFontReady = useQuranFont() === 'ready';

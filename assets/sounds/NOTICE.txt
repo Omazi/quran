@@ -1,0 +1,20 @@
+SOUND PALETTE: ORIGIN AND LICENCE
+
+The ten files of this folder (drop, plop, grow, open, page, found, splash, celebrate,
+encourage, error; .m4a, AAC-LC, mono, 44.1 kHz) are the project's own work.
+
+Origin: they are synthesised from nothing by tools/sounds/generate.py (sine partials, filtered
+noise from a fixed random seed, a small synthetic room), then encoded with ffmpeg's native AAC
+encoder. No recording, no sample, no sound library and no third-party audio was used or
+listened to while making them. Running the generator again gives the same samples.
+
+Licence: CC0 1.0 Universal (public domain dedication), by the owner of the project. They may be
+used, changed and sold with no condition. No attribution is required.
+
+Quality checks without listening: python3 tools/sounds/check.py (clipping, peak ceiling of
+-3 dBFS, fade in and out, DC offset, loudness of the loudest 100 ms within 1.5 dB of its target,
+nothing shrill, size under 30 KB each). Their feel on a phone has to be judged by ear.
+
+Tools used to make them, not shipped in the app: Python 3, numpy (BSD-3-Clause), scipy
+(BSD-3-Clause), ffmpeg (run as a separate program, nothing linked or copied; the native AAC
+encoder is LGPL-2.1+ code, the files it writes carry no licence of it).

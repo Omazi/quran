@@ -1,9 +1,9 @@
 import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
 
-import { useProgression } from '@/features/gardens';
+import { useGardenArt, useProgression } from '@/features/gardens';
 import { AccountInvitation, HomeScreen, useHomeScreen, type HomeActions } from '@/features/home';
-import { useOpenRecognition } from '@/features/listening';
+import { useOpenRecognition, usePreloadVoiceModel } from '@/features/listening';
 import { useResumePage } from '@/features/reader';
 
 /**
@@ -27,8 +27,11 @@ export default function HomeRoute() {
   // The tab stays mounted under the reader: the garden's growth plays when it is in front again.
   const isFocused = useIsFocused();
   const progression = useProgression();
+  // The garden of the person's level (D46): its own once downloaded, a placeholder until then.
+  const gardenArt = useGardenArt(progression?.styleId ?? null);
   const { welcome } = useLocalSearchParams<{ welcome?: string }>();
   const recognize = useOpenRecognition();
+  usePreloadVoiceModel();
   const actions = useMemo<HomeActions>(
     () => ({
       readAndWater: () => router.push(`/reader/${resumePage}`),
@@ -53,7 +56,7 @@ export default function HomeRoute() {
         avatarInitial={avatarInitial}
         arrival={arrival}
         isFocused={isFocused}
-        styleId={progression?.styleId ?? null}
+        gardenArt={gardenArt}
       />
       <AccountInvitation
         requested={welcome === '1'}

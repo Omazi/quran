@@ -6,6 +6,7 @@
  */
 
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
+import { useCallback } from 'react';
 import * as Haptics from 'expo-haptics';
 import { AccessibilityInfo, AppState } from 'react-native';
 
@@ -17,7 +18,7 @@ import { showLanguage } from '@/features/garden/test-support/screen-conditions';
 import { deviceLocalDate } from '@/features/home';
 import { AppStoreProvider, READER_TEXT_SIZE_RANGE, type AppStore } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
-import { palette } from '@/ui/tokens';
+import { appColors, backdropGradients, palette, readerShapes } from '@/ui/tokens';
 import {
   changeReducedMotion,
   renderOnIOS,
@@ -31,11 +32,13 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { requiredReadingSeconds } from '@/domain/khatm';
 
 import { READER_CONFIG } from '../config';
+import { playFeedback } from '../feedback-events';
 import { pageWordCounts } from '../page-words';
 import { forgetReadingProgress } from '../reading-memory';
 import { READER_KEEP_AWAKE_TAG } from '../use-keep-reader-awake';
 import { ReaderNotFound, ReaderScreen } from '../reader-screen';
 import { SIMPLE_SCRIPT_FONT_FAMILY } from '../script-fonts';
+import { createThreadStore } from '../thread-store';
 import { useReader, type ReaderActions, type ReaderModel } from '../use-reader';
 import { useRecitationFollow, type RecitationFollow } from '../use-recitation-follow';
 import type { QuranFontStatus } from '../use-quran-font';
@@ -50,6 +53,17 @@ jest.mock('expo-haptics', () => ({
   ...jest.requireActual('expo-haptics'),
   impactAsync: jest.fn(() => Promise.resolve()),
 }));
+
+jest.mock('../feedback-events', () => ({ playFeedback: jest.fn() }));
+
+// The system status bar batches its updates on timers that fake ones would hold: a stand-in that
+// shows the style asked.
+jest.mock('expo-status-bar', () => {
+  const { View } = jest.requireActual<typeof import('react-native')>('react-native');
+  return {
+    StatusBar: ({ style }: { style: string }) => <View testID={`status-bar-${style}`} />,
+  };
+});
 
 const WIDTH = 390;
 /** The height of the scroll on screen, in points. */
@@ -172,6 +186,32 @@ async function showWholePage(page: number) {
   await scrollTo(0);
 }
 
+/** The longest a drop takes to form and fall (`dropTimings`). */
+const LONGEST_DROP_MS =
+  READER_CONFIG.drop.formMs +
+  READER_CONFIG.drop.holdMs +
+  READER_CONFIG.drop.fallBaseMs +
+  READER_CONFIG.drop.fallExtraMaxMs;
+
+/** Lets the drop that is falling land in the pill (the test runs on fake timers). */
+async function letTheDropLand() {
+  await act(async () => {
+    jest.advanceTimersByTime(LONGEST_DROP_MS);
+  });
+}
+
+/** Plays what the fake timers still hold (the pill leaving), then gives the real ones back. */
+async function backToRealTimers() {
+  await act(async () => {
+    jest.runOnlyPendingTimers();
+  });
+  jest.useRealTimers();
+}
+
+/** The pages of hizb 1, where page 10 belongs: the pill counts them. */
+const HIZB_1_PAGES =
+  quranStructure.hizbPageRange(1).lastPage - quranStructure.hizbPageRange(1).firstPage + 1;
+
 /** Words of each page, from the repository, for the time each page asks. */
 let words: readonly number[] = [];
 beforeAll(async () => {
@@ -240,7 +280,12 @@ describe('a continuous vertical scroll, not a book (owner, 25 November 2026)', (
     expect(within(section).getByRole('header', { name: /سورة الكهف/ })).toBeOnTheScreen();
     const basmala = within(section).getByTestId('basmala');
     expect(basmala).toHaveTextContent((await quranRepository.getVerse('1:1')).text);
-    expect(within(section).getByTestId('page-footer-293')).toHaveTextContent('293');
+    // The mark between two pages names the page that comes (maquette-wow, `.pg-mark`).
+    expect(within(section).getByTestId('page-footer-293')).toHaveTextContent('page 294');
+    expect(within(section).getByTestId('page-footer-293')).toHaveProp(
+      'accessibilityLabel',
+      'Fin de la page 293',
+    );
   });
 });
 
@@ -286,22 +331,49 @@ describe('a page counts once its section was seen long enough (spec 3, D8, D41)'
   it('a page seen whole for 30 seconds is recorded on the local day, and the pill says so', async () => {
     const store = createTestAppStore();
     await openReader(store, 10);
-    await showWholePage(10);
-    await wait(secondsAsked(10));
-    await scrollTo(1);
-    expect(store.getState().journal).toEqual([{ khatm: 1, page: 10, date: TODAY }]);
-    expect(screen.getByTestId('reader-feedback')).toHaveTextContent(
-      /^\+1 page, tes canaux avancent$/,
-    );
+    jest.useFakeTimers();
+    try {
+      await showWholePage(10);
+      await wait(secondsAsked(10));
+      await scrollTo(1);
+      expect(store.getState().journal).toEqual([{ khatm: 1, page: 10, date: TODAY }]);
+      // The drop falls: the pill names what it waters, with the count before the page.
+      const pill = () => screen.getByTestId('reader-feedback-content');
+      expect(pill()).toHaveProp(
+        'accessibilityLabel',
+        `Une goutte pour les canaux, 0 page sur ${HIZB_1_PAGES} du hizb 1`,
+      );
+      await letTheDropLand();
+      expect(pill()).toHaveProp(
+        'accessibilityLabel',
+        `Les canaux ont avancé, 1 page sur ${HIZB_1_PAGES} du hizb 1`,
+      );
+      await act(async () => {
+        jest.advanceTimersByTime(READER_CONFIG.dropPill.visibleSeconds * SECOND);
+      });
+    } finally {
+      await backToRealTimers();
+    }
   });
 
-  it('tells VoiceOver too', async () => {
+  it('tells VoiceOver too, once the drop has landed', async () => {
     const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility');
+    // React Native's mock keeps the calls of earlier tests.
+    announce.mockClear();
     await openReader(createTestAppStore(), 10);
-    await showWholePage(10);
-    await wait(secondsAsked(10));
-    await scrollTo(1);
-    expect(announce).toHaveBeenCalledWith(expect.stringMatching(/^\+1 page, tes canaux avancent$/));
+    jest.useFakeTimers();
+    try {
+      await showWholePage(10);
+      await wait(secondsAsked(10));
+      await scrollTo(1);
+      expect(announce).not.toHaveBeenCalled();
+      await letTheDropLand();
+      expect(announce).toHaveBeenLastCalledWith(
+        `Les canaux ont avancé, 1 page sur ${HIZB_1_PAGES} du hizb 1`,
+      );
+    } finally {
+      await backToRealTimers();
+    }
   });
 
   it('pages flung past are not recorded, and nothing is said', async () => {
@@ -391,7 +463,7 @@ describe('a page counts once its section was seen long enough (spec 3, D8, D41)'
     await wait(60);
     await scrollTo(1);
     expect(store.getState().journal).toBe(journal);
-    expect(screen.queryByText(/^\+1 page/)).toBeNull();
+    expect(screen.queryByTestId('reader-feedback')).toBeNull();
   });
 
   it('leaving the reader records a page seen long enough', async () => {
@@ -408,24 +480,31 @@ describe('a page counts once its section was seen long enough (spec 3, D8, D41)'
     const firstPages = Array.from({ length: lastPage - 1 }, (_, index) => index + 1);
     const store = createTestAppStore({ journal: readPages(firstPages) });
     await openReader(store, lastPage);
-    await showWholePage(lastPage);
-    await wait(secondsAsked(lastPage));
-    await scrollTo(1);
-    expect(screen.getByTestId('reader-feedback')).toHaveTextContent(
-      /^Hizb terminé\. Nouveau dans ton jardin : \S/,
-    );
+    jest.useFakeTimers();
+    try {
+      await showWholePage(lastPage);
+      await wait(secondsAsked(lastPage));
+      await scrollTo(1);
+      await letTheDropLand();
+      expect(screen.getByTestId('reader-feedback-content').props.accessibilityLabel).toMatch(
+        /^Hizb 1 terminé, Nouveau dans ton jardin : \S/,
+      );
+    } finally {
+      await backToRealTimers();
+    }
   });
 });
 
-describe('the bar follows the reading (docs/design/mushaf.png)', () => {
-  it('names the surah under the reading line, then the juz, the hizb and the page', async () => {
+describe('the glass title follows the reading (maquette-wow, shots 14 to 16)', () => {
+  it('names the surah under the reading line and its page; VoiceOver hears the juz and hizb', async () => {
     await openReader(createTestAppStore(), 293);
     // Page 293: the end of Al-Isra (400 points), then Al-Kahf (800 points).
     await layOutPage(293, 0, 1200, [400, 800]);
     await scrollTo(0);
     const title = () => within(screen.getByTestId('reader-header')).getByRole('header');
     expect(within(title()).getByText('Al-Isra')).toBeOnTheScreen();
-    expect(within(title()).getByText('Juz 15, Hizb 30 · Page 293')).toBeOnTheScreen();
+    expect(within(title()).getByText('page 293')).toBeOnTheScreen();
+    expect(title()).toHaveProp('accessibilityLabel', 'Al-Isra, juz 15, hizb 30, page 293');
     await scrollTo(400);
     expect(within(title()).getByText('Al-Kahf')).toBeOnTheScreen();
   });
@@ -472,17 +551,20 @@ describe('the bar follows the reading (docs/design/mushaf.png)', () => {
     expect(Haptics.impactAsync).toHaveBeenCalledTimes(2);
   });
 
-  it('draws its round buttons white on the warm ground, 44 points to touch, the text on paper', async () => {
+  it('floats its controls in glass over the paper, each 44 points to touch', async () => {
     setDeviceConditions({ os: 'android' });
     await openReader(createTestAppStore(), 293);
-    expect(styleOf(screen.getByTestId('reader'))).toMatchObject({
-      backgroundColor: palette.pageGround.light,
+    expect(styleOf(screen.getByTestId('reader-page'))).toMatchObject({
+      backgroundColor: backdropGradients.readerPage.light[1]?.[1],
     });
-    const back = screen.getByTestId('reader-back');
-    expect(styleOf(back)).toMatchObject({ backgroundColor: palette.surface.light });
-    const drawn = Number(styleOf(back).width);
-    const slop = back.props.hitSlop as { top: number; bottom: number };
-    expect(drawn + slop.top + slop.bottom).toBeGreaterThanOrEqual(44);
+    for (const name of ['Retour', 'Marque-page', 'Taille du texte']) {
+      const button = screen.getByRole('button', { name });
+      expect(Number(styleOf(button).width)).toBeGreaterThanOrEqual(44);
+      expect(Number(styleOf(button).height)).toBeGreaterThanOrEqual(44);
+    }
+    // The text runs the full height of the screen, under the controls, and fades under them.
+    expect(screen.getByTestId('reader-fade-top')).toBeTruthy();
+    expect(screen.getByTestId('reader-fade-bottom')).toBeTruthy();
   });
 
   it('a tap on the text hides the bars and keeps their room; another shows them again', async () => {
@@ -493,12 +575,28 @@ describe('the bar follows the reading (docs/design/mushaf.png)', () => {
     expect(screen.queryByRole('button', { name: 'Réciter, suivi par l’appli' })).toBeNull();
     expect(styleOf(header)).toMatchObject({ opacity: 0 });
     expect(styleOf(header).minHeight).toBeGreaterThan(0);
+    // The bottom bar hides with it; the text does not move: the controls float over it.
+    expect(
+      styleOf(screen.getByTestId('reader-bottom-bar', { includeHiddenElements: true })),
+    ).toMatchObject({ opacity: 0 });
     await fireEvent.press(screen.getByTestId('page-section-20'));
     expect(screen.getByRole('button', { name: 'Retour' })).toBeOnTheScreen();
   });
 });
 
-describe('the bottom bar: script, microphone, text size (mockup, D41)', () => {
+describe('the bottom bar: today’s water, script, microphone (maquette-wow, shots 14, 15)', () => {
+  it('counts the new pages of the day toward the goal, the drop beside the number', async () => {
+    const store = createTestAppStore({
+      journal: readPages([1, 2, 3, 4, 5]),
+      settings: { dailyGoalPages: 8 },
+    });
+    await openReader(store, 293);
+    const today = screen.getByTestId('reader-today');
+    expect(within(today).getByText('5', { includeHiddenElements: true })).toBeTruthy();
+    expect(within(today).getByText('/8', { includeHiddenElements: true })).toBeTruthy();
+    expect(today).toHaveProp('accessibilityLabel', 'Arrosage du jour : 5 pages sur 8');
+  });
+
   it('starts following the recitation from the big green microphone (owner, 25 November 2026)', async () => {
     setDeviceConditions({ os: 'android' });
     await openReader(createTestAppStore(), 293);
@@ -542,20 +640,6 @@ describe('the bottom bar: script, microphone, text size (mockup, D41)', () => {
     expect(screen.getByTestId('verse-18:10').props.children).toBe(simple);
   });
 
-  it('names each control of the bar in words on screen, not only for VoiceOver', async () => {
-    await openReader(createTestAppStore(), 293);
-    const bar = screen.getByTestId('reader-bottom-bar');
-    // Visible captions: the script choice and the text size cannot be mistaken for each other.
-    expect(within(bar).getByText('Écriture', { includeHiddenElements: true })).toBeOnTheScreen();
-    expect(
-      within(bar).getByText('Taille du texte', { includeHiddenElements: true }),
-    ).toBeOnTheScreen();
-    // VoiceOver hears each name once, on its control, not again on the caption.
-    expect(within(bar).queryByText('Écriture')).toBeNull();
-    expect(within(bar).queryByText('Taille du texte')).toBeNull();
-    expect(screen.getByTestId('reader-script')).toHaveProp('accessibilityLabel', 'Écriture');
-  });
-
   it('names the two scripts in Arabic too', async () => {
     await showLanguage('ar');
     await openReader(createTestAppStore(), 293);
@@ -563,9 +647,38 @@ describe('the bottom bar: script, microphone, text size (mockup, D41)', () => {
     expect(screen.getByRole('radio', { name: 'إملائي' })).toBeOnTheScreen();
   });
 
+  it('opens the text size under the "Aa" button, and closes it with a tap on the text', async () => {
+    await openReader(createTestAppStore(), 1);
+    expect(screen.queryByTestId('reader-text-size-panel')).toBeNull();
+    const aa = screen.getByRole('button', { name: 'Taille du texte' });
+    await fireEvent.press(aa);
+    expect(screen.getByTestId('reader-text-size-panel')).toBeOnTheScreen();
+    expect(aa.props.accessibilityState).toMatchObject({ selected: true });
+    await fireEvent.press(screen.getByTestId('page-section-1'));
+    expect(screen.queryByTestId('reader-text-size-panel')).toBeNull();
+    // That tap only closed the panel: the controls are still there.
+    expect(screen.getByRole('button', { name: 'Retour' })).toBeOnTheScreen();
+  });
+
+  it('goes to the step touched on the track', async () => {
+    const store = createTestAppStore();
+    await openReader(store, 1);
+    await fireEvent.press(screen.getByRole('button', { name: 'Taille du texte' }));
+    const track = screen.getByTestId('reader-text-size-track', { includeHiddenElements: true });
+    await act(async () => {
+      track.props.onResponderGrant({ nativeEvent: { locationX: readerShapes.sizeTrackWidth } });
+    });
+    expect(store.getState().settings.readerTextSize).toBe(READER_TEXT_SIZE_RANGE.max);
+    await act(async () => {
+      track.props.onResponderMove({ nativeEvent: { locationX: 0 } });
+    });
+    expect(store.getState().settings.readerTextSize).toBe(READER_TEXT_SIZE_RANGE.min);
+  });
+
   it('makes the text larger and smaller within its range, and remembers it', async () => {
     const store = createTestAppStore();
     await openReader(store, 1);
+    await fireEvent.press(screen.getByRole('button', { name: 'Taille du texte' }));
     const size = () => Number(styleOf(screen.getByTestId('verses-1-1')).fontSize);
     const before = size();
     await fireEvent.press(screen.getByRole('button', { name: 'Texte plus grand' }));
@@ -583,6 +696,7 @@ describe('the bottom bar: script, microphone, text size (mockup, D41)', () => {
   it('dims the button at the end of the range, and it does nothing', async () => {
     const store = createTestAppStore({ settings: { readerTextSize: READER_TEXT_SIZE_RANGE.max } });
     await openReader(store, 1);
+    await fireEvent.press(screen.getByRole('button', { name: 'Taille du texte' }));
     const larger = screen.getByRole('button', { name: 'Texte plus grand' });
     expect(larger.props.accessibilityState).toMatchObject({ disabled: true });
     await fireEvent.press(larger);
@@ -597,39 +711,67 @@ describe('the bottom bar: script, microphone, text size (mockup, D41)', () => {
   });
 });
 
-describe('the watered pill, the moment of the reader (spec 3)', () => {
-  it('shows under the title, white with words of water, never over the text', async () => {
-    setDeviceConditions({ os: 'android' });
-    await openReader(createTestAppStore(), 10);
+describe('the drop and the glass pill: the moment a page counts (maquette-wow, shots 21, 22)', () => {
+  /** Page 10 counts, its end on screen. */
+  async function countPage10() {
     await showWholePage(10);
     await wait(secondsAsked(10));
     await scrollTo(1);
-    const row = screen.getByTestId('reader-pill-row');
-    const pill = within(row).getByTestId('reader-feedback');
-    expect(within(screen.getByTestId('reader-header')).getByText('Al-Baqarah')).toBeOnTheScreen();
-    expect(
-      within(pill).getByTestId('reader-feedback-drop', { includeHiddenElements: true }),
-    ).toBeTruthy();
-    expect(styleOf(pill)).toMatchObject({ backgroundColor: palette.surface.light });
-    expect(within(screen.getByTestId('reader-text')).queryByTestId('reader-feedback')).toBeNull();
+  }
+
+  beforeEach(() => jest.mocked(playFeedback).mockClear());
+
+  it('shows the pill at the bottom while one drop falls from the page, then says it was received', async () => {
+    const store = createTestAppStore({ journal: readPages([1, 2, 3, 4]) });
+    await openReader(store, 10);
+    jest.useFakeTimers();
+    try {
+      await countPage10();
+      // The drop forms at the end of the page's thread and falls; the counter still says 4.
+      expect(screen.getByTestId('reader-drop')).toBeTruthy();
+      expect(
+        within(screen.getByTestId('reader-today')).getByText('4', { includeHiddenElements: true }),
+      ).toBeTruthy();
+      expect(playFeedback).toHaveBeenCalledTimes(1);
+      expect(playFeedback).toHaveBeenLastCalledWith('drop');
+      await letTheDropLand();
+      expect(screen.queryByTestId('reader-drop')).toBeNull();
+      expect(
+        within(screen.getByTestId('reader-today')).getByText('5', { includeHiddenElements: true }),
+      ).toBeTruthy();
+      expect(screen.getByTestId('reader-feedback-content')).toHaveProp(
+        'accessibilityLabel',
+        `Les canaux ont avancé, 5 pages sur ${HIZB_1_PAGES} du hizb 1`,
+      );
+      expect(playFeedback).toHaveBeenCalledTimes(2);
+      expect(playFeedback).toHaveBeenLastCalledWith('drop-received');
+    } finally {
+      await backToRealTimers();
+    }
   });
 
-  it('keeps its row when there is nothing to say, so the text does not move when it comes', async () => {
-    await openReader(createTestAppStore(), 10);
-    expect(screen.queryByTestId('reader-feedback')).toBeNull();
-    expect(styleOf(screen.getByTestId('reader-pill-row')).minHeight).toBeGreaterThan(0);
-  });
-
-  it('is brief: it leaves after a few seconds', async () => {
+  it('puts the pill above the bottom bar (owner’s decision, 27 November 2026)', async () => {
     await openReader(createTestAppStore(), 10);
     jest.useFakeTimers();
     try {
-      await showWholePage(10);
-      await wait(secondsAsked(10));
-      await scrollTo(1);
+      await countPage10();
+      const room = styleOf(screen.getByTestId('reader-feedback-room'));
+      expect(room.bottom).toBeGreaterThan(0);
+      expect(room.top).toBeUndefined();
+    } finally {
+      await backToRealTimers();
+    }
+  });
+
+  it('is brief: it leaves a few seconds after the drop landed', async () => {
+    await openReader(createTestAppStore(), 10);
+    jest.useFakeTimers();
+    try {
+      await countPage10();
+      await letTheDropLand();
       expect(screen.getByTestId('reader-feedback')).toBeOnTheScreen();
       await act(async () => {
-        jest.advanceTimersByTime(READER_CONFIG.feedbackSeconds * SECOND - 1);
+        jest.advanceTimersByTime(READER_CONFIG.dropPill.visibleSeconds * SECOND - 1);
       });
       expect(screen.getByTestId('reader-feedback')).toBeOnTheScreen();
       await act(async () => {
@@ -637,99 +779,178 @@ describe('the watered pill, the moment of the reader (spec 3)', () => {
       });
       expect(screen.queryByTestId('reader-feedback')).toBeNull();
     } finally {
-      jest.useRealTimers();
+      await backToRealTimers();
     }
   });
 
-  it('appears without movement with Reduce Motion', async () => {
+  it('has no drop with Reduce Motion: the pill says at once what was received, without moving', async () => {
     // The setting is read when the pill first asks for it, as on a phone where it is already on.
     jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
     await openReader(createTestAppStore(), 10);
     await changeReducedMotion(true);
-    await showWholePage(10);
-    await wait(secondsAsked(10));
-    await scrollTo(1);
-    await waitFor(() =>
-      expect(styleOf(screen.getByTestId('reader-feedback-motion')).transform).toBeUndefined(),
+    await countPage10();
+    expect(screen.queryByTestId('reader-drop')).toBeNull();
+    expect(screen.getByTestId('reader-feedback-content')).toHaveProp(
+      'accessibilityLabel',
+      `Les canaux ont avancé, 1 page sur ${HIZB_1_PAGES} du hizb 1`,
     );
-    expect(styleOf(screen.getByTestId('reader-feedback-motion')).opacity ?? 1).toBe(1);
+    expect(styleOf(screen.getByTestId('reader-feedback-motion')).transform).toBeUndefined();
+    expect(playFeedback).toHaveBeenCalledTimes(1);
+    expect(playFeedback).toHaveBeenLastCalledWith('drop-received');
+  });
+
+  it('floats in glass and takes no touch', async () => {
+    await openReader(createTestAppStore(), 10);
+    jest.useFakeTimers();
+    try {
+      await countPage10();
+      expect(screen.getByTestId('reader-feedback-room').props.pointerEvents).toBe('none');
+    } finally {
+      await backToRealTimers();
+    }
   });
 });
 
-describe('the water line: this page is being counted (owner, 25 November 2026)', () => {
-  const fillWidth = () =>
-    Number(
-      styleOf(screen.getByTestId('reader-page-progress-fill', { includeHiddenElements: true }))
-        .width,
-    );
+describe('the water thread in the margin: this page is being counted (maquette-wow, shots 20 to 22)', () => {
+  const thread = (page: number) =>
+    screen.getByTestId(`page-thread-${page}`, { includeHiddenElements: true });
+  const fill = (page: number) =>
+    styleOf(screen.getByTestId(`page-thread-${page}-fill`, { includeHiddenElements: true }));
+  const bead = (page: number) =>
+    screen.queryByTestId(`page-thread-${page}-bead`, { includeHiddenElements: true });
 
-  it('fills while the page gathers its time, then a drop says the page will count', async () => {
-    await openReader(createTestAppStore(), 10);
-    await layOutPage(10, 0, 3000);
-    await scrollTo(0);
-    const line = () => screen.getByTestId('reader-page-progress', { includeHiddenElements: true });
-    expect(line()).toBeTruthy();
-    await wait(secondsAsked(10) / 2);
-    await scrollTo(1);
-    // The fill follows with the system's timing (the steps are checked with Reduce Motion below).
-    expect(
-      screen.queryByTestId('reader-page-progress-drop', { includeHiddenElements: true }),
-    ).toBeNull();
-    await wait(secondsAsked(10));
-    await scrollTo(2);
-    // Its time is reached, its end not yet seen: the drop has settled; nothing is recorded yet.
-    expect(
-      screen.getByTestId('reader-page-progress-drop', { includeHiddenElements: true }),
-    ).toBeTruthy();
-  });
-
-  it('says nothing to VoiceOver and covers no text', async () => {
-    await openReader(createTestAppStore(), 10);
-    await showWholePage(10);
-    const line = screen.getByTestId('reader-page-progress', { includeHiddenElements: true });
-    expect(line.props.accessibilityElementsHidden).toBe(true);
-    expect(
-      within(screen.getByTestId('reader-pill-row')).getByTestId('reader-page-progress', {
-        includeHiddenElements: true,
-      }),
-    ).toBeTruthy();
-    expect(
-      within(screen.getByTestId('reader-text')).queryByTestId('reader-page-progress'),
-    ).toBeNull();
-  });
-
-  it('is not there for a page already read in the khatma', async () => {
-    await openReader(createTestAppStore({ journal: readPages([10]) }), 10);
-    await showWholePage(10);
-    await wait(5);
-    await scrollTo(1);
-    expect(
-      screen.queryByTestId('reader-page-progress', { includeHiddenElements: true }),
-    ).toBeNull();
-  });
-
-  it('gives way to the pill when the page counts', async () => {
-    await openReader(createTestAppStore(), 10);
-    await showWholePage(10);
-    await wait(secondsAsked(10));
-    await scrollTo(1);
-    expect(screen.getByTestId('reader-feedback')).toBeOnTheScreen();
-    expect(
-      screen.queryByTestId('reader-page-progress', { includeHiddenElements: true }),
-    ).toBeNull();
-  });
-
-  it('moves by three still steps with Reduce Motion', async () => {
+  /** With Reduce Motion the thread is drawn as it is: its share can be read from its style. */
+  async function openStill(store: AppStore, page: number) {
     jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
-    await openReader(createTestAppStore(), 10);
+    await openReader(store, page);
     await changeReducedMotion(true);
+  }
+
+  it('runs along each page, empty with its bead at the top before the page is read', async () => {
+    await openStill(createTestAppStore(), 10);
     await layOutPage(10, 0, 3000);
     await scrollTo(0);
-    const { width, reducedMotionSteps } = READER_CONFIG.progressLine;
+    expect(thread(10)).toBeTruthy();
+    expect(fill(10).height).toBe('0%');
+    expect(bead(10)).toBeTruthy();
+  });
+
+  it('fills by three still steps with Reduce Motion as the page gathers its time', async () => {
+    await openStill(createTestAppStore(), 10);
+    await layOutPage(10, 0, 3000);
+    await scrollTo(0);
     await wait(secondsAsked(10) * 0.5);
     await scrollTo(1);
-    // Half the time: the first of three steps, without animation.
-    await waitFor(() => expect(fillWidth()).toBeCloseTo(width / reducedMotionSteps));
+    await waitFor(() => expect(fill(10).height).toBe(`${(1 / 3) * 100}%`));
+  });
+
+  it('is full, its bead at the end, once the time is reached and before the page counts', async () => {
+    const store = createTestAppStore();
+    await openStill(store, 10);
+    await layOutPage(10, 0, 3000);
+    await scrollTo(0);
+    await wait(secondsAsked(10) + 1);
+    await scrollTo(2);
+    // Its end not seen yet: nothing is recorded; the thread waits, full.
+    expect(pagesOf(store)).toEqual([]);
+    await waitFor(() => expect(fill(10).height).toBe('100%'));
+    expect(bead(10)).toBeTruthy();
+  });
+
+  it('stays full, pale and still once the page counted, or for a page the khatma holds', async () => {
+    await openStill(createTestAppStore({ journal: readPages([10]) }), 10);
+    await showWholePage(10);
+    expect(fill(10)).toMatchObject({ height: '100%', opacity: READER_CONFIG.thread.doneOpacity });
+    expect(bead(10)).toBeNull();
+  });
+
+  it('follows the page that counts: done as soon as it is recorded', async () => {
+    await openStill(createTestAppStore(), 10);
+    await showWholePage(10);
+    await wait(secondsAsked(10));
+    await scrollTo(1);
+    await waitFor(() => expect(bead(10)).toBeNull());
+    expect(fill(10).opacity).toBe(READER_CONFIG.thread.doneOpacity);
+  });
+
+  it('says nothing to VoiceOver and takes no touch', async () => {
+    await openReader(createTestAppStore(), 10);
+    expect(thread(10).props.accessibilityElementsHidden).toBe(true);
+    expect(thread(10).props.pointerEvents).toBe('none');
+  });
+
+  it('lies on the left, the outer margin of the Arabic lines, in every interface language', async () => {
+    await showLanguage('ar');
+    await openReader(createTestAppStore(), 10);
+    expect(styleOf(screen.getByTestId('page-section-10'))).toMatchObject({ direction: 'ltr' });
+    expect(Number(styleOf(thread(10)).left)).toBeLessThan(0);
+  });
+});
+
+describe('the paper by day, the night page at night (owner, 27 November 2026)', () => {
+  function ReaderAt({ hour }: { hour: number }) {
+    const at = useCallback(() => new Date(2026, 10, 24, hour, 0), [hour]);
+    const { model, actions } = useReader(10, { monotonicClock, clock: at });
+    const texts = useScriptTexts(model.script);
+    const follow = useRecitationFollow({
+      createEngine: startFollowing,
+      uthmaniTextOf: null,
+      onPagesFollowed: actions.countPagesReadAloud,
+    });
+    return (
+      <ReaderScreen
+        model={model}
+        actions={actions}
+        fontStatus="ready"
+        texts={texts}
+        openContents={openContents}
+        close={close}
+        follow={follow}
+      />
+    );
+  }
+
+  async function openAt(hour: number) {
+    await render(
+      <AppStoreProvider store={createTestAppStore()}>
+        <ReaderAt hour={hour} />
+      </AppStoreProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId('page-section-10')).toBeOnTheScreen());
+  }
+
+  const pageColor = () => styleOf(screen.getByTestId('reader-page')).backgroundColor;
+  const firstVerse = quranStructure.firstVerseOfPage(10);
+  const ink = () =>
+    styleOf(screen.getByTestId(`verses-${firstVerse.surah}-${firstVerse.verse}`)).color;
+
+  it('is the cream paper by day, the phone in its light appearance', async () => {
+    setDeviceConditions({ os: 'android' });
+    await openAt(10);
+    expect(pageColor()).toBe(backdropGradients.readerPage.light[1]?.[1]);
+    expect(ink()).toBe(appColors.ink.light);
+    expect(screen.getByTestId('status-bar-dark')).toBeTruthy();
+  });
+
+  it('is the warm night page in the evening, even with the phone light', async () => {
+    setDeviceConditions({ os: 'android' });
+    await openAt(20);
+    expect(pageColor()).toBe(backdropGradients.readerPage.dark[1]?.[1]);
+    expect(ink()).toBe(appColors.ink.dark);
+    // Light status bar text on the night page.
+    expect(screen.getByTestId('status-bar-light')).toBeTruthy();
+  });
+
+  it('is the night page whenever the phone is dark', async () => {
+    setDeviceConditions({ os: 'android', scheme: 'dark' });
+    await openAt(10);
+    expect(pageColor()).toBe(backdropGradients.readerPage.dark[1]?.[1]);
+  });
+
+  it('keeps every word of the night page in its night colour on an iPhone too', async () => {
+    await openAt(20);
+    // The phone is light: the reader fixes its own appearance, so the night ink is given as it is.
+    expect(ink()).toBe(appColors.ink.dark);
   });
 });
 
@@ -754,7 +975,7 @@ describe('the screen stays awake while reading (owner, 25 November 2026)', () =>
   });
 });
 
-describe('what the pill names (owner, 25 November 2026)', () => {
+describe('what the pill names (owner, 25 November 2026; maquette-wow)', () => {
   const noActions: ReaderActions = {
     observe: jest.fn(),
     toggleBars: jest.fn(),
@@ -762,6 +983,7 @@ describe('what the pill names (owner, 25 November 2026)', () => {
     chooseScript: jest.fn(),
     enlargeText: jest.fn(),
     shrinkText: jest.fn(),
+    chooseTextSize: jest.fn(),
     countPagesReadAloud: jest.fn(),
   };
 
@@ -773,8 +995,22 @@ describe('what the pill names (owner, 25 November 2026)', () => {
       hizb: 2,
       barsVisible: true,
       isBookmarked: false,
-      feedback: { kind: 'page-counted', growingKind },
-      pageProgress: { kind: 'hidden' },
+      counted: {
+        sequence: 1,
+        pageEndOnScreen: null,
+        feedback: {
+          kind: 'page-counted',
+          page: 20,
+          growingKind,
+          growth:
+            growingKind === null ? null : { hizb: 3, pagesBefore: 3, pagesAfter: 4, pageCount: 10 },
+          todayBefore: 1,
+          todayAfter: 2,
+        },
+      },
+      threads: createThreadStore(),
+      today: { pagesRead: 2, goalPages: 5 },
+      paper: 'day',
       script: 'uthmani',
       textSizeStep: 1,
       textScale: 1,
@@ -786,8 +1022,8 @@ describe('what the pill names (owner, 25 November 2026)', () => {
         <ReaderScreen
           model={model}
           actions={noActions}
-          fontStatus="loading"
-          texts={{ status: 'loading' }}
+          fontStatus="ready"
+          texts={{ status: 'error' }}
           openContents={openContents}
           close={close}
           follow={IDLE_FOLLOW}
@@ -796,24 +1032,58 @@ describe('what the pill names (owner, 25 November 2026)', () => {
     );
   }
 
+  const pill = () => screen.getByTestId('reader-feedback-content').props.accessibilityLabel;
+
   it.each([
-    ['fr', 'pomegranate', '+1 page, ton grenadier grandit'],
-    ['fr', 'channels', '+1 page, tes canaux avancent'],
-    ['fr', 'fountain', '+1 page, ta fontaine prend forme'],
-    ['en', 'roses', '+1 page, your roses are growing'],
-    ['ar', 'date-palm', '+1 صفحة، النخلة في حديقتك تكبر'],
-    ['ar', 'wall', '+1 صفحة، السور في حديقتك يرتفع'],
-  ] as const)('in %s, names the %s with its own grammar', async (language, kind, text) => {
-    await showLanguage(language);
-    await pillFor(kind);
-    expect(screen.getByTestId('reader-feedback')).toHaveTextContent(text);
-  });
+    [
+      'fr',
+      'pomegranate',
+      'Une goutte pour le grenadier, 3 pages sur 10 du hizb 3',
+      'Le grenadier a grandi, 4 pages sur 10 du hizb 3',
+    ],
+    [
+      'fr',
+      'olive',
+      'Une goutte pour l’olivier, 3 pages sur 10 du hizb 3',
+      'L’olivier a grandi, 4 pages sur 10 du hizb 3',
+    ],
+    [
+      'fr',
+      'channels',
+      'Une goutte pour les canaux, 3 pages sur 10 du hizb 3',
+      'Les canaux ont avancé, 4 pages sur 10 du hizb 3',
+    ],
+    [
+      'en',
+      'roses',
+      'A drop for the roses, 3 pages of 10 in hizb 3',
+      'The roses grew, 4 pages of 10 in hizb 3',
+    ],
+    [
+      'ar',
+      'date-palm',
+      'قطرة للنخلة، الصفحات: 3 من 10 · الحزب 3',
+      'كبرت النخلة، الصفحات: 4 من 10 · الحزب 3',
+    ],
+  ] as const)(
+    'in %s, names the %s with its own grammar',
+    async (language, kind, falling, received) => {
+      await showLanguage(language);
+      // While the drop falls.
+      const view = await pillFor(kind);
+      expect(pill()).toBe(falling);
+      await view.unmount();
+      // Once it landed: with Reduce Motion the pill says it at once.
+      jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
+      await changeReducedMotion(true);
+      await pillFor(kind);
+      expect(pill()).toBe(received);
+    },
+  );
 
   it('waters the garden when nothing grows any more', async () => {
     await pillFor(null);
-    expect(screen.getByTestId('reader-feedback')).toHaveTextContent(
-      '+1 page, ton jardin est arrosé',
-    );
+    expect(pill()).toBe('Une goutte pour ton jardin, 1 page aujourd’hui');
   });
 });
 

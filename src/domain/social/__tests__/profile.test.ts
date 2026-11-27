@@ -15,6 +15,7 @@ describe('Profile (section 2, rule 1)', () => {
       displayName: 'Omar',
       showGarden: true,
       showLevel: true,
+      gender: null,
       createdOn: TODAY,
     });
   });
@@ -43,6 +44,26 @@ describe('Profile (section 2, rule 1)', () => {
         ...profile,
         showLevel: false,
       });
+    });
+
+    it('the gender is changed to male or female, or back to unspecified with null', () => {
+      const female = applyProfileChanges(profile, { gender: 'female' });
+      expect(female.gender).toBe('female');
+      expect(applyProfileChanges(female, { gender: 'male' }).gender).toBe('male');
+      expect(applyProfileChanges(female, { gender: null }).gender).toBeNull();
+      // Changing the gender touches nothing else.
+      expect(applyProfileChanges(female, { gender: null })).toEqual(profile);
+    });
+
+    it('a gender that is not male, female or null is refused, so that nothing is guessed', () => {
+      expect(() => applyProfileChanges(profile, { gender: 'other' as unknown as 'male' })).toThrow(
+        RangeError,
+      );
+      expect(() => applyProfileChanges(profile, { gender: 1 as unknown as 'male' })).toThrow(
+        TypeError,
+      );
+      // Present but undefined is not "no change" (like every other field).
+      expect(() => applyProfileChanges(profile, { gender: undefined })).toThrow(TypeError);
     });
 
     it('a new name is checked like any display name and trimmed', () => {

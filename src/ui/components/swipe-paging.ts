@@ -286,20 +286,36 @@ export interface ProjectedTargetInput {
   readonly velocity: number;
   /** The page the gesture started on, or the spring's target when it was caught. */
   readonly anchor: number;
+  /**
+   * The position when the gesture took the pages. Defaults to the anchor; it differs when the
+   * touch caught the pages while they still settled.
+   */
+  readonly start?: number;
   readonly pageCount: number;
 }
 
-/** The page a release settles on: the nearest to the projection, one page at most from the anchor. */
+/**
+ * The page a release settles on: the nearest to the projection, one page at most from the anchor.
+ *
+ * Pages caught while settling are short of the page they were going to: on the page grid alone, a
+ * light flick there would land on that page again and be lost, though the same flick turns the
+ * page from pages at rest. So when the grid gives back the anchor, the gesture is also measured
+ * from where it caught the pages, as if they had already arrived: a swipe means the same thing
+ * whether the pages are still or settling. A gesture at rest starts on the anchor: both readings
+ * are the same, the motion spec's (§1). A catch pulled back to another page still goes there.
+ */
 export function projectedTarget({
   position,
   velocity,
   anchor,
+  start = anchor,
   pageCount,
 }: ProjectedTargetInput): number {
   'worklet';
-  const projected = position + velocity * PROJECTED_PAGING.projectionS;
-  const page = clamp(Math.round(projected), anchor - 1, anchor + 1);
-  return clamp(page, 0, pageCount - 1);
+  const flung = velocity * PROJECTED_PAGING.projectionS;
+  const onGrid = Math.round(position + flung);
+  const page = onGrid !== anchor ? onGrid : anchor + Math.round(position - start + flung);
+  return clamp(clamp(page, anchor - 1, anchor + 1), 0, pageCount - 1);
 }
 
 /**

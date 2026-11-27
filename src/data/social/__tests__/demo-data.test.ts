@@ -38,10 +38,10 @@ describe('Demonstration data (createDemoSocialData)', () => {
     );
   });
 
-  it('holds the first names of D25, Omar, Mustapha, Sarah and Taghread', () => {
+  it('holds the first names of D25, Omar, Mostapha, Sarah and Taghread', () => {
     const names = createDemoSocialData(TODAY).profiles.map((row) => row.displayName);
 
-    expect(names).toEqual(expect.arrayContaining(['Omar', 'Mustapha', 'Sarah', 'Taghread']));
+    expect(names).toEqual(expect.arrayContaining(['Omar', 'Mostapha', 'Sarah', 'Taghread']));
   });
 
   it('gives three friends to Omar, and a request from one more person that waits', () => {
@@ -85,7 +85,7 @@ describe('Demonstration data (createDemoSocialData)', () => {
       );
       return levelOfCompletedKhatmas(badges.length);
     });
-    // Mustapha, the screen check's friend, is level 3; Sarah 4; Taghread, who has just completed
+    // Mostapha, the screen check's friend, is level 3; Sarah 4; Taghread, who has just completed
     // her first khatma, 2.
     expect(levels).toEqual([3, 4, 2]);
   });

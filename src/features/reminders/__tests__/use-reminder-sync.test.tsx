@@ -157,6 +157,22 @@ describe('what starts the planning', () => {
     expect(lastRequest().notifications[0]?.title).toBe('Every letter read: ten hasanat');
   });
 
+  it('plans again when the person says what they are: the Arabic texts agree with them', async () => {
+    const store = await renderWithStore(<Probe />, { settings: finished });
+    const before = sync.mock.calls.length;
+    await act(async () => {
+      store.getState().setGender('female');
+    });
+    expect(sync.mock.calls.length).toBe(before + 1);
+    // Nothing the French says to the person depends on gender: the words are the same.
+    expect(lastRequest().notifications[0]?.title).toBe('Chaque lettre lue, dix hasanat');
+    // The same answer again plans nothing more.
+    await act(async () => {
+      store.getState().setGender('female');
+    });
+    expect(sync.mock.calls.length).toBe(before + 1);
+  });
+
   it('plans again when the app comes back to the foreground, not when it leaves', async () => {
     await renderWithStore(<Probe />, { settings: finished });
     await act(async () => appStateListener('background'));

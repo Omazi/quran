@@ -11,10 +11,12 @@ import {
 } from '@/domain/listening';
 import type { QuranStructure } from '@/domain/quran';
 import type { VerseIndex } from '@/domain/recognition';
+import { useGenderedTranslation } from '@/features/gender';
 import { useReducedMotion } from '@/ui';
 
 import { describePassage } from './passage-words';
 import { useListening } from './use-listening';
+import { loadQuranHeldTexts } from './verse-index-source';
 import type { LoadVerseText } from './use-verse-texts';
 import { FoundView } from './views/found-view';
 import { ListeningView, type ListeningViewPhase } from './views/listening-view';
@@ -75,11 +77,12 @@ export function ListeningScreen({
   onOpenPage,
   onOpenSettings,
 }: ListeningScreenProps) {
-  const { t, i18n } = useTranslation('listening');
+  const { t, i18n } = useGenderedTranslation('listening');
   const { state, heardWords, listenAgain, stop } = useListening({
     engine,
     loadVerseIndex,
     autoStart,
+    loadHeldTexts: loadQuranHeldTexts,
   });
   const reducedMotion = useReducedMotion();
 

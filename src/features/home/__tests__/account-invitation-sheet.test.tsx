@@ -149,7 +149,11 @@ describe('the account invitation sheet (prototype, "Ton jardin est prêt.")', ()
   });
 
   it('has its words in the three languages', () => {
-    expect(Object.keys(arHome.invitation).sort()).toEqual(Object.keys(frHome.invitation).sort());
+    expect(
+      Object.keys(arHome.invitation)
+        .filter((key) => !key.endsWith('_female'))
+        .sort(),
+    ).toEqual(Object.keys(frHome.invitation).sort());
     expect(Object.keys(enHome.invitation).sort()).toEqual(Object.keys(frHome.invitation).sort());
     expect(frHome.invitation.title).toBe('Ton jardin est prêt.');
   });

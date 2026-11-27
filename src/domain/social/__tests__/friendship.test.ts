@@ -247,7 +247,7 @@ describe('Rule 2 — friend request (demande d’amitié)', () => {
     });
 
     it('a request cannot be sent over the bond of two other people', () => {
-      // PENDING links Omar and Sarah: Mustapha has no place in it.
+      // PENDING links Omar and Sarah: Mostapha has no place in it.
       expect(() => requestFriendship(PENDING, MUSTAPHA, SARAH, TODAY)).toThrow(RangeError);
       expect(() => requestFriendship(PENDING, MUSTAPHA, SARAH, TODAY)).not.toThrow(SocialRuleError);
     });

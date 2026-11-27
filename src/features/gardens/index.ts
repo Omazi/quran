@@ -31,4 +31,5 @@ export {
   useKhatmaCelebration,
   type KhatmaCelebrationDependencies,
 } from './use-khatma-celebration';
+export { useBadgeShare, type BadgeShare, type BadgeShareOptions } from './share';
 export { useProgression } from './use-progression';

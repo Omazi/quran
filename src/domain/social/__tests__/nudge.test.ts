@@ -84,13 +84,13 @@ describe('Rule 7 — nudge (encouragement)', () => {
     });
 
     it('another friend can be nudged the same day', () => {
-      const withMustapha = acceptFriendRequest(
+      const withMostapha = acceptFriendRequest(
         requestFriendship(NO_BOND, OMAR, MUSTAPHA, TODAY),
         MUSTAPHA,
         TODAY,
       );
 
-      expect(sendNudge({ ...REQUEST, toId: MUSTAPHA }, withMustapha, [SENT_TODAY]).toId).toBe(
+      expect(sendNudge({ ...REQUEST, toId: MUSTAPHA }, withMostapha, [SENT_TODAY]).toId).toBe(
         MUSTAPHA,
       );
     });

@@ -1,7 +1,7 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
 
+import { useGenderedTranslation } from '@/features/gender';
 import { AddFriendPage } from '@/features/friends';
 
 /**
@@ -12,7 +12,7 @@ import { AddFriendPage } from '@/features/friends';
  * (src/app/invite) arrives with its code, which fills the code field.
  */
 export default function AddFriendRoute() {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   const { code } = useLocalSearchParams<{ code?: string }>();
   return (
     <>

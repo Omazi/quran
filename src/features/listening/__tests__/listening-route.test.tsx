@@ -68,10 +68,11 @@ describe('where the listening screen leads', () => {
 describe('the route', () => {
   it('in development, shows the listening screen with the simulated engine', async () => {
     await showLanguage('fr');
-    markOpenedInApp('listening');
+    // Load the route first: under load, importing it can outlast the 5-second in-app mark.
     const ListeningRoute = jest.requireActual<{ default: ComponentType }>(
       '@/app/listening',
     ).default;
+    markOpenedInApp('listening');
     await render(<ListeningRoute />);
     // "Un instant…" while the engine starts, then "J'écoute…" once the microphone is open.
     expect(

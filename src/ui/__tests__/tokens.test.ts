@@ -419,6 +419,7 @@ describe('text styles', () => {
     headline: 'Headline',
     body: 'Body',
     callout: 'Callout',
+    pillTitle: 'Pill Title',
     subhead: 'Subhead',
     subheadEmphasized: 'Subhead Emphasized',
     footnote: 'Footnote',
@@ -444,6 +445,7 @@ describe('text styles', () => {
       ['headline', '600'],
       ['body', '400'],
       ['callout', '600'],
+      ['pillTitle', '600'],
       ['subhead', '400'],
       ['subheadEmphasized', '600'],
       ['footnote', '400'],
@@ -454,6 +456,7 @@ describe('text styles', () => {
     expect(textStyles.largeTitle.fontFamily).toBe(fontFamily.display);
     expect(textStyles.title1.fontFamily).toBe(fontFamily.display);
     expect(textStyles.title2.fontFamily).toBe(fontFamily.display);
+    expect(textStyles.pillTitle.fontFamily).toBe(fontFamily.display);
     expect(textStyles.displayTitle.fontFamily).toBe(fontFamily.serif);
     for (const name of [
       'figure',
@@ -492,6 +495,8 @@ describe('text styles', () => {
       headline: 'headline',
       body: 'body',
       callout: 'callout',
+      // The title of a glass pill, 16 points like Callout, scales as Callout.
+      pillTitle: 'callout',
       subhead: 'subheadline',
       subheadEmphasized: 'subheadline',
       footnote: 'footnote',
@@ -504,8 +509,8 @@ describe('spacing, shapes and targets', () => {
     expect(spacing).toEqual({ none: 0, xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 });
   });
 
-  it('has the three radii of the charter, the card of the mockups and the capsule', () => {
-    expect(radius).toEqual({ sm: 8, md: 12, lg: 16, xl: 24, full: 999 });
+  it('has the three radii of the charter, the card and the glass panel of the mockups, and the capsule', () => {
+    expect(radius).toEqual({ sm: 8, md: 12, lg: 16, xl: 24, glassPanel: 30, full: 999 });
   });
 
   it('keeps 16 points at the screen edge and 12 between controls', () => {

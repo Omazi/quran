@@ -47,6 +47,23 @@ File:     node_modules/expo-camera/LICENSE
   File:     node_modules/@types/emscripten/LICENSE
 
 
+expo-audio 58.0.12 (dependency; version listed by Expo SDK 58 in bundledNativeModules.json)
+------------------
+Use:      plays the short sounds of the interface (src/data/feedback, assets/sounds), with the
+          audio session set to "ambient" so that the silent switch is respected. No dependency
+          of its own beyond the Expo modules the app already has.
+Licence:  MIT. "Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"
+File:     node_modules/expo-audio/LICENSE (read from the 58.0.12 package of the npm registry; the
+          package is installed by `npm install`, which this branch's package-lock.json asks for)
+
+
+Sound palette (assets/sounds/*.m4a): own work, not a package
+------------------------------------------------------------
+Use:      the ten sounds of the interface, synthesised by tools/sounds/generate.py.
+Licence:  CC0 1.0, by the owner of the project; nothing third-party in them.
+File:     assets/sounds/NOTICE.txt
+
+
 uqr 0.1.3 (dependency; no dependencies of its own)
 ---------
 Use:      computes the QR code of my invitation (src/ui/components/qr-code.tsx), drawn by
@@ -71,6 +88,17 @@ Use:      keeps the screen awake while the reader is open (src/features/reader/u
           D41); released in the background and when the reader closes.
 Licence:  MIT. "Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"
 File:     node_modules/expo-keep-awake/LICENSE
+
+expo-sensors 58.0.5 (dependency; version listed by Expo SDK 58 in bundledNativeModules.json)
+------------
+Use:      the light of the home garden follows the phone's tilt (src/data/motion/device-gravity.ts):
+          gravity from DeviceMotion, at most 30 samples a second, only while the home garden is
+          seen and Reduce Motion is off. No motion permission is requested (app.json sets
+          `motionPermission: false`).
+Licence:  MIT. "Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"
+Its one dependency, invariant 2.2.4, is MIT ("Copyright (c) 2013-present, Facebook, Inc.").
+File:     node_modules/expo-sensors/LICENSE (read from the 58.0.5 package of the npm registry; the
+          package is installed in main by the coordinator)
 
 whisper.rn 0.7.4 (dependency; the speech engine, D42)
 ----------------
@@ -167,6 +195,23 @@ Its own dependencies, installed for the types only, none of them bundled in the 
   @types/webxr 0.5.24                MIT         "Copyright (c) Microsoft Corporation."
   fflate 0.8.3                       MIT         "Copyright (c) 2026 Arjun Barrett"
   meshoptimizer 1.1.1                MIT         "Copyright (c) 2016-2026 Arseny Kapoulkine"
+
+react-native-view-shot 6.1.1 (dependency; the version Expo SDK 58 lists, node_modules/expo/bundledNativeModules.json)
+-----------------------------
+Use:      draws the card of a shared badge off screen and writes it as a PNG in the cache
+          (src/features/gardens/share). No dependency of its own; supports the new architecture
+          (4.0 onward, React Native 0.80 or later).
+Licence:  MIT. "Copyright (c) 2016 Gaëtan Renaudeau"
+File:     node_modules/react-native-view-shot/LICENSE
+
+
+expo-sharing 58.0.23 (dependency; version chosen for SDK 58, node_modules/expo/bundledNativeModules.json)
+-------------------
+Use:      opens the system share sheet on that PNG (src/features/gardens/share). Its config
+          plugin (receiving shares from other apps) is not used.
+Licence:  MIT. "Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"
+File:     node_modules/expo-sharing/LICENSE
+
 
 The garden model itself (Quaternius and Kenney, CC0) has its own notice:
 assets/models/garden/NOTICE.txt. It also covers the gardens of levels 2 to 7, downloaded by the

@@ -102,4 +102,31 @@ export const GARDEN_3D = {
   wiltByFoliage: [0, 0.5, 0.8, 1] as const,
   /** How long the 3D garden takes to replace the picture once its first frame is drawn. */
   revealMs: 200,
+  /**
+   * The home garden, full screen under the sky (maquette-wow, `app.js` VIEWS.home): the picture's
+   * box is 1.32 times as wide as the screen, its centre at 44 % of the screen's height. The garden
+   * runs past both edges of the screen, as in the validated shots 01 to 04.
+   */
+  stage: { widthShare: 1.32, centerYShare: 0.44 },
+  /**
+   * The return glide (maquette-wow, `growOnReturn`, owner's decision of 27 November 2026): the
+   * camera goes to the plant that grew (zoom, the plant at the middle of the screen), the plant
+   * grows one step, then the camera comes back. Times in milliseconds; the curves are the animate
+   * skill's strong ease-in-out (moving on screen) and strong ease-out (arriving).
+   */
+  glide: {
+    zoom: 1.9,
+    focusY: 0.5,
+    toMs: 800,
+    /** The growth during the glide: its own duration, but never longer than this. */
+    growMaxMs: 1100,
+    holdMs: 150,
+    backMs: 600,
+    /** After a tap, the camera comes back this fast and the plant takes its size at once. */
+    interruptedBackMs: 450,
+    /** A tap on "Un grenadier pousse": the camera goes to the plant, a second tap comes back. */
+    look: { zoom: 2.1, toMs: 900, backMs: 700 },
+    easeInOut: { x1: 0.77, y1: 0, x2: 0.175, y2: 1 },
+    easeOut: { x1: 0.23, y1: 1, x2: 0.32, y2: 1 },
+  },
 } as const;

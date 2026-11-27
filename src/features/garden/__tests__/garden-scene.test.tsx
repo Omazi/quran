@@ -339,9 +339,14 @@ describe('the garden locale files', () => {
     );
   }
 
+  // A gendered form ("hint_female") is a wording of a key, not a key: a language may need none.
+  const withoutGenderForms = (keys: string[]) => [
+    ...new Set(keys.map((key) => key.replace(/_(male|female)$/, ''))),
+  ];
+
   it('have the same keys in French, English and Arabic', () => {
-    expect(keysOf(locales.en)).toEqual(keysOf(locales.fr));
-    expect(keysOf(locales.ar)).toEqual(keysOf(locales.fr));
+    expect(withoutGenderForms(keysOf(locales.en))).toEqual(withoutGenderForms(keysOf(locales.fr)));
+    expect(withoutGenderForms(keysOf(locales.ar))).toEqual(withoutGenderForms(keysOf(locales.fr)));
   });
 
   it.each(Object.entries(locales))('name every kind of element in %s', (_, locale) => {

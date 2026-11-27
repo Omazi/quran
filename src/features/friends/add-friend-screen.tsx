@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 
+import { useGenderedTranslation } from '@/features/gender';
 import { inviteLink, SOCIAL_CONFIG } from '@/domain/social';
 import { formatLongDate } from '@/features/home/format-date';
 import {
@@ -52,7 +52,7 @@ export interface AddFriendScreenProps {
  * Field and button share a row while the text fits, and stack at large text sizes.
  */
 export function AddFriendScreen({ model, actions }: AddFriendScreenProps) {
-  const { t, i18n } = useTranslation('friends');
+  const { t, i18n } = useGenderedTranslation('friends');
   const colors = useColors();
   const { fontScale } = useWindowDimensions();
   const isSideBySide = fontScale <= layout.sideBySideMaxFontScale;

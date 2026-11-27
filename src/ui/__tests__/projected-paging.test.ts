@@ -79,6 +79,36 @@ describe('the projected pager: where a release goes', () => {
     // Caught on the way to page 5 at 4.8, pulled on: the next page is 6 at most, not 5.8 + 1.
     expect(projectedTarget({ position: 5.3, velocity: 6, anchor: 5, pageCount: 16 })).toBe(6);
   });
+
+  it('turns the page for a light flick on pages still settling, as it does on pages at rest', () => {
+    // 70 pt at 1000 pt/s on an 844 pt screen: from page 3 at rest, page 4.
+    const drag = 70 / 844;
+    const speed = 1000 / 844;
+    expect(projectedTarget({ position: 3 + drag, velocity: speed, anchor: 3, pageCount: 16 })).toBe(
+      4,
+    );
+    // The same flick 0.2 s after the last one: the pages, on their way to 4, caught at 3.81.
+    expect(
+      projectedTarget({
+        position: 3.81 + drag,
+        velocity: speed,
+        anchor: 4,
+        start: 3.81,
+        pageCount: 16,
+      }),
+    ).toBe(5);
+  });
+
+  it('still lets pages caught while settling be pulled back to the nearest page', () => {
+    // On their way to 4, caught at 3.7 and pulled back to 3.4 without speed: page 3 is nearest.
+    expect(
+      projectedTarget({ position: 3.4, velocity: 0, anchor: 4, start: 3.7, pageCount: 16 }),
+    ).toBe(3);
+    // Caught at 3.7, barely moved: they go on to 4.
+    expect(
+      projectedTarget({ position: 3.75, velocity: 0, anchor: 4, start: 3.7, pageCount: 16 }),
+    ).toBe(4);
+  });
 });
 
 describe('the projected pager: the release speed', () => {

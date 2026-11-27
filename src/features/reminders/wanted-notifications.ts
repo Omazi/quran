@@ -1,3 +1,4 @@
+import type { Gender } from '@/domain/shared/gender';
 import { parseLocalDate } from '@/domain/shared/local-date';
 import {
   buildNotificationSlots,
@@ -41,7 +42,8 @@ export function notificationLabels(language: AppLanguage): NotificationLabels {
 /**
  * The notifications to schedule for an input: the plan of the reminders module, placed on the
  * clock of the phone and written in the language of the app, each day with its own variant, the
- * place to resume (`buildReminderResume`) and what is left of that day's goal
+ * place to resume (`buildReminderResume`), what is left of that day's goal and, in Arabic, what
+ * the person says they are
  * (docs/specs/reminders-copy.md). The signature carries a fingerprint of the words, so changing
  * them replaces the notification.
  */
@@ -49,11 +51,13 @@ export function buildWantedNotifications(
   input: RemindersInput,
   language: AppLanguage,
   resume: ReminderResume | null,
+  gender: Gender | null = null,
 ): readonly NotificationToSchedule[] {
   return buildNotificationSlots(planReminders(input)).map((slot: NotificationSlot) => {
     const { title, body } = reminderText(slot.kind, slot.date, language, {
       resume,
       goal: readingGoalOn(input, slot.date),
+      gender,
     });
     return {
       id: slot.id,

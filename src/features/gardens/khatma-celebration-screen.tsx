@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import { useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useColorScheme, useWindowDimensions, View } from 'react-native';
@@ -14,6 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { playFeedback } from '@/features/feedback';
 import { previewGardenState } from '@/features/garden';
 import {
   ActionButton,
@@ -34,6 +34,7 @@ import {
 import { GardenThumb } from './garden-thumb';
 import type { Celebration } from './gardens-model';
 import { KhatmaBadge } from './khatma-badge';
+import { SHARE_SYMBOL, useBadgeShare } from './share';
 
 const CLOSE: IconSymbol = { ios: 'xmark', android: 'close' };
 const BARE_EARTH = previewGardenState({ hizbCompleted: 0 });
@@ -76,6 +77,8 @@ const BADGE_MAX = 280;
 
 export interface KhatmaCelebrationScreenProps {
   celebration: Celebration;
+  /** The name of the person's account, if any: offered for the shared picture, never put there unasked. */
+  displayName?: string | null;
   onSeeGarden: () => void;
   onClose: () => void;
 }
@@ -88,6 +91,7 @@ export interface KhatmaCelebrationScreenProps {
  */
 export function KhatmaCelebrationScreen({
   celebration,
+  displayName = null,
   onSeeGarden,
   onClose,
 }: KhatmaCelebrationScreenProps) {
@@ -100,9 +104,10 @@ export function KhatmaCelebrationScreen({
   const garden = t(`styles.${celebration.styleId}`);
   const nextGarden = t(`styles.${celebration.next.styleId}`);
   const days = t('celebration.days', { count: celebration.days });
+  const sharing = useBadgeShare({ displayName });
 
   useEffect(() => {
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
+    playFeedback('celebrate');
   }, []);
 
   return (
@@ -116,6 +121,23 @@ export function KhatmaCelebrationScreen({
         ]}
       >
         <View style={styles.closeRow}>
+          <ActionButton
+            variant="tonal"
+            symbol={SHARE_SYMBOL}
+            label={t('share.button')}
+            accessibilityLabel={t('share.buttonLabel', { khatm: celebration.khatm })}
+            onPress={() =>
+              sharing.share({
+                khatm: celebration.khatm,
+                styleId: celebration.styleId,
+                completedOn: celebration.completedOn,
+                days: celebration.days,
+              })
+            }
+            disabled={sharing.isBusy}
+            fullWidth={false}
+            testID="khatma-celebration-share"
+          />
           <ActionButton
             variant="tonal"
             symbol={CLOSE}
@@ -204,6 +226,7 @@ export function KhatmaCelebrationScreen({
           testID="khatma-celebration-see"
         />
       </View>
+      {sharing.host}
     </View>
   );
 }
@@ -361,7 +384,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     rowGap: spacing.md,
   },
-  closeRow: { alignItems: 'flex-end' },
+  // Share at the start, close at the end: the toolbar of a screen with no navigation bar. Above
+  // the gold light of the badge, which would wash the buttons out.
+  closeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 1,
+  },
   badgeStage: { alignItems: 'center' },
   entrance: { alignItems: 'center', justifyContent: 'center' },
   halo: { position: 'absolute' },

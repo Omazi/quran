@@ -27,6 +27,7 @@ describe('proofClipOf', () => {
 function scriptedEngine(
   batches: readonly string[][],
   onReading: (ms: number) => void,
+  checkHeard?: SpeechEngine['checkHeard'],
 ): SpeechEngine {
   const wordListeners: ((words: readonly string[]) => void)[] = [];
   const endListeners: ((reason: SpeechEndReason) => void)[] = [];
@@ -56,6 +57,7 @@ function scriptedEngine(
       endListeners.push(listener);
       return () => undefined;
     },
+    ...(checkHeard === undefined ? {} : { checkHeard }),
   };
 }
 
@@ -98,6 +100,52 @@ describe('runVoiceProof', () => {
       /b__113-1-2\.wav .*nothing found \(1 words heard\).*finished \| MISS$/,
     );
     expect(lines[3]).toBe('voice-proof: DONE right 1/2, wrong 0');
+  });
+
+  it('runs the audio check when the words alone name nothing, and says so', async () => {
+    const lines: string[] = [];
+    const texts = {
+      text: ({ surah, verse }: { surah: number; verse: number }) =>
+        surah === 112
+          ? ['قل هو الله أحد', 'الله الصمد', 'لم يلد ولم يولد', 'ولم يكن له كفوا أحد'][verse - 1]
+          : 'قل أعوذ برب الفلق',
+      verseCount: (surah: number) => (surah === 112 ? 4 : 2),
+    };
+    let onHeld: (ms: number) => void = () => undefined;
+    // Held to 112, the audio costs little; held to anything else, a lot.
+    const checkHeard = jest.fn(async (held: readonly string[]) => {
+      onHeld(900);
+      return {
+        freeText: 'قالوا هو الله',
+        audio: null,
+        readings: held.map((text) =>
+          /^112 1 /m.test(text)
+            ? {
+                text: 'قُلْ هُوَ اللَّهُ أَحَدٌ اللَّهُ الصَّمَدُ',
+                cost: 2,
+                letters: 20,
+                freeLetters: 0,
+                abandoned: false,
+              }
+            : { text: 'قُلْ', cost: 90, letters: 2, freeLetters: 0, abandoned: false },
+        ),
+      };
+    });
+    const results = await runVoiceProof({
+      clips: [clip('a__112-1-4.wav')],
+      loadIndex: async () => index,
+      loadHeldTexts: async () => texts,
+      createEngine: (_c, onReading, onHeldReading) => {
+        onHeld = onHeldReading;
+        return scriptedEngine([['قالوا', 'هو', 'الله']], onReading, checkHeard);
+      },
+      now: () => 0,
+      log: (line) => lines.push(line),
+    });
+    expect(checkHeard).toHaveBeenCalled();
+    expect(results[0]?.byCheck).toBe(true);
+    expect(lines[1]).toMatch(/1 audio checks, max 900 ms, answer by the check/);
+    expect(lines[1]).toMatch(/\| OK$/);
   });
 
   it('says WRONG when another passage is announced', () => {

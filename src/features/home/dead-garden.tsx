@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { useGenderedTranslation } from '@/features/gender';
 import { ActionButton, AppText, Card, IconTile, layout, spacing } from '@/ui';
 
 import { HOME_SYMBOLS } from './config';
@@ -17,7 +17,7 @@ export interface DeadGardenProps {
  * page. No reproach, a clear next step (writing.md › Best practices; charter, voice).
  */
 export function DeadGarden({ model, onRead }: DeadGardenProps) {
-  const { t } = useTranslation('home');
+  const { t } = useGenderedTranslation('home');
   const days = model.drought?.daysWithoutReading ?? model.garden.missedDaysInARow;
   const kept = t('dead.kept', { count: model.hizb.completed });
   const comeBack = t('dead.comeBack');

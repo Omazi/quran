@@ -57,8 +57,11 @@ le résultat change.
   événement abîmé ou forgé) est écartée par `normalizeJournal`.
 - **Réglages qui voyagent** : langue, objectif du jour, rappels, dernière page ouverte, écriture
   et taille du texte du lecteur (D41) (le plus récent gagne) ; graine des jardins (**la plus ancienne gagne** : un nouveau téléphone prend les
-  jardins du compte) ; introduction terminée (**vrai gagne**) ; « Montrer mon niveau » (D46, le plus
-  récent gagne) ; dernière khatma fêtée (**le plus grand gagne**, règle `highest` : une khatma fêtée
+  jardins du compte) ; « Je suis » (D47, `gender`, le plus récent gagne ; **« non précisé » est une
+  valeur valide** qui peut remplacer un choix) ; question déjà posée (`genderAsked`, **vrai gagne**) ;
+  introduction terminée (**vrai gagne**) ; « Montrer mon niveau » (D46, le plus
+  récent gagne) ; « Sons » et « Vibrations » (`soundsEnabled`, `hapticsEnabled`, le plus récent
+  gagne) ; dernière khatma fêtée (**le plus grand gagne**, règle `highest` : une khatma fêtée
   sur un téléphone ne l'est pas une seconde fois sur un autre). Une valeur que le magasin refuserait
   est ignorée, une clé inconnue aussi (venue d'une version plus récente).
 - **Horloges** : chaque téléphone horodate avec une horloge hybride (jamais en arrière, toujours

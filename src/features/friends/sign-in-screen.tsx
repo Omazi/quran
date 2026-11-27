@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next';
 import { Platform, StyleSheet, View } from 'react-native';
 
+import { useGenderedTranslation } from '@/features/gender';
 import { SOCIAL_CONFIG, type SignInProvider } from '@/domain/social';
 import { GardenScene, previewGardenState } from '@/features/garden';
 import {
@@ -48,7 +48,7 @@ export interface SignInScreenProps {
  * sky, a big serif sentence, one line of grey text, then the capsule buttons.
  */
 export function SignInScreen({ model, actions }: SignInScreenProps) {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   const press: Record<SignInProvider, () => void> = {
     apple: actions.signInWithApple,
     google: actions.signInWithGoogle,

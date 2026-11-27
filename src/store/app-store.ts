@@ -3,6 +3,7 @@ import { createStore, type StoreApi } from 'zustand/vanilla';
 import { goalPagesPerDay, readingMomentTime, READING_MOMENTS } from '@/domain/goal-plan';
 import { EMPTY_JOURNAL, recordPageRead } from '@/domain/khatm';
 import { PAGE_COUNT } from '@/domain/quran';
+import { parseGender } from '@/domain/shared/gender';
 import type { LocalDate } from '@/domain/shared/local-date';
 import { MAX_SECONDS_PER_DAY, type SecondsByDay } from '@/domain/stats';
 import {
@@ -24,6 +25,10 @@ import {
   DEFAULT_READER_SCRIPT,
   DEFAULT_READER_TEXT_SIZE,
   DEFAULT_REMINDERS,
+  DEFAULT_GENDER,
+  DEFAULT_GENDER_ASKED,
+  DEFAULT_HAPTICS_ENABLED,
+  DEFAULT_SOUNDS_ENABLED,
   DEFAULT_SHOW_LEVEL,
   EMPTY_TIME_SPENT,
   MAX_PAUSES,
@@ -143,6 +148,10 @@ export function createFirstLaunchSettings(userSeed: number): AppSettings {
     readerTextSize: DEFAULT_READER_TEXT_SIZE,
     showLevel: DEFAULT_SHOW_LEVEL,
     celebratedKhatm: NO_KHATMA_CELEBRATED,
+    gender: DEFAULT_GENDER,
+    genderAsked: DEFAULT_GENDER_ASKED,
+    soundsEnabled: DEFAULT_SOUNDS_ENABLED,
+    hapticsEnabled: DEFAULT_HAPTICS_ENABLED,
     pauses: [],
     reminders: DEFAULT_REMINDERS,
   };
@@ -398,6 +407,34 @@ export function createStateStore(
           throw new TypeError(`showLevel must be true or false, received ${String(showLevel)}.`);
         }
         if (get().settings.showLevel !== showLevel) changeSettings({ showLevel });
+      },
+
+      setGender: (gender) => {
+        // Refused loudly (a wrong gender would put the wrong words in someone's mouth), and the
+        // same answer again changes nothing, so nothing is written or sent twice.
+        parseGender(gender);
+        const { settings } = get();
+        if (settings.gender !== gender || !settings.genderAsked) {
+          changeSettings({ gender, genderAsked: true });
+        }
+      },
+
+      setSoundsEnabled: (soundsEnabled) => {
+        if (typeof soundsEnabled !== 'boolean') {
+          throw new TypeError(
+            `soundsEnabled must be true or false, received ${String(soundsEnabled)}.`,
+          );
+        }
+        if (get().settings.soundsEnabled !== soundsEnabled) changeSettings({ soundsEnabled });
+      },
+
+      setHapticsEnabled: (hapticsEnabled) => {
+        if (typeof hapticsEnabled !== 'boolean') {
+          throw new TypeError(
+            `hapticsEnabled must be true or false, received ${String(hapticsEnabled)}.`,
+          );
+        }
+        if (get().settings.hapticsEnabled !== hapticsEnabled) changeSettings({ hapticsEnabled });
       },
 
       markKhatmaCelebrated: (khatm) => {

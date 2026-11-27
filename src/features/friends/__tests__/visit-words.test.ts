@@ -13,6 +13,7 @@ import type { FriendCard } from '../friends-model';
 const IMANE: FriendCard = {
   userId: 'demo-imane',
   name: 'Imane',
+  gender: null,
   garden: null,
   hizbCompleted: 38,
   water: { kind: 'today' },

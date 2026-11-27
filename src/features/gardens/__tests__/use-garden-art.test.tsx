@@ -27,20 +27,20 @@ describe('useGardenArt', () => {
 
   it('draws the first garden with the art in the app, without downloading anything', async () => {
     const load = jest.fn();
-    const { result } = await renderHook(() => useGardenArt('fountain-courtyard', load));
+    const { result } = await renderHook(() => useGardenArt('fountain-courtyard', { load: load }));
     expect(result.current).toEqual({ art: LEVEL_1_ART, tint: null, status: 'ready' });
     expect(load).not.toHaveBeenCalled();
   });
 
   it('draws a friend who hides their level (null) with the first garden', async () => {
-    const { result } = await renderHook(() => useGardenArt(null, jest.fn()));
+    const { result } = await renderHook(() => useGardenArt(null, { load: jest.fn() }));
     expect(result.current.art).toBe(LEVEL_1_ART);
   });
 
   it('shows the placeholder cast while the pack of the level downloads, then its own garden', async () => {
     let resolve: (files: GardenArtFiles) => void = () => undefined;
     const load = jest.fn(() => new Promise<GardenArtFiles>((r) => (resolve = r)));
-    const { result } = await renderHook(() => useGardenArt('oasis', load));
+    const { result } = await renderHook(() => useGardenArt('oasis', { load: load }));
     expect(load).toHaveBeenCalledWith(2);
     expect(result.current.status).toBe('loading');
     expect(result.current.art).toBe(LEVEL_1_ART);
@@ -53,7 +53,7 @@ describe('useGardenArt', () => {
 
   it('keeps the placeholder when the pack cannot be had (offline, a file that failed its check)', async () => {
     const load = jest.fn(() => Promise.reject(new Error('offline')));
-    const { result } = await renderHook(() => useGardenArt('night-garden', load));
+    const { result } = await renderHook(() => useGardenArt('night-garden', { load: load }));
     await act(async () => undefined);
     expect(load).toHaveBeenCalledWith(7);
     expect(result.current.status).toBe('unavailable');

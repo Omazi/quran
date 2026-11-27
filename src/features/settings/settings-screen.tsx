@@ -1,4 +1,10 @@
 import { useTranslation } from 'react-i18next';
+import {
+  useGenderedTranslation,
+  choiceOfGender,
+  GENDER_CHOICES,
+  genderOfChoice,
+} from '@/features/gender';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -19,6 +25,7 @@ import { DiagnosticsSection } from '@/features/diagnostics';
 import { SyncStatusSection } from '@/features/sync';
 
 import { DailyGoalSection } from './daily-goal-section';
+import { FeedbackSection } from './feedback-section';
 import { RemindersSection } from './reminders-section';
 import type { SettingsActions, SettingsModel } from './use-settings';
 import { VersionSection } from './voice-diagnostics-section';
@@ -32,7 +39,8 @@ const NOTICE_SYMBOL: IconSymbol = { ios: 'info.circle', android: 'info' };
 
 /**
  * The settings: a grouped list of the few things the system does not already decide
- * (settings.md › Best practices) — the language, the daily goal, the reminders
+ * (settings.md › Best practices) — the language, what the person says they are ("Je suis"), the
+ * daily goal, the reminders
  * (managing-notifications.md › Best practices) — and the way back to the introduction
  * (onboarding.md › Best practices). A page opened from the last card of the profile: its title is
  * in the system navigation bar, which the route gives it.
@@ -116,7 +124,7 @@ export interface SettingsSectionsProps extends SettingsScreenProps {
 
 /** The sections of the settings, to place in a `GroupedList`. */
 export function SettingsSections({ model, actions, title }: SettingsSectionsProps) {
-  const { t } = useTranslation('settings');
+  const { t } = useGenderedTranslation('settings');
   const languageOptions = model.language.options.map((choice) => ({
     value: choice,
     label: t(`language.options.${choice}`),
@@ -147,6 +155,19 @@ export function SettingsSections({ model, actions, title }: SettingsSectionsProp
           />
         ) : null}
       </ListSection>
+      {/* "Je suis": so that the words that speak to the person, and of them, agree. */}
+      <ListSection footer={t('gender.note')}>
+        <ChoiceRow
+          label={t('gender.label')}
+          options={GENDER_CHOICES.map((choice) => ({
+            value: choice,
+            label: t(`gender.options.${choice}`),
+          }))}
+          value={choiceOfGender(model.gender)}
+          onChange={(choice) => actions.setGender(genderOfChoice(choice))}
+          testID="gender"
+        />
+      </ListSection>
       <DailyGoalSection
         title={t('goal.title')}
         model={model.dailyGoal}
@@ -158,6 +179,12 @@ export function SettingsSections({ model, actions, title }: SettingsSectionsProp
         onChange={actions.changeReminders}
         onOpenSystemSettings={actions.openSystemSettings}
         onRequestPermission={actions.requestNotificationPermission}
+      />
+      <FeedbackSection
+        title={t('feedback.title')}
+        model={model.feedback}
+        onSoundsChange={actions.setSoundsEnabled}
+        onHapticsChange={actions.setHapticsEnabled}
       />
       <ListSection>
         <ListRow

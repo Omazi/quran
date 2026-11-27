@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { PAGE_COUNT } from '@/domain/quran';
 import type { StatsPeriod } from '@/domain/stats';
+import { useGenderedTranslation } from '@/features/gender';
 import {
   ActionButton,
   AppText,
@@ -68,8 +69,8 @@ export interface StatsSectionsProps {
  * garden it grows.
  */
 export function StatsSections({ model, actions, onRead }: StatsSectionsProps) {
-  const { t } = useTranslation('profile');
-  const { t: tHome } = useTranslation('home');
+  const { t } = useGenderedTranslation('profile');
+  const { t: tHome } = useGenderedTranslation('home');
   if (model.status === 'loading') {
     return (
       <Card tone="raised">

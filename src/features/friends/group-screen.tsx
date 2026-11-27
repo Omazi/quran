@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { useGenderedTranslation } from '@/features/gender';
 import type { LeaderboardPeriod } from '@/domain/social';
 import { ActionButton, AppText, Avatar, Card, SegmentedChoice, spacing } from '@/ui';
 
@@ -26,7 +26,7 @@ export interface GroupScreenProps {
  * native bar's (see the route).
  */
 export function GroupScreen({ model, refusal, actions }: GroupScreenProps) {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   const periods: readonly { value: LeaderboardPeriod['kind']; label: string }[] = [
     { value: 'week', label: t('group.week') },
     { value: 'month', label: t('group.month') },
@@ -134,7 +134,7 @@ export interface NewGroupScreenProps {
  * name follows the rules of a display name (rule 8); a refusal is said under the field.
  */
 export function NewGroupScreen({ model, actions }: NewGroupScreenProps) {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   return (
     <FriendsPage isUnderBar testID="new-group">
       <Card contentGap="md">

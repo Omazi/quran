@@ -210,14 +210,14 @@ describe('Rule 11 — search by name (recherche par nom)', () => {
     });
 
     it('a stranger appears by default', () => {
-      expect(namesFound('mus', [candidate(MUSTAPHA, 'Mustapha')])).toEqual(['Mustapha']);
+      expect(namesFound('mos', [candidate(MUSTAPHA, 'Mostapha')])).toEqual(['Mostapha']);
     });
   });
 
   describe('what a result shows', () => {
     it('only the identifier, the name and the relation', () => {
-      const [result] = searchPeople(OMAR, 'mus', [candidate(MUSTAPHA, 'Mustapha')]);
-      expect(result).toEqual({ userId: MUSTAPHA, displayName: 'Mustapha', relation: 'none' });
+      const [result] = searchPeople(OMAR, 'mos', [candidate(MUSTAPHA, 'Mostapha')]);
+      expect(result).toEqual({ userId: MUSTAPHA, displayName: 'Mostapha', relation: 'none' });
       expect(Object.keys(result ?? {}).sort()).toEqual(['displayName', 'relation', 'userId']);
     });
 

@@ -10,7 +10,7 @@ const HALF_OF_A_CHARACTER_PAIR = '\uD83C';
 const MOON = '\u{1F319}';
 
 describe('Rule 1 — display name (nom affiché)', () => {
-  it.each(['Omar', 'Mustapha', 'Sarah', 'Taghread', 'تغريد', 'Omar B.'])(
+  it.each(['Omar', 'Mostapha', 'Sarah', 'Taghread', 'تغريد', 'Omar B.'])(
     'accepts "%s" and returns it unchanged',
     (name) => {
       expect(parseDisplayName(name)).toBe(name);

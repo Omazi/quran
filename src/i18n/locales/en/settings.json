@@ -25,6 +25,15 @@
       "cancel": "Cancel"
     }
   },
+  "gender": {
+    "label": "I am",
+    "options": {
+      "male": "A man",
+      "female": "A woman",
+      "unspecified": "Prefer not to say"
+    },
+    "note": "So the app speaks to you properly. Your friends see it too."
+  },
   "goal": {
     "title": "Daily Goal",
     "pagesPerDay": "Pages per Day",
@@ -55,6 +64,12 @@
       "not-asked": "Your phone has not asked yet whether this app may send you notifications. Until it does, your reminders cannot arrive.",
       "none-enabled": "With no reminder on, the app sends you no notifications."
     }
+  },
+  "feedback": {
+    "title": "Sounds and Vibrations",
+    "sounds": "Sounds",
+    "haptics": "Vibrations",
+    "note": "Sounds stay quiet when your phone is on silent, and while the app listens to your recitation."
   },
   "introduction": {
     "replay": "See the Introduction Again"

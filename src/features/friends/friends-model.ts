@@ -1,4 +1,5 @@
 import type { GardenState } from '@/domain/garden';
+import type { Gender } from '@/domain/shared/gender';
 import type { LocalDate } from '@/domain/shared/local-date';
 import type {
   FriendRequests,
@@ -18,6 +19,8 @@ import { gardenStateOf, waterStatusOf, type WaterStatus } from './friend-garden'
 export interface FriendCard {
   readonly userId: UserId;
   readonly name: string;
+  /** What the friend says they are; null when they have not said. Words about them follow it. */
+  readonly gender: Gender | null;
   /** Null when the friend hides their garden or has not published it yet. */
   readonly garden: GardenState | null;
   readonly hizbCompleted: number | null;
@@ -66,6 +69,7 @@ export function friendCardOf(friend: FriendView, today: LocalDate): FriendCard {
   return {
     userId: friend.userId,
     name: friend.displayName,
+    gender: friend.gender,
     garden: garden === null ? null : gardenStateOf(garden, today),
     hizbCompleted: garden === null ? null : garden.hizbCompleted,
     water: garden === null ? null : waterStatusOf(garden.lastWateredOn, today),

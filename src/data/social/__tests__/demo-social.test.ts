@@ -133,6 +133,39 @@ describe('Demonstration of accounts and friends', () => {
       });
     });
 
+    it('the demonstration people each say what they are: Omar and Mostapha men, Sarah and Taghread women, Yacine a man', async () => {
+      const { demo } = await signedIn();
+
+      expect((await demo.repository.getMyProfile()).gender).toBe('male');
+      const friends = await demo.repository.listFriends();
+      expect(Object.fromEntries(friends.map((friend) => [friend.userId, friend.gender]))).toEqual({
+        [mustapha]: 'male',
+        [sarah]: 'female',
+        [taghread]: 'female',
+      });
+      // Yacine's request is a stranger's: the name only, no gender (rule 4).
+      const requests = await demo.repository.listFriendRequests();
+      expect(requests.incoming.map((request) => request.person)).toEqual([
+        { kind: 'other', userId: yacine, displayName: 'Yacine' },
+      ]);
+      expect(await demo.repositoryAs(sarah).getMyProfile()).toMatchObject({ gender: 'female' });
+    });
+
+    it('the person changes their gender, and friends see it at once; null says "not said"', async () => {
+      const { demo } = await signedIn();
+
+      await demo.repository.updateMyProfile({ gender: 'female' });
+      expect(await demo.repositoryAs(sarah).getPersonView(omar)).toMatchObject({
+        kind: 'friend',
+        gender: 'female',
+      });
+      await demo.repository.updateMyProfile({ gender: null });
+      expect(await demo.repositoryAs(sarah).getPersonView(omar)).toMatchObject({ gender: null });
+      await expect(
+        demo.repository.updateMyProfile({ gender: 'x' as unknown as 'male' }),
+      ).rejects.toThrow(RangeError);
+    });
+
     it('a new name is checked by the rule, and a refused name changes nothing', async () => {
       const { demo } = await signedIn();
 
@@ -242,7 +275,7 @@ describe('Demonstration of accounts and friends', () => {
       const friends = await demo.repository.listFriends();
 
       expect(friends.map((friend) => friend.displayName)).toEqual([
-        'Mustapha',
+        'Mostapha',
         'Sarah',
         'Taghread',
       ]);
@@ -263,7 +296,7 @@ describe('Demonstration of accounts and friends', () => {
       expect((await demo.repository.listFriendRequests()).incoming).toEqual([]);
     });
 
-    it('a request is answered by the other side: Mustapha asks Yacine, Yacine accepts, only he can', async () => {
+    it('a request is answered by the other side: Mostapha asks Yacine, Yacine accepts, only he can', async () => {
       const { demo } = await signedIn();
       await demo.repositoryAs(mustapha).sendFriendRequest(yacine);
 
@@ -323,7 +356,7 @@ describe('Demonstration of accounts and friends', () => {
       await demo.repositoryAs(sarah).removeFriend(omar);
 
       expect((await demo.repository.listFriends()).map((friend) => friend.displayName)).toEqual([
-        'Mustapha',
+        'Mostapha',
         'Taghread',
       ]);
       await demo.repository.sendFriendRequest(sarah);
@@ -464,7 +497,7 @@ describe('Demonstration of accounts and friends', () => {
       const { demo } = await signedIn();
 
       expect(await demo.repository.listReceivedNudges()).toEqual([
-        { fromId: mustapha, fromName: 'Mustapha', kind: 'encourage', sentOn: addDays(START, -1) },
+        { fromId: mustapha, fromName: 'Mostapha', kind: 'encourage', sentOn: addDays(START, -1) },
       ]);
     });
 
@@ -489,12 +522,12 @@ describe('Demonstration of accounts and friends', () => {
       expect(groups.map((group) => group.name)).toEqual(['Famille']);
       expect(members.map((member) => [member.displayName, member.role])).toEqual([
         ['Omar', 'owner'],
-        ['Mustapha', 'member'],
+        ['Mostapha', 'member'],
         ['Sarah', 'member'],
         ['Taghread', 'member'],
       ]);
       expect(board.map((entry) => entry.displayName).sort()).toEqual([
-        'Mustapha',
+        'Mostapha',
         'Omar',
         'Sarah',
         'Taghread',

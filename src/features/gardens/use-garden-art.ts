@@ -29,10 +29,17 @@ export interface StyleArt {
  */
 export function useGardenArt(
   styleId: GardenStyleId | null,
-  load: (level: number) => Promise<GardenArtFiles> = loadGardenArtFiles,
+  {
+    appearance,
+    load = loadGardenArtFiles,
+  }: {
+    /** Fixes the placeholder's appearance (a picture that is always light). */
+    appearance?: 'light' | 'dark';
+    load?: (level: number) => Promise<GardenArtFiles>;
+  } = {},
 ): StyleArt {
   const level = styleId === null ? null : packLevelOf(styleId);
-  const tint = useGardenTint(styleId ?? 'fountain-courtyard');
+  const tint = useGardenTint(styleId ?? 'fountain-courtyard', appearance);
   const [loaded, setLoaded] = useState<{ level: number; art: GardenArt | null } | null>(null);
 
   useEffect(() => {

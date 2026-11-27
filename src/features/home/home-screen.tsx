@@ -1,9 +1,8 @@
-import type { GardenStyleId } from '@/domain/levels';
 import type { ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { LocalDate } from '@/domain/shared/local-date';
+import { useGenderedTranslation } from '@/features/gender';
 import {
   Button,
   ContentUnavailable,
@@ -16,20 +15,17 @@ import {
   type IconSymbol,
 } from '@/ui';
 
-import { AddedCard } from './added-card';
 import type { Arrival } from './arrival';
 import { ArrivalSheet } from './arrival-sheet';
-import { DailyCard } from './daily-card';
 import { DeadGarden } from './dead-garden';
-import { GardenProgress, type GardenGrowing } from './garden-progress';
 import { GardenStage } from './garden-stage';
 import { HomeHeader } from './home-header';
 import type { HomeActions, HomeLayout, HomeModel, HomeReadyModel } from './home-model';
 import { KhatmaComplete } from './khatma-complete';
-import { NeighbourGardensSection } from './neighbour-gardens';
+import { LivingHome, type HomeGardenArt } from './living-home';
 import type { NeighbourGardens } from './neighbours';
-import { RecoveringBanner, ThirstBanner } from './notice-banner';
 import { StatePreviewSection } from './state-preview';
+import type { SkyChrome } from './use-sky-chrome';
 
 const UNAVAILABLE_SYMBOL: IconSymbol = { ios: 'leaf', android: 'eco' };
 
@@ -56,23 +52,46 @@ export interface HomeScreenProps {
   arrival: Arrival | null;
   /** The screen is in front (not under the reader): the garden's growth plays when it is. */
   isFocused?: boolean;
-  /** The garden style of the person's level (D46), from `useProgression`. */
-  styleId?: GardenStyleId | null;
+  /** Tests give the sky; the app follows the real local hour. */
+  chrome?: SkyChrome;
+  /** The art of the person's level garden (D46), from `useGardenArt`; none: the first garden. */
+  gardenArt?: HomeGardenArt;
 }
 
 /**
- * The home screen, the "Jardin" tab, as the validated mockups draw it (docs/design/accueil.png,
- * soif.png, mort.png, khatm.png, nouveau.png): where is my garden, and what do I read now?
+ * The home screen, the "Jardin" tab. A growing or thirsty garden is the living garden of the
+ * validated "wow" mockup (docs/design/maquette-wow, 27 November 2026): the garden full screen
+ * under the sky of the hour, the rest on glass (`LivingHome`). The dry earth (mort.png) and the
+ * completed khatma (khatm.png) keep their own pages, on their gradient.
  *
- * It only shows what it receives. One scroll view; at the top the garden on its gradient, the
- * signature of the screen, under the title; then the cards, in the order of importance
- * (layout.md › Visual hierarchy), with the one main button in the card of the day
- * (buttons.md › Style). A thirsty garden puts its banner first; a dead garden keeps only what
- * brings it back; a completed khatma has its own page.
+ * It only shows what it receives.
  */
 export function HomeScreen(props: HomeScreenProps) {
   const { model, actions } = props;
   if (model.status !== 'ready') return <UnavailableHome {...props} />;
+  if (model.layout === 'growing' || model.layout === 'thirsty') {
+    return (
+      <>
+        <LivingHome
+          model={model}
+          actions={actions}
+          today={props.today}
+          neighbours={props.neighbours}
+          avatarInitial={props.avatarInitial}
+          isFocused={props.isFocused ?? true}
+          chrome={props.chrome}
+          gardenArt={props.gardenArt}
+        />
+        {model.layout === 'growing' && props.arrival !== null ? (
+          <ArrivalSheet
+            arrival={props.arrival}
+            onDismiss={actions.dismissArrival}
+            onShare={actions.share}
+          />
+        ) : null}
+      </>
+    );
+  }
   return (
     <HomeFrame layout={model.layout}>
       {model.layout === 'complete' && model.completedKhatma !== null ? (
@@ -85,15 +104,8 @@ export function HomeScreen(props: HomeScreenProps) {
           }
         />
       ) : (
-        <GardenHome {...props} model={model} />
+        <DeadHome {...props} model={model} />
       )}
-      {model.layout === 'growing' && props.arrival !== null ? (
-        <ArrivalSheet
-          arrival={props.arrival}
-          onDismiss={actions.dismissArrival}
-          onShare={actions.share}
-        />
-      ) : null}
     </HomeFrame>
   );
 }
@@ -133,89 +145,33 @@ function HomeFrame({ layout: homeLayout, children }: { layout: HomeLayout; child
   );
 }
 
-function GardenHome({
+/** The dry earth (mort.png): the header, the earth in the middle, what brings it back. */
+function DeadHome({
   model,
   actions,
   today,
-  neighbours,
   avatarInitial,
   isFocused = true,
-  styleId = null,
+  gardenArt,
 }: HomeScreenProps & { model: HomeReadyModel }) {
-  const { garden, layout: homeLayout } = model;
-  const insets = useSafeInsets();
   return (
     <>
-      <View style={homeLayout === 'dead' ? styles.deadStage : styles.stage}>
-        {homeLayout === 'dead' ? null : (
-          // Down to the middle of the first card, as in the mockups: the cards rise over its end.
-          <GradientBackdrop
-            name={BACKDROPS[homeLayout]}
-            extendUp={insets.top + PULL_ROOM}
-            style={styles.backdrop}
-          />
-        )}
+      <View style={styles.deadStage}>
         <HomeHeader
           today={today}
           streakDays={model.streakDays}
           avatarInitial={avatarInitial}
           onOpenProfile={actions.openProfile}
         />
-        {homeLayout === 'dead' ? (
-          // The dry earth in the middle of the room left, as on the mockup.
-          <View style={styles.deadEarth}>
-            <GardenStage garden={garden} isActive={isFocused} styleId={styleId} />
-          </View>
-        ) : (
-          <GardenStage garden={garden} isActive={isFocused} styleId={styleId} />
-        )}
-        {homeLayout === 'dead' ? null : (
-          <GardenProgress hizb={model.hizb} waterRun={model.waterRun} growing={growingOf(model)} />
-        )}
-      </View>
-      {homeLayout === 'dead' ? (
-        <View style={styles.deadFoot}>
-          <DeadGarden model={model} onRead={actions.readAndWater} />
+        <View style={styles.deadEarth}>
+          <GardenStage garden={model.garden} isActive={isFocused} gardenArt={gardenArt} />
         </View>
-      ) : (
-        <>
-          <View style={styles.cards}>
-            {homeLayout === 'thirsty' &&
-            model.drought !== null &&
-            (garden.phase === 'thirsty' ||
-              garden.phase === 'wilting' ||
-              garden.phase === 'dying') ? (
-              <ThirstBanner phase={garden.phase} drought={model.drought} />
-            ) : null}
-            {model.notice === 'recovering' ? <RecoveringBanner /> : null}
-            <DailyCard
-              model={model}
-              onRead={actions.readAndWater}
-              onRecognize={actions.recognize}
-            />
-            {homeLayout === 'growing' && garden.lastUnlocked !== null ? (
-              <AddedCard element={garden.lastUnlocked} />
-            ) : null}
-          </View>
-          <NeighbourGardensSection
-            neighbours={neighbours}
-            onSeeAll={actions.openFriends}
-            onOpenFriend={actions.openFriend}
-          />
-        </>
-      )}
+      </View>
+      <View style={styles.deadFoot}>
+        <DeadGarden model={model} onRead={actions.readAndWater} />
+      </View>
     </>
   );
-}
-
-/**
- * What grows, for the line under the garden: only while the garden grows. A thirsty garden has
- * nothing to celebrate (soif.png), and a garden complete has nothing left to grow.
- */
-function growingOf(model: HomeReadyModel): GardenGrowing | null {
-  const next = model.garden.nextElement;
-  if (model.layout !== 'growing' || next === null) return null;
-  return { kind: next.element.kind, growth: next.growth, pages: model.growingPages };
 }
 
 /**
@@ -224,7 +180,7 @@ function growingOf(model: HomeReadyModel): GardenGrowing | null {
  * practices: clear next steps, and a button to take them).
  */
 function UnavailableHome({ actions, today, avatarInitial }: HomeScreenProps) {
-  const { t } = useTranslation('home');
+  const { t } = useGenderedTranslation('home');
   return (
     <HomeFrame layout="growing">
       <HomeHeader
@@ -255,15 +211,8 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { flexGrow: 1, paddingBottom: spacing.xl },
   backdrop: { position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 },
-  stage: { paddingBottom: spacing.xxl },
   deadStage: { flexGrow: 1 },
   deadFoot: { paddingBottom: spacing.md },
   deadEarth: { flexGrow: 1, justifyContent: 'center', paddingVertical: spacing.lg },
-  cards: {
-    marginTop: -spacing.xl,
-    paddingHorizontal: layout.screenMargin,
-    rowGap: spacing.md,
-    paddingBottom: spacing.lg,
-  },
   unavailableAction: { paddingHorizontal: layout.screenMargin, paddingVertical: spacing.md },
 });

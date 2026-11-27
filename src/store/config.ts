@@ -23,8 +23,14 @@ import type { ReminderSettings } from './types';
  * Version 8 adds `settings.showLevel` and `settings.celebratedKhatm` (D46): a version 7 document
  * shows its level (the default) and has celebrated nothing, its journal untouched, so an existing
  * user keeps their progress and level.
+ * Version 9 adds `settings.gender` and `settings.genderAsked` (the person says whether they are a
+ * man or a woman, so that the words agree; asked once, optional): a version 8 document has not
+ * said, and has not been asked.
+ * Version 10 adds `settings.soundsEnabled` and `settings.hapticsEnabled`, the switches "Sons" and
+ * "Vibrations" of the interface feedback (src/data/feedback): a version 9 document has both on,
+ * which is the default.
  */
-export const STORED_DATA_VERSION = 8;
+export const STORED_DATA_VERSION = 10;
 
 /** The key of the stored document. */
 export const STORED_DATA_KEY = 'app-data';
@@ -93,6 +99,18 @@ export const DEFAULT_DAILY_GOAL_PAGES = 5;
 
 /** A first launch shows the person's level to their friends (D46): they can hide it. */
 export const DEFAULT_SHOW_LEVEL = true;
+
+/** Nothing said about the gender yet: every text has its neutral wording (owner, 26 Nov 2026). */
+export const DEFAULT_GENDER = null;
+
+/** The question about the gender has not been asked yet. */
+export const DEFAULT_GENDER_ASKED = false;
+
+/** A first launch has the interface sounds on (they stay silent when the phone's switch is). */
+export const DEFAULT_SOUNDS_ENABLED = true;
+
+/** A first launch has the interface vibrations on (the system's own haptics setting still rules). */
+export const DEFAULT_HAPTICS_ENABLED = true;
 
 /** No khatma celebrated yet. */
 export const NO_KHATMA_CELEBRATED = 0;

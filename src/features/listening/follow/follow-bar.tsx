@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -10,6 +9,7 @@ import Animated, {
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import type { Unsubscribe } from '@/domain/listening';
+import { useGenderedTranslation } from '@/features/gender';
 import { fontFamily, listeningShape, spacing, useColorValues, type IconSymbol } from '@/ui';
 
 import { METER_MOTION } from '../config';
@@ -51,7 +51,7 @@ export function FollowBar({
   heardWords = NO_WORDS,
   onStop,
 }: FollowBarProps) {
-  const { t } = useTranslation('listening');
+  const { t } = useGenderedTranslation('listening');
   const colors = useColorValues();
   const title = isHearing ? t('follow.hearing') : t('follow.title');
   const heard = heardWords.join(' ');

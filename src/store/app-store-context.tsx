@@ -1,4 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react';
+import { createStore, type StoreApi } from 'zustand/vanilla';
 import { useStore } from 'zustand/react';
 
 import type { AppStore } from './app-store';
@@ -40,4 +41,21 @@ export function useAppStoreApi(): AppStore {
     throw new Error('useAppStoreApi must be used below an AppStoreProvider.');
   }
   return store;
+}
+
+/** What `useOptionalAppStore` reads when there is no store: nothing. */
+const NO_STORE: StoreApi<AppState | null> = createStore<AppState | null>(() => null);
+
+/**
+ * Like `useAppStore`, for words and screens that must also work outside the app's store (the
+ * pages of the Proches tab rendered on their own): without a store it gives `fallback`.
+ */
+export function useOptionalAppStore<Selected, Fallback>(
+  selector: (state: AppState) => Selected,
+  fallback: Fallback,
+): Selected | Fallback {
+  const store = useContext(AppStoreContext);
+  // `AppStore` is a `StoreApi<AppState>`: read as a store that may hold nothing, it is only read.
+  const readable = (store ?? NO_STORE) as StoreApi<AppState | null>;
+  return useStore(readable, (state) => (state === null ? fallback : selector(state)));
 }

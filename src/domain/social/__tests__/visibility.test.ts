@@ -8,6 +8,7 @@ import {
   type Badge,
   type Bond,
   type GardenSummary,
+  type Gender,
   type PersonData,
 } from '../index';
 import {
@@ -39,7 +40,9 @@ const BADGES: readonly Badge[] = [
   { userId: SARAH, khatmNumber: 2, completedOn: day('2026-08-01') },
 ];
 
-function sarah(overrides: Partial<{ showGarden: boolean; showLevel: boolean }> = {}): PersonData {
+function sarah(
+  overrides: Partial<{ showGarden: boolean; showLevel: boolean; gender: Gender | null }> = {},
+): PersonData {
   return { profile: profileOf(SARAH, 'Sarah', overrides), garden: GARDEN, badges: BADGES };
 }
 
@@ -69,6 +72,7 @@ describe('Rule 4 — what another person sees of me (viewOf)', () => {
         kind: 'friend',
         userId: SARAH,
         displayName: 'Sarah',
+        gender: null,
         garden: {
           hizbCompleted: 42,
           health: 0.75,
@@ -115,9 +119,25 @@ describe('Rule 4 — what another person sees of me (viewOf)', () => {
         kind: 'friend',
         userId: SARAH,
         displayName: 'Sarah',
+        gender: null,
         garden: null,
         level: null,
       });
+    });
+
+    it('sees the gender of the person, whatever they hide: it is how to speak of them', () => {
+      const female: PersonData = {
+        profile: profileOf(SARAH, 'Sarah', {
+          gender: 'female',
+          showGarden: false,
+          showLevel: false,
+        }),
+        garden: GARDEN,
+        badges: BADGES,
+      };
+
+      expect(viewOf(female, OMAR, FRIENDS)).toMatchObject({ kind: 'friend', gender: 'female' });
+      expect(viewOf(sarah(), OMAR, FRIENDS)).toMatchObject({ kind: 'friend', gender: null });
     });
 
     it('sees no garden and no level before the app of the person has published a summary', () => {
@@ -149,8 +169,8 @@ describe('Rule 4 — what another person sees of me (viewOf)', () => {
         'someone whose request was declined',
         declineFriendRequest(requestFriendship(NO_BOND, OMAR, SARAH, TODAY), SARAH, TODAY),
       ],
-    ])('%s sees the name only', (_label, bond) => {
-      expect(viewOf(sarah(), OMAR, bond)).toEqual({
+    ])('%s sees the name only, not even the gender', (_label, bond) => {
+      expect(viewOf(sarah({ gender: 'female' }), OMAR, bond)).toEqual({
         kind: 'other',
         userId: SARAH,
         displayName: 'Sarah',

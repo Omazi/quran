@@ -4,11 +4,14 @@
   "loading": "جارٍ تحميل أحبّتك",
   "failed": {
     "title": "تعذّر عرض أحبّتك",
-    "text": "حاول مرة أخرى بعد قليل."
+    "text": "حاول مرة أخرى بعد قليل.",
+    "text_female": "حاولي مرة أخرى بعد قليل."
   },
   "signIn": {
     "heading": "اقرأ مع أحبّتك",
+    "heading_female": "اقرئي مع أحبّتك",
     "text": "شاهد حدائقهم تنمو، وشجّعهم، واقرؤوا معًا في مجموعات. تحتاج إلى حساب لذلك.",
+    "text_female": "شاهدي حدائقهم تنمو، وشجّعيهم، واقرؤوا معًا في مجموعات. تحتاجين إلى حساب لذلك.",
     "apple": "المتابعة باستخدام Apple",
     "google": "المتابعة باستخدام Google",
     "email": "المتابعة بالبريد الإلكتروني",
@@ -23,7 +26,7 @@
   },
   "list": {
     "requestsTitle": "الطلبات",
-    "requestDetail": "يريد أن يكون من أحبّتك",
+    "requestDetail": "طلب للانضمام إلى أحبّتك",
     "accept": "قبول {{name}}",
     "decline": "رفض {{name}}",
     "acceptShort": "قبول",
@@ -31,6 +34,7 @@
     "gardensTitle": "حدائقهم",
     "noFriends": "لا أحبّة لديك بعد",
     "noFriendsNote": "أضف أحدًا برمزك، أو بمسح رمزه.",
+    "noFriendsNote_female": "أضيفي أحدًا برمزك، أو بمسح رمزه.",
     "groupsTitle": "المجموعات",
     "members_zero": "لا أعضاء",
     "members_one": "عضو واحد",
@@ -42,10 +46,14 @@
     "createGroup": "إنشاء مجموعة",
     "seeAll": "عرض الكل",
     "addTitle": "أضف أحبّتك",
+    "addTitle_female": "أضيفي أحبّتك",
     "addText": "شاهد حدائقهم تنمو وشجّعوا بعضكم.",
+    "addText_female": "شاهدي حدائقهم تنمو وشجّعوا بعضكم.",
     "scan": "امسح",
+    "scan_female": "امسحي",
     "myQr": "رمز QR الخاص بي",
-    "examples": "أمثلة لترى كيف يبدو الأمر. تختفي مع أول حبيب تضيفه."
+    "examples": "أمثلة لترى كيف يبدو الأمر. تختفي مع أول حبيب تضيفه.",
+    "examples_female": "أمثلة لتري كيف يبدو الأمر. تختفي مع أول حبيب تضيفينه."
   },
   "card": {
     "hizb_zero": "{{count}} حزب",
@@ -90,13 +98,19 @@
     "streakValue_other": "{{count}} يوم",
     "level": "المستوى",
     "badges": "الختمات المكتملة",
-    "gardenHidden": "لا يشارك {{name}} حديقته.",
-    "readingTitle": "قراءته",
+    "gardenHidden": "حديقة {{name}} غير مشارَكة.",
+    "gardenHidden_male": "لا يشارك {{name}} حديقته.",
+    "gardenHidden_female": "لا تشارك {{name}} حديقتها.",
+    "readingTitle": "القراءة",
+    "readingTitle_male": "قراءته",
+    "readingTitle_female": "قراءتها",
     "words": "الكلمات المقروءة",
     "verses": "الآيات المقروءة",
     "hasanat": "الحسنات (تقدير)",
     "hasanatNote": "تقدير: كل حرف مقروء بعشر حسنات، على حديث ابن مسعود (سنن الترمذي، رقم 2910). والله وحده يعلم الأجر.",
-    "levelHidden": "لا يشارك {{name}} مستواه ولا قراءته.",
+    "levelHidden": "المستوى والقراءة غير مشارَكين لدى {{name}}.",
+    "levelHidden_male": "لا يشارك {{name}} مستواه ولا قراءته.",
+    "levelHidden_female": "لا تشارك {{name}} مستواها ولا قراءتها.",
     "encourage": "تشجيع {{name}}",
     "encouraged": "تمّ التشجيع اليوم",
     "encourageNote": "تشجيع واحد في اليوم.",
@@ -109,7 +123,7 @@
     "blockMessage": "لن يستطيع هذا الشخص أن يجدك أو يرسل إليك طلبًا أو يرى حديقتك. ولن يُبلَّغ بذلك.",
     "blockConfirm": "حظر",
     "cancel": "إلغاء",
-    "notFriend": "{{name}} ليس من أحبّتك.",
+    "notFriend": "لا يوجد {{name}} ضمن أحبّتك.",
     "unavailableTitle": "لا أحد لعرضه",
     "unavailableText": "هذا الحساب غير متاح.",
     "hizbOutOf_zero": "{{count}} من 60 حزبًا",
@@ -122,7 +136,11 @@
     "readHint": "يفتح المصحف حيث توقفت.",
     "options": "خيارات أخرى",
     "encourageShort": "تشجيع",
-    "readWith": "اقرأ مع {{name}}",
+    "readWith": "{{verb}} مع {{name}}",
+    "readVerb": "اقرأ",
+    "readVerb_female": "اقرئي",
+    "readWith_male": "{{verb}} معه",
+    "readWith_female": "{{verb}} معها",
     "streakShort_zero": "{{count}} ي",
     "streakShort_one": "{{count}} ي",
     "streakShort_two": "{{count}} ي",
@@ -145,12 +163,15 @@
     "scan": "مسح رمز QR",
     "qrCaption": "يمسحه حبيبك من Jannatuk.",
     "shareShort": "شارك",
+    "shareShort_female": "شاركي",
     "scanShort": "امسح",
+    "scanShort_female": "امسحي",
     "close": "إغلاق"
   },
   "scan": {
     "title": "مسح رمز QR",
     "instructions": "وجّه الكاميرا إلى رمز QR الخاص بحبيبك: تتم إضافته فور قراءة الرمز.",
+    "instructions_female": "وجّهي الكاميرا إلى رمز QR الخاص بحبيبك: تتم إضافته فور قراءة الرمز.",
     "preview": "معاينة الكاميرا",
     "adding": "جارٍ إضافة حبيبك…",
     "notAnInvitation": "رمز QR هذا ليس دعوة من جنتك.",
@@ -159,7 +180,9 @@
     "continue": "متابعة",
     "deniedTitle": "الوصول إلى الكاميرا معطّل",
     "deniedText": "لمسح رمز QR لحبيب، اسمح باستخدام الكاميرا من الإعدادات.",
+    "deniedText_female": "لمسح رمز QR لحبيب، اسمحي باستخدام الكاميرا من الإعدادات.",
     "openSettings": "افتح الإعدادات",
+    "openSettings_female": "افتحي الإعدادات",
     "failedTitle": "الكاميرا لا تعمل",
     "failedText": "ربما يستخدمها تطبيق آخر.",
     "typeInstead": "يمكنك أيضًا كتابة رمزه في الصفحة السابقة."
@@ -185,6 +208,7 @@
     "noOneToAdd": "كل أحبّتك في هذه المجموعة.",
     "notFoundTitle": "المجموعة غير موجودة",
     "notFoundText": "لست عضوًا في هذه المجموعة، أو لم تعد كذلك.",
+    "notFoundText_female": "لستِ عضوةً في هذه المجموعة، أو لم تعودي كذلك.",
     "addShort": "إضافة"
   },
   "newGroup": {
@@ -192,10 +216,12 @@
     "nameField": "اسم المجموعة",
     "namePlaceholder": "العائلة، الأصدقاء…",
     "create": "إنشاء المجموعة",
-    "note": "ستكون مالكها، ثم تضيف إليها أحبّتك."
+    "note": "ستكون مالكها، ثم تضيف إليها أحبّتك.",
+    "note_female": "ستكونين مالكتها، ثم تضيفين إليها أحبّتك."
   },
   "refusals": {
     "name-empty": "اكتب اسمًا.",
+    "name-empty_female": "اكتبي اسمًا.",
     "name-too-long": "30 حرفًا على الأكثر.",
     "name-forbidden-character": "في هذا الاسم حرف غير مقبول.",
     "already-friends": "أنتما من الأحبّة بالفعل.",
@@ -206,15 +232,18 @@
     "invite-code-malformed": "هذا ليس رمز دعوة: 8 حروف وأرقام.",
     "invite-not-found": "لا توجد دعوة بهذا الرمز.",
     "invite-expired": "لم يعد هذا الرمز صالحًا. اطلب رمزًا جديدًا.",
+    "invite-expired_female": "لم يعد هذا الرمز صالحًا. اطلبي رمزًا جديدًا.",
     "invite-is-yours": "هذا رمزك أنت.",
     "search-query-too-long": "30 حرفًا على الأكثر.",
     "search-query-forbidden-character": "في البحث حرف غير مقبول.",
     "too-many-searches": "عمليات بحث كثيرة دفعة واحدة. حاول بعد دقيقة.",
+    "too-many-searches_female": "عمليات بحث كثيرة دفعة واحدة. حاولي بعد دقيقة.",
     "already-nudged-today": "تمّ التشجيع اليوم.",
-    "already-a-member": "عضو في هذه المجموعة بالفعل.",
+    "already-a-member": "ضمن أعضاء هذه المجموعة بالفعل.",
     "group-full": "هذه المجموعة ممتلئة.",
     "email-malformed": "يبدو العنوان هكذا: name@example.com.",
     "email-code-malformed": "الرمز من 6 أرقام.",
-    "unknown": "لم ينجح ذلك. حاول مرة أخرى بعد قليل."
+    "unknown": "لم ينجح ذلك. حاول مرة أخرى بعد قليل.",
+    "unknown_female": "لم ينجح ذلك. حاولي مرة أخرى بعد قليل."
   }
 }

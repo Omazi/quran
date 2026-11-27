@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { Linking } from 'react-native';
 
 import { deviceNotificationPermissions } from '@/data/notifications';
+import { useSelfDisplayName } from '@/features/friends';
 import { useProgression } from '@/features/gardens';
 import { ProfileScreen, useProfileGarden, useProfileStats } from '@/features/profile';
 import { useResumePage } from '@/features/reader';
@@ -17,6 +18,7 @@ export default function ProfileRoute() {
   const { model: stats, actions: statsActions } = useProfileStats();
   const garden = useProfileGarden();
   const progression = useProgression();
+  const displayName = useSelfDisplayName();
   const showLevel = useAppStore((state) => state.settings.showLevel);
   const setShowLevel = useAppStore((state) => state.setShowLevel);
   const resumePage = useResumePage();
@@ -38,6 +40,7 @@ export default function ProfileRoute() {
       garden={garden}
       progression={progression}
       showLevel={showLevel}
+      displayName={displayName}
       actions={{
         openSettings: () => router.push('/settings'),
         read: () => router.push(`/reader/${resumePage}`),

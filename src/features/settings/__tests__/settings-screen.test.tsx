@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 
 import {
   createInertNotificationPermissions,
@@ -18,6 +18,7 @@ import {
   withDescendants,
 } from '@/ui/test-support/environment';
 
+import { playFeedback } from '@/features/feedback';
 import type { ConfirmAction, ConfirmActionOptions } from '@/ui';
 
 import { SettingsScreen } from '../settings-screen';
@@ -40,6 +41,8 @@ jest.mock('expo-notifications', () =>
     )
     .loadQuietly(),
 );
+
+jest.mock('@/features/feedback', () => ({ playFeedback: jest.fn() }));
 
 const NO_BREAK_SPACE = ' ';
 
@@ -200,8 +203,8 @@ describe('settings screen', () => {
     const cards = withDescendants(screen.getByTestId('settings-list')).filter(
       (element) => JSON.stringify(styleOf(element).backgroundColor) === surface,
     );
-    // Language, daily goal, reminders, introduction, backup status, version.
-    expect(cards).toHaveLength(6);
+    // Language, gender, daily goal, reminders, sounds and vibrations, introduction, backup status, version.
+    expect(cards).toHaveLength(8);
   });
 });
 
@@ -211,12 +214,10 @@ describe('language setting', () => {
 
   it('offers the phone’s language first, then the three languages of the app', async () => {
     await renderSettings();
-    expect(screen.getAllByRole('radio').map((option) => option.props.accessibilityLabel)).toEqual([
-      'Langue du téléphone',
-      'Français',
-      'English',
-      'العربية',
-    ]);
+    const languages = within(screen.getByTestId('language'));
+    expect(
+      languages.getAllByRole('radio').map((option) => option.props.accessibilityLabel),
+    ).toEqual(['Langue du téléphone', 'Français', 'English', 'العربية']);
     // The app has the phone's language: nothing to explain, nothing to restart.
     expect(screen.queryByText(MISSING_NOTE)).toBeNull();
     expect(screen.queryByTestId('restart-app')).toBeNull();
@@ -405,6 +406,59 @@ describe('language setting', () => {
     await fireEvent.press(screen.getByTestId('restart-app'));
     expect(direction.platform.restart).toHaveBeenCalledTimes(2);
     warn.mockRestore();
+  });
+});
+
+describe('gender setting ("Je suis")', () => {
+  it('offers a man, a woman or "prefer not to say", the last one chosen until the person says', async () => {
+    await renderSettings();
+
+    expect(screen.getByTestId('gender')).toHaveProp('accessibilityLabel', 'Je suis');
+    expect(screen.getByRole('radio', { name: 'Un homme' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Une femme' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Préférer ne pas dire' })).toBeChecked();
+    // Says why it is asked, and who sees it.
+    expect(
+      screen.getByText('Pour s’adresser à toi correctement. Tes proches le voient aussi.'),
+    ).toBeOnTheScreen();
+  });
+
+  it('saves a woman, then a man, and the choice is shown at once', async () => {
+    const { store } = await renderSettings();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Une femme' }));
+    expect(store.getState().settings).toMatchObject({ gender: 'female', genderAsked: true });
+    expect(screen.getByRole('radio', { name: 'Une femme' })).toBeChecked();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Un homme' }));
+    expect(store.getState().settings.gender).toBe('male');
+    expect(screen.getByRole('radio', { name: 'Un homme' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Une femme' })).not.toBeChecked();
+  });
+
+  it('goes back to "prefer not to say", which is nothing said and the question answered', async () => {
+    const { store } = await renderSettings({ settings: { gender: 'female', genderAsked: true } });
+    expect(screen.getByRole('radio', { name: 'Une femme' })).toBeChecked();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Préférer ne pas dire' }));
+
+    expect(store.getState().settings).toMatchObject({ gender: null, genderAsked: true });
+    expect(screen.getByRole('radio', { name: 'Préférer ne pas dire' })).toBeChecked();
+  });
+
+  it('is written in English and in Arabic', async () => {
+    await renderSettings({ language: 'en' });
+    expect(screen.getByTestId('gender')).toHaveProp('accessibilityLabel', 'I am');
+    expect(screen.getByRole('radio', { name: 'A woman' })).toBeOnTheScreen();
+  });
+
+  it('is written in Arabic, with the feminine and masculine nouns', async () => {
+    setDeviceConditions({ rightToLeft: true });
+    await renderSettings({ language: 'ar', rightToLeft: true, settings: { language: 'ar' } });
+    expect(screen.getByTestId('gender')).toHaveProp('accessibilityLabel', 'أنا');
+    expect(screen.getByRole('radio', { name: 'رجل' })).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'امرأة' })).toBeOnTheScreen();
+    expect(screen.getByRole('radio', { name: 'أفضّل ألّا أقول' })).toBeChecked();
   });
 });
 
@@ -751,5 +805,68 @@ describe('introduction', () => {
     const { openIntroduction } = await renderSettings();
     await fireEvent.press(screen.getByRole('button', { name: 'Revoir la présentation' }));
     expect(openIntroduction).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('sounds and vibrations settings', () => {
+  beforeEach(() => jest.mocked(playFeedback).mockClear());
+
+  it('offers two switches, both on by default, and says when the sounds stay quiet', async () => {
+    await renderSettings();
+    expect(screen.getByText('Sons et vibrations')).toBeOnTheScreen();
+    expect(screen.getByRole('switch', { name: 'Sons' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Vibrations' })).toBeChecked();
+    expect(
+      screen.getByText(
+        'Les sons se taisent quand ton téléphone est en silencieux, et pendant l’écoute de ta récitation.',
+      ),
+    ).toBeOnTheScreen();
+  });
+
+  it('saves each switch on its own', async () => {
+    const { store } = await renderSettings();
+    await fireEvent.press(screen.getByRole('switch', { name: 'Sons' }));
+    expect(store.getState().settings).toMatchObject({ soundsEnabled: false, hapticsEnabled: true });
+    expect(screen.getByRole('switch', { name: 'Sons' })).not.toBeChecked();
+    await fireEvent.press(screen.getByRole('switch', { name: 'Vibrations' }));
+    expect(store.getState().settings).toMatchObject({
+      soundsEnabled: false,
+      hapticsEnabled: false,
+    });
+    await fireEvent.press(screen.getByRole('switch', { name: 'Sons' }));
+    expect(store.getState().settings.soundsEnabled).toBe(true);
+  });
+
+  it('shows what was saved: a switch that was off starts off', async () => {
+    await renderSettings({ settings: { soundsEnabled: false } });
+    expect(screen.getByRole('switch', { name: 'Sons' })).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Vibrations' })).toBeChecked();
+  });
+
+  it('lets the person feel what they just switched on, and nothing when they switch off', async () => {
+    await renderSettings({ settings: { soundsEnabled: false, hapticsEnabled: false } });
+    await fireEvent.press(screen.getByRole('switch', { name: 'Sons' }));
+    expect(playFeedback).toHaveBeenLastCalledWith('drop');
+    await fireEvent.press(screen.getByRole('switch', { name: 'Vibrations' }));
+    expect(playFeedback).toHaveBeenLastCalledWith('select');
+    jest.mocked(playFeedback).mockClear();
+    await fireEvent.press(screen.getByRole('switch', { name: 'Sons' }));
+    await fireEvent.press(screen.getByRole('switch', { name: 'Vibrations' }));
+    expect(playFeedback).not.toHaveBeenCalled();
+  });
+
+  it('is written in English', async () => {
+    await renderSettings({ language: 'en' });
+    expect(screen.getByText('Sounds and Vibrations')).toBeOnTheScreen();
+    expect(screen.getByRole('switch', { name: 'Sounds' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Vibrations' })).toBeChecked();
+  });
+
+  it('is written in Arabic', async () => {
+    setDeviceConditions({ rightToLeft: true });
+    await renderSettings({ language: 'ar', rightToLeft: true, settings: { language: 'ar' } });
+    expect(screen.getByText('الأصوات والاهتزاز')).toBeOnTheScreen();
+    expect(screen.getByRole('switch', { name: 'الأصوات' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'الاهتزاز' })).toBeChecked();
   });
 });

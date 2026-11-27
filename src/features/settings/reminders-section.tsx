@@ -1,5 +1,4 @@
-import { useTranslation } from 'react-i18next';
-
+import { useGenderedTranslation } from '@/features/gender';
 import type { ReminderSettings } from '@/store';
 import { Button, ListSection, SwitchRow, TimePickerRow } from '@/ui';
 
@@ -40,7 +39,7 @@ export function RemindersSection({
   onOpenSystemSettings,
   onRequestPermission,
 }: RemindersSectionProps) {
-  const { t } = useTranslation('settings');
+  const { t } = useGenderedTranslation('settings');
   const footer = model.notice === null ? undefined : t(`reminders.notice.${model.notice}`);
   return (
     <ListSection title={title} footer={footer}>

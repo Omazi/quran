@@ -23,10 +23,19 @@ import { AppText } from './app-text';
  * `onAction`: a white capsule with deep green words, on the green of the listening page
  * ("Reconnaître" in the card "Quel est ce passage ?", maquettes 2026-11-26, 3A). `surface`: a
  * white capsule with a green symbol, on the cream of a field inside a card ("Partager" beside
- * "Mon code", maquettes 2026-11-26, "friends").
+ * "Mon code", maquettes 2026-11-26, "friends"). `glass`: the quiet action on the glass over the
+ * home garden ("Reconnaître", maquette-wow `.btn.glassy`): more glass, a bright rim, green words.
  */
 export type ActionButtonVariant =
-  'filled' | 'tonal' | 'outline' | 'contrast' | 'plain' | 'destructive' | 'onAction' | 'surface';
+  | 'filled'
+  | 'tonal'
+  | 'outline'
+  | 'contrast'
+  | 'plain'
+  | 'destructive'
+  | 'onAction'
+  | 'surface'
+  | 'glass';
 
 export interface ActionButtonProps {
   /** Says what the button does, starting with a verb. Omit only for a button with a symbol. */
@@ -76,6 +85,7 @@ const LOOK: Readonly<
   destructive: { foreground: 'destructiveText' },
   onAction: { background: 'actionCapsule', foreground: 'onActionCapsule' },
   surface: { background: 'surface', foreground: 'actionTint' },
+  glass: { background: 'glassTonal', foreground: 'actionTint', border: 'glassEdge' },
 };
 
 /**

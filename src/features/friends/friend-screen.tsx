@@ -1,9 +1,10 @@
 import { useEffect, useRef, type ComponentRef, type ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import type { GardenState } from '@/domain/garden';
 import { styleOfLevel } from '@/domain/levels';
+import { useGenderedTranslation } from '@/features/gender';
+import { genderContext } from '@/i18n';
 import { HIZB_COUNT } from '@/domain/quran';
 import { publishHandle } from '@/features/screen-check/handles';
 import { GARDEN_PICTURE_ASPECT_RATIO, GardenView3D } from '@/features/garden';
@@ -89,7 +90,7 @@ export function FriendScreen({
   openReader,
   renderOptions,
 }: FriendScreenProps) {
-  const { t, i18n } = useTranslation('friends');
+  const { t, i18n } = useGenderedTranslation('friends');
   const sky = useSkyStyle('visit');
   // Measured after the first layout; until then the window under both bars, never nothing: a 3D
   // garden asked to fill a flat area makes a context with no pixels (iOS check of 683ad8d).
@@ -127,11 +128,14 @@ export function FriendScreen({
   }
   const { card, level, streakDays } = model;
   const name = card.name;
+  // The words about the friend follow what they say they are; those to me follow what I say (the
+  // hook adds it unless a text gives this context, which is then the friend's).
+  const friendContext = genderContext(card.gender);
   const colour = avatarIndexOf(card.userId);
   const number = (value: number) => formatNumber(value, i18n.language);
   const confirmation = (kind: 'remove' | 'block') => ({
-    title: t(`friend.${kind}Title`, { name }),
-    message: t(`friend.${kind}Message`, { name }),
+    title: t(`friend.${kind}Title`, { name, context: friendContext }),
+    message: t(`friend.${kind}Message`, { name, context: friendContext }),
     confirmLabel: t(`friend.${kind}Confirm`),
     cancelLabel: t('friend.cancel'),
   });
@@ -211,9 +215,15 @@ export function FriendScreen({
               <ActionButton
                 variant="tonal"
                 symbol={model.encouragedToday ? HEART_FILLED : HEART}
-                label={model.encouragedToday ? t('friend.encouraged') : t('friend.encourageShort')}
+                label={
+                  model.encouragedToday
+                    ? t('friend.encouraged', { context: friendContext })
+                    : t('friend.encourageShort')
+                }
                 accessibilityLabel={
-                  model.encouragedToday ? t('friend.encouraged') : t('friend.encourage', { name })
+                  model.encouragedToday
+                    ? t('friend.encouraged', { context: friendContext })
+                    : t('friend.encourage', { name })
                 }
                 accessibilityHint={t('friend.encourageNote')}
                 onPress={actions.encourage}
@@ -224,7 +234,13 @@ export function FriendScreen({
               <ActionButton
                 variant="filled"
                 symbol={BOOK}
-                label={t('friend.readWith', { name })}
+                // "Lire avec lui" / "Lire avec elle", or the name when they have not said; the
+                // Arabic verb ("اقرأ" / "اقرئي") follows the person who reads.
+                label={t('friend.readWith', {
+                  name,
+                  verb: t('friend.readVerb'),
+                  context: friendContext,
+                })}
                 accessibilityHint={t('friend.readHint')}
                 onPress={() => openReader?.()}
                 grows
@@ -248,11 +264,11 @@ export function FriendScreen({
 
         <Card contentGap="md" style={styles.more}>
           <AppText variant="title2" color="heading">
-            {t('friend.readingTitle')}
+            {t('friend.readingTitle', { context: friendContext })}
           </AppText>
           {level === null ? (
             <AppText variant="subhead" color="muted" testID="friend-level-hidden">
-              {t('friend.levelHidden', { name })}
+              {t('friend.levelHidden', { name, context: friendContext })}
             </AppText>
           ) : (
             <View>
@@ -332,7 +348,7 @@ function FriendStats({
   number: (value: number) => string;
   isSideBySide: boolean;
 }) {
-  const { t } = useTranslation('friends');
+  const { t } = useGenderedTranslation('friends');
   const colors = useColors();
   const figures = [
     streakDays === null

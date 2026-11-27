@@ -6,9 +6,15 @@ import { useColorValues } from '@/ui';
 
 import { GARDEN_STYLE_ART } from './garden-style-art';
 
-/** The placeholder colour cast of a garden style in the current appearance, or null (D46). */
-export function useGardenTint(styleId: GardenStyleId): GardenSceneTint | null {
-  const values = useColorValues();
+/**
+ * The placeholder colour cast of a garden style in the current appearance, or null (D46).
+ * `appearance` fixes it, for a picture that is always light (the card of a shared badge).
+ */
+export function useGardenTint(
+  styleId: GardenStyleId,
+  appearance?: 'light' | 'dark',
+): GardenSceneTint | null {
+  const values = useColorValues(appearance);
   const tint = GARDEN_STYLE_ART[styleId].placeholderTint;
   return useMemo(
     () => (tint === null ? null : { color: values[tint.role], opacity: tint.opacity }),

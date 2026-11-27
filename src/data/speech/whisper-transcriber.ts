@@ -3,12 +3,14 @@
  * model is the file bundled with the app (`voice-model.ts`). One context serves every listening:
  * loading the model takes a moment, transcribing with it does not.
  */
-import { SpeechEngineError, failureOf } from '@/domain/listening';
+import { AUDIO_CHECK, SpeechEngineError, failureOf, type HeldReading } from '@/domain/listening';
 
 import type { Transcriber } from './whisper-speech-engine';
 import { VOICE_MODEL } from './voice-model';
 
 interface WhisperContextLike {
+  /** whisper.rn's id of the context (the native functions take it). */
+  readonly id?: number;
   transcribeData(
     data: ArrayBuffer,
     options: Record<string, unknown>,
@@ -43,6 +45,51 @@ export const WHISPER_OPTIONS = Object.freeze({
   maxContext: 0,
 });
 
+/**
+ * The native function added to whisper.rn by `patches/whisper.rn+0.7.4.patch` (D49): reads the
+ * audio again held to each text (`native/quran-decoding`), resolves with the readings as JSON.
+ * Installed with whisper.rn's own functions; absent from a build without the patch.
+ */
+type ReadHeldFunction = (
+  contextId: number,
+  texts: readonly string[],
+  options: Record<string, number>,
+  audio: ArrayBuffer,
+) => Promise<string>;
+
+/** The native function, when this build has it. */
+export function findReadHeld(scope: object = globalThis): ReadHeldFunction | null {
+  const found = (scope as { whisperReadHeld?: unknown }).whisperReadHeld;
+  return typeof found === 'function' ? (found as ReadHeldFunction) : null;
+}
+
+/** Checks the JSON of the native side: one reading per text, with the expected fields. */
+export function parseHeldReadings(json: string, expected: number): HeldReading[] {
+  const parsed: unknown = JSON.parse(json);
+  if (!Array.isArray(parsed) || parsed.length !== expected) {
+    throw new Error(`Held readings: expected ${expected}, got ${String(json).slice(0, 80)}`);
+  }
+  return parsed.map((entry: unknown) => {
+    const r = entry as Record<string, unknown>;
+    if (
+      typeof r.text !== 'string' ||
+      typeof r.cost !== 'number' ||
+      typeof r.letters !== 'number' ||
+      typeof r.freeLetters !== 'number' ||
+      typeof r.abandoned !== 'boolean'
+    ) {
+      throw new Error('Held readings: a reading is malformed');
+    }
+    return {
+      text: r.text,
+      cost: r.cost,
+      letters: r.letters,
+      freeLetters: r.freeLetters,
+      abandoned: r.abandoned,
+    };
+  });
+}
+
 export interface WhisperTranscriberOptions {
   /**
    * Checks the model file is in the app before Whisper opens it; rejects with a
@@ -50,6 +97,8 @@ export interface WhisperTranscriberOptions {
    * the model", the same words for a missing file and a broken one).
    */
   readonly checkModel?: () => Promise<void>;
+  /** Finds the native held reading (tests replace it). */
+  readonly findReadHeld?: () => ReadHeldFunction | null;
 }
 
 /**
@@ -60,7 +109,7 @@ export interface WhisperTranscriberOptions {
  */
 export function createWhisperTranscriber(
   loadBinding: () => WhisperBinding,
-  { checkModel }: WhisperTranscriberOptions = {},
+  { checkModel, findReadHeld: find = findReadHeld }: WhisperTranscriberOptions = {},
 ): Transcriber {
   let context: Promise<WhisperContextLike> | null = null;
   let queue: Promise<unknown> = Promise.resolve();
@@ -93,9 +142,29 @@ export function createWhisperTranscriber(
     return context;
   }
 
+  /** Runs `job` after the readings already asked for, whatever their outcome. */
+  function inTurn<T>(job: () => Promise<T>): Promise<T> {
+    const turn = queue.then(job);
+    queue = turn.catch(() => undefined);
+    return turn;
+  }
+
   return {
     async prepare() {
       await loaded();
+    },
+    readHeld(samples, texts, minLetters) {
+      return inTurn(async () => {
+        const whisper = await loaded();
+        const read = find();
+        if (read === null || typeof whisper.id !== 'number') return null;
+        const data = samples.buffer.slice(
+          samples.byteOffset,
+          samples.byteOffset + samples.byteLength,
+        ) as ArrayBuffer;
+        const json = await read(whisper.id, texts, { ...AUDIO_CHECK.read, minLetters }, data);
+        return parseHeldReadings(json, texts.length);
+      });
     },
     transcribe(samples) {
       const reading = queue.then(async () => {

@@ -1,10 +1,11 @@
+import { parseGender } from '@/domain/shared/gender';
 import type { LocalDate } from '@/domain/shared/local-date';
 
 import { parseDisplayName } from './display-name';
 import type { Profile, ProfileChanges, UserId } from './types';
 import { assertId, assertLocalDate, assertObject } from './validation';
 
-const CHANGEABLE_FIELDS: readonly string[] = ['displayName', 'showGarden', 'showLevel'];
+const CHANGEABLE_FIELDS: readonly string[] = ['displayName', 'showGarden', 'showLevel', 'gender'];
 
 /** A new profile: the garden and the level are shown to friends until the person says no (D23). */
 export function createProfile(id: UserId, rawName: string, today: LocalDate): Profile {
@@ -15,6 +16,7 @@ export function createProfile(id: UserId, rawName: string, today: LocalDate): Pr
     displayName: parseDisplayName(rawName),
     showGarden: true,
     showLevel: true,
+    gender: null,
     createdOn: today,
   };
 }
@@ -50,6 +52,10 @@ export function applyProfileChanges(profile: Profile, changes: ProfileChanges): 
   if ('showLevel' in changes) {
     assertBoolean(changes.showLevel as boolean, 'showLevel');
     next = { ...next, showLevel: changes.showLevel as boolean };
+  }
+  if ('gender' in changes) {
+    // `undefined` is refused by parseGender (a TypeError), like the other fields.
+    next = { ...next, gender: parseGender(changes.gender) };
   }
   return next;
 }

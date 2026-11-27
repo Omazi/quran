@@ -194,6 +194,18 @@ export const palette = {
   onFollowBarSecondary: { light: '#E4EFEB', dark: '#D6E6E1' },
   followBarControl: { light: '#FFFFFF2E', dark: '#FFFFFF29' },
 
+  // --- The reader's glass and water thread (maquette-wow, 27 November 2026, shots 14-16, 20-22) ---
+  /** The track of a segmented choice on the glass: ink at 8 % (`.seg`). */
+  glassTrack: { light: 'rgba(28, 28, 30, 0.08)', dark: 'rgba(239, 232, 216, 0.08)' },
+  /** The chosen segment on that track: white by day, a lighter glass at night (`.seg-thumb`). */
+  glassThumb: { light: '#FFFFFF', dark: 'rgba(255, 255, 255, 0.14)' },
+  /** The water thread of a page in the margin, before it fills: ink at 7 % (`.thread`). */
+  threadTrack: { light: 'rgba(28, 28, 30, 0.07)', dark: 'rgba(239, 232, 216, 0.07)' },
+  /** The light that runs down a filling thread (`.thread .fill::before`, #8BE3EE). */
+  waterHighlight: { light: '#8BE3EE', dark: '#8BE3EE' },
+  /** The glow around the bead of water and the falling drop (`.bead`, rgba(79, 184, 198, .7)). */
+  waterGlow: { light: 'rgba(79, 184, 198, 0.7)', dark: 'rgba(79, 184, 198, 0.7)' },
+
   // --- The launch (the app icon's layers; app.json's expo-splash-screen colours) --------------
   /** The deep water behind the mark, a step deeper at night: `app.json` has the same two values. */
   launchWater: { light: '#0B3C44', dark: '#072C33' },
@@ -209,6 +221,23 @@ export const palette = {
    * the system's glass is not available. At night, and over the deep green of the listening page,
    * the prototype's light values.
    */
+  // --- The glass over the home garden (maquette-wow, `.glass`, validated 27 November 2026) ---
+  /**
+   * The tint of the glass drawn by the app where the system's Liquid Glass is not available: warm
+   * white by day, blue-black at night. Its opacity is not fixed: it is raised hour by hour until
+   * every word on it reaches its contrast over the sky (`glassVeilMinimum`, src/features/home).
+   */
+  glassVeil: { light: '#FFFDF8', dark: '#181920' },
+  /** The glass with Reduce Transparency on: opaque (liquid-glass.md › Review checklist, 5). */
+  glassOpaque: { light: '#F7F4EE', dark: '#1E2027' },
+  /** The bright rim of the glass, and the light on its upper edge (the mockup's `::after`, `::before`). */
+  glassEdge: { light: 'rgba(255, 255, 255, 0.7)', dark: 'rgba(255, 255, 255, 0.22)' },
+  glassHighlight: { light: 'rgba(255, 255, 255, 0.55)', dark: 'rgba(255, 255, 255, 0.16)' },
+  /** The hairline between two rows on the glass: the ink at 9 %. */
+  glassDivider: { light: 'rgba(29, 42, 35, 0.09)', dark: 'rgba(241, 234, 219, 0.09)' },
+  /** The quiet button on the glass ("Reconnaître", `.btn.glassy`): more glass. */
+  glassTonal: { light: 'rgba(255, 255, 255, 0.55)', dark: 'rgba(255, 255, 255, 0.12)' },
+
   pageDot: { light: 'rgba(29, 42, 35, 0.22)', dark: 'rgba(255, 255, 255, 0.35)' },
   pageDotCurrent: { light: '#1D2A23', dark: '#FFFFFF' },
   pageDotsSurface: { light: 'rgba(255, 255, 255, 0.55)', dark: 'rgba(255, 255, 255, 0.14)' },
@@ -345,6 +374,20 @@ export const backdropGradients = {
       [1, '#151A19'],
     ],
   },
+  /**
+   * The reader's page (maquette-wow, `.reader`): the cream paper by day, the warm dark page of the
+   * dusk at night. Its ends are `paper`'s two values' neighbours, so the text keeps its contrast.
+   */
+  readerPage: {
+    light: [
+      [0, '#FBF7EC'],
+      [1, '#F6F0E1'],
+    ],
+    dark: [
+      [0, '#221E19'],
+      [1, '#1B1915'],
+    ],
+  },
   /** soif.png: the warmth drained to grey. */
   thirsty: {
     light: [
@@ -462,10 +505,17 @@ export type BackdropName = keyof typeof backdropGradients;
  */
 export const elevation = {
   card: { light: '0px 6px 20px rgba(60, 48, 24, 0.07)', dark: 'none' },
+  /** Under the glass over the home garden (the mockup's `--glass-shadow`). */
+  glass: {
+    light: '0px 10px 34px rgba(60, 46, 24, 0.16), 0px 1px 2px rgba(60, 46, 24, 0.16)',
+    dark: '0px 10px 34px rgba(0, 0, 0, 0.35), 0px 1px 2px rgba(0, 0, 0, 0.35)',
+  },
   floating: {
     light: '0px 8px 24px rgba(40, 32, 16, 0.14)',
     dark: '0px 8px 24px rgba(0, 0, 0, 0.4)',
   },
+  /** The thumb of a track, a small white disc (maquette-wow, `.rd-size-track i`). */
+  thumb: { light: '0px 2px 8px rgba(0, 0, 0, 0.25)', dark: '0px 2px 8px rgba(0, 0, 0, 0.25)' },
 } as const;
 
 /**
@@ -482,6 +532,19 @@ export const launchColors = {
   word: palette.launchWord.light,
   drops: palette.launchDrops.light,
   leaf: palette.launchLeaf.light,
+} as const;
+
+/**
+ * The least opacity of the glass's tint (`glassVeil`) where the app draws the glass: a chip over
+ * the sky, the panel at the bottom (the mockup's `--glass-bg` and `--glass-bg-thick`). Over a sky
+ * that needs it, the tint is made thicker, never thinner. `header`: the scroll edge behind the
+ * date and the title, invisible unless the sky of the hour needs it (status-bars.md › Best
+ * practices).
+ */
+export const glassVeilMinimum = {
+  chip: { light: 0.46, dark: 0.34 },
+  panel: { light: 0.62, dark: 0.5 },
+  header: { light: 0, dark: 0 },
 } as const;
 
 /** Width of the launch mark in points: the `imageWidth` the native launch screen used (app.json). */
@@ -608,6 +671,11 @@ export type IconColorRole = Exclude<
   | 'orbDeep'
   | 'notificationSurface'
   | 'notificationEdge'
+  | 'glassTrack'
+  | 'glassThumb'
+  | 'threadTrack'
+  | 'waterHighlight'
+  | 'waterGlow'
 >;
 
 /**
@@ -733,6 +801,11 @@ export const textStyles = {
   body: { fontSize: 17, lineHeight: 22, fontWeight: '400' },
   /** A name in a card ("Al-Kahf", a friend's name): Callout, emphasized. */
   callout: { fontSize: 16, lineHeight: 21, fontWeight: '600' },
+  /**
+   * The title in a glass pill over the reader ("Al-Kahf", maquette-wow `.rd-title .t-s`): the
+   * titles' serif at the size of Callout, so that it fits the 44-point pill.
+   */
+  pillTitle: { fontFamily: fontFamily.display, fontSize: 16, lineHeight: 20, fontWeight: '600' },
   /** Secondary text. */
   subhead: { fontSize: 15, lineHeight: 20, fontWeight: '400' },
   /** A short label that leads ("Arrosage du jour", "24 hizb sur 60"): Subheadline, emphasized. */
@@ -760,6 +833,7 @@ export const appleTextStyles = {
   headline: 'headline',
   body: 'body',
   callout: 'callout',
+  pillTitle: 'callout',
   subhead: 'subheadline',
   subheadEmphasized: 'subheadline',
   footnote: 'footnote',
@@ -835,6 +909,8 @@ export const radius = {
   lg: 16,
   /** A card of the validated mockups (accueil.png: about 24 points). */
   xl: 24,
+  /** The glass panel over the home garden (maquette-wow `.hm-panel`: 30 points). */
+  glassPanel: 30,
   /** Half of any height: a capsule, a circle. */
   full: 999,
 } as const;
@@ -845,6 +921,8 @@ export const radius = {
  * it holds text; the shapes keep their size.
  */
 export const pieceSizes = {
+  /** The bars of the day's watering on the home garden's glass (maquette-wow `.segs`: 6 high). */
+  segmentHeight: 6,
   /** The ring of the day's watering. */
   ringLarge: 60,
   ringLargeStroke: 6,
@@ -907,6 +985,11 @@ export const chart = {
 } as const;
 
 export const layout = {
+  /**
+   * The scroll edge veil at the top of the home garden: the status bar, the date, the title and
+   * the friends chip (maquette-wow: down to 180 points), and its fade.
+   */
+  homeHeaderVeil: 240,
   /** Margin between the screen edge and its content. */
   screenMargin: spacing.md,
   /** Space between two controls that have a bezel (accessibility.md › Mobility). */
@@ -973,6 +1056,51 @@ export const readerShapes = {
     large: { fontSize: 28, lineHeight: 40 },
     row: { fontSize: 20, lineHeight: 30 },
   },
+  /**
+   * The glass controls of the reader (maquette-wow, `.rd-top`, `.rd-bar`): a round button and the
+   * title pill, 44 points; the bottom bar, 56 points with 6 inside, its segmented choice 44 with 3
+   * inside, its microphone 44; their distance to the screen's sides and the gap between them.
+   */
+  glassControl: 44,
+  glassBarHeight: 56,
+  glassBarPadding: 6,
+  glassSegmentPadding: 3,
+  glassSideInset: 14,
+  /** Below the status bar, the top controls start this far down (the mockup's 56 - 47). */
+  glassTopGap: 9,
+  /** Above the home indicator, the bottom bar ends this far up (the mockup's 30 - 21). */
+  glassBottomGap: 9,
+  /** The text size panel under the top controls (`.rd-sizes`): its track's width. */
+  sizeTrackWidth: 110,
+  sizeThumb: 20,
+  /**
+   * The text fades under the glass controls (the mockup's mask: transparent to opaque over 48
+   * points at the top, 52 at the bottom).
+   */
+  fadeTop: 48,
+  fadeBottom: 52,
+  /** The page's margins: the thread's side (34) and the other (26), as in `.rd-scroll`. */
+  pageMarginThread: 34,
+  pageMarginOther: 26,
+  /** The water thread: its width, its distance from the text, its ends' inset; its bead. */
+  threadWidth: 3,
+  threadFromText: 20,
+  threadInset: 10,
+  threadBead: 9,
+  /** The light that runs down a filling thread: its length. */
+  threadHighlight: 26,
+  /** The falling drop: the symbol's text style is Title 3 (`.drop`, 18 by 24 points). */
+  dropSplash: 4,
+  /** The glass pill the drop falls into (`.rd-toast`): height, start inset, gap above the bar. */
+  dropPillHeight: 52,
+  dropPillLeading: 8,
+  dropPillTrailing: 18,
+  dropPillGap: 14,
+  /** The ornament between two pages: its stars, and the gap around the number (`.pg-mark`). */
+  pageMarkStar: 14,
+  /** The surah's framed title (`.rd-head .frame`): its height, the inner rule's inset. */
+  surahFrameHeight: 54,
+  surahFrameInset: 5,
   /** The soft shadow of the mockups: its opacity, blur radius and drop. */
   shadowOpacity: 0.1,
   shadowRadius: 10,
@@ -1249,4 +1377,64 @@ export const stateOpacity = {
   disabled: 0.38,
   /** A step under way, shown at half strength (accueil.png: the dot of the hizb being read). */
   inProgress: 0.45,
+} as const;
+
+/**
+ * The image a person shares of a badge (docs/specs/ui-lot1.md is silent on it: owner's decision of
+ * 26 November 2026). It is a picture, not a screen: drawn on a fixed 1080 × 1350 grid of design
+ * units, always in the light appearance, whatever the device's, and never scaled by the person's
+ * text size (typography.md › Supporting Dynamic Type is for text people read in the app). One
+ * design unit is one pixel of the finished image: the card multiplies every number below by
+ * `1 / PixelRatio.get()` points, so the capture comes out at exactly this size.
+ * Portrait 4:5 is the tallest ratio Instagram and WhatsApp keep whole. Colours: `palette` and
+ * `appColors` in their light values; fonts: `fontFamily`.
+ */
+export const shareCardShape = {
+  width: 1080,
+  height: 1350,
+  /** The two gold rules of the frame (the mushaf's frame, mushaf.png), from the edge. */
+  frameOuterInset: 40,
+  frameOuterWidth: 3,
+  frameInnerInset: 56,
+  frameInnerWidth: 1.5,
+  /**
+   * The body (badge to invocation) is centred between these two paddings, so that a card with a
+   * name and a card without one both sit evenly above the footer.
+   */
+  bodyPaddingTop: 96,
+  bodyPaddingBottom: 216,
+  /** The footer (icon and name of the app) rests this far from the bottom edge. */
+  footerBottom: 84,
+  /** The badge, with its glow around it. */
+  badgeSize: 420,
+  glowRadius: 440,
+  gardenSize: 38,
+  gardenLineHeight: 48,
+  titleSize: 76,
+  titleLineHeight: 92,
+  nameSize: 44,
+  nameLineHeight: 56,
+  dateSize: 38,
+  dateLineHeight: 48,
+  figureSize: 72,
+  figureLineHeight: 84,
+  figureLabelSize: 36,
+  figureLabelLineHeight: 46,
+  figureDividerWidth: 2,
+  figureDividerHeight: 96,
+  duaSize: 84,
+  duaLineHeight: 104,
+  appIconSize: 84,
+  appIconRadiusShare: 0.225,
+  appNameSize: 48,
+  appNameLineHeight: 60,
+  /** Gaps between the blocks, from the top of the card. */
+  gapBadgeToGarden: 24,
+  gapGardenToTitle: 16,
+  gapTitleToDate: 12,
+  gapDateToFigures: 44,
+  gapFiguresToDua: 40,
+  footerGap: 24,
+  /** Width of the row of figures. */
+  figuresWidth: 800,
 } as const;

@@ -2,14 +2,14 @@
  * CHECK BUILD ONLY (loaded through `door.ts`; a published bundle does not contain it). Asked with
  * `-screenCheckVoiceProof 1`: plays every recording the iOS check put in the app's
  * `Documents/voice-proof` folder to the real speech engine (`createFileSpeechEngine`) and the real
- * passage search, and writes what came out to `Documents/voice-proof.txt`, one line per clip, then
+ * passage search, with the audio check (D49), and writes what came out to `Documents/voice-proof.txt`, one line per clip, then
  * `voice-proof: DONE`. The check copies that file into its report (tools/ci/crash-report.py).
  */
 import { Directory, File, Paths } from 'expo-file-system';
 import { useEffect } from 'react';
 
 import { createFileSpeechEngine } from '@/data/speech';
-import { loadQuranVerseIndex } from '@/features/listening';
+import { loadQuranHeldTexts, loadQuranVerseIndex } from '@/features/listening';
 
 import { createProgressLog } from './progress-log';
 import { proofClipOf, runVoiceProof, type ProofClip } from './voice-proof-run';
@@ -45,7 +45,9 @@ export function ScreenCheckVoiceProof() {
     void runVoiceProof({
       clips: proofClips(),
       loadIndex: loadQuranVerseIndex,
-      createEngine: (clip, onReading) => createFileSpeechEngine(clip.path, { onReading }),
+      createEngine: (clip, onReading, onHeldReading) =>
+        createFileSpeechEngine(clip.path, { onReading, onHeldReading }),
+      loadHeldTexts: loadQuranHeldTexts,
       now: Date.now,
       log: report.line,
     }).catch((error: unknown) => {

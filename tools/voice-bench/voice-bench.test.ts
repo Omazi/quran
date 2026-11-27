@@ -14,6 +14,16 @@ import { whisperWords } from '@/data/speech/transcript';
 import type { AudioCapture, EngineTimers, Transcriber } from '@/data/speech/whisper-speech-engine';
 import { searchHeardWords, type SpeechEngine } from '@/domain/listening';
 import {
+  audioCheckCandidates,
+  decideByAudio,
+  followUpCandidates,
+  heldText,
+  minLettersFor,
+  wholeQuranText,
+  type AudioCheckCandidate,
+  type HeldReading,
+} from '@/domain/listening/audio-check';
+import {
   createVerseIndex,
   normalizeArabic,
   type VerseText,
@@ -29,6 +39,7 @@ import {
   fs,
   readWav,
   simulateListening,
+  type HeldOptions,
   type LatencyModel,
   type WhisperDecoding,
 } from './bench-support';
@@ -75,7 +86,9 @@ interface BenchConfig {
 
 const QURAN_PROMPT = 'بسم الله الرحمن الرحيم';
 const CONFIGS: Readonly<Record<string, BenchConfig>> = {
-  app: { model: 'ggml-quran-tiny-q8_0.bin', decoding: APP_DECODING, engine: {} },
+  app: { model: 'ggml-quran-base-q5_1.bin', decoding: APP_DECODING, engine: {} },
+  /** The app before D49: Whisper tiny. */
+  tiny: { model: 'ggml-quran-tiny-q8_0.bin', decoding: APP_DECODING, engine: {} },
   /** The app before D45: whisper.cpp's temperature fallback left on. */
   before: {
     model: 'ggml-quran-tiny-q8_0.bin',
@@ -510,6 +523,8 @@ describeBench('voice benchmark', () => {
   function writeScores(listened: ReadonlyMap<string, Listened>, name: string): void {
     const lines: string[] = [];
     const summary: Record<string, unknown> = { config: name, latency, groups: {} };
+    /** Each clip's answer through the first search, for a look at the misses. */
+    const perClip: string[] = [];
     for (const { name: searchName, search, partial, index: own } of searches) {
       const searchIndex = own ?? index;
       const groups = new Map<string, { clip: Clip; score: ClipScore }[]>();
@@ -523,6 +538,18 @@ describeBench('voice benchmark', () => {
           record.batches.flatMap((batch) => batch.words),
           clip.truth,
         );
+        if (searchName === searches[0]!.name) {
+          const record2 = listened.get(clip.id)!;
+          perClip.push(
+            JSON.stringify({
+              clip: clip.id,
+              answer: score.answer,
+              top3: score.inTopThree,
+              at: score.answeredAt,
+              text: record2.passes.map((pass) => pass.text).slice(-1)[0] ?? '',
+            }),
+          );
+        }
         const reader = clip.stream.professional ? 'pro' : 'ordinary';
         for (const key of [
           `${clip.condition} ${clip.wanted}s`,
@@ -581,6 +608,7 @@ describeBench('voice benchmark', () => {
     );
     fs.writeFileSync(`${work}/score-${name}.txt`, lines.join('\n'));
     fs.writeFileSync(`${work}/score-${name}.json`, JSON.stringify(summary, null, 1));
+    fs.writeFileSync(`${work}/clips-${name}.jsonl`, `${perClip.join('\n')}\n`);
   }
 
   function readJsonl<T>(path: string): T[] {
@@ -675,5 +703,290 @@ describeBench('voice benchmark', () => {
     }
     writeScores(listened, `offline-${configName}${tag}${scoreTag}`);
     expect(listened.size).toBeGreaterThan(0);
+  });
+
+  // ---- Held readings: each proposed passage read again from the audio (D49) -------------------
+
+  const heldTag = env.VOICE_BENCH_HELD_TAG ?? '';
+  const heldFile = `${work}/held-${configName}${tag}${heldTag}.jsonl`;
+  interface HeldRecord {
+    readonly clip: string;
+    readonly free: string;
+    readonly candidates: readonly AudioCheckCandidate[];
+    readonly readings: readonly HeldReading[];
+    readonly ms: number;
+    readonly audioMs: number;
+  }
+  const heldOptions = (): Omit<HeldOptions, 'minLetters'> => ({
+    freeLetterCost: Number(env.VOICE_BENCH_HELD_FREE_COST ?? 2),
+    firstChoices: Number(env.VOICE_BENCH_HELD_FIRSTS ?? 3),
+    margin: Number(env.VOICE_BENCH_HELD_MARGIN ?? 0),
+    threads: Number(env.VOICE_BENCH_HELD_THREADS ?? 1),
+  });
+
+  /** Imla'i verse texts (the spelling the model writes), from the app's generated data. */
+  function imlaei(): {
+    text: (ref: { surah: number; verse: number }) => string | undefined;
+    count: (surah: number) => number;
+  } {
+    const data = JSON.parse(fs.readFileSync('assets/data/verses/imlaei.json', 'utf8')) as Record<
+      string,
+      string[]
+    >;
+    return {
+      text: ({ surah, verse }) => data[String(surah)]?.[verse - 1],
+      count: (surah) => data[String(surah)]?.length ?? 0,
+    };
+  }
+
+  (phase.includes('held') ? it : it.skip)(
+    'reads every clip again, held to each proposed passage',
+    async () => {
+      const config = chosenConfig();
+      const done = new Set(readJsonl<HeldRecord>(heldFile).map((r) => r.clip));
+      const free = new Map(readJsonl<OfflineReading>(offlineFile).map((r) => [r.clip, r.text]));
+      const verses = imlaei();
+      const driver = createWhisperDriver(
+        env.VOICE_BENCH_HELD_DRIVER ?? `${work}/whisper-driver-q`,
+        `${work}/${config.model}`,
+        `${work}/cache-held-unused.jsonl`,
+      );
+      const audioOf = new Map<string, Int16Array>();
+      try {
+        for (const clip of clips) {
+          const text = free.get(clip.id);
+          if (done.has(clip.id) || text === undefined) continue;
+          const candidates = audioCheckCandidates(index, whisperWords(text), verses.count);
+          let readings: HeldReading[] = [];
+          let ms = 0;
+          const path = `${streamDir}/${clip.condition}/${clip.stream.id}.wav`;
+          if (!audioOf.has(path)) {
+            audioOf.clear();
+            audioOf.set(path, readWav(path));
+          }
+          const audio = audioOf
+            .get(path)!
+            .subarray(
+              Math.round(clip.start * 16000),
+              Math.round((clip.start + clip.length) * 16000),
+            );
+          if (candidates.length > 0) {
+            const answer = await driver.held(
+              audio,
+              candidates.map((candidate) => heldText(candidate, verses.text)),
+              { ...heldOptions(), minLetters: minLettersFor(text) },
+            );
+            readings = answer.readings;
+            ms = answer.ms;
+          }
+          const record: HeldRecord = {
+            clip: clip.id,
+            free: text,
+            candidates,
+            readings,
+            ms,
+            audioMs: (audio.length * 1000) / 16000,
+          };
+          fs.appendFileSync(heldFile, `${JSON.stringify(record)}\n`);
+        }
+      } finally {
+        driver.close();
+      }
+    },
+    24 * 3600 * 1000,
+  );
+
+  /**
+   * The second chance (held-check.ts): for each clip the first check left unsure, the audio held
+   * to the whole Quran, then the passages that reading names. Written to `held2-...`, with the
+   * first readings, for `held-score` (VOICE_BENCH_HELD_SECOND=1).
+   */
+  const held2File = `${work}/held2-${configName}${tag}${heldTag}.jsonl`;
+  (phase.includes('held2') ? it : it.skip)(
+    'reads the unsure clips again, held to the whole Quran, then to what it names',
+    async () => {
+      const config = chosenConfig();
+      const done = new Set(readJsonl<HeldRecord>(held2File).map((r) => r.clip));
+      const verses = imlaei();
+      const whole = wholeQuranText(verses.text, verses.count);
+      const driver = createWhisperDriver(
+        env.VOICE_BENCH_HELD_DRIVER ?? `${work}/whisper-driver-q`,
+        `${work}/${config.model}`,
+        `${work}/cache-held-unused.jsonl`,
+      );
+      const audioOf = new Map<string, Int16Array>();
+      const byClip = new Map(clips.map((clip) => [clip.id, clip]));
+      try {
+        for (const record of readJsonl<HeldRecord>(heldFile)) {
+          const clip = byClip.get(record.clip);
+          if (clip === undefined || done.has(record.clip)) continue;
+          let out: HeldRecord = record;
+          const first = decideByAudio(index, record.candidates, record.readings, record.free);
+          if (first.status !== 'found' && whisperWords(record.free).length >= 1) {
+            const path = `${streamDir}/${clip.condition}/${clip.stream.id}.wav`;
+            if (!audioOf.has(path)) {
+              audioOf.clear();
+              audioOf.set(path, readWav(path));
+            }
+            const audio = audioOf
+              .get(path)!
+              .subarray(
+                Math.round(clip.start * 16000),
+                Math.round((clip.start + clip.length) * 16000),
+              );
+            const options = { ...heldOptions(), minLetters: minLettersFor(record.free) };
+            const wholeAnswer = await driver.held(audio, [whole], options);
+            const more = followUpCandidates(
+              index,
+              wholeAnswer.readings[0]!,
+              record.candidates,
+              verses.count,
+            );
+            let ms = record.ms + wholeAnswer.ms;
+            let extra: HeldReading[] = [];
+            if (more.length > 0) {
+              const answer = await driver.held(
+                audio,
+                more.map((c) => heldText(c, verses.text)),
+                options,
+              );
+              extra = answer.readings;
+              ms += answer.ms;
+            }
+            out = {
+              ...record,
+              candidates: [...record.candidates, ...more],
+              readings: [...record.readings, ...extra],
+              ms,
+              wholeText: wholeAnswer.readings[0]!.text,
+            } as HeldRecord;
+          }
+          fs.appendFileSync(held2File, `${JSON.stringify(out)}\n`);
+        }
+      } finally {
+        driver.close();
+      }
+    },
+    24 * 3600 * 1000,
+  );
+
+  (phase.includes('held-score') ? it : it.skip)('scores the held readings', () => {
+    const records = readJsonl<HeldRecord>(
+      env.VOICE_BENCH_HELD_SECOND === '1' ? held2File : heldFile,
+    );
+    /** What the app's search said of the free reading alone (offline-score's per-clip dump). */
+    const appAnswers = new Map(
+      readJsonl<{ clip: string; answer: string }>(
+        `${work}/clips-offline-${configName}${tag}.jsonl`,
+      ).map((r) => [r.clip, r.answer]),
+    );
+    const groups = new Map<
+      string,
+      {
+        right: number;
+        wrong: number;
+        wrongIfLeftOut: number;
+        n: number;
+        app: number;
+        both: number;
+        bothWrong: number;
+      }
+    >();
+    const byClip = new Map(clips.map((clip) => [clip.id, clip]));
+    for (const record of records) {
+      const clip = byClip.get(record.clip);
+      if (clip === undefined) continue;
+      const truthOf = (candidate: AudioCheckCandidate) => isRight(candidate.passage, clip.truth);
+      const decision = decideByAudio(index, record.candidates, record.readings, record.free);
+      // The same, with the right passage taken out: anything announced then is wrong.
+      const kept = record.candidates
+        .map((c, i) => [c, record.readings[i]!] as const)
+        .filter(([c]) => !truthOf(c));
+      const leftOut = decideByAudio(
+        index,
+        kept.map(([c]) => c),
+        kept.map(([, r]) => r),
+        record.free,
+      );
+      const reader = clip.stream.professional ? 'pro' : 'ordinary';
+      for (const key of [`${clip.condition} ${clip.wanted}s`, `${reader} all`, 'all']) {
+        const g = groups.get(key) ?? {
+          right: 0,
+          wrong: 0,
+          wrongIfLeftOut: 0,
+          n: 0,
+          app: 0,
+          both: 0,
+          bothWrong: 0,
+        };
+        g.n += 1;
+        const app = appAnswers.get(record.clip) ?? 'none';
+        const held =
+          decision.status === 'found' ? (truthOf(decision.candidate) ? 'right' : 'wrong') : 'none';
+        const both = app !== 'none' ? app : held;
+        if (app === 'right') g.app += 1;
+        if (both === 'right') g.both += 1;
+        if (both === 'wrong') g.bothWrong += 1;
+        if (decision.status === 'found') {
+          if (truthOf(decision.candidate)) g.right += 1;
+          else g.wrong += 1;
+        }
+        if (leftOut.status === 'found') g.wrongIfLeftOut += 1;
+        groups.set(key, g);
+      }
+    }
+    const lines = [
+      'group | clips | app search | held check | wrong | wrong with the right passage left out | app then held | wrong',
+    ];
+    for (const [key, g] of [...groups].sort(([a], [b]) => a.localeCompare(b))) {
+      lines.push(
+        `${key} | ${g.n} | ${percent(g.app, g.n)} | ${percent(g.right, g.n)} | ${g.wrong} | ` +
+          `${g.wrongIfLeftOut} | ${percent(g.both, g.n)} | ${g.bothWrong}`,
+      );
+    }
+    // Other thresholds, on the same readings: how much is left on the table, at what risk.
+    const grid: string[] = ['base | per letter | lead | right | wrong | wrong left out'];
+    for (const maxCostBase of [5, 10, 20, 30]) {
+      for (const maxCostPerLetter of [0.3, 0.5, 0.7, 1, 1.5]) {
+        for (const minLead of [5, 10, 15, 25]) {
+          const t = { maxCostBase, maxCostPerLetter, minLead };
+          let right = 0;
+          let wrong = 0;
+          let leftOutWrong = 0;
+          for (const record of records) {
+            const clip = byClip.get(record.clip);
+            if (clip === undefined) continue;
+            const truthOf = (c: AudioCheckCandidate) => isRight(c.passage, clip.truth);
+            const app = appAnswers.get(record.clip) ?? 'none';
+            const d = decideByAudio(index, record.candidates, record.readings, record.free, t);
+            const held = d.status === 'found' ? (truthOf(d.candidate) ? 'right' : 'wrong') : 'none';
+            const both = app !== 'none' ? app : held;
+            if (both === 'right') right += 1;
+            if (both === 'wrong') wrong += 1;
+            const kept = record.candidates
+              .map((c, i) => [c, record.readings[i]!] as const)
+              .filter(([c]) => !truthOf(c));
+            const lo = decideByAudio(
+              index,
+              kept.map(([c]) => c),
+              kept.map(([, r]) => r),
+              record.free,
+              t,
+            );
+            if (lo.status === 'found') leftOutWrong += 1;
+          }
+          grid.push(
+            `${maxCostBase} | ${maxCostPerLetter} | ${minLead} | ${right} | ${wrong} | ${leftOutWrong}`,
+          );
+        }
+      }
+    }
+    lines.push('', ...grid);
+    const second = env.VOICE_BENCH_HELD_SECOND === '1' ? '-second' : '';
+    fs.writeFileSync(
+      `${work}/score-held-${configName}${tag}${heldTag}${second}.txt`,
+      lines.join('\n'),
+    );
+    expect(records.length).toBeGreaterThan(0);
   });
 });

@@ -5,6 +5,7 @@
 export {
   createDeviceSpeechEngine,
   createFileSpeechEngine,
+  preloadVoiceModel,
   type DeviceSpeechEngineOptions,
   type FileSpeechEngineOptions,
 } from './device-speech-engine';

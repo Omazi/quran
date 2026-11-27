@@ -1,8 +1,8 @@
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import type { GardenState } from '@/domain/garden';
 import { GardenScene } from '@/features/garden';
+import { useGenderedTranslation } from '@/features/gender';
 import { ActionButton, AppText, ArabicDisplayText, Card, layout, spacing } from '@/ui';
 
 import { HOME_SYMBOLS } from './config';
@@ -22,7 +22,7 @@ export interface KhatmaCompleteProps {
  * not size, tells the preferred choice).
  */
 export function KhatmaComplete({ garden, khatma, onShare, onStartNext }: KhatmaCompleteProps) {
-  const { t, i18n } = useTranslation('home');
+  const { t, i18n } = useGenderedTranslation('home');
   // The blessing is Arabic: in Arabic it needs no translation under it. (An empty string in the
   // Arabic file would fall back to the French one.)
   const meaning = i18n.language === 'ar' ? '' : t('complete.blessingMeaning');
