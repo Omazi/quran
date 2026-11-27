@@ -7,8 +7,14 @@
  *
  * A clip says what it holds in its name: `<id>__<surah>-<first verse>-<last verse>.wav`.
  */
-import { searchHeardWords, searchWithPartialWords, type SpeechEngine } from '@/domain/listening';
+import {
+  AUDIO_CHECK,
+  searchHeardWords,
+  searchWithPartialWords,
+  type SpeechEngine,
+} from '@/domain/listening';
 import type { PassageCandidate, SearchResult, VerseIndex } from '@/domain/recognition';
+import { checkHeardWords, type HeldTexts } from '@/features/listening';
 
 export interface ProofClip {
   readonly name: string;
@@ -39,6 +45,10 @@ export interface ProofResult {
   readonly foundAtMs: number | null;
   readonly words: number;
   readonly readingsMs: readonly number[];
+  /** How long each audio check took (D49), in milliseconds. */
+  readonly checksMs?: readonly number[];
+  /** The answer came from the audio check, not from the words alone. */
+  readonly byCheck?: boolean;
   /** How the listening ended: `finished`, `failed: <failure>`, `timeout`... */
   readonly ending: string;
 }
@@ -47,7 +57,13 @@ export interface VoiceProofDependencies {
   readonly clips: readonly ProofClip[];
   readonly loadIndex: () => Promise<VerseIndex>;
   /** The engine on one clip; it calls `onReading` after each reading by Whisper. */
-  readonly createEngine: (clip: ProofClip, onReading: (ms: number) => void) => SpeechEngine | null;
+  readonly createEngine: (
+    clip: ProofClip,
+    onReading: (ms: number) => void,
+    onHeldReading: (ms: number) => void,
+  ) => SpeechEngine | null;
+  /** Imla'i verse texts for the audio check, as the listening screen loads them (D49). */
+  readonly loadHeldTexts?: () => Promise<HeldTexts>;
   readonly now: () => number;
   readonly log: (line: string) => void;
   /** A listening that has not ended after this long is stopped. */
@@ -82,8 +98,14 @@ export function describeResult(result: ProofResult): string {
       ? `nothing found (${result.words} words heard)`
       : `found ${found.start.surah}:${found.start.verse}-${found.end.surah}:${found.end.verse} ` +
         `at ${((result.foundAtMs ?? 0) / 1000).toFixed(1)} s after ${result.words} words`;
+  const checks = result.checksMs ?? [];
+  const checking =
+    checks.length === 0
+      ? ''
+      : ` | ${checks.length} audio checks, max ${Math.round(Math.max(...checks))} ms` +
+        (result.byCheck === true ? ', answer by the check' : '');
   const verdict = found === null ? 'MISS' : covers(found, clip) ? 'OK' : 'WRONG';
-  return `voice-proof: ${clip.name} expected ${expected} | ${what} | ${timing} | ${result.ending} | ${verdict}`;
+  return `voice-proof: ${clip.name} expected ${expected} | ${what} | ${timing}${checking} | ${result.ending} | ${verdict}`;
 }
 
 /** Listens to one clip as the listening screen does: the first `found` is the answer. */
@@ -93,7 +115,12 @@ async function listenTo(
   deps: VoiceProofDependencies,
 ): Promise<ProofResult> {
   const readingsMs: number[] = [];
-  const engine = deps.createEngine(clip, (ms) => readingsMs.push(ms));
+  const checksMs: number[] = [];
+  const engine = deps.createEngine(
+    clip,
+    (ms) => readingsMs.push(ms),
+    (ms) => checksMs.push(ms),
+  );
   if (engine === null) {
     return { clip, found: null, foundAtMs: null, words: 0, readingsMs, ending: 'no engine' };
   }
@@ -102,6 +129,8 @@ async function listenTo(
   let foundAtMs: number | null = null;
   let wordsAtAnswer: number | null = null;
   let startedAt = deps.now();
+  let byCheck = false;
+  const texts = deps.loadHeldTexts === undefined ? null : await deps.loadHeldTexts();
   const ending = await new Promise<string>((resolve) => {
     const timer = setTimeout(() => resolve('timeout'), deps.clipTimeoutMs ?? 90_000);
     const done = (why: string) => {
@@ -116,12 +145,44 @@ async function listenTo(
       // As on the screen: the answer closes the microphone.
       void engine.stop().then(() => done('stopped at the answer'));
     };
+    // The audio check, as the listening screen runs it (use-listening.ts): one at a time,
+    // again once more words came, and once more before "nothing found".
+    let checking: Promise<void> | null = null;
+    let checkedAt = 0;
+    const check = (words: readonly string[], last = false): Promise<void> => {
+      checkedAt = words.length;
+      const run = (async () => {
+        if (texts === null) return;
+        try {
+          const result = await checkHeardWords(engine, index, texts, words, { secondChance: last });
+          if (result !== null && found === null) byCheck = true;
+          answer(result, heard.length);
+        } catch {
+          // As on the screen: a failed check leaves the answer to the words.
+        }
+      })();
+      checking = run;
+      void run.then(() => {
+        if (checking === run) checking = null;
+      });
+      return run;
+    };
     // The same searches as the listening screen (use-listening.ts): the final words, and the
     // words of the latest reading not final yet.
     engine.onWords((words) => {
       if (found !== null) return;
       heard.push(...words);
-      answer(searchHeardWords(index, heard), heard.length);
+      const result = searchHeardWords(index, heard);
+      answer(result, heard.length);
+      if (
+        found === null &&
+        texts !== null &&
+        checking === null &&
+        heard.length >= AUDIO_CHECK.minWords &&
+        heard.length >= checkedAt + AUDIO_CHECK.recheckAfterWords
+      ) {
+        void check([...heard]);
+      }
     });
     engine.onActivity?.((activity) => {
       if (found !== null) return;
@@ -130,9 +191,18 @@ async function listenTo(
         heard.length + activity.partial.length,
       );
     });
-    engine.onEnd((reason, failure) =>
-      done(failure === undefined ? reason : `${reason}: ${failure}`),
-    );
+    engine.onEnd((reason, failure) => {
+      void (async () => {
+        if (reason === 'finished' && found === null && texts !== null) {
+          if (checking !== null) await checking;
+          if (found === null && heard.length >= AUDIO_CHECK.minWords) {
+            await check([...heard], true);
+          }
+          if (found !== null) return;
+        }
+        done(failure === undefined ? reason : `${reason}: ${failure}`);
+      })();
+    });
     engine.start().then(
       () => {
         startedAt = deps.now();
@@ -142,7 +212,16 @@ async function listenTo(
     );
   });
   await engine.stop().catch(() => undefined);
-  return { clip, found, foundAtMs, words: wordsAtAnswer ?? heard.length, readingsMs, ending };
+  return {
+    clip,
+    found,
+    foundAtMs,
+    words: wordsAtAnswer ?? heard.length,
+    readingsMs,
+    checksMs,
+    byCheck,
+    ending,
+  };
 }
 
 /** Every clip, one after the other; the last line says DONE and how many were right. */

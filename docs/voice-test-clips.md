@@ -13,7 +13,8 @@ voice-proof: faraj-2__83-1-3.wav expected 83:1-3 | found 83:1-83:3 at 6.1 s afte
 voice-proof: DONE right 4/5, wrong 0
 ```
 
-`OK` : le bon passage ; `MISS` : rien d'annoncé (l'appli dit « rien trouvé ») ; `WRONG` : un autre
+Depuis D49, la ligne dit aussi les contrôles par le son (`2 audio checks, max 1840 ms, answer by
+the check` quand c'est le contrôle qui a trouvé). `OK` : le bon passage ; `MISS` : rien d'annoncé (l'appli dit « rien trouvé ») ; `WRONG` : un autre
 passage annoncé (ce qui ne doit jamais arriver). Le simulateur calcule sur le processeur du Mac
 (Metal n'y est pas disponible pour Whisper) : ses durées ne sont pas celles d'un iPhone.
 

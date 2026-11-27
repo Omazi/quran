@@ -94,8 +94,32 @@ export interface Reading {
   readonly cached: boolean;
 }
 
+/** How a held reading runs (native/quran-decoding, ReadOptions). */
+export interface HeldOptions {
+  readonly minLetters: number;
+  readonly freeLetterCost: number;
+  readonly firstChoices: number;
+  readonly margin: number;
+  readonly threads: number;
+}
+
+export interface HeldAnswer {
+  readonly readings: {
+    text: string;
+    cost: number;
+    letters: number;
+    freeLetters: number;
+    tokens: number;
+    deadEnd: boolean;
+    abandoned: boolean;
+  }[];
+  readonly ms: number;
+}
+
 export interface WhisperDriver {
   transcribe(samples: Int16Array, decoding: WhisperDecoding): Promise<Reading>;
+  /** Reads the samples again, once per text, held to it (see quran-decoding.h). */
+  held(samples: Int16Array, texts: readonly string[], options: HeldOptions): Promise<HeldAnswer>;
   close(): void;
 }
 
@@ -140,6 +164,25 @@ export function createWhisperDriver(
   }
 
   return {
+    held(samples, texts, options) {
+      const bytes = new Uint8Array(samples.buffer, samples.byteOffset, samples.byteLength);
+      const reading = queue.then(
+        () =>
+          new Promise<HeldAnswer>((resolve) => {
+            const body = NodeBufferClass.from(texts.join('\f'), 'utf8');
+            const header =
+              `held samples=${samples.length} threads=${options.threads} ` +
+              `minletters=${options.minLetters} freecost=${options.freeLetterCost} ` +
+              `firsts=${options.firstChoices} margin=${options.margin} texts=${body.length}\n`;
+            waiting.push((line) => resolve(JSON.parse(line) as HeldAnswer));
+            process().stdin.write(
+              NodeBufferClass.concat([NodeBufferClass.from(header), body, bytes]),
+            );
+          }),
+      );
+      queue = reading.catch(() => undefined);
+      return reading;
+    },
     transcribe(samples, decoding) {
       const bytes = new Uint8Array(samples.buffer, samples.byteOffset, samples.byteLength);
       const key = crypto

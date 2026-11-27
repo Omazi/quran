@@ -7,7 +7,13 @@ export { ListeningScreen, type ListeningScreenProps } from './listening-screen';
 export { createFollowEngine, createListeningEngine } from './speech-engine-door';
 export { parseFollowParams, type FollowParams } from './follow/follow-params';
 export { useListeningNavigation, readerHref } from './use-listening-navigation';
-export { loadQuranPage, loadQuranVerseIndex, loadQuranVerseText } from './verse-index-source';
+export {
+  loadQuranHeldTexts,
+  loadQuranPage,
+  loadQuranVerseIndex,
+  loadQuranVerseText,
+} from './verse-index-source';
+export { checkHeardWords, type HeldTexts } from './held-check';
 export {
   forgetOpenedInApp,
   markOpenedInApp,
@@ -15,3 +21,4 @@ export {
   type MicrophoneRoute,
 } from './in-app-open';
 export { useOpenRecognition } from './use-open-recognition';
+export { usePreloadVoiceModel } from './use-preload-voice-model';

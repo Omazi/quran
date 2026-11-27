@@ -126,4 +126,31 @@ export interface SpeechEngine {
    * Optional: an engine without it shows the level only.
    */
   onActivity?(listener: (activity: SpeechActivity) => void): Unsubscribe;
+  /**
+   * Reads the audio of the latest reading again, once per text, held to that text (the audio
+   * check, D49, `audio-check.ts`). Gives the readings and the text of that latest reading; null
+   * when nothing was read yet or when this build cannot (the screen then goes by the words alone).
+   * With `sameAudioAs`, reads the audio of that earlier check instead (its readings and these
+   * can then be compared). Optional: an engine without it is never checked.
+   */
+  checkHeard?(texts: readonly string[], sameAudioAs?: HeldCheck): Promise<HeldCheck | null>;
+}
+
+/** What `checkHeard` gives: one reading per text, and Whisper's free reading of the same audio. */
+export interface HeldCheck {
+  readonly readings: readonly HeldReading[];
+  readonly freeText: string;
+  /** The audio read, kept by the engine for a check of the same audio (`sameAudioAs`). */
+  readonly audio: unknown;
+}
+
+/** One reading of the audio held to a text (native `quran-decoding`, `Reading`). */
+export interface HeldReading {
+  readonly text: string;
+  readonly cost: number;
+  readonly letters: number;
+  /** Letters of the free words at its start (not the passage). */
+  readonly freeLetters: number;
+  /** Stopped early because it already cost far more than a better one. */
+  readonly abandoned: boolean;
 }

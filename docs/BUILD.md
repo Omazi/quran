@@ -159,7 +159,8 @@ Trois pièces natives entrent dans l'appli avec la reconnaissance vocale :
 - **`modules/voice-capture`** (module local de l'appli, Swift) : le micro, converti en 16 kHz.
   Relié automatiquement comme les autres modules de `modules/` (il n'est pas dans
   `expo.autolinking.exclude`). Voir son `README.md`.
-- **Le modèle** `ggml-quran-tiny-q8_0.bin` (43,5 Mo), copié dans l'appli par le plugin du module.
+- **Le modèle** `ggml-quran-base-q5_1.bin` (59,7 Mo, D49 ; avant : `ggml-quran-tiny-q8_0.bin`,
+  43,5 Mo, manifeste gardé dans `voice-model.tiny.json`), copié dans l'appli par le plugin du module.
 
 Vérifié sous Linux le 25 novembre 2026 (copie temporaire, `npx expo prebuild --platform ios
 --no-install`) : le projet iOS contient le modèle (empreinte vérifiée) dans les ressources de la
@@ -170,6 +171,25 @@ exécution de `ios-check.yml` ou de l'envoi TestFlight le dira. Points à regard
 si elle échoue : `VoiceCaptureModule.swift` (jamais compilé), les en-têtes `RCTBridge+Private.h`
 utilisés par whisper.rn pour installer ses fonctions JSI (présents dans React Native 0.88).
 
+### La relecture tenue au texte (D49) : un correctif de whisper.rn
+
+`patches/whisper.rn+0.7.4.patch`, appliqué par `patch-package` (MIT) à chaque `npm ci`
+(`postinstall`), ajoute à whisper.rn une fonction JSI, `whisperReadHeld`, et lui fait compiler
+`native/quran-decoding/quran-decoding.cpp` (C++17, seulement l'API publique de `whisper.h`) :
+la même source que le banc de mesure (`tools/voice-bench`). Elle est compilée sur le Mac avec le
+code JSI de whisper.rn (qui l'est toujours, même avec le `rnwhisper.xcframework` précompilé, dont
+elle n'utilise que des fonctions exportées : vérifié par `llvm-nm`). Le chemin d'inclusion est
+relatif (`../../../../native/...` depuis `node_modules/whisper.rn/cpp/jsi`) : `node_modules`
+doit être à la racine du dépôt, comme dans la CI.
+
+Vérifié sous Linux : le correctif s'applique (`patch-package` 8.0.1, copie neuve de whisper.rn
+0.7.4) et le fichier corrigé passe `g++ -std=c++20 -fsyntax-only` avec les en-têtes JSI de
+React Native. **Pas vérifié** : la compilation par Xcode. Sans la fonction (build sans le
+correctif), l'appli ne fait que la recherche par les mots, comme avant.
+
+Monter la version de whisper.rn demande de refaire le correctif (`npx patch-package whisper.rn`
+après l'avoir réappliqué à la main).
+
 ### Le modèle de la voix
 
 Le fichier n'est pas dans le dépôt. Pendant `npx expo prebuild`, le plugin
@@ -177,11 +197,11 @@ Le fichier n'est pas dans le dépôt. Pendant `npx expo prebuild`, le plugin
 `modules/voice-capture/voice-model.json`, vérifie sa taille et son SHA-256
 (`ef01ab44…8b52`), le garde dans `node_modules/.cache/voice-model` et le place dans le projet
 iOS. Un fichier qui ne correspond pas est refusé et la compilation s'arrête, avec l'adresse et la
-raison. Le Mac de GitHub le télécharge à chaque compilation (43,5 Mo).
+raison. Le Mac de GitHub le télécharge à chaque compilation (59,7 Mo).
 
 On voit qu'il est entré, à trois endroits :
 
-- le journal de `expo prebuild` affiche `voice model ok: 43537433 ef01ab44…` une fois le fichier
+- le journal de `expo prebuild` affiche `voice model ok: 59707625 acc1f03c…` une fois le fichier
   placé **et revérifié** dans `ios/<App>/` ; le plugin vérifie aussi que le projet Xcode le copie
   dans l'appli (« Copy Bundle Resources ») et arrête la compilation sinon ;
 - après la compilation, `tools/ci/check-voice-model.sh` vérifie le fichier **dans l'appli
@@ -190,7 +210,7 @@ On voit qu'il est entré, à trois endroits :
   fichier est dans l'appli et sa taille, si Whisper l'a chargé, l'état du micro, le dernier
   niveau, la dernière transcription et la dernière erreur.
 
-- Hors ligne : `VOICE_MODEL_FILE=/chemin/ggml-quran-tiny-q8_0.bin` (toujours vérifié).
+- Hors ligne : `VOICE_MODEL_FILE=/chemin/ggml-quran-base-q5_1.bin` (toujours vérifié).
 - Derrière un proxy (la session de l'assistant) : `NODE_USE_ENV_PROXY=1`.
 - Changer de modèle : nouveau fichier, nouvelle taille, nouvelle empreinte dans
   `voice-model.json`, et D42 à mettre à jour.

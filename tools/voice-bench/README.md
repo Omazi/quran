@@ -52,6 +52,21 @@ Variables : `VOICE_BENCH_CONFIG` (réglages nommés dans `voice-bench.test.ts`),
 `VOICE_BENCH_SCORE_TAG`, `VOICE_BENCH_FIXED_MS` / `VOICE_BENCH_PER_WORD_MS` (durée d'une lecture
 sur l'iPhone simulé). Les lectures sont gardées en cache (`cache-<modèle>.jsonl`).
 
+**La relecture tenue au texte (D49)** : le pilote est compilé avec `native/quran-decoding` ; la
+phase `held` relit chaque extrait, tenu à chaque passage que propose la recherche
+(`audio-check.ts`, la logique de l'appli), à partir des lectures entières (`offline-<config>`), et
+`held-score` compte, à côté de la recherche seule, ce que l'appli annonce avec la vérification
+par le son, et ce qu'elle annoncerait si le bon passage n'était pas parmi les candidats
+(`wrong with the right passage left out`) :
+
+```bash
+VOICE_BENCH_PHASE=held,held-score VOICE_BENCH_CONFIG=app VOICE_BENCH_HELD_DRIVER=<travail>/whisper-driver ...
+```
+
+Variables : `VOICE_BENCH_HELD_TAG`, `VOICE_BENCH_HELD_FREE_COST`, `VOICE_BENCH_HELD_FIRSTS`,
+`VOICE_BENCH_HELD_MARGIN`, `VOICE_BENCH_HELD_THREADS` (1 par défaut : sur une machine chargée,
+deux fils qui s'attendent ralentissent chaque pas du décodeur de 10 à 50 fois).
+
 Les temps du repli de température (D45) : `python3 -I tools/voice-bench/retime.py <données>
 <travail> <travail>/offline-before.jsonl`.
 

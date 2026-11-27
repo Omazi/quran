@@ -567,3 +567,36 @@ describe('nothing hangs without saying what broke', () => {
     );
   });
 });
+
+describe('the audio check (D49)', () => {
+  it('reads the audio of the latest reading again, held to each text', async () => {
+    const capture = fakeCapture();
+    const transcriber = fakeTranscriber();
+    const readHeld = jest.fn(async (_samples: Int16Array, texts: readonly string[]) =>
+      texts.map(() => ({ text: '', cost: 1, letters: 0, freeLetters: 0, abandoned: false })),
+    );
+    const engine = createWhisperSpeechEngine({
+      capture,
+      transcriber: { ...transcriber, readHeld },
+    });
+    expect(await engine.checkHeard!(['a'])).toBeNull();
+    await engine.start();
+    await capture.feed('voice', 1800);
+    await capture.feed('silence', phraseEndSilenceMs + chunkMs);
+    const check = await engine.checkHeard!(['a', 'b']);
+    expect(check?.readings).toHaveLength(2);
+    // The same audio as the latest reading, and that reading's text.
+    const lastSamples = (transcriber.transcribe as jest.Mock).mock.calls.at(-1)![0] as Int16Array;
+    expect(readHeld.mock.calls[0]![0]).toBe(lastSamples);
+    expect(check?.freeText.trim()).toBe(SURAH_112.slice(0, 5).join(' '));
+  });
+
+  it('gives null with a transcriber that cannot read held', async () => {
+    const capture = fakeCapture();
+    const engine = createWhisperSpeechEngine({ capture, transcriber: fakeTranscriber() });
+    await engine.start();
+    await capture.feed('voice', 1800);
+    await capture.feed('silence', phraseEndSilenceMs + chunkMs);
+    expect(await engine.checkHeard!(['a'])).toBeNull();
+  });
+});

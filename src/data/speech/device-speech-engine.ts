@@ -109,9 +109,34 @@ export function createDeviceSpeechEngine(
   );
 }
 
+/**
+ * Loads the voice model ahead of time (D49): the first load reads ~45 MB and builds Whisper's
+ * buffers, which a listening would otherwise wait for. Called when the person reaches a screen
+ * from which they can listen; harmless when called again, and does nothing on a build without the
+ * native module. A failure is forgotten (the next listening tries again and says what broke).
+ */
+export function preloadVoiceModel({
+  findNative = findLinkedNative,
+}: Pick<DeviceSpeechEngineOptions, 'findNative'> = {}): Promise<void> {
+  let native: NativeVoiceCapture | null = null;
+  try {
+    native = findNative();
+  } catch {
+    // Not there.
+  }
+  if (native === null) return Promise.resolve();
+  const linked = native;
+  sharedTranscriber ??= createWhisperTranscriber(loadWhisperRn, {
+    checkModel: () => checkModelFile(linked),
+  });
+  return sharedTranscriber.prepare().catch(() => undefined);
+}
+
 export interface FileSpeechEngineOptions extends DeviceSpeechEngineOptions {
   /** Told how long each reading by Whisper took, in milliseconds (the clock of the phone). */
   readonly onReading?: (ms: number, text: string) => void;
+  /** Told how long each held reading (the audio check, D49) took, and of how many texts. */
+  readonly onHeldReading?: (ms: number, texts: number) => void;
   readonly now?: () => number;
 }
 
@@ -128,6 +153,7 @@ export function createFileSpeechEngine(
     findNative = findLinkedNative,
     loadWhisper,
     onReading,
+    onHeldReading,
     now = Date.now,
   }: FileSpeechEngineOptions = {},
 ): SpeechEngine | null {
@@ -154,7 +180,7 @@ export function createFileSpeechEngine(
     loadWhisper === undefined
       ? (sharedTranscriber ??= createWhisperTranscriber(loadWhisperRn, { checkModel }))
       : createWhisperTranscriber(loadWhisper, { checkModel });
-  const timed: Transcriber = {
+  const timed: { -readonly [K in keyof Transcriber]: Transcriber[K] } = {
     prepare: () => whisper.prepare(),
     async transcribe(samples) {
       const started = now();
@@ -163,6 +189,15 @@ export function createFileSpeechEngine(
       return text;
     },
   };
+  if (whisper.readHeld !== undefined) {
+    const readHeld = whisper.readHeld.bind(whisper);
+    timed.readHeld = async (samples, texts, minLetters) => {
+      const started = now();
+      const readings = await readHeld(samples, texts, minLetters);
+      onHeldReading?.(now() - started, texts.length);
+      return readings;
+    };
+  }
   return silenceWhileListening(
     createWhisperSpeechEngine({
       capture: createNativeAudioCapture(fromFile),

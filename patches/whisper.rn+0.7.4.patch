@@ -1,0 +1,108 @@
+diff --git a/node_modules/whisper.rn/cpp/jsi/RNWhisperJSI.cpp b/node_modules/whisper.rn/cpp/jsi/RNWhisperJSI.cpp
+index ac3403e..966aaca 100644
+--- a/node_modules/whisper.rn/cpp/jsi/RNWhisperJSI.cpp
++++ b/node_modules/whisper.rn/cpp/jsi/RNWhisperJSI.cpp
+@@ -24,6 +24,10 @@
+ #include <android/log.h>
+ #endif
+ 
++// Jannatuk (docs/DECISIONS.md, D49; patches/whisper.rn+0.7.4.patch): the audio read again held
++// to the passages proposed by the search. One source, compiled here and by the voice bench.
++#include "../../../../native/quran-decoding/quran-decoding.cpp"
++
+ using namespace facebook;
+ 
+ namespace {
+@@ -2189,6 +2193,84 @@ void installJSIBindings(
+             }
+         });
+ 
++    // Jannatuk (D49): whisperReadHeld(contextId, texts, options, audio) reads the audio again,
++    // once per text, held to it (native/quran-decoding); resolves with the readings as JSON.
++    auto readHeld = jsi::Function::createFromHostFunction(
++        runtime,
++        jsi::PropNameID::forAscii(runtime, "whisperReadHeld"),
++        4,
++        [callInvoker](
++            jsi::Runtime &runtime,
++            const jsi::Value &,
++            const jsi::Value *arguments,
++            size_t count) -> jsi::Value {
++            int contextId = requireContextId(runtime, arguments, count);
++            if (count < 2 || !arguments[1].isObject() ||
++                !arguments[1].asObject(runtime).isArray(runtime)) {
++                throw jsi::JSError(runtime, "Held texts must be an array of strings");
++            }
++            auto textArray = arguments[1].asObject(runtime).asArray(runtime);
++            std::vector<std::string> texts;
++            for (size_t i = 0; i < textArray.size(runtime); ++i) {
++                auto value = textArray.getValueAtIndex(runtime, i);
++                if (!value.isString()) {
++                    throw jsi::JSError(runtime, "Held texts must be an array of strings");
++                }
++                texts.push_back(value.asString(runtime).utf8(runtime));
++            }
++            auto options = requireObjectArgument(
++                runtime, arguments, count, 2, "Held reading options must be an object");
++            auto audio = requireAudioBufferArgument(runtime, arguments, count, 3);
++
++            quran_decoding::ReadOptions readOptions;
++            int maxThreads = static_cast<int>(std::thread::hardware_concurrency());
++            int defaultThreads = maxThreads == 4 ? 2 : std::min(4, maxThreads);
++            int nThreads = getIntProperty(runtime, options, "maxThreads", defaultThreads);
++            readOptions.threads = nThreads > 0 ? nThreads : defaultThreads;
++            readOptions.min_letters = getIntProperty(runtime, options, "minLetters", 0);
++            readOptions.free_letter_cost = getFloatProperty(runtime, options, "freeLetterCost", 2.0f);
++            readOptions.first_choices = getIntProperty(runtime, options, "firstChoices", 3);
++            readOptions.margin = getFloatProperty(runtime, options, "margin", 0.0f);
++
++            auto holder = g_whisperContexts.get(contextId);
++            if (!holder) {
++                throw jsi::JSError(runtime, "Context not found");
++            }
++            if (!holder->beginExclusiveOperation(-1)) {
++                throw jsi::JSError(runtime, "Context is already transcribing");
++            }
++
++            holder->retainTask();
++            try {
++                return createPromiseTask(runtime, callInvoker, [holder, texts, readOptions, audio]() -> PromiseResultGenerator {
++                    PromiseScopeGuard taskGuard([holder]() { holder->releaseTask(); });
++                    PromiseScopeGuard exclusiveGuard([holder]() { holder->endExclusiveOperation(); });
++
++                    std::vector<std::shared_ptr<const quran_decoding::Index>> indexes;
++                    for (const auto &text : texts) {
++                        auto index = quran_decoding::index_for(text);
++                        if (index == nullptr) {
++                            throw std::runtime_error("A held text holds no verse");
++                        }
++                        indexes.push_back(index);
++                    }
++                    auto readings = quran_decoding::read_held_to(
++                        holder->context, audio.data(), static_cast<int>(audio.size()), indexes, readOptions);
++                    if (readings.size() != indexes.size()) {
++                        throw std::runtime_error("Whisper could not read the audio again");
++                    }
++                    std::string json = quran_decoding::readings_json(readings);
++                    return [json](jsi::Runtime &rt) {
++                        return jsi::String::createFromUtf8(rt, json);
++                    };
++                }, contextId);
++            } catch (...) {
++                holder->endExclusiveOperation();
++                holder->releaseTask();
++                throw;
++            }
++        });
++
+     auto initParakeetContext = jsi::Function::createFromHostFunction(
+         runtime,
+         jsi::PropNameID::forAscii(runtime, "parakeetInitContext"),
+@@ -2724,6 +2806,7 @@ void installJSIBindings(
+     runtime.global().setProperty(runtime, "whisperTranscribeData", std::move(transcribeData));
+     runtime.global().setProperty(runtime, "whisperAbortTranscribe", std::move(abortTranscribe));
+     runtime.global().setProperty(runtime, "whisperBench", std::move(bench));
++    runtime.global().setProperty(runtime, "whisperReadHeld", std::move(readHeld));
+     runtime.global().setProperty(runtime, "parakeetInitContext", std::move(initParakeetContext));
+     runtime.global().setProperty(runtime, "parakeetReleaseContext", std::move(releaseParakeetContext));
+     runtime.global().setProperty(runtime, "parakeetReleaseAllContexts", std::move(releaseAllParakeetContexts));

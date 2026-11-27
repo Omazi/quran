@@ -16,6 +16,7 @@ import { useReducedMotion } from '@/ui';
 
 import { describePassage } from './passage-words';
 import { useListening } from './use-listening';
+import { loadQuranHeldTexts } from './verse-index-source';
 import type { LoadVerseText } from './use-verse-texts';
 import { FoundView } from './views/found-view';
 import { ListeningView, type ListeningViewPhase } from './views/listening-view';
@@ -81,6 +82,7 @@ export function ListeningScreen({
     engine,
     loadVerseIndex,
     autoStart,
+    loadHeldTexts: loadQuranHeldTexts,
   });
   const reducedMotion = useReducedMotion();
 
