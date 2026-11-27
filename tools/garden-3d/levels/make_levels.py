@@ -352,8 +352,12 @@ class Garden:
         assert used <= set(ids), used - set(ids)
         missing = {e["id"] for e in self.catalogue if e["kind"] not in NO_MODEL} - used
         assert not missing, (self.slug, missing)
+        half = self.plot["half"] - 0.3
         for item in self.items:
             assert self.roles.get(item["role"]), (self.slug, item["role"])
+            if "x" in item:
+                reach = math.hypot(item["x"], item["z"]) if self.plot["shape"] == "round" else max(abs(item["x"]), abs(item["z"]))
+                assert reach <= half, (self.slug, item["element"], item["x"], item["z"])
             if "line" in item or not item["element"]:
                 continue
             size = item["size"]
@@ -789,8 +793,10 @@ def orchard():
         n = math.hypot(nx, nz)
         s = 1 if k % 2 else -1
         for j in range(3):
-            g.put("full-bloom", "reeds", p[0] + s * nx / n * (1.35 + 0.15 * j) + (nxt[0] - p[0]) * j,
-                  p[1] + s * nz / n * (1.35 + 0.15 * j) + (nxt[1] - p[1]) * j, {"h": 0.65, "wmax": 0.8}, y=L)
+            x = p[0] + s * nx / n * (1.35 + 0.15 * j) + (nxt[0] - p[0]) * j
+            z = p[1] + s * nz / n * (1.35 + 0.15 * j) + (nxt[1] - p[1]) * j
+            if max(abs(x), abs(z)) < IN - 0.3:
+                g.put("full-bloom", "reeds", x, z, {"h": 0.65, "wmax": 0.8}, y=L)
     for k, i in enumerate((26, 34, 46)):
         p = river[i]
         g.put("full-bloom", "lily", p[0] + 0.35, p[1] + 0.2, {"w": 0.55}, y=0.068, onWater=True, variant=k)
@@ -1541,7 +1547,7 @@ def night():
     for k, (u, v) in enumerate([(1.2, 1.1), (-1.1, -1.2)]):
         x, z = uv(u * 0.9, v * 0.9)
         g.put("full-bloom", "lily", x, z, {"w": 0.45}, y=0.172, onWater=True, variant=k + 5)
-    for k, (u, v) in enumerate([(4.2, -1.0), (-4.2, 1.0), (6.0, 6.8), (-6.0, 6.8)]):
+    for k, (u, v) in enumerate([(4.2, -1.0), (-4.2, 1.0), (5.0, 5.8), (-5.0, 5.8)]):
         x, z = uv(u, v)
         g.put("full-bloom", "lantern-small", x, z, {"h": 0.4}, y=0.03, yaw=45)
         glow(g, "full-bloom", x, 0.05, z, 0.7)

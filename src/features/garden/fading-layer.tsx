@@ -3,10 +3,11 @@ import { useEffect, useState } from 'react';
 import { Animated, Platform, StyleSheet } from 'react-native';
 
 import { GARDEN_PICTURE_POSITION } from './config';
+import type { GardenImageSource } from './garden-art';
 
 export interface FadingLayerProps {
   /** The picture, or undefined when this layer has nothing to show. */
-  asset: number | undefined;
+  asset: GardenImageSource | undefined;
   /** How long a change takes, in milliseconds. 0: at once, with no fade at all. */
   transitionMs: number;
   /** Where the picture rests in a taller box. Bottom if not given. */

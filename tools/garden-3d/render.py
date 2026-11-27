@@ -94,6 +94,11 @@ def full_set(renderer, out, first, last):
     started = time.time()
     for count in range(first, last + 1):
         for foliage in range(FOLIAGE_STAGES):
+            name = f"h{count:02d}-f{foliage}"
+            if os.path.exists(os.path.join(out, "base", name + ".webp")) and os.path.exists(
+                os.path.join(out, "water", ".done-" + name)
+            ):
+                continue  # drawn by an earlier run (a long set is drawn in several runs)
             dry = renderer.shot(count, 0, foliage)
             dry.save(os.path.join(out, "base", f"h{count:02d}-f{foliage}.webp"), "WEBP", quality=QUALITY, method=4)
             for water in WATER_PICTURES:
@@ -101,6 +106,7 @@ def full_set(renderer, out, first, last):
                 if over.getbbox() is None:
                     continue  # no water in this garden yet
                 over.save(os.path.join(out, "water", f"h{count:02d}-f{foliage}-w{water}.webp"), "WEBP", quality=QUALITY, method=4)
+            open(os.path.join(out, "water", ".done-" + name), "w").close()
         print(f"  hizb {count}: {time.time() - started:.0f} s", flush=True)
 
 

@@ -1,12 +1,14 @@
 /**
  * Levels, gardens and badges on screen (D46): the badge, the level chip, the badge shelf, the
  * current garden card, "Montrer mon niveau", "Mes jardins", the khatma celebration and a friend's
- * level. The rules are in `@/domain/levels`; the pictures of each style in `garden-style-art.ts`.
+ * level. The rules are in `@/domain/levels`; the art of each style in `garden-style-art.ts`, loaded
+ * by `useGardenArt`.
  */
 export { BadgeShelf, type BadgeShelfProps } from './badge-shelf';
 export { CurrentGardenCard, type CurrentGardenCardProps } from './current-garden-card';
 export { FriendLevelSection, type FriendLevelSectionProps } from './friend-level-section';
-export { GARDEN_STYLE_ART, isProvisionalArt } from './garden-style-art';
+export { GARDEN_STYLE_ART, packLevelOf } from './garden-style-art';
+export { useGardenArt, type StyleArt } from './use-garden-art';
 export {
   celebrationOf,
   friendShelf,

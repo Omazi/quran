@@ -2,62 +2,66 @@ import type { GardenStyleId } from '@/domain/levels';
 import type { PaletteRole } from '@/ui';
 
 /**
- * PROVISIONAL (D46): how a garden style without pictures of its own is drawn until its art is
- * rendered (tools/garden-pictures, models of D22): the level-1 pictures, with a colour cast of the
- * charter laid over the garden only (`GardenScene`'s `tint`).
+ * A colour cast laid over the level-1 pictures (`GardenScene`'s `tint`): how a level garden is
+ * drawn while its pack is not on the device yet (downloading, offline, or a pack that failed its
+ * check), so that the style is never shown with another garden's look without a hint of its own.
  */
-export interface ProvisionalTint {
+export interface PlaceholderTint {
   /** A colour of the charter's palette, read in the current appearance. */
   readonly role: PaletteRole;
   /** From 0 to 1: a cast, so the garden is still read under it. */
   readonly opacity: number;
 }
 
-/** The pictures of one garden style. */
+/** Where the art of a garden style comes from, and what stands in for it meanwhile. */
 export interface GardenStyleArt {
-  /** The set of rendered pictures that draws the style. Only level 1 has its own today. */
-  readonly pictures: 'level-1';
-  /** Null once the style has its own pictures. */
-  readonly provisionalTint: ProvisionalTint | null;
+  /**
+   * `bundled`: the level-1 garden, in the app. A number: the level whose pack holds the style's
+   * garden (src/data/garden-art, tools/garden-3d), downloaded when needed.
+   */
+  readonly source: 'bundled' | { readonly packLevel: number };
+  /** Over the level-1 pictures while the pack is not there. Null for the bundled garden. */
+  readonly placeholderTint: PlaceholderTint | null;
 }
 
 /**
- * The style registry of the app: every style of `GARDEN_STYLES` has an entry (a test checks it),
- * so a new garden cannot ship without its pictures decided. When a style's art is rendered, give it
- * its own `pictures` and set `provisionalTint` to null: nothing else changes.
- *
- * TODO(D46): render the oasis, the waterside orchard, the mountain garden, the cherry blossoms,
- * the pine clearing and the night garden. Nobody sees them before completing a whole khatma.
+ * The style registry of the app (D46): every style of `GARDEN_STYLES` has an entry (a test checks
+ * it), so a new garden cannot ship without its art decided. Levels 2 to 7 have their own gardens
+ * (tools/garden-3d/levels/make_levels.py), each in a pack of its level.
  */
 export const GARDEN_STYLE_ART: Readonly<Record<GardenStyleId, GardenStyleArt>> = Object.freeze({
-  'fountain-courtyard': { pictures: 'level-1', provisionalTint: null },
+  'fountain-courtyard': { source: 'bundled', placeholderTint: null },
   // Warm sand light.
-  oasis: { pictures: 'level-1', provisionalTint: { role: 'goldLight', opacity: 0.3 } },
+  oasis: { source: { packLevel: 2 }, placeholderTint: { role: 'goldLight', opacity: 0.3 } },
   // The water's blue-green.
   'waterside-orchard': {
-    pictures: 'level-1',
-    provisionalTint: { role: 'waterFill', opacity: 0.24 },
+    source: { packLevel: 3 },
+    placeholderTint: { role: 'waterFill', opacity: 0.24 },
   },
   // Cool mountain air.
   'mountain-garden': {
-    pictures: 'level-1',
-    provisionalTint: { role: 'avatarBlue', opacity: 0.24 },
+    source: { packLevel: 4 },
+    placeholderTint: { role: 'avatarBlue', opacity: 0.24 },
   },
   // Blossom pink.
   'cherry-blossoms': {
-    pictures: 'level-1',
-    provisionalTint: { role: 'avatarRose', opacity: 0.26 },
+    source: { packLevel: 5 },
+    placeholderTint: { role: 'avatarRose', opacity: 0.26 },
   },
   // Deep pine green.
-  'pine-clearing': { pictures: 'level-1', provisionalTint: { role: 'avatarGreen', opacity: 0.28 } },
+  'pine-clearing': {
+    source: { packLevel: 6 },
+    placeholderTint: { role: 'avatarGreen', opacity: 0.28 },
+  },
   // Night water.
   'night-garden': {
-    pictures: 'level-1',
-    provisionalTint: { role: 'launchWater', opacity: 0.38 },
+    source: { packLevel: 7 },
+    placeholderTint: { role: 'launchWater', opacity: 0.38 },
   },
 });
 
-/** Whether a style is still drawn with borrowed, tinted pictures. */
-export function isProvisionalArt(styleId: GardenStyleId): boolean {
-  return GARDEN_STYLE_ART[styleId].provisionalTint !== null;
+/** The level whose pack holds a style's garden, or null for the garden in the app. */
+export function packLevelOf(styleId: GardenStyleId): number | null {
+  const { source } = GARDEN_STYLE_ART[styleId];
+  return source === 'bundled' ? null : source.packLevel;
 }

@@ -1,0 +1,48 @@
+{
+  "about": "PROVISIONAL until tools/garden-3d/pack.mjs runs",
+  "format": 1,
+  "levels": {
+    "2": {
+      "style": "oasis",
+      "file": "level-2.gardenpack",
+      "bytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "urls": ["https://github.com/Omazi/quran/raw/garden-art/level-2.gardenpack"]
+    },
+    "3": {
+      "style": "waterside-orchard",
+      "file": "level-3.gardenpack",
+      "bytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "urls": ["https://github.com/Omazi/quran/raw/garden-art/level-3.gardenpack"]
+    },
+    "4": {
+      "style": "mountain-garden",
+      "file": "level-4.gardenpack",
+      "bytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "urls": ["https://github.com/Omazi/quran/raw/garden-art/level-4.gardenpack"]
+    },
+    "5": {
+      "style": "cherry-blossoms",
+      "file": "level-5.gardenpack",
+      "bytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "urls": ["https://github.com/Omazi/quran/raw/garden-art/level-5.gardenpack"]
+    },
+    "6": {
+      "style": "pine-clearing",
+      "file": "level-6.gardenpack",
+      "bytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "urls": ["https://github.com/Omazi/quran/raw/garden-art/level-6.gardenpack"]
+    },
+    "7": {
+      "style": "night-garden",
+      "file": "level-7.gardenpack",
+      "bytes": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "urls": ["https://github.com/Omazi/quran/raw/garden-art/level-7.gardenpack"]
+    }
+  }
+}

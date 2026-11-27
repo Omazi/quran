@@ -12,7 +12,7 @@ import {
   GARDEN_PICTURE_POSITION,
   GARDEN_SCENE_BAND_MIN_HEIGHT,
 } from './config';
-import { baseAsset, SHIPPED_GARDEN_IMAGES, waterAsset } from './garden-images';
+import { LEVEL_1_ART, type GardenArt, type GardenImageSource } from './garden-art';
 import { gardenPicture, pictureNames, type GardenImageNames } from './garden-picture';
 import { gardenSceneLabel, gardenSceneName } from './garden-words';
 import { GrowingSprite } from './growing-sprite';
@@ -44,7 +44,12 @@ export interface GardenSceneProps {
   size: GardenSceneSize;
   /** Where the picture rests in a taller box (`fill`): its bottom edge (default) or the middle. */
   anchor?: 'bottom' | 'center';
-  /** Which pictures exist. Only tests give it: the app uses the set that ships with it. */
+  /**
+   * The garden's art: the level-1 pictures by default, or a level garden downloaded with its
+   * pictures (D46, docs/specs/garden-levels.md).
+   */
+  art?: GardenArt;
+  /** Which pictures exist. Only tests give it: the app uses the set of `art`. */
   images?: GardenImageNames;
   /** A provisional colour cast for a garden style without pictures of its own (D46). */
   tint?: GardenSceneTint | null;
@@ -57,7 +62,7 @@ function Layer({
   position,
   tint,
 }: {
-  asset: number | undefined;
+  asset: GardenImageSource | undefined;
   transitionMs: number;
   position: ImageContentPosition;
   tint?: GardenSceneTint;
@@ -89,7 +94,8 @@ function Layer({
  * The garden on screen, and its only entry point (decision D12). It receives a `GardenState` and
  * a size, nothing else: the day a 3D engine exists, only this component changes.
  *
- * It shows the picture of the level-1 garden that matches the state (`gardenPicture`): the dry
+ * It shows the picture of its garden (`art`, level 1 by default) that matches the state
+ * (`gardenPicture`): the dry
  * garden and the water laid over it. The element of the hizb in progress is drawn over it from
  * its first counted page, smaller while it grows, one step per stage (owner, 25 November 2026,
  * replacing D35's "only when its hizb is complete"; `GrowingSprite`). Only those images are loaded. When the state jumps
@@ -102,7 +108,8 @@ export function GardenScene({
   state,
   size,
   anchor = 'bottom',
-  images = SHIPPED_GARDEN_IMAGES,
+  art = LEVEL_1_ART,
+  images = art.images,
   tint = null,
 }: GardenSceneProps) {
   const { t } = useTranslation('garden');
@@ -138,24 +145,29 @@ export function GardenScene({
       onLayout={onLayout}
       testID="garden-scene"
     >
-      <Layer asset={baseAsset(names.base)} transitionMs={transitionMs} position={position} />
+      <Layer asset={art.base(names.base)} transitionMs={transitionMs} position={position} />
       {tint === null ? null : (
         <Layer
-          asset={baseAsset(names.base)}
+          asset={art.base(names.base)}
           transitionMs={transitionMs}
           position={position}
           tint={tint}
         />
       )}
       <FadingLayer
-        asset={names.water === null ? undefined : waterAsset(names.water)}
+        asset={names.water === null ? undefined : art.water(names.water)}
         transitionMs={transitionMs}
         position={position}
       />
       {
         // Drawn once the pictures show every element before it (not during a walk of steps).
         growing !== null && picture.stage.count === growing.hizb - 1 ? (
-          <GrowingSprite hizb={growing.hizb} growth={growing.growth} box={box} anchor={anchor} />
+          <GrowingSprite
+            sprite={art.sprite(growing.hizb)}
+            growth={growing.growth}
+            box={box}
+            anchor={anchor}
+          />
         ) : null
       }
     </View>

@@ -22,6 +22,14 @@ export {
   type GardenReadoutProps,
 } from './garden-readout';
 export {
+  LEVEL_1_ART,
+  packedGardenArt,
+  type GardenArt,
+  type GardenImageSource,
+  type GardenSpriteArt,
+  type PackedGarden,
+} from './garden-art';
+export {
   GardenScene,
   type GardenSceneProps,
   type GardenSceneSize,

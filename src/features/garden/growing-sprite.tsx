@@ -5,12 +5,12 @@ import { Animated, Easing, Platform, StyleSheet } from 'react-native';
 import { useReducedMotion } from '@/ui';
 
 import { GARDEN_PICTURE_SIZE } from './config';
-import { GARDEN_SPRITES } from './garden-sprites.generated';
+import type { GardenSpriteArt } from './garden-art';
 import { pictureRect, pictureStep } from './growth-pose';
 
 export interface GrowingSpriteProps {
-  /** The element growing (its hizb), and how far. */
-  hizb: number;
+  /** The element growing, cut from its garden's pictures (none: nothing is drawn), and how far. */
+  sprite: GardenSpriteArt | undefined;
   growth: number;
   /** The size of the scene, once laid out. */
   box: { readonly width: number; readonly height: number };
@@ -30,7 +30,7 @@ const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
  * it grows, one step per stage of its growth (`pictureStep`). A step grows into the next; with
  * Reduce Motion it comes at once. Not an element of its own for VoiceOver: the scene says it.
  */
-export function GrowingSprite({ hizb, growth, box, anchor }: GrowingSpriteProps) {
+export function GrowingSprite({ sprite, growth, box, anchor }: GrowingSpriteProps) {
   const isMotionReduced = useReducedMotion();
   const step = pictureStep(growth);
   const target = step?.scale ?? 0;
@@ -51,7 +51,6 @@ export function GrowingSprite({ hizb, growth, box, anchor }: GrowingSpriteProps)
     return () => grow.stop();
   }, [target, isMotionReduced, scale]);
 
-  const sprite = GARDEN_SPRITES[hizb];
   if (sprite === undefined || step === null || box.width === 0) return null;
   const picture = pictureRect(box, GARDEN_PICTURE_SIZE.width / GARDEN_PICTURE_SIZE.height, anchor);
   const k = picture.width / GARDEN_PICTURE_SIZE.width;
@@ -73,7 +72,7 @@ export function GrowingSprite({ hizb, growth, box, anchor }: GrowingSpriteProps)
       ]}
     >
       <Image
-        source={sprite.asset}
+        source={sprite.source}
         style={StyleSheet.absoluteFill}
         contentFit="fill"
         accessible={false}

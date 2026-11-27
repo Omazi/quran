@@ -5,10 +5,11 @@ import {
   pageRange,
   readPages,
 } from '@/domain/khatm/__fixtures__/journal-builders';
+import { gardenArtEntry } from '@/data/garden-art';
 import { GARDEN_STYLES, getProgression } from '@/domain/levels';
 
 import { celebrationOf, friendShelf, ownShelf } from '../gardens-model';
-import { GARDEN_STYLE_ART, isProvisionalArt } from '../garden-style-art';
+import { GARDEN_STYLE_ART, packLevelOf } from '../garden-style-art';
 
 const START = day('2026-01-01');
 
@@ -17,20 +18,28 @@ describe('the art of each garden style', () => {
     expect(Object.keys(GARDEN_STYLE_ART).sort()).toEqual([...GARDEN_STYLES].sort());
   });
 
-  it('draws the fountain courtyard with its own pictures, untinted', () => {
-    expect(isProvisionalArt('fountain-courtyard')).toBe(false);
-    expect(GARDEN_STYLE_ART['fountain-courtyard'].provisionalTint).toBeNull();
+  it('draws the fountain courtyard with the garden in the app, untinted', () => {
+    expect(packLevelOf('fountain-courtyard')).toBeNull();
+    expect(GARDEN_STYLE_ART['fountain-courtyard'].placeholderTint).toBeNull();
   });
 
-  it('marks the six other styles provisional: the level-1 pictures, each with its own tint', () => {
+  it('draws each other style with the pack of its own level, which the manifest has', () => {
+    GARDEN_STYLES.forEach((style, index) => {
+      if (style === 'fountain-courtyard') return;
+      const level = index + 1;
+      expect(packLevelOf(style)).toBe(level);
+      expect(gardenArtEntry(level)?.style).toBe(style);
+    });
+  });
+
+  it('gives each downloaded style its own placeholder cast, never a flat colour', () => {
     const others = GARDEN_STYLES.filter((style) => style !== 'fountain-courtyard');
-    for (const style of others) expect(isProvisionalArt(style)).toBe(true);
-    const tints = others.map((style) => GARDEN_STYLE_ART[style].provisionalTint?.role);
+    const tints = others.map((style) => GARDEN_STYLE_ART[style].placeholderTint?.role);
     expect(new Set(tints).size).toBe(others.length);
     for (const style of others) {
-      const opacity = GARDEN_STYLE_ART[style].provisionalTint?.opacity ?? 0;
+      const opacity = GARDEN_STYLE_ART[style].placeholderTint?.opacity ?? 0;
       expect(opacity).toBeGreaterThan(0);
-      // A cast, never a flat colour: the garden must still be read under it.
+      // A cast: the garden must still be read under it.
       expect(opacity).toBeLessThanOrEqual(0.4);
     }
   });

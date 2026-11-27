@@ -16,9 +16,9 @@ import { publishHandle } from '@/features/screen-check/handles';
 import { Pill, spacing, useReducedMotion, type IconSymbol } from '@/ui';
 
 import { GARDEN_PICTURE_ASPECT_RATIO } from '../config';
-import { SHIPPED_GARDEN_IMAGES } from '../garden-images';
+import { LEVEL_1_ART, type GardenArt } from '../garden-art';
 import { gardenStage } from '../garden-picture';
-import { GardenScene } from '../garden-scene';
+import { GardenScene, type GardenSceneTint } from '../garden-scene';
 import { gardenSceneLabel } from '../garden-words';
 import { useGardenPictureSequence } from '../use-garden-picture';
 import { GARDEN_3D } from './config';
@@ -47,6 +47,10 @@ export interface GardenView3DProps {
   playsGrowth?: boolean;
   /** The screen is in front: false while the reader is pushed over it. A growth waits for it. */
   isActive?: boolean;
+  /** The garden's art: level 1 by default, or a downloaded level garden (D46). */
+  art?: GardenArt;
+  /** A colour cast on the picture while a level garden is not downloaded yet (D46). */
+  tint?: GardenSceneTint | null;
   testID?: string;
 }
 
@@ -84,11 +88,13 @@ export function GardenView3D({
   fill = false,
   playsGrowth = false,
   isActive = true,
+  art = LEVEL_1_ART,
+  tint = null,
   testID = 'garden-3d',
 }: GardenView3DProps) {
   const { t } = useTranslation('garden');
   const isMotionReduced = useReducedMotion();
-  const modelStatus = useGardenModel();
+  const modelStatus = useGardenModel(art);
   const hint = useGardenHint();
   const [isReady, setReady] = useState(false);
   const [hasFailed, setFailed] = useState(false);
@@ -113,7 +119,7 @@ export function GardenView3D({
   // A new object only when the stage changes, so that a walk is not restarted by a render.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const targetPicture = useMemo(() => ({ stage: target }), [targetKey]);
-  const { picture } = useGardenPictureSequence(targetPicture, SHIPPED_GARDEN_IMAGES);
+  const { picture } = useGardenPictureSequence(targetPicture, art.images);
   const stage = picture?.stage ?? target;
 
   useEffect(() => surface.setStage(stage), [stage, surface]);
@@ -240,6 +246,8 @@ export function GardenView3D({
               state={state}
               size={fill ? 'fill' : 'band'}
               anchor={fill ? 'center' : 'bottom'}
+              art={art}
+              tint={tint}
             />
           </View>
         )}

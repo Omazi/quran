@@ -2,10 +2,12 @@ import { useEffect, useRef, type ComponentRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
+import type { GardenState } from '@/domain/garden';
+import { styleOfLevel } from '@/domain/levels';
 import { HIZB_COUNT } from '@/domain/quran';
 import { publishHandle } from '@/features/screen-check/handles';
 import { GARDEN_PICTURE_ASPECT_RATIO, GardenView3D } from '@/features/garden';
-import { FriendLevelSection } from '@/features/gardens';
+import { FriendLevelSection, useGardenArt } from '@/features/gardens';
 import {
   ActionButton,
   AppText,
@@ -174,12 +176,7 @@ export function FriendScreen({
               />
             ) : (
               // The garden to visit in 3D (visite.png: « Glisse pour tourner, pince pour zoomer »).
-              <GardenView3D
-                state={card.garden}
-                hintPlacement="below"
-                fill
-                testID="friend-garden-3d"
-              />
+              <FriendGarden state={card.garden} level={level?.level ?? null} />
             )}
           </View>
           <Card style={styles.sheet} testID="friend-card">
@@ -296,6 +293,24 @@ export function FriendScreen({
       </ScrollView>
       {renderOptions?.(menu)}
     </View>
+  );
+}
+
+/**
+ * The garden to visit in 3D, in the style of the friend's level (D46). A friend who hides their
+ * level shows the first garden: the style would tell the level.
+ */
+function FriendGarden({ state, level }: { state: GardenState; level: number | null }) {
+  const { art, tint } = useGardenArt(level === null ? null : styleOfLevel(level));
+  return (
+    <GardenView3D
+      state={state}
+      hintPlacement="below"
+      fill
+      art={art}
+      tint={tint}
+      testID="friend-garden-3d"
+    />
   );
 }
 

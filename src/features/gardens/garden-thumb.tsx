@@ -6,7 +6,7 @@ import type { GardenStyleId } from '@/domain/levels';
 import { baseAsset, GARDEN_PICTURE_ASPECT_RATIO, GardenScene } from '@/features/garden';
 import { useColorValues } from '@/ui';
 
-import { useGardenTint } from './use-garden-tint';
+import { useGardenArt } from './use-garden-art';
 
 /**
  * A garden of a style, as a picture inside something that already says what it is (a badge, a
@@ -21,7 +21,7 @@ export function GardenThumb({
   state: GardenState;
   style?: StyleProp<ViewStyle>;
 }) {
-  const tint = useGardenTint(styleId);
+  const { art, tint } = useGardenArt(styleId);
   return (
     <View
       style={style}
@@ -29,7 +29,7 @@ export function GardenThumb({
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
-      <GardenScene state={state} size="band" anchor="center" tint={tint} />
+      <GardenScene state={state} size="band" anchor="center" art={art} tint={tint} />
     </View>
   );
 }
