@@ -149,12 +149,12 @@ async function listenTo(
     // again once more words came, and once more before "nothing found".
     let checking: Promise<void> | null = null;
     let checkedAt = 0;
-    const check = (words: readonly string[]): Promise<void> => {
+    const check = (words: readonly string[], last = false): Promise<void> => {
       checkedAt = words.length;
       const run = (async () => {
         if (texts === null) return;
         try {
-          const result = await checkHeardWords(engine, index, texts, words);
+          const result = await checkHeardWords(engine, index, texts, words, { secondChance: last });
           if (result !== null && found === null) byCheck = true;
           answer(result, heard.length);
         } catch {
@@ -195,8 +195,8 @@ async function listenTo(
       void (async () => {
         if (reason === 'finished' && found === null && texts !== null) {
           if (checking !== null) await checking;
-          if (found === null && heard.length >= AUDIO_CHECK.minWords && heard.length > checkedAt) {
-            await check([...heard]);
+          if (found === null && heard.length >= AUDIO_CHECK.minWords) {
+            await check([...heard], true);
           }
           if (found !== null) return;
         }

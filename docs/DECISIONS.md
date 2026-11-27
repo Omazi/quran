@@ -910,7 +910,8 @@ modèle ; d'autres passages que 83:1–3 chez des lecteurs ordinaires ; la compi
 Swift (`startFile`) et la preuve elle-même, qui attendent la prochaine vérification iOS.
 
 _Changerait si_ un iPhone montre que `base` tient le rythme (le prendre), ou que `tiny` est trop
-lent même sans repli (relire moins souvent : `passEveryMs`).
+lent même sans repli (relire moins souvent : `passEveryMs`). **Suite : D47** (`base` pris, et le
+contrôle par le son).
 
 ## D46 — Niveaux, jardins et badges
 
@@ -943,3 +944,103 @@ Choix de mise en œuvre (développeur, 26 novembre 2026) :
 
 _Changerait si_ le propriétaire voit les images provisoires et préfère une autre solution, ou
 change l'ordre des jardins avant que des badges existent.
+
+## D47 — Une reconnaissance plus juste : le modèle base, et le son relu tenu à chaque passage
+
+Décidé le 27 novembre 2026 (développeur, branche `work/voice-accuracy`), à la demande du
+propriétaire : « on ne peut pas avoir un modèle précis ? sinon les gens vont fuir ». Remplace la
+question laissée ouverte par D45 (passer à `base`). Complète D42 et D45.
+
+**Ce qui a changé dans l'appli**
+
+1. **Le modèle `base`** (`tarteel-ai/whisper-base-ar-quran`, Apache-2.0, GGML q5_1, 59,7 Mo, le
+   fichier mesuré par le banc, vérifié par son SHA-256) au lieu de `tiny` (43,5 Mo) : **+16,2 Mo**
+   dans l'appli. Le manifeste de `tiny` reste dans `modules/voice-capture/voice-model.tiny.json`
+   (le retour en arrière : le remettre à la place de `voice-model.json`). L'adresse du dépôt du
+   propriétaire (branche `voice-model`) est essayée d'abord : **le fichier doit y être déposé** ;
+   d'ici là, le miroir d'où vient le fichier du banc sert.
+2. **Le contrôle par le son** (`domain/listening/audio-check.ts`, `features/listening/held-check.ts`,
+   `native/quran-decoding`) : quand les mots ne nomment pas un passage sûr, les passages que la
+   recherche classe (4 au plus, seuil abaissé à 0,3, un verset de chaque côté) sont relus **à partir
+   du même son**, le décodeur de Whisper n'ayant le droit qu'aux mots qui continuent le texte de ce
+   passage (lettres comparées, voyelles et formes de la hamza non). Chaque relecture a un coût :
+   combien le texte a dû écarter Whisper de ce qu'il entendait (somme des écarts de
+   log-probabilité ; deux premiers mots libres, payés 2 par lettre, pour un mot coupé ou mal
+   entendu ; lettres manquantes payées pareil). Un passage n'est annoncé que si **(a)** sa relecture
+   coûte peu (≤ 10 + 0,5 par lettre de la lecture libre), **(b)** toute autre coûte au moins 15 de
+   plus, **(c)** les mots de sa relecture, cherchés comme des mots entendus (`searchHeardWords`,
+   jamais sûr à tort), nomment ce passage et lui seul. Au dernier contrôle d'une écoute, si rien
+   n'est sûr, **deuxième chance** : le même son relu tenu au Coran entier, puis les passages que
+   cette relecture nomme. Un contrôle à la fois, à côté des mots (l'écoute continue), refait
+   seulement quand 3 mots de plus sont venus.
+3. **whisper.rn corrigé** (`patches/whisper.rn+0.7.4.patch`, `patch-package` au `postinstall`) :
+   une fonction JSI `whisperReadHeld` qui compile la même source C++ que le banc (docs/BUILD.md).
+   Une version sans elle fait comme avant (les mots seuls).
+4. **Le modèle chargé à l'avance** (Accueil, onglet Coran, 1,5 s après l'affichage) et **une minute**
+   pour le charger (la vérification iOS a vu plus de 30 s dans le simulateur ; l'écran dit
+   « préparation » pendant ce temps).
+5. **La preuve dans le simulateur** fait aussi le contrôle par le son et écrit sa durée.
+
+**Mesuré** (banc `tools/voice-bench`, lectures entières, 208 extraits : 52 enregistrements, 6 et
+10 s propres, bruit 10 dB et bande téléphonique 10 s ; 16 lecteurs ordinaires, 36 récitants
+professionnels ; « faux » : un autre passage annoncé ; « faux si absent » : ce qui serait annoncé
+si le bon passage n'était pas parmi les candidats) :
+
+| 208 extraits (top-1 / faux)         | tiny, mots seuls | tiny + contrôle | base, mots seuls | **base + contrôle** |
+| ----------------------------------- | ---------------- | --------------- | ---------------- | ------------------- |
+| tous                                | 67 % / 0         | 74 % / 0        | 77 % / 0         | **82–83 % / 0**     |
+| 10 s propres                        | 75 %             | 81 %            | 85 %             | **87 %**            |
+| 10 s bruit 10 dB                    | 69 %             | 77 %            | 81 %             | **87 %**            |
+| 10 s bande téléphonique             | 71 %             | 81 %            | 83 %             | **89 %**            |
+| 6 s propres                         | 54 %             | 58 %            | 60 %             | **67–69 %**         |
+| lecteurs ordinaires (6 et 10 s)     | 44 %             | 56 %            | 66 %             | **72–73 %**         |
+| récitants professionnels            | 78 %             | 82 %            | 82 %             | **87 %**            |
+| faux si le bon passage était absent | —                | 4 (doublons)    | —                | **0**               |
+
+(« tiny + contrôle » : une version antérieure du code natif, avant les deux mots libres comptés à
+la fin et la limite des formules ; « base + contrôle » : le code livré ; la fourchette : sans, puis
+avec la deuxième chance, qui n'apporte qu'un extrait et ne sert donc qu'au dernier contrôle d'une
+écoute, avant « rien trouvé ».) Jamais un autre passage annoncé, dans aucune mesure. Les « faux si
+absent » de tiny étaient des passages dits à l'identique ailleurs, que la vérification par la
+recherche (c) a ensuite écartés.
+
+Sur le même banc, les extraits de 3 s ne sont pas comptés (2 à 4 mots : trop peu, voulu). Des
+seuils plus lâches (grille de 320 réglages sur les mêmes relectures) n'ajoutent qu'un extrait :
+ce qui manque vient des candidats (le bon passage n'est proposé ni par les mots ni par la
+relecture du Coran entier) et des passages dits à l'identique ailleurs (2:255 et 3:2, 3:190 et
+2:164 : rester « peut-être » est juste).
+
+**Essayé, pas retenu**
+
+- **Décodage tenu au Coran entier dans `whisper_full`** (filtre des logits) : le premier mot mal
+  entendu enferme la lecture dans un mauvais passage, et la renormalisation cache le coût. Gardé
+  seulement comme deuxième chance, avec deux mots libres.
+- **Vraie recherche en faisceau** pour les relectures : `whisper.h` ne décode qu'une suite à la
+  fois ; changer d'hypothèse redécode leur fin commune (4 500 passes du décodeur pour un extrait).
+  À la place : glouton depuis les trois premiers mots les plus probables, chaque branche arrêtée
+  dès qu'elle coûte plus que la meilleure.
+- **Plus gros modèles** : aucun Whisper `small`/`medium` affiné sur le Coran n'a pu être mesuré
+  ici (huggingface.co refusé par le proxy de cette session). Repérés : `naazimsnh02/
+whisper-large-v3-turbo-ar-quran` (Apache-2.0, ~800 Mo : trop gros pour l'appli),
+  `baristiran/QuranASR` (whisper-small, MIT d'après son dépôt GitHub, non vérifié sur le modèle).
+- **Reconnaissance d'Apple** (SFSpeechRecognizer, `SpeechTranscriber` d'iOS 26) : aucun rapport
+  publié sur la récitation du Coran ; Apple a écrit (forum des développeurs, janvier 2026) que
+  `SpeechTranscriber` annonçait l'arabe à tort. Pas de logits : le contrôle par le son ne s'y
+  appliquerait pas. Écarté.
+
+**Temps sur l'iPhone (estimations, pas des mesures)** : une lecture de `base` coûte environ trois
+fois celle de `tiny` (calcul ×4 mesuré sur ordinateur). Un contrôle relit une fois l'encodeur puis
+environ 130 pas de décodeur (médiane du banc ; 350 au 9e décile) ; la deuxième chance en ajoute
+autant. Ordre de grandeur sur un iPhone 12 avec Metal : 1 à 3 s par contrôle, en plus des
+lectures. Les réponses par les mots seuls ne changent pas.
+
+**Pas vérifié** : la compilation du correctif par Xcode ; la durée réelle d'une lecture `base` et
+d'un contrôle sur un iPhone (la preuve du simulateur donnera les deux sur le processeur d'un
+Mac ; le modèle `base` n'a pas de Core ML ici) ; le micro d'un iPhone (les lecteurs ordinaires du
+banc sont au téléphone 8 kHz, en lecture de Qalun : chiffres pessimistes) ; l'écoute en continu
+avec le contrôle (le banc l'a mesuré sur lectures entières).
+
+_Changerait si_ un iPhone montre `base` trop lent (revenir à `tiny`, le contrôle par le son
+gardé : +7 points sur le même banc, D47) ou un contrôle trop long (moins de candidats, sans la
+deuxième chance) ; ou si un Whisper `small` affiné sur le Coran, à licence permissive, peut être
+mesuré (encodeur Core ML sur le moteur neuronal).

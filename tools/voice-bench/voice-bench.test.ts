@@ -16,8 +16,10 @@ import { searchHeardWords, type SpeechEngine } from '@/domain/listening';
 import {
   audioCheckCandidates,
   decideByAudio,
+  followUpCandidates,
   heldText,
   minLettersFor,
+  wholeQuranText,
   type AudioCheckCandidate,
   type HeldReading,
 } from '@/domain/listening/audio-check';
@@ -794,8 +796,84 @@ describeBench('voice benchmark', () => {
     24 * 3600 * 1000,
   );
 
+  /**
+   * The second chance (held-check.ts): for each clip the first check left unsure, the audio held
+   * to the whole Quran, then the passages that reading names. Written to `held2-...`, with the
+   * first readings, for `held-score` (VOICE_BENCH_HELD_SECOND=1).
+   */
+  const held2File = `${work}/held2-${configName}${tag}${heldTag}.jsonl`;
+  (phase.includes('held2') ? it : it.skip)(
+    'reads the unsure clips again, held to the whole Quran, then to what it names',
+    async () => {
+      const config = chosenConfig();
+      const done = new Set(readJsonl<HeldRecord>(held2File).map((r) => r.clip));
+      const verses = imlaei();
+      const whole = wholeQuranText(verses.text, verses.count);
+      const driver = createWhisperDriver(
+        env.VOICE_BENCH_HELD_DRIVER ?? `${work}/whisper-driver-q`,
+        `${work}/${config.model}`,
+        `${work}/cache-held-unused.jsonl`,
+      );
+      const audioOf = new Map<string, Int16Array>();
+      const byClip = new Map(clips.map((clip) => [clip.id, clip]));
+      try {
+        for (const record of readJsonl<HeldRecord>(heldFile)) {
+          const clip = byClip.get(record.clip);
+          if (clip === undefined || done.has(record.clip)) continue;
+          let out: HeldRecord = record;
+          const first = decideByAudio(index, record.candidates, record.readings, record.free);
+          if (first.status !== 'found' && whisperWords(record.free).length >= 1) {
+            const path = `${streamDir}/${clip.condition}/${clip.stream.id}.wav`;
+            if (!audioOf.has(path)) {
+              audioOf.clear();
+              audioOf.set(path, readWav(path));
+            }
+            const audio = audioOf
+              .get(path)!
+              .subarray(
+                Math.round(clip.start * 16000),
+                Math.round((clip.start + clip.length) * 16000),
+              );
+            const options = { ...heldOptions(), minLetters: minLettersFor(record.free) };
+            const wholeAnswer = await driver.held(audio, [whole], options);
+            const more = followUpCandidates(
+              index,
+              wholeAnswer.readings[0]!,
+              record.candidates,
+              verses.count,
+            );
+            let ms = record.ms + wholeAnswer.ms;
+            let extra: HeldReading[] = [];
+            if (more.length > 0) {
+              const answer = await driver.held(
+                audio,
+                more.map((c) => heldText(c, verses.text)),
+                options,
+              );
+              extra = answer.readings;
+              ms += answer.ms;
+            }
+            out = {
+              ...record,
+              candidates: [...record.candidates, ...more],
+              readings: [...record.readings, ...extra],
+              ms,
+              wholeText: wholeAnswer.readings[0]!.text,
+            } as HeldRecord;
+          }
+          fs.appendFileSync(held2File, `${JSON.stringify(out)}\n`);
+        }
+      } finally {
+        driver.close();
+      }
+    },
+    24 * 3600 * 1000,
+  );
+
   (phase.includes('held-score') ? it : it.skip)('scores the held readings', () => {
-    const records = readJsonl<HeldRecord>(heldFile);
+    const records = readJsonl<HeldRecord>(
+      env.VOICE_BENCH_HELD_SECOND === '1' ? held2File : heldFile,
+    );
     /** What the app's search said of the free reading alone (offline-score's per-clip dump). */
     const appAnswers = new Map(
       readJsonl<{ clip: string; answer: string }>(
@@ -897,12 +975,18 @@ describeBench('voice benchmark', () => {
             );
             if (lo.status === 'found') leftOutWrong += 1;
           }
-          grid.push(`${maxCostBase} | ${maxCostPerLetter} | ${minLead} | ${right} | ${wrong} | ${leftOutWrong}`);
+          grid.push(
+            `${maxCostBase} | ${maxCostPerLetter} | ${minLead} | ${right} | ${wrong} | ${leftOutWrong}`,
+          );
         }
       }
     }
     lines.push('', ...grid);
-    fs.writeFileSync(`${work}/score-held-${configName}${tag}${heldTag}.txt`, lines.join('\n'));
+    const second = env.VOICE_BENCH_HELD_SECOND === '1' ? '-second' : '';
+    fs.writeFileSync(
+      `${work}/score-held-${configName}${tag}${heldTag}${second}.txt`,
+      lines.join('\n'),
+    );
     expect(records.length).toBeGreaterThan(0);
   });
 });

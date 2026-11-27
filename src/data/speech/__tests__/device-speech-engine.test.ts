@@ -1,4 +1,5 @@
-import { preloadVoiceModel ,
+import {
+  preloadVoiceModel,
   checkModelFile,
   createDeviceSpeechEngine,
   createFileSpeechEngine,

@@ -41,7 +41,9 @@ describe('checkHeardWords', () => {
       ),
     );
     // Words too misheard for the search to propose 112.
-    const result = await checkHeardWords(engine, index, texts, ['سيارة', 'كبيرة', 'جميلة']);
+    const result = await checkHeardWords(engine, index, texts, ['سيارة', 'كبيرة', 'جميلة'], {
+      secondChance: true,
+    });
     expect(result?.status).toBe('found');
     expect(result?.candidates[0]?.start).toMatchObject({ surah: 112 });
     // The whole Quran, then the passages its reading proposes, on the same audio.
@@ -53,6 +55,18 @@ describe('checkHeardWords', () => {
     const { engine } = engineWith((held) =>
       held.map(() => ({ text: 'نص', cost: 90, letters: 2, freeLetters: 0, abandoned: false })),
     );
+    expect(
+      await checkHeardWords(engine, index, texts, ['سيارة', 'كبيرة', 'جميلة'], {
+        secondChance: true,
+      }),
+    ).toBeNull();
+  });
+
+  it('gives no second chance unless asked (during the listening)', async () => {
+    const { engine, calls } = engineWith((held) =>
+      held.map(() => ({ text: 'نص', cost: 90, letters: 2, freeLetters: 0, abandoned: false })),
+    );
     expect(await checkHeardWords(engine, index, texts, ['سيارة', 'كبيرة', 'جميلة'])).toBeNull();
+    expect(calls).toHaveLength(0);
   });
 });

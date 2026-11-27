@@ -1,5 +1,5 @@
 diff --git a/node_modules/whisper.rn/cpp/jsi/RNWhisperJSI.cpp b/node_modules/whisper.rn/cpp/jsi/RNWhisperJSI.cpp
-index ac3403e..7f10abc 100644
+index ac3403e..966aaca 100644
 --- a/node_modules/whisper.rn/cpp/jsi/RNWhisperJSI.cpp
 +++ b/node_modules/whisper.rn/cpp/jsi/RNWhisperJSI.cpp
 @@ -24,6 +24,10 @@
@@ -72,7 +72,7 @@ index ac3403e..7f10abc 100644
 +
 +                    std::vector<std::shared_ptr<const quran_decoding::Index>> indexes;
 +                    for (const auto &text : texts) {
-+                        auto index = quran_decoding::build_index(text);
++                        auto index = quran_decoding::index_for(text);
 +                        if (index == nullptr) {
 +                            throw std::runtime_error("A held text holds no verse");
 +                        }

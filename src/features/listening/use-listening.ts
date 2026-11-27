@@ -118,11 +118,13 @@ export function useListening({
     let checkedAt = 0;
     let checking: Promise<void> | null = null;
     const canCheck = engine.checkHeard !== undefined && loadHeldTexts !== undefined;
-    const check = (words: readonly string[]): Promise<void> => {
+    const check = (words: readonly string[], last = false): Promise<void> => {
       checkedAt = words.length;
       const run = (async () => {
         try {
-          const result = await checkHeardWords(engine, await index, await loadHeldTexts!(), words);
+          const result = await checkHeardWords(engine, await index, await loadHeldTexts!(), words, {
+            secondChance: last,
+          });
           if (result !== null && isCurrent() && !found) {
             found = true;
             // More words may have come during the check: the answer stands for all of them.

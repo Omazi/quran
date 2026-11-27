@@ -41,14 +41,17 @@ function wholeQuranOf(texts: HeldTexts): string {
 /**
  * Checks `words` against the audio of the engine's latest reading. Resolves with a `found`
  * search result naming the passage, or null (unsure, nothing to check, or a build that cannot).
- * When the passages the words propose leave it unsure, the audio is read once more held to the
- * whole Quran, and the passages that reading proposes are read too (two more native calls).
+ * With `secondChance` (the last check of a listening, before "nothing found"), when the passages
+ * the words propose leave it unsure, the audio is read once more held to the whole Quran, and the
+ * passages that reading proposes are read too (two more native calls; +1 clip in 208 on the
+ * bench, D47: not worth slowing the readings during the listening).
  */
 export async function checkHeardWords(
   engine: SpeechEngine,
   index: VerseIndex,
   texts: HeldTexts,
   words: readonly string[],
+  { secondChance = false }: { readonly secondChance?: boolean } = {},
 ): Promise<SearchResult | null> {
   if (engine.checkHeard === undefined || words.length < AUDIO_CHECK.minWords) return null;
   const verseCount = (surah: number) => texts.verseCount(surah);
@@ -63,6 +66,7 @@ export async function checkHeardWords(
     const decision = decideByAudio(index, candidates, readings, first.freeText);
     if (decision.status === 'found') return decision.result;
   }
+  if (!secondChance) return null;
   // Second chance: the same audio held to the whole Quran proposes its own passages.
   const whole = await engine.checkHeard([wholeQuranOf(texts)], first ?? undefined);
   if (whole === null || whole.readings.length !== 1) return null;
