@@ -90,7 +90,8 @@
       },
       "features": {
         "accountInvitation": false,
-        "friendsSignIn": false
+        "friendsSignIn": false,
+        "friendsAnonymous": false
       }
     },
     "experiments": {

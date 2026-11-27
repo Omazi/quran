@@ -29,3 +29,6 @@ export { APPLE_LOGO, SIGN_IN_BUTTON_KINDS } from './sign-in-screen';
 // What the home screen's "Jardins voisins" reads: a friend's garden, their water, their colour.
 export { gardenStateOf, waterStatusOf } from './friend-garden';
 export { avatarIndexOf } from './friend-avatar';
+// The anonymous account of the phone, behind the `friendsAnonymous` flag: the sync's account.
+export { appSyncSession } from './anonymous-account';
+export { isFriendsAnonymousEnabled } from './anonymous-flag';

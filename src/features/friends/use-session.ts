@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Platform } from 'react-native';
 
 import { parseEmail, signInProvidersFor, type Session, type SignInProvider } from '@/domain/social';
 
 import { refusalOf, type ShownRefusal } from './refusal';
-import { useSocialStore, useSocialVersion } from './social-store';
+import { useSocialStore, useSocialVersion, type SocialStore } from './social-store';
 import { runFromButton, useAsync } from './use-async';
 
 export type SessionState =
@@ -27,21 +27,35 @@ export function useSession(): SessionState {
 export type TabSessionState = SessionState | { readonly status: 'failed' };
 
 /**
+ * How the tab opens a session without a screen, or null when only the sign-in screen can: the
+ * anonymous account of a real client (`friendsAnonymous`), or the invented session of the
+ * demonstration. Never where the build shows its sign-in screen (`friendsSignIn`).
+ */
+function silentOpener(store: SocialStore): (() => Promise<unknown>) | null {
+  if (store.showsSignIn) return null;
+  const { client } = store;
+  if (client.openSilently !== undefined) return client.openSilently;
+  return client.auth.isDemonstration ? () => client.auth.signInWithApple() : null;
+}
+
+/**
  * The session the pages of the tab work with. Where the build shows no sign-in screen (the
- * `friendsSignIn` flag, off until real accounts exist), a person signed out of the demonstration
- * is signed in at once, without a screen: the tab opens on the friends, whose list says they are
- * a demonstration. A real client always keeps its sign-in.
+ * `friendsSignIn` flag, off until real accounts exist), a person signed out is signed in at once,
+ * without a screen: with the anonymous account of the phone (flag `friendsAnonymous`), or in the
+ * demonstration, whose list says it is one. A real client without a silent way keeps its sign-in.
  */
 export function useTabSession(): TabSessionState {
   const store = useSocialStore();
   const session = useSession();
-  const opensByItself = !store.showsSignIn && store.client.auth.isDemonstration;
+  // Kept for the store's life: a new function at each render would open the session again.
+  const open = useMemo(() => silentOpener(store), [store]);
+  const opensByItself = open !== null;
   const isSignedOut = session.status === 'signed-out';
   const [hasFailed, setHasFailed] = useState(false);
   useEffect(() => {
-    if (!isSignedOut || !opensByItself) return;
+    if (!isSignedOut || open === null) return;
     let isCurrent = true;
-    store.client.auth.signInWithApple().then(
+    open().then(
       () => store.changed(),
       (error: unknown) => {
         console.warn('The local session of the Proches tab could not open.', error);
@@ -51,7 +65,7 @@ export function useTabSession(): TabSessionState {
     return () => {
       isCurrent = false;
     };
-  }, [isSignedOut, opensByItself, store]);
+  }, [isSignedOut, open, store]);
   if (isSignedOut && opensByItself) return { status: hasFailed ? 'failed' : 'loading' };
   return session;
 }

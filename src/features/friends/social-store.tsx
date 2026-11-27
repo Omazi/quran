@@ -1,21 +1,27 @@
 import { createContext, useContext, useState, useSyncExternalStore, type ReactNode } from 'react';
 
-import { createDemoSocial } from '@/data/social';
 import type { LocalDate } from '@/domain/shared/local-date';
 import type { AuthGateway, Invite, SocialRepository, UserId } from '@/domain/social';
 import { deviceLocalDate } from '@/features/home';
 
+import { appSocialClient } from './anonymous-account';
 import { isFriendsSignInEnabled } from './sign-in-flag';
 
 /**
- * Where the Proches tab gets its accounts and friends. Today a demonstration (D33); the day the
- * server exists, a second implementation of the same two interfaces takes its place here and no
- * screen changes (docs/specs/social.md, section 4).
+ * Where the Proches tab gets its accounts and friends: the demonstration (D33), or, with the
+ * `friendsAnonymous` flag, the Supabase project with the anonymous account of the phone. Both
+ * implement the same two interfaces, and no screen changes (docs/specs/social.md, section 4).
  */
 export interface SocialClient {
   readonly isDemonstration: boolean;
   readonly auth: AuthGateway;
   readonly repository: SocialRepository;
+  /**
+   * Opens a session without any screen, where the client can (the anonymous account, made the
+   * first time). Absent: only the sign-in screen opens one (or, in the demonstration, the
+   * invented session of `useTabSession`).
+   */
+  readonly openSilently?: () => Promise<unknown>;
 }
 
 /**
@@ -79,10 +85,13 @@ export function createSocialStore(
 
 let appStore: SocialStore | null = null;
 
-/** The demonstration the app runs on: created once, on the first visit to the tab. */
+/**
+ * The client the app runs on (the demonstration, or the real tables with the `friendsAnonymous`
+ * flag): created once, on the first visit to the tab.
+ */
 function appSocialStore(): SocialStore {
   if (appStore === null) {
-    appStore = createSocialStore(createDemoSocial({ today: () => deviceLocalDate(new Date()) }));
+    appStore = createSocialStore(appSocialClient(() => deviceLocalDate(new Date())));
   }
   return appStore;
 }
