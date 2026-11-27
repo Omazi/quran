@@ -1,6 +1,7 @@
 import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
 
+import { useProgression } from '@/features/gardens';
 import { AccountInvitation, HomeScreen, useHomeScreen, type HomeActions } from '@/features/home';
 import { useOpenRecognition } from '@/features/listening';
 import { useResumePage } from '@/features/reader';
@@ -25,6 +26,7 @@ export default function HomeRoute() {
   const resumePage = useResumePage();
   // The tab stays mounted under the reader: the garden's growth plays when it is in front again.
   const isFocused = useIsFocused();
+  const progression = useProgression();
   const { welcome } = useLocalSearchParams<{ welcome?: string }>();
   const recognize = useOpenRecognition();
   const actions = useMemo<HomeActions>(
@@ -51,6 +53,7 @@ export default function HomeRoute() {
         avatarInitial={avatarInitial}
         arrival={arrival}
         isFocused={isFocused}
+        styleId={progression?.styleId ?? null}
       />
       <AccountInvitation
         requested={welcome === '1'}

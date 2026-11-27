@@ -2,13 +2,16 @@ import { StyleSheet, View } from 'react-native';
 
 import type { GardenState } from '@/domain/garden';
 import { GardenView3D } from '@/features/garden';
-import { useGardenArt, useProgression } from '@/features/gardens';
+import type { GardenStyleId } from '@/domain/levels';
+import { useGardenArt } from '@/features/gardens';
 import { spacing } from '@/ui';
 
 export interface GardenStageProps {
   garden: GardenState;
   /** The home screen is in front (not under the reader): the growth plays when it is. */
   isActive?: boolean;
+  /** The style of the person's level (D46); none: the first garden. */
+  styleId?: GardenStyleId | null;
 }
 
 /**
@@ -18,10 +21,9 @@ export interface GardenStageProps {
  * is said on the line under it (`GardenProgress`; maquettes 2026-11-26, 1A, chosen by the owner).
  * The garden itself is never mirrored (right-to-left.md › Images).
  */
-export function GardenStage({ garden, isActive = true }: GardenStageProps) {
+export function GardenStage({ garden, isActive = true, styleId = null }: GardenStageProps) {
   // The garden of the person's level (D46): its own once downloaded, the placeholder until then.
-  const progression = useProgression();
-  const { art, tint } = useGardenArt(progression?.styleId ?? null);
+  const { art, tint } = useGardenArt(styleId);
   return (
     <View style={styles.stage} testID="home-garden-stage">
       <GardenView3D

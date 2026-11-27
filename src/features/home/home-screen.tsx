@@ -1,3 +1,4 @@
+import type { GardenStyleId } from '@/domain/levels';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
@@ -55,6 +56,8 @@ export interface HomeScreenProps {
   arrival: Arrival | null;
   /** The screen is in front (not under the reader): the garden's growth plays when it is. */
   isFocused?: boolean;
+  /** The garden style of the person's level (D46), from `useProgression`. */
+  styleId?: GardenStyleId | null;
 }
 
 /**
@@ -137,6 +140,7 @@ function GardenHome({
   neighbours,
   avatarInitial,
   isFocused = true,
+  styleId = null,
 }: HomeScreenProps & { model: HomeReadyModel }) {
   const { garden, layout: homeLayout } = model;
   const insets = useSafeInsets();
@@ -160,10 +164,10 @@ function GardenHome({
         {homeLayout === 'dead' ? (
           // The dry earth in the middle of the room left, as on the mockup.
           <View style={styles.deadEarth}>
-            <GardenStage garden={garden} isActive={isFocused} />
+            <GardenStage garden={garden} isActive={isFocused} styleId={styleId} />
           </View>
         ) : (
-          <GardenStage garden={garden} isActive={isFocused} />
+          <GardenStage garden={garden} isActive={isFocused} styleId={styleId} />
         )}
         {homeLayout === 'dead' ? null : (
           <GardenProgress hizb={model.hizb} waterRun={model.waterRun} growing={growingOf(model)} />
