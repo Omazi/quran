@@ -113,7 +113,12 @@ describe('the first launch, "voix" direction', () => {
     await open({ page: 14 });
     const threeMonths = computeGoalPlan({ kind: '3-months' }, TODAY);
     expect(screen.getByRole('button', { name: '3 mois', selected: true })).toBeOnTheScreen();
-    expect(screen.getByText(String(threeMonths.pagesPerDay) + ' ')).toBeOnTheScreen();
+    // The figure and its unit are two texts a gap apart. A space typed after the figure sat on
+    // its outer side in Arabic, where a lone figure is still written left to right: the iPhone
+    // showed "7صفحة" (iOS photo of 27 November 2026).
+    const figure = screen.getByText(String(threeMonths.pagesPerDay));
+    expect(figure).toBeOnTheScreen();
+    expect(figure.parent).toHaveStyle({ flexDirection: 'row', columnGap: 4 });
     expect(
       screen.getByText(`Dans un mois : ${threeMonths.hizbAfter30Days} hizb`, {
         includeHiddenElements: true,
@@ -122,7 +127,7 @@ describe('the first launch, "voix" direction', () => {
     await fireEvent.press(screen.getByRole('button', { name: '1 mois' }));
     const oneMonth = computeGoalPlan({ kind: '1-month' }, TODAY);
     expect(screen.getByRole('button', { name: '1 mois', selected: true })).toBeOnTheScreen();
-    expect(screen.getByText(String(oneMonth.pagesPerDay) + ' ')).toBeOnTheScreen();
+    expect(screen.getByText(String(oneMonth.pagesPerDay))).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'À mon rythme' }));
     expect(screen.getByText('Quand tu veux')).toBeOnTheScreen();
   });
@@ -191,5 +196,19 @@ describe('the first launch, "voix" direction', () => {
     expect(screen.getByTestId('onboarding-garden', { includeHiddenElements: true })).toHaveStyle({
       transform: [{ translateY: 14 }, { scale: 0.97 }, { perspective: 1400 }, { rotateY: '-5deg' }],
     });
+  });
+
+  it('turns the garden alone in a plane of its own (iOS photos of 27 November 2026)', async () => {
+    // On the iPhone, pages 1 to 9 showed half a garden and half the app's name ("atuk", "Jann"):
+    // a view turned in 3D among its siblings goes behind them on one side and in front of them
+    // on the other. Alone in a parent that is really drawn, it is flattened into that parent.
+    await open({ page: 0 });
+    const garden = screen.getByTestId('onboarding-garden', { includeHiddenElements: true });
+    const plane = screen.getByTestId('onboarding-garden-plane', { includeHiddenElements: true });
+    expect(garden.parent).toBe(plane);
+    expect(plane.children).toHaveLength(1);
+    expect(plane).toHaveProp('collapsable', false);
+    expect(plane).toHaveProp('pointerEvents', 'none');
+    expect(plane).toHaveStyle({ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 });
   });
 });

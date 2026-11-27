@@ -10,7 +10,9 @@
 >   les oiseaux (hizb 27, 37, 57) et les papillons (hizb 47) se gagnent. Au hizb 25 de la maquette,
 >   ni oiseaux ni papillons. Le choix « Vie du jardin » du panneau montre hizb 27+ et 47+ ;
 > - comparaison de la pastille en bas / en haut : `review/compare-pastille-jour.png` et
->   `review/compare-pastille-nuit.png` (la goutte qui tombe, puis « a grandi »).
+>   `review/compare-pastille-nuit.png` (la goutte qui tombe, puis « a grandi ») ;
+> - le titre de sourate est au milieu de son cadre (il était 9,8 points trop bas et sortait du
+>   cadre) : images 13 à 16 et 20 à 22 refaites ; la mesure est dans `../POLISH-CHECKLIST.md`.
 
 **Pour voir :** double-clique sur `index.html` (Chrome, Safari ou Edge sur un ordinateur). Tout est
 dans le dossier, sans serveur ni Internet. À gauche, le panneau de commandes ; à droite, l'iPhone

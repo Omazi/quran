@@ -130,8 +130,10 @@ describe('GardenView3D, filling its parent, until its first frame', () => {
     await resize(390, 700);
 
     await waitFor(() => expect(picture()).toBeNull());
-    expect(
-      await screen.findByTestId('garden-3d-hint', { includeHiddenElements: true }),
-    ).toBeOnTheScreen();
+    const hint = await screen.findByTestId('garden-3d-hint', { includeHiddenElements: true });
+    expect(hint).toBeOnTheScreen();
+    // Under the garden, the hint keeps the same air above and below: on the iPhone it touched
+    // the card that follows (0.7 point between the two: photo of 27 November 2026).
+    expect(hint).toHaveStyle({ paddingVertical: 8 });
   });
 });

@@ -10,6 +10,7 @@ import Animated, {
 import {
   AppText,
   Icon,
+  spacing,
   useColors,
   useColorValues,
   useElevation,
@@ -254,5 +255,14 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: L.choiceGap, minHeight: L.rowMinHeight },
   rowLabel: { flex: 1 },
   roll: { minHeight: L.rollHeight, marginTop: L.rollGap, overflow: 'hidden' },
-  rolling: { position: 'absolute', start: 0, top: 0, flexDirection: 'row', alignItems: 'baseline' },
+  // The gap is the row's, not a space typed after a figure: in Arabic a lone figure is still
+  // written left to right, and its trailing space fell on the outer side ("7صفحة" on the iPhone).
+  rolling: {
+    position: 'absolute',
+    start: 0,
+    top: 0,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    columnGap: spacing.xs,
+  },
 });

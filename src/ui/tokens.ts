@@ -992,6 +992,12 @@ export const layout = {
   homeHeaderVeil: 240,
   /** Margin between the screen edge and its content. */
   screenMargin: spacing.md,
+  /**
+   * Where the large title of a tab starts (Coran, Proches, Profil), as the validated mockup puts
+   * all three (maquette-wow, `.tp-head`: 20 points from the edge, 12 under the status bar): its
+   * distance to the leading edge, and to the safe area above it.
+   */
+  tabTitle: { inset: spacing.md + spacing.xs, top: 12 },
   /** Space between two controls that have a bezel (accessibility.md › Mobility). */
   controlGap: 12,
   /** Smallest width and height of anything that can be touched. */
@@ -1098,9 +1104,14 @@ export const readerShapes = {
   dropPillGap: 14,
   /** The ornament between two pages: its stars, and the gap around the number (`.pg-mark`). */
   pageMarkStar: 14,
-  /** The surah's framed title (`.rd-head .frame`): its height, the inner rule's inset. */
+  /**
+   * The surah's framed title (`.rd-head .frame`): its smallest height, the inner rule's inset, and
+   * the least air between that rule and the ink of any of the 114 titles (the hamza of «الأنعام»,
+   * the final mim of «القلم»): the frame grows until it has it (`framedHeight`).
+   */
   surahFrameHeight: 54,
   surahFrameInset: 5,
+  surahFrameInkGap: 3,
   /** The soft shadow of the mockups: its opacity, blur radius and drop. */
   shadowOpacity: 0.1,
   shadowRadius: 10,
