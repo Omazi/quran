@@ -78,7 +78,6 @@ export {
   useColorValues,
   colorValuesFor,
   useElevation,
-  colorValuesFor,
   type AppearanceScopeProps,
   type Colors,
   type ColorValues,
