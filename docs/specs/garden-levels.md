@@ -41,7 +41,8 @@ dépôt du propriétaire (comme le modèle de voix, D42). Il est vérifié (tail
 manifeste `src/data/garden-art/garden-art.json`) avant d'être dépaqueté dans les documents de
 l'appli, puis gardé. Tant qu'il n'est pas là (téléchargement, hors ligne, copie refusée), l'image du
 niveau 1 avec la teinte du style reste, comme avant. Un proche qui cache son niveau montre le
-jardin du niveau 1 : le style dirait le niveau.
+jardin du niveau 1 : le style dirait le niveau. Le téléchargement se fait en Wi-Fi comme en données mobiles (décision
+du propriétaire, 27 novembre 2026) : environ 20 Mo par jardin, une seule fois.
 
 **Pas vérifié** : le téléchargement sur un iPhone (aucun iPhone ici, D24), et l'adresse elle-même
 tant que la branche `garden-art` n'est pas poussée par le propriétaire.

@@ -938,6 +938,13 @@ Choix de mise en œuvre (développeur, 26 novembre 2026) :
 - **Jardins des niveaux 2 à 7 : faits (27 novembre 2026).** Six vrais jardins 3D, avec les
   modèles de D22, téléchargés à la demande et vérifiés (`docs/specs/garden-levels.md`). La teinte
   provisoire ne sert plus que tant que le paquet d'un niveau n'est pas sur l'appareil.
+  Le paquet se télécharge en Wi-Fi comme en données mobiles, sans restriction (décision du
+  propriétaire, 27 novembre 2026).
+- **Niveau 1 recuit (27 novembre 2026, accord du propriétaire).** L'outil fusionnait à l'origine,
+  à leur taille d'origine, les modèles posés une seule fois (fontaine, pavillon, tapis, coussins,
+  rocher de la cascade) : le GLB du niveau 1 les montrait mal placés en 3D. Outil corrigé, GLB
+  recuit ; rendus avant et après comparés : seuls ces cinq éléments changent. Les images du
+  niveau 1 (rendues par l'outil des images, déjà justes) et les découpes ne changent pas.
 - Le thème de `gardenVariant` (`theme-1` à `theme-4`, graine propre à l'utilisateur) n'est lu par
   aucun rendu ; le style vient du niveau. L'aligner sur D23 touche l'accueil (autre chantier).
 

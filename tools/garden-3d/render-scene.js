@@ -3,11 +3,11 @@
 // garden at rest, at the default orbit, in the frame of the level-1 pictures (D35, D40).
 // The /app/ modules exist only in the page, written when render.py starts.
 /* eslint-disable import/no-unresolved */
-import { DEFAULT_ORBIT } from '/app/camera-rig.js';
-import { readGardenModel } from '/app/garden-model.js';
-import { createGardenRenderer } from '/app/garden-renderer.js';
-import { buildGardenThree } from '/app/garden-three.js';
-import { parseGlb } from '/app/glb.js';
+import { DEFAULT_ORBIT } from '/app/features/garden/garden3d/camera-rig.js';
+import { readGardenModel } from '/app/features/garden/garden3d/garden-model.js';
+import { createGardenRenderer } from '/app/features/garden/garden3d/garden-renderer.js';
+import { buildGardenThree } from '/app/features/garden/garden3d/garden-three.js';
+import { parseGlb } from '/app/features/garden/garden3d/glb.js';
 
 let current = null;
 
