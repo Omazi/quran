@@ -13,13 +13,12 @@ import {
   deviceAnonymousAuth,
   deviceSessionStorage,
 } from '@/data/auth';
-import { createSupabaseSocial } from '@/data/social';
+import { createDemoSocial, createSupabaseSocial } from '@/data/social';
 import { showLanguage } from '@/features/garden/test-support/screen-conditions';
 import { deviceLocalDate } from '@/features/home';
 
 import { chooseSocialClient, chooseSyncSession } from '../anonymous-account';
 import { readFriendsAnonymousFlag } from '../anonymous-flag';
-import { createDemoSocial } from '@/data/social';
 import { AccountInvitationSheet } from '@/features/home/account-invitation-sheet';
 
 import { AddFriendPage, FriendsHome } from '../friends-pages';
