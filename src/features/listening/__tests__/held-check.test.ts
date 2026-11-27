@@ -51,6 +51,20 @@ describe('checkHeardWords', () => {
     expect(calls.slice(1).every((call) => call.same)).toBe(true);
   });
 
+  it('names a passage too short for the word search by its letters, said once (D50)', async () => {
+    const words = 'رَبِّ الْعَالَمِينَ';
+    const { engine } = engineWith((held) =>
+      held.map((text) =>
+        /^1 2 /m.test(text)
+          ? { text: words, cost: 0, letters: 10, freeLetters: 0, abandoned: false }
+          : { text: 'نص', cost: 90, letters: 2, freeLetters: 0, abandoned: false },
+      ),
+    );
+    const result = await checkHeardWords(engine, index, texts, words.split(' '));
+    expect(result?.status).toBe('found');
+    expect(result?.candidates[0]?.start).toMatchObject({ surah: 1, verse: 2 });
+  });
+
   it('gives null when even the second chance stays unsure', async () => {
     const { engine } = engineWith((held) =>
       held.map(() => ({ text: 'نص', cost: 90, letters: 2, freeLetters: 0, abandoned: false })),

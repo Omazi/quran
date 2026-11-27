@@ -18,6 +18,7 @@ import type { VerseRef } from '../quran/types';
 import type { PassageCandidate, SearchResult, VerseIndex } from '../recognition';
 
 import { searchHeardWords } from './heard-search';
+import { lettersOf, type LetterPlace, type QuranLetters } from './quran-letters';
 import type { HeldReading } from './types';
 
 export type { HeldReading } from './types';
@@ -45,6 +46,18 @@ export const AUDIO_CHECK = Object.freeze({
   maxCostBase: 10,
   maxCostPerLetter: 0.5,
   minLead: 15,
+  /**
+   * A reading that holds more of its passage than Whisper heard plainly may cost up to this per
+   * letter of its own passage (counted up to the letters heard), when that allows more than
+   * `maxCostPerLetter` (D50: an ordinary reader misspelt by Whisper, read back whole).
+   */
+  maxCostPerPassageLetter: 1,
+  /**
+   * With the letters of the Quran (`quran-letters.ts`): a reading whose passage letters, at
+   * least this many, are said in one place only of the Quran names that place, even when its
+   * words are too few for the word search (which wants three). D50.
+   */
+  uniqueMinLetters: 10,
   /** How the native side reads (quran-decoding.h, ReadOptions). A passage already `margin`
    * more expensive than the best one is not read to the end: more than `minLead`, so stopping
    * it never changes the decision. */
@@ -211,6 +224,45 @@ export interface AudioCheckThresholds {
   readonly maxCostBase: number;
   readonly maxCostPerLetter: number;
   readonly minLead: number;
+  /** 0 or absent: no allowance per letter of the reading's own passage. */
+  readonly maxCostPerPassageLetter?: number;
+  /** 0 or absent: the word search alone names the passage. */
+  readonly uniqueMinLetters?: number;
+}
+
+const FORMULA_LETTERS = AUDIO_CHECK.formulas.map(lettersOf);
+
+/** The one place where the letters of `words` are said (opening formulas skipped), or null. */
+function uniquePlace(
+  letters: QuranLetters,
+  words: readonly string[],
+  min: number,
+): LetterPlace | null {
+  let passage = lettersOf(words.join(' '));
+  for (const formula of FORMULA_LETTERS) {
+    if (passage.startsWith(formula) && passage.length > formula.length) {
+      passage = passage.slice(formula.length);
+    }
+  }
+  if (passage.length < min) return null;
+  const places = letters.placesOf(passage, 2);
+  return places.length === 1 ? places[0]! : null;
+}
+
+/** A search result naming `place` alone, as the word search names a passage. */
+function foundAt(place: LetterPlace): SearchResult {
+  return {
+    status: 'found',
+    candidates: [
+      {
+        start: { ...place.first, word: 1 },
+        end: { ...place.last, word: 1 },
+        score: 1,
+        confidence: 1,
+      },
+    ],
+    tiedCount: 1,
+  };
 }
 
 export function decideByAudio(
@@ -219,6 +271,7 @@ export function decideByAudio(
   readings: readonly HeldReading[],
   freeText: string,
   thresholds: AudioCheckThresholds = AUDIO_CHECK,
+  letters?: QuranLetters,
 ): AudioCheckDecision {
   if (candidates.length === 0 || readings.length !== candidates.length) return { status: 'unsure' };
   let best = -1;
@@ -228,7 +281,12 @@ export function decideByAudio(
   });
   if (best < 0) return { status: 'unsure' };
   const cost = readings[best]!.cost;
-  const allowed = thresholds.maxCostBase + thresholds.maxCostPerLetter * letterCount(freeText);
+  const words = passageWords(readings[best]!);
+  const heard = letterCount(freeText);
+  const own = Math.min(heard, letterCount(words.join(' ')));
+  const allowed =
+    thresholds.maxCostBase +
+    Math.max(thresholds.maxCostPerLetter * heard, (thresholds.maxCostPerPassageLetter ?? 0) * own);
   if (cost > allowed) return { status: 'unsure' };
   let lead = Number.POSITIVE_INFINITY;
   readings.forEach((reading, i) => {
@@ -237,11 +295,17 @@ export function decideByAudio(
   });
   if (lead < thresholds.minLead) return { status: 'unsure' };
   const candidate = candidates[best]!;
-  const named = searchHeardWords(index, passageWords(readings[best]!));
-  if (named.status !== 'found') return { status: 'unsure' };
-  const place = named.candidates[0]!;
-  const from = order(place.start);
-  const to = order(place.end);
-  if (to < order(candidate.first) || from > order(candidate.last)) return { status: 'unsure' };
-  return { status: 'found', candidate, lead, result: named };
+  const within = (from: VerseRef, to: VerseRef) =>
+    order(to) >= order(candidate.first) && order(from) <= order(candidate.last);
+  const named = searchHeardWords(index, words);
+  if (named.status === 'found') {
+    const place = named.candidates[0]!;
+    if (!within(place.start, place.end)) return { status: 'unsure' };
+    return { status: 'found', candidate, lead, result: named };
+  }
+  const minLetters = thresholds.uniqueMinLetters ?? 0;
+  if (letters === undefined || minLetters <= 0) return { status: 'unsure' };
+  const place = uniquePlace(letters, words, minLetters);
+  if (place === null || !within(place.first, place.last)) return { status: 'unsure' };
+  return { status: 'found', candidate, lead, result: foundAt(place) };
 }

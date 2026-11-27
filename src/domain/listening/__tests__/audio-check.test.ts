@@ -13,6 +13,7 @@ import {
   wholeQuranText,
   type AudioCheckCandidate,
 } from '../audio-check';
+import { createQuranLetters } from '../quran-letters';
 import type { HeldReading } from '../types';
 
 const index = createVerseIndex(UTHMANI_SAMPLE);
@@ -120,8 +121,13 @@ describe('decideByAudio', () => {
   });
 
   it('is unsure when even the best reading had to be forced on the audio', () => {
+    const heard = letterCount(MISHEARD_112);
     const tooMuch =
-      AUDIO_CHECK.maxCostBase + AUDIO_CHECK.maxCostPerLetter * letterCount(MISHEARD_112);
+      AUDIO_CHECK.maxCostBase +
+      Math.max(
+        AUDIO_CHECK.maxCostPerLetter * heard,
+        AUDIO_CHECK.maxCostPerPassageLetter * Math.min(heard, letterCount(SURAH_112)),
+      );
     const decision = decideByAudio(index, [right], [reading(SURAH_112, tooMuch + 1)], MISHEARD_112);
     expect(decision.status).toBe('unsure');
   });
@@ -152,6 +158,91 @@ describe('decideByAudio', () => {
       'unsure',
     );
     expect(decideByAudio(index, [], [], SURAH_112).status).toBe('unsure');
+  });
+});
+
+describe('decideByAudio with the letters of the Quran', () => {
+  const letters = createQuranLetters(imlaei, verseCount, [
+    ...new Set(IMLAEI_SAMPLE.map((v) => v.surah)),
+  ]);
+  const fatiha = candidate(1, 1, 3);
+
+  it('names a passage too short for the word search when its letters are said nowhere else', () => {
+    const words = 'رَبِّ الْعَالَمِينَ';
+    const readings = [reading(words, 0)];
+    // Two words: the word search wants three, so the letters decide.
+    expect(decideByAudio(index, [fatiha], readings, words).status).toBe('unsure');
+    const decision = decideByAudio(index, [fatiha], readings, words, AUDIO_CHECK, letters);
+    expect(decision.status).toBe('found');
+    if (decision.status !== 'found') return;
+    expect(decision.result.status).toBe('found');
+    expect(decision.result.candidates[0]).toMatchObject({
+      start: { surah: 1, verse: 2 },
+      end: { surah: 1, verse: 2 },
+    });
+  });
+
+  it('skips an opening formula before the passage', () => {
+    const words = 'أَعُوذُ بِاللَّهِ مِنَ الشَّيْطَانِ الرَّجِيمِ رَبِّ الْعَالَمِينَ';
+    const readings = [reading(words, 0)];
+    expect(decideByAudio(index, [fatiha], readings, words).status).toBe('unsure');
+    const decision = decideByAudio(index, [fatiha], readings, words, AUDIO_CHECK, letters);
+    expect(decision.status).toBe('found');
+  });
+
+  it('stays unsure when those letters are said in another place too', () => {
+    // 1:1 ends with them, 1:3 is nothing else.
+    const words = 'الرَّحْمَنِ الرَّحِيمِ';
+    const decision = decideByAudio(
+      index,
+      [fatiha],
+      [reading(words, 0)],
+      words,
+      AUDIO_CHECK,
+      letters,
+    );
+    expect(decision.status).toBe('unsure');
+  });
+
+  it('stays unsure for too few letters, even said once', () => {
+    const words = 'اللَّهُ الصَّمَدُ';
+    expect(letters.placesOf('اللهالصمد')).toHaveLength(1);
+    const decision = decideByAudio(
+      index,
+      [candidate(112, 1, 3)],
+      [reading(words, 0)],
+      words,
+      AUDIO_CHECK,
+      letters,
+    );
+    expect(decision.status).toBe('unsure');
+  });
+});
+
+describe('decideByAudio, the cost allowed', () => {
+  const right = candidate(112, 1, 4);
+
+  it('allows more for a reading that holds more of the passage than was heard plainly', () => {
+    // The free reading heard few letters plainly; the reading held to 112 explains 31 of them.
+    const free = 'قَالُوا هُوَ اللَّهُ أَحَدٌ لَمْ يَلِدْ وَلَمْ يُولَدْ';
+    const cost = AUDIO_CHECK.maxCostBase + AUDIO_CHECK.maxCostPerLetter * letterCount(free) + 5;
+    const decision = decideByAudio(index, [right], [reading(SURAH_112, cost)], free);
+    expect(cost).toBeLessThan(
+      AUDIO_CHECK.maxCostBase + AUDIO_CHECK.maxCostPerPassageLetter * letterCount(free),
+    );
+    expect(decision.status).toBe('found');
+  });
+
+  it('allows no more than per letter heard for a reading shorter than what was heard', () => {
+    const free = 'قَالُوا هُوَ اللَّهُ أَحَدٌ لَمْ يَلِدْ وَلَمْ يُولَدْ';
+    const short = 'قُلْ هُوَ اللَّهُ أَحَدٌ';
+    // Over the allowance per letter heard; under the one per letter of the passage of the
+    // whole surah, which this short reading does not hold.
+    const cost = AUDIO_CHECK.maxCostBase + AUDIO_CHECK.maxCostPerLetter * letterCount(free) + 1;
+    expect(cost).toBeLessThan(
+      AUDIO_CHECK.maxCostBase + AUDIO_CHECK.maxCostPerPassageLetter * letterCount(free),
+    );
+    expect(decideByAudio(index, [right], [reading(short, cost)], free).status).toBe('unsure');
   });
 });
 

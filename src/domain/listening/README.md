@@ -12,6 +12,9 @@ Spécification : [docs/specs/listening.md](../../../docs/specs/listening.md).
   recherche ne trouve pas, les 8 derniers seuls, avec les mêmes seuils (le bruit des premiers
   mots d'un lecteur ordinaire ne doit pas cacher la suite). Seul un `found` des derniers mots
   remplace la réponse ; mesures dans D42.
+- `audio-check.ts` : le contrôle par le son (D49, D50) : les passages à relire, et la décision.
+- `quran-letters.ts` : le Coran en lettres (celles que compare `native/quran-decoding`) ; dit
+  si les lettres d'une relecture ne sont dites qu'à un endroit (D50).
 - `recitation-follow.ts` : le suivi mot à mot sur une page (voix.png). Les mots sont comparés
   comme la recherche les compare (`isSameWordHeard`) ; un mot répété n'est pas une erreur.
 
