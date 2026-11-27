@@ -15,7 +15,14 @@ export { QrCode, qrCodeModules, type QrCodeProps } from './components/qr-code';
 export { ReaderSearchField, type ReaderSearchFieldProps } from './components/reader-search-field';
 export { QuranText, type QuranTextProps, type QuranTextRun } from './components/quran-text';
 export { Screen, type ScreenBackground, type ScreenProps } from './components/screen';
-export { useHighContrast, useReducedMotion } from './device-settings';
+export { useHighContrast, useReducedMotion, useReducedTransparency } from './device-settings';
+export { GlassSurface, type GlassSurfaceProps } from './components/glass-surface';
+export {
+  ScrollEdgeVeil,
+  SkyGradient,
+  type ScrollEdgeVeilProps,
+  type SkyGradientProps,
+} from './components/sky-gradient';
 export { useSafeInsets } from './safe-insets';
 export { listeningOpacity, listeningShape, useUpcomingInk } from './listening-tokens';
 export { getWritingDirection, type WritingDirection } from './direction';
@@ -49,6 +56,7 @@ export {
   voiceStoryDetails,
   voiceStoryShadows,
   droughtLeafColors,
+  glassVeilMinimum,
   type BackdropName,
   type PaletteRole,
   type QuranTextStyleName,
@@ -61,10 +69,14 @@ export {
   type TextStyleName,
 } from './tokens';
 export {
+  AppearanceScope,
+  useAppearance,
   useBackdropGradient,
   useColors,
   useColorValues,
   useElevation,
+  colorValuesFor,
+  type AppearanceScopeProps,
   type Colors,
   type ColorValues,
 } from './use-colors';

@@ -2,6 +2,7 @@ import { GLView, type ExpoWebGLRenderingContext } from 'expo-gl';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
+  AppState,
   Platform,
   StyleSheet,
   View,
@@ -20,6 +21,8 @@ import { SHIPPED_GARDEN_IMAGES } from '../garden-images';
 import { gardenStage } from '../garden-picture';
 import { GardenScene } from '../garden-scene';
 import { gardenSceneLabel } from '../garden-words';
+import type { GardenLife } from '../living/life-rules';
+import type { SkyState } from '../sky/sky-state';
 import { useGardenPictureSequence } from '../use-garden-picture';
 import { GARDEN_3D } from './config';
 import { GardenSurface } from './garden-surface';
@@ -28,8 +31,31 @@ import { useGardenHint } from './use-garden-hint';
 import { useGardenModel } from './use-garden-model';
 import { useGrowthPlayback } from './use-growth-playback';
 
-/** Where the first-time hint goes: over the bottom of the garden, or in a row under it. */
-export type GardenHintPlacement = 'overlay' | 'below';
+/**
+ * Where the first-time hint goes: over the bottom of the garden, in a row under it, or nowhere
+ * (the home garden carries no word: VoiceOver keeps its actions).
+ */
+export type GardenHintPlacement = 'overlay' | 'below' | 'none';
+
+/**
+ * The home garden (maquette-wow, validated on 27 November 2026): full screen under the sky, alive,
+ * lit by the hour, with the return glide.
+ */
+export interface LivingGarden {
+  /** The sky of the hour: its light on the garden, its lights behind it. */
+  readonly sky: SkyState;
+  /** What lives in it (`gardenLifeOf`). */
+  readonly life: GardenLife;
+  /** The plant grows during the return glide: the sound and the light haptic. */
+  readonly onGrow?: () => void;
+  /** The return glide starts or ends. */
+  readonly onGlideChange?: (isGliding: boolean) => void;
+  /**
+   * Given the function that stops the glide (null when the garden goes): a touch on what floats
+   * over the garden calls it.
+   */
+  readonly onInterruptReady?: (interrupt: (() => void) | null) => void;
+}
 
 export interface GardenView3DProps {
   /** The garden to show, exactly as the garden module describes it. */
@@ -47,7 +73,22 @@ export interface GardenView3DProps {
   playsGrowth?: boolean;
   /** The screen is in front: false while the reader is pushed over it. A growth waits for it. */
   isActive?: boolean;
+  /** The home garden, full screen and alive; absent, the still garden of the pictures. */
+  living?: LivingGarden;
   testID?: string;
+}
+
+/** Whether the app is in the foreground: the living garden stops in the background. */
+function useAppIsActive(isWatched: boolean): boolean {
+  const [isActive, setActive] = useState(AppState.currentState !== 'background');
+  useEffect(() => {
+    if (!isWatched) return undefined;
+    const subscription = AppState.addEventListener('change', (state) =>
+      setActive(state === 'active'),
+    );
+    return () => subscription.remove();
+  }, [isWatched]);
+  return isActive;
 }
 
 /** The circular arrow of the mockup's hint (visite.png). Both exist on iOS 16. */
@@ -84,8 +125,13 @@ export function GardenView3D({
   fill = false,
   playsGrowth = false,
   isActive = true,
+  living,
   testID = 'garden-3d',
 }: GardenView3DProps) {
+  const isLiving = living !== undefined;
+  const isAppActive = useAppIsActive(isLiving);
+  const isShown = isActive && isAppActive;
+
   const { t } = useGenderedTranslation('garden');
   const isMotionReduced = useReducedMotion();
   const modelStatus = useGardenModel();
@@ -98,7 +144,9 @@ export function GardenView3D({
   const [surface] = useState(
     () =>
       new GardenSurface({
-        anchor: fill ? 'center' : 'bottom',
+        anchor: isLiving ? 'stage' : fill ? 'center' : 'bottom',
+        living: isLiving,
+        glides: isLiving,
         onReady: () => setReady(true),
         onFail: (error) => {
           console.warn('The 3D garden stopped; the picture stays.', error);
@@ -120,11 +168,32 @@ export function GardenView3D({
   // The plant of the hizb in progress, growing with its pages: played in the render loop.
   useGrowthPlayback(surface, state, {
     remembers: playsGrowth,
-    isActive,
+    isActive: isShown,
     isReady: isReady && !hasFailed,
     isMotionReduced,
   });
   useEffect(() => surface.setMotionReduced(isMotionReduced), [isMotionReduced, surface]);
+  useEffect(() => surface.setActive(isShown), [isShown, surface]);
+  const sky = living?.sky;
+  useEffect(() => {
+    if (sky !== undefined) surface.setSky(sky);
+  }, [sky, surface]);
+  const life = living?.life;
+  useEffect(() => {
+    if (life !== undefined) surface.setLife(life);
+  }, [life, surface]);
+  const onGrow = living?.onGrow;
+  const onGlideChange = living?.onGlideChange;
+  useEffect(
+    () => surface.setGlideListeners({ onGrow, onGlideChange }),
+    [onGrow, onGlideChange, surface],
+  );
+  const onInterruptReady = living?.onInterruptReady;
+  useEffect(() => {
+    if (onInterruptReady === undefined) return undefined;
+    onInterruptReady(() => surface.interruptGlide());
+    return () => onInterruptReady(null);
+  }, [onInterruptReady, surface]);
   useEffect(() => surface.setOnUse(hint.retire), [hint.retire, surface]);
   // In the commit that removes the GL view, not after it (a passive effect runs later): from
   // then on no frame, gesture event or layout can draw into the context that leaves with it.
@@ -134,7 +203,7 @@ export function GardenView3D({
   // any other build (the handle is only kept when the check opened it).
   useEffect(() => publishHandle('garden-controller', surface.controller), [surface]);
 
-  const gesture = useGardenGestures(surface.controller, isReady && !hasFailed, testID);
+  const gesture = useGardenGestures(surface.controller, isReady && !hasFailed, testID, isLiving);
   const model = modelStatus.status === 'ready' ? modelStatus.model : null;
 
   const onContextCreate = useCallback(
@@ -188,7 +257,7 @@ export function GardenView3D({
 
   const shows3D = model !== null && !hasFailed && hasSize;
   const isInteractive = shows3D && isReady;
-  const showsHint = hint.isShown && isInteractive;
+  const showsHint = hint.isShown && isInteractive && hintPlacement !== 'none';
   const hintPill = (
     <View
       style={[styles.hint, hintPlacement === 'overlay' ? styles.hintOverlay : styles.hintBelow]}
@@ -208,9 +277,9 @@ export function GardenView3D({
   );
 
   return (
-    <View style={[styles.container, fill && styles.fill]}>
+    <View style={[styles.container, (fill || isLiving) && styles.fill]}>
       <View
-        style={fill ? styles.fill : styles.band}
+        style={fill || isLiving ? styles.fill : styles.band}
         onLayout={onLayout}
         accessible
         accessibilityRole="image"
@@ -238,8 +307,8 @@ export function GardenView3D({
           >
             <GardenScene
               state={state}
-              size={fill ? 'fill' : 'band'}
-              anchor={fill ? 'center' : 'bottom'}
+              size={fill || isLiving ? 'fill' : 'band'}
+              anchor={fill || isLiving ? 'center' : 'bottom'}
             />
           </View>
         )}

@@ -15,7 +15,7 @@ interface DeviceSetting {
   /** False on the platforms where React Native cannot tell: the setting then stays off. */
   isExposed: () => boolean;
   query: () => Promise<boolean>;
-  changeEvent: 'highTextContrastChanged' | 'reduceMotionChanged';
+  changeEvent: 'highTextContrastChanged' | 'reduceMotionChanged' | 'reduceTransparencyChanged';
 }
 
 function createSettingHook({ isExposed, query, changeEvent }: DeviceSetting): () => boolean {
@@ -89,4 +89,15 @@ export const useReducedMotion = createSettingHook({
   isExposed: () => true,
   query: () => AccessibilityInfo.isReduceMotionEnabled(),
   changeEvent: 'reduceMotionChanged',
+});
+
+/**
+ * True when the person asked iOS to reduce transparency: what the app draws as glass by itself
+ * becomes opaque (liquid-glass.md › Review checklist, item 5). The system's own glass already
+ * does. React Native exposes the setting on iOS only; elsewhere it stays off.
+ */
+export const useReducedTransparency = createSettingHook({
+  isExposed: () => Platform.OS === 'ios',
+  query: () => AccessibilityInfo.isReduceTransparencyEnabled(),
+  changeEvent: 'reduceTransparencyChanged',
 });

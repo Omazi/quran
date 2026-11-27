@@ -208,6 +208,32 @@ export function chromeAppearanceOf(theme: SkyTheme, device: Appearance): Appeara
   return theme === 'night' || device === 'dark' ? 'dark' : 'light';
 }
 
+/** How far a day sky moves towards the evening sky in Dark Mode. */
+const DARK_MODE_DIM = 0.6;
+/** The evening sky it moves towards: the keyframe of 20:12. */
+const EVENING = skyKeyframes.find((keyframe) => keyframe.hour === 20.2) ?? skyKeyframes[0];
+
+/**
+ * The sky in Dark Mode (dark-mode.md › Best practices: dimmer backgrounds; the owner's "dusk" at
+ * night, brand-spec.md › Nuit): a day sky is dimmed towards the evening, so that the dusk palette
+ * of the words floats on a dark enough sky. The garden keeps the light of its hour. A sky that is
+ * already night is unchanged.
+ */
+export function skyForAppearance(sky: SkyState, device: Appearance): SkyState {
+  if (device !== 'dark' || sky.theme === 'night' || EVENING === undefined) return sky;
+  const top = mixHex(sky.top, EVENING.top, DARK_MODE_DIM);
+  const low = mixHex(sky.low, EVENING.low, DARK_MODE_DIM);
+  return {
+    ...sky,
+    top,
+    mid: mixHex(sky.mid, EVENING.mid, DARK_MODE_DIM),
+    low,
+    theme: relativeLuminance(top) < SKY_NIGHT_LUMINANCE ? 'night' : 'day',
+    water: mixHex(skyLights.water, low, 0.45),
+    cloud: sky.cloud * (1 - DARK_MODE_DIM),
+  };
+}
+
 /** The local hour of a date, with its minutes as a fraction (18:24 is 18.4). */
 export function hourOfDay(date: Date): number {
   return date.getHours() + date.getMinutes() / 60;

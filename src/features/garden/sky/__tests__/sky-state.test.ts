@@ -3,6 +3,7 @@ import {
   hourOfDay,
   mixHex,
   relativeLuminance,
+  skyForAppearance,
   skyPhaseAt,
   skyStateAt,
 } from '../sky-state';
@@ -103,6 +104,25 @@ describe('the appearance of what floats on the sky', () => {
   it('keeps the dusk palette in Dark Mode, even under a day sky', () => {
     expect(chromeAppearanceOf('day', 'dark')).toBe('dark');
     expect(chromeAppearanceOf('day', 'light')).toBe('light');
+  });
+});
+
+describe('the sky in Dark Mode', () => {
+  it('dims a day sky towards the evening, dark enough for the dusk palette', () => {
+    const day = skyStateAt(13);
+    const dimmed = skyForAppearance(day, 'dark');
+    expect(relativeLuminance(dimmed.top)).toBeLessThan(relativeLuminance(day.top));
+    expect(dimmed.theme).toBe('night');
+    // The garden keeps the light of its hour.
+    expect(dimmed.sunColor).toBe(day.sunColor);
+    expect(dimmed.sunDirection).toEqual(day.sunDirection);
+  });
+
+  it('leaves the sky as it is in the light appearance, and a night sky as it is', () => {
+    const day = skyStateAt(13);
+    expect(skyForAppearance(day, 'light')).toBe(day);
+    const night = skyStateAt(22.5);
+    expect(skyForAppearance(night, 'dark')).toBe(night);
   });
 });
 

@@ -209,6 +209,23 @@ export const palette = {
    * the system's glass is not available. At night, and over the deep green of the listening page,
    * the prototype's light values.
    */
+  // --- The glass over the home garden (maquette-wow, `.glass`, validated 27 November 2026) ---
+  /**
+   * The tint of the glass drawn by the app where the system's Liquid Glass is not available: warm
+   * white by day, blue-black at night. Its opacity is not fixed: it is raised hour by hour until
+   * every word on it reaches its contrast over the sky (`glassVeilMinimum`, src/features/home).
+   */
+  glassVeil: { light: '#FFFDF8', dark: '#181920' },
+  /** The glass with Reduce Transparency on: opaque (liquid-glass.md › Review checklist, 5). */
+  glassOpaque: { light: '#F7F4EE', dark: '#1E2027' },
+  /** The bright rim of the glass, and the light on its upper edge (the mockup's `::after`, `::before`). */
+  glassEdge: { light: 'rgba(255, 255, 255, 0.7)', dark: 'rgba(255, 255, 255, 0.22)' },
+  glassHighlight: { light: 'rgba(255, 255, 255, 0.55)', dark: 'rgba(255, 255, 255, 0.16)' },
+  /** The hairline between two rows on the glass: the ink at 9 %. */
+  glassDivider: { light: 'rgba(29, 42, 35, 0.09)', dark: 'rgba(241, 234, 219, 0.09)' },
+  /** The quiet button on the glass ("Reconnaître", `.btn.glassy`): more glass. */
+  glassTonal: { light: 'rgba(255, 255, 255, 0.55)', dark: 'rgba(255, 255, 255, 0.12)' },
+
   pageDot: { light: 'rgba(29, 42, 35, 0.22)', dark: 'rgba(255, 255, 255, 0.35)' },
   pageDotCurrent: { light: '#1D2A23', dark: '#FFFFFF' },
   pageDotsSurface: { light: 'rgba(255, 255, 255, 0.55)', dark: 'rgba(255, 255, 255, 0.14)' },
@@ -462,6 +479,11 @@ export type BackdropName = keyof typeof backdropGradients;
  */
 export const elevation = {
   card: { light: '0px 6px 20px rgba(60, 48, 24, 0.07)', dark: 'none' },
+  /** Under the glass over the home garden (the mockup's `--glass-shadow`). */
+  glass: {
+    light: '0px 10px 34px rgba(60, 46, 24, 0.16), 0px 1px 2px rgba(60, 46, 24, 0.16)',
+    dark: '0px 10px 34px rgba(0, 0, 0, 0.35), 0px 1px 2px rgba(0, 0, 0, 0.35)',
+  },
   floating: {
     light: '0px 8px 24px rgba(40, 32, 16, 0.14)',
     dark: '0px 8px 24px rgba(0, 0, 0, 0.4)',
@@ -482,6 +504,19 @@ export const launchColors = {
   word: palette.launchWord.light,
   drops: palette.launchDrops.light,
   leaf: palette.launchLeaf.light,
+} as const;
+
+/**
+ * The least opacity of the glass's tint (`glassVeil`) where the app draws the glass: a chip over
+ * the sky, the panel at the bottom (the mockup's `--glass-bg` and `--glass-bg-thick`). Over a sky
+ * that needs it, the tint is made thicker, never thinner. `header`: the scroll edge behind the
+ * date and the title, invisible unless the sky of the hour needs it (status-bars.md › Best
+ * practices).
+ */
+export const glassVeilMinimum = {
+  chip: { light: 0.46, dark: 0.34 },
+  panel: { light: 0.62, dark: 0.5 },
+  header: { light: 0, dark: 0 },
 } as const;
 
 /** Width of the launch mark in points: the `imageWidth` the native launch screen used (app.json). */
@@ -835,6 +870,8 @@ export const radius = {
   lg: 16,
   /** A card of the validated mockups (accueil.png: about 24 points). */
   xl: 24,
+  /** The glass panel over the home garden (maquette-wow `.hm-panel`: 30 points). */
+  glassPanel: 30,
   /** Half of any height: a capsule, a circle. */
   full: 999,
 } as const;

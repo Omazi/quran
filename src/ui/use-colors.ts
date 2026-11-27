@@ -1,3 +1,4 @@
+import { createContext, createElement, useContext, type ReactNode } from 'react';
 import {
   DynamicColorIOS,
   Platform,
@@ -116,13 +117,42 @@ const fallbackColors: Readonly<Record<Contrast, Record<Appearance, Colors>>> = {
 };
 
 /**
+ * An appearance fixed for a part of the screen, whatever the device's: what floats over the home
+ * garden's sky takes the night values under a night sky (src/features/home). Null: the device's.
+ */
+const FixedAppearance = createContext<Appearance | null>(null);
+
+export interface AppearanceScopeProps {
+  /** The appearance below; null leaves the device's. */
+  appearance: Appearance | null;
+  children: ReactNode;
+}
+
+/**
+ * Gives every colour below the values of one appearance. On iOS the colours below are then plain
+ * values, not the system's dynamic colours: a change of the device appearance renders again.
+ */
+export function AppearanceScope({ appearance, children }: AppearanceScopeProps) {
+  return createElement(FixedAppearance.Provider, { value: appearance }, children);
+}
+
+/** The appearance in force here: the scope's, or the device's. */
+export function useAppearance(): Appearance {
+  const fixed = useContext(FixedAppearance);
+  const scheme = useColorScheme();
+  return fixed ?? (scheme === 'dark' ? 'dark' : 'light');
+}
+
+/**
  * The single way to get a colour. Returns the colour of every role for the current appearance
  * and contrast: the system's dynamic colours on iOS, values that follow the device settings
  * elsewhere. There is no appearance setting in the app (dark-mode.md › Best practices).
  */
 export function useColors(): Colors {
   const scheme = useColorScheme();
+  const fixed = useContext(FixedAppearance);
   const isHighContrast = useHighContrast();
+  if (fixed !== null) return fallbackColors[isHighContrast ? 'high' : 'standard'][fixed];
   if (Platform.OS === 'ios') return getIosColors();
   return fallbackColors[isHighContrast ? 'high' : 'standard'][scheme === 'dark' ? 'dark' : 'light'];
 }
@@ -132,14 +162,12 @@ export function useColors(): Colors {
  * an SVG, which takes plain values: the appearance is read here, and a change of it renders again.
  */
 export function useBackdropGradient(name: BackdropName): readonly GradientStop[] {
-  const scheme = useColorScheme();
-  return backdropGradients[name][scheme === 'dark' ? 'dark' : 'light'];
+  return backdropGradients[name][useAppearance()];
 }
 
 /** A soft shadow of the mockups for the current appearance (`elevation`), as a box shadow. */
 export function useElevation(level: keyof typeof elevation): string {
-  const scheme = useColorScheme();
-  return elevation[level][scheme === 'dark' ? 'dark' : 'light'];
+  return elevation[level][useAppearance()];
 }
 
 /** Every app colour as a plain value, for the current appearance and contrast. */
@@ -178,9 +206,9 @@ const colorValues: Readonly<Record<Contrast, Record<Appearance, ColorValues>>> =
  * the device.
  */
 export function useColorValues(appearance?: Appearance): ColorValues {
-  const scheme = useColorScheme();
+  const inForce = useAppearance();
   const isHighContrast = useHighContrast();
-  const resolved = appearance ?? (scheme === 'dark' ? 'dark' : 'light');
+  const resolved = appearance ?? inForce;
   return colorValues[isHighContrast ? 'high' : 'standard'][resolved];
 }
 

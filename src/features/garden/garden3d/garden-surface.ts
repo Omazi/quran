@@ -111,6 +111,8 @@ export class GardenSurface {
   private sky: SkyState | null = null;
   private life: GardenLife | null = null;
   private glide: Glide | null = null;
+  private onGrow: (() => void) | undefined;
+  private onGlideChange: ((isGliding: boolean) => void) | undefined;
   /**
    * Set when the view goes. A GL context that arrives later (expo-gl calls `onContextCreate`
    * from the native side, possibly after the screen closed) is never drawn into: the native
@@ -120,6 +122,8 @@ export class GardenSurface {
 
   constructor(private readonly options: GardenSurfaceOptions) {
     this.frames = options.frames ?? screenFrames;
+    this.onGrow = options.onGrow;
+    this.onGlideChange = options.onGlideChange;
     this.player = new GrowthPlayer({
       frames: options.frames,
       onFrame: (frame) => this.showGrowthFrame(frame),
@@ -150,6 +154,15 @@ export class GardenSurface {
     this.isActive = isActive;
     if (!isActive) this.finishGlideAtOnce();
     this.updateLoop();
+  }
+
+  /** Who is told of the return glide: the plant grows (feedback), the glide starts or ends. */
+  setGlideListeners(listeners: {
+    readonly onGrow?: () => void;
+    readonly onGlideChange?: (isGliding: boolean) => void;
+  }): void {
+    this.onGrow = listeners.onGrow;
+    this.onGlideChange = listeners.onGlideChange;
   }
 
   /** Whether the render loop of the living garden runs: for the tests and the screen check. */
@@ -279,7 +292,7 @@ export class GardenSurface {
     const from = this.controller.orbit;
     const glide: Glide = { from, segments, phase: 'to', holdFrame: null };
     this.glide = glide;
-    this.options.onGlideChange?.(true);
+    this.onGlideChange?.(true);
     const target = focusOrbit(from, focus, this.size.width / this.size.height, this.anchor);
     const { toMs, easeInOut } = GARDEN_3D.glide;
     this.controller.glideTo(target, toMs, easeInOut, () => this.growDuringGlide(glide));
@@ -298,7 +311,7 @@ export class GardenSurface {
     if (this.glide !== glide) return;
     glide.phase = 'grow';
     this.engine?.three.rippleAtGrowth(this.lifeTime);
-    this.options.onGrow?.();
+    this.onGrow?.();
     this.player.play(glide.segments, {
       maxMs: GARDEN_3D.glide.growMaxMs,
       onPlayed: () => this.holdThenReturn(glide),
@@ -327,7 +340,7 @@ export class GardenSurface {
     if (this.glide !== glide) return;
     if (glide.holdFrame !== null) this.frames.cancel(glide.holdFrame);
     this.glide = null;
-    this.options.onGlideChange?.(false);
+    this.onGlideChange?.(false);
   }
 
   /** Whether the camera is on its return glide: for the tests and the screen check. */
