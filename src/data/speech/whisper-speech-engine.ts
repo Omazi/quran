@@ -24,6 +24,8 @@
 import {
   SpeechEngineError,
   failureOf,
+  minLettersFor,
+  type HeldReading,
   type MicrophonePermission,
   type SpeechActivity,
   type SpeechEndReason,
@@ -64,6 +66,15 @@ export interface Transcriber {
   prepare(): Promise<void>;
   /** The text Whisper reads in 16 kHz mono 16-bit samples. */
   transcribe(samples: Int16Array): Promise<string>;
+  /**
+   * Reads the samples again, once per text, held to it (D47). Null when this build cannot (the
+   * native function is missing). Optional.
+   */
+  readHeld?(
+    samples: Int16Array,
+    texts: readonly string[],
+    minLetters: number,
+  ): Promise<HeldReading[] | null>;
 }
 
 /** The clock of the engine: the global timers, replaced in tests. */
@@ -334,6 +345,9 @@ export function createWhisperSpeechEngine({
     return concat(phrase, Math.min(phraseSamples, samplesUpToLastVoice + tail));
   }
 
+  /** The audio of the latest reading and what Whisper read in it, for the audio check (D47). */
+  let lastRead: { audio: Int16Array; text: string } | null = null;
+
   async function transcribeWords(audio: Int16Array): Promise<string[]> {
     show({ transcribing: true });
     const text = await withinTime(
@@ -344,6 +358,7 @@ export function createWhisperSpeechEngine({
       timers,
     );
     record({ lastTranscript: text });
+    lastRead = { audio, text };
     return whisperWords(text);
   }
 
@@ -485,5 +500,17 @@ export function createWhisperSpeechEngine({
     onWords: (listener) => listen(wordListeners, listener),
     onEnd: (listener) => listen(endListeners, listener),
     onActivity: (listener) => listen(activityListeners, listener),
+    async checkHeard(texts) {
+      const read = lastRead;
+      if (read === null || transcriber.readHeld === undefined || texts.length === 0) return null;
+      const readings = await withinTime(
+        transcriber.readHeld(read.audio, texts, minLettersFor(read.text)),
+        config.transcribeTimeoutMs,
+        'transcription-failed',
+        'Reading the voice again',
+        timers,
+      );
+      return readings === null ? null : { readings, freeText: read.text };
+    },
   };
 }

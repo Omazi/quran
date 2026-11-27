@@ -18,6 +18,9 @@ import type { VerseRef } from '../quran/types';
 import type { PassageCandidate, SearchResult, VerseIndex } from '../recognition';
 
 import { searchHeardWords } from './heard-search';
+import type { HeldReading } from './types';
+
+export type { HeldReading } from './types';
 
 export const AUDIO_CHECK = Object.freeze({
   /** The search that proposes passages to check: looser than the one that announces. */
@@ -40,10 +43,16 @@ export const AUDIO_CHECK = Object.freeze({
    * Measured on the voice benchmark (tools/voice-bench, D47).
    */
   maxCostBase: 10,
-  maxCostPerLetter: 1.0,
-  minLead: 25,
+  maxCostPerLetter: 0.5,
+  minLead: 15,
+  /** How the native side reads (quran-decoding.h, ReadOptions). A passage already `margin`
+   * more expensive than the best one is not read to the end: more than `minLead`, so stopping
+   * it never changes the decision. */
+  read: { freeLetterCost: 2, firstChoices: 3, margin: 40 },
   /** At least this many words heard before checking (fewer say too little). */
   minWords: 2,
+  /** A listening is checked again only once this many more words were heard. */
+  recheckAfterWords: 3,
   /** Opening formulas: said before a passage, the passage follows. */
   formulas: ['أعوذ بالله من الشيطان الرجيم', 'بسم الله الرحمن الرحيم'] as readonly string[],
 });
@@ -55,19 +64,14 @@ export interface AudioCheckCandidate {
   readonly last: VerseRef;
 }
 
-/** One reading of the audio held to a candidate's text (see `quran-decoding.h`). */
-export interface HeldReading {
-  readonly cost: number;
-  readonly letters: number;
-  /** Letters of the free words at its start (not the passage). */
-  readonly freeLetters: number;
-  /** Stopped early because it already cost far more than a better one. */
-  readonly abandoned: boolean;
-  readonly text: string;
-}
-
 export type AudioCheckDecision =
-  | { readonly status: 'found'; readonly candidate: AudioCheckCandidate; readonly lead: number }
+  | {
+      readonly status: 'found';
+      readonly candidate: AudioCheckCandidate;
+      readonly lead: number;
+      /** The search of the reading's own words: `found`, naming the passage. */
+      readonly result: SearchResult;
+    }
   | { readonly status: 'unsure' };
 
 function order(ref: VerseRef): number {
@@ -191,5 +195,5 @@ export function decideByAudio(
   const from = order(place.start);
   const to = order(place.end);
   if (to < order(candidate.first) || from > order(candidate.last)) return { status: 'unsure' };
-  return { status: 'found', candidate, lead };
+  return { status: 'found', candidate, lead, result: named };
 }

@@ -243,3 +243,84 @@ describe('Whisper', () => {
     expect(options).not.toHaveProperty('prompt');
   });
 });
+
+describe('the held reading (D47)', () => {
+  const answer = JSON.stringify([
+    {
+      text: 'قُلْ هُوَ',
+      cost: 2.5,
+      letters: 4,
+      freeLetters: 0,
+      passageLetters: 4,
+      tokens: 5,
+      deadEnd: false,
+      abandoned: false,
+    },
+  ]);
+
+  it('reads the audio again through the native function, with the context’s id', async () => {
+    const { binding, context } = fakeWhisper();
+    (context as unknown as { id: number }).id = 7;
+    const read = jest.fn(async () => answer);
+    const transcriber = createWhisperTranscriber(() => binding as unknown as WhisperBinding, {
+      findReadHeld: () => read,
+    });
+    const samples = new Int16Array([1, 2, 3]);
+    const readings = await transcriber.readHeld!(samples, ['formula x\n112 1 قل هو'], 9);
+    expect(readings).toEqual([
+      { text: 'قُلْ هُوَ', cost: 2.5, letters: 4, freeLetters: 0, abandoned: false },
+    ]);
+    expect(read).toHaveBeenCalledWith(
+      7,
+      ['formula x\n112 1 قل هو'],
+      expect.objectContaining({ minLetters: 9, freeLetterCost: 2 }),
+      expect.anything(),
+    );
+    // The samples themselves, as 16-bit PCM bytes.
+    expect((read.mock.calls[0] as unknown[])[3]).toHaveProperty('byteLength', 6);
+  });
+
+  it('gives null in a build without the native function', async () => {
+    const { binding, context } = fakeWhisper();
+    (context as unknown as { id: number }).id = 7;
+    const transcriber = createWhisperTranscriber(() => binding as unknown as WhisperBinding, {
+      findReadHeld: () => null,
+    });
+    expect(await transcriber.readHeld!(new Int16Array(3), ['t'], 0)).toBeNull();
+  });
+
+  it('refuses an answer that does not hold one reading per text', async () => {
+    const { binding, context } = fakeWhisper();
+    (context as unknown as { id: number }).id = 7;
+    const transcriber = createWhisperTranscriber(() => binding as unknown as WhisperBinding, {
+      findReadHeld: () => async () => answer,
+    });
+    await expect(transcriber.readHeld!(new Int16Array(3), ['a', 'b'], 0)).rejects.toThrow(
+      /expected 2/,
+    );
+  });
+
+  it('waits for the reading under way: one job at a time on the context', async () => {
+    const { binding, context } = fakeWhisper();
+    (context as unknown as { id: number }).id = 7;
+    let release: (value: { result: string; isAborted: boolean }) => void = () => undefined;
+    context.transcribeData.mockImplementationOnce(() => ({
+      stop: async () => undefined,
+      promise: new Promise((resolve) => {
+        release = resolve;
+      }),
+    }));
+    const read = jest.fn(async () => answer);
+    const transcriber = createWhisperTranscriber(() => binding as unknown as WhisperBinding, {
+      findReadHeld: () => read,
+    });
+    const reading = transcriber.transcribe(new Int16Array(3));
+    const held = transcriber.readHeld!(new Int16Array(3), ['t'], 0);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(read).not.toHaveBeenCalled();
+    release({ result: 'x', isAborted: false });
+    await reading;
+    await held;
+    expect(read).toHaveBeenCalledTimes(1);
+  });
+});

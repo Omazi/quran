@@ -2,6 +2,8 @@ import { quranRepository, quranStructure } from '@/data/quran';
 import { formatVerseKey, type MushafPage, type VerseRef } from '@/domain/quran';
 import { createVerseIndex, type VerseIndex } from '@/domain/recognition';
 
+import type { HeldTexts } from './held-check';
+
 let pending: Promise<VerseIndex> | null = null;
 
 /**
@@ -17,6 +19,29 @@ export function loadQuranVerseIndex(): Promise<VerseIndex> {
   const loading = pending;
   loading.catch(() => {
     if (pending === loading) pending = null;
+  });
+  return loading;
+}
+
+let pendingHeld: Promise<HeldTexts> | null = null;
+
+/**
+ * The imla'i text of every verse, for the audio check (D47): the model writes imla'i, so the
+ * readings are held to that spelling. Loaded once per session, on the first check.
+ */
+export function loadQuranHeldTexts(): Promise<HeldTexts> {
+  pendingHeld ??= Promise.all(
+    quranStructure.surahs.map(({ surah }) => quranRepository.getSurahVerses(surah, 'imlaei')),
+  ).then((surahs) => {
+    const bySurah = new Map(surahs.map((verses) => [verses[0]?.surah ?? 0, verses]));
+    return {
+      text: ({ surah, verse }) => bySurah.get(surah)?.[verse - 1]?.text,
+      verseCount: (surah) => bySurah.get(surah)?.length ?? 0,
+    };
+  });
+  const loading = pendingHeld;
+  loading.catch(() => {
+    if (pendingHeld === loading) pendingHeld = null;
   });
   return loading;
 }

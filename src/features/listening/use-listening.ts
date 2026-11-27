@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 
 import {
+  AUDIO_CHECK,
   INITIAL_LISTENING_STATE,
   failureOf,
   searchHeardWords,
@@ -12,6 +13,8 @@ import {
 } from '@/domain/listening';
 import type { VerseIndex } from '@/domain/recognition';
 
+import { checkHeardWords, type HeldTexts } from './held-check';
+
 export interface ListeningDependencies {
   readonly engine: SpeechEngine;
   /** The passage search over the whole Quran (`loadQuranVerseIndex` in the app). */
@@ -21,6 +24,12 @@ export interface ListeningDependencies {
    * link: it then waits for the person to press the button (`listenAgain` starts it).
    */
   readonly autoStart: boolean;
+  /**
+   * Imla'i verse texts for the audio check (D47, `held-check.ts`): when the words do not name a
+   * passage, the ranked passages are read again from the audio. Without it, or with an engine
+   * that cannot (`checkHeard`), the screen goes by the words alone.
+   */
+  readonly loadHeldTexts?: () => Promise<HeldTexts>;
 }
 
 export interface Listening {
@@ -78,6 +87,7 @@ export function useListening({
   engine,
   loadVerseIndex,
   autoStart,
+  loadHeldTexts,
 }: ListeningDependencies): Listening {
   const [screen, dispatch] = useReducer(reduce, INITIAL_SCREEN);
   const state = screen.listening;
@@ -102,12 +112,52 @@ export function useListening({
       });
     };
 
+    // The audio check (D47): one at a time, beside the words (the engine keeps listening), and
+    // again only once more words came. Whatever it finds is announced as words found are.
+    let found = false;
+    let checkedAt = 0;
+    let checking: Promise<void> | null = null;
+    const canCheck = engine.checkHeard !== undefined && loadHeldTexts !== undefined;
+    const check = (words: readonly string[]): Promise<void> => {
+      checkedAt = words.length;
+      const run = (async () => {
+        try {
+          const result = await checkHeardWords(engine, await index, await loadHeldTexts!(), words);
+          if (result !== null && isCurrent() && !found) {
+            found = true;
+            // More words may have come during the check: the answer stands for all of them.
+            const all = [...heardWords];
+            dispatch({ type: 'words-heard', heardWordCount: all.length, result, words: all });
+          }
+        } catch {
+          // A check that fails leaves the answer to the words.
+        }
+      })();
+      checking = run;
+      void run.then(() => {
+        if (checking === run) checking = null;
+      });
+      return run;
+    };
+    const maybeCheck = (words: readonly string[]) => {
+      if (!canCheck || found || checking !== null) return;
+      if (
+        words.length < AUDIO_CHECK.minWords ||
+        words.length < checkedAt + AUDIO_CHECK.recheckAfterWords
+      ) {
+        return;
+      }
+      void check(words);
+    };
+
     const unsubscribeWords = engine.onWords((words) => {
       if (!isCurrent() || words.length === 0) return;
       heardWords.push(...words);
       const snapshot = [...heardWords];
       enqueue(async () => {
         const result = searchHeardWords(await index, snapshot);
+        if (result.status === 'found') found = true;
+        else maybeCheck(snapshot);
         if (isCurrent()) {
           dispatch({
             type: 'words-heard',
@@ -119,7 +169,18 @@ export function useListening({
       });
     });
     const unsubscribeEnd = engine.onEnd((reason, failure) => {
-      enqueue(() => {
+      enqueue(async () => {
+        // Before "nothing found": the check under way, then one with every word heard.
+        if (canCheck && !found && reason === 'finished') {
+          if (checking !== null) await checking;
+          if (
+            !found &&
+            heardWords.length >= AUDIO_CHECK.minWords &&
+            heardWords.length > checkedAt
+          ) {
+            await check([...heardWords]);
+          }
+        }
         if (isCurrent()) dispatch({ type: 'engine-ended', reason, failure });
       });
     });
@@ -135,6 +196,7 @@ export function useListening({
         const partial = [...activity.partial];
         enqueue(async () => {
           const result = searchWithPartialWords(await index, final, partial);
+          if (result !== null) found = true;
           if (result !== null && isCurrent()) {
             const words = [...final, ...partial];
             dispatch({ type: 'words-heard', heardWordCount: words.length, result, words });
@@ -169,7 +231,7 @@ export function useListening({
       unsubscribeEnd();
       unsubscribeActivity();
     };
-  }, [engine, loadVerseIndex]);
+  }, [engine, loadVerseIndex, loadHeldTexts]);
 
   // One listening when the screen opens (if it was opened from inside the app); the engine is
   // closed when the screen goes away.

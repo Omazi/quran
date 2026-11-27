@@ -320,3 +320,90 @@ describe('what the person sees while the engine works', () => {
     expect(result.current.state).toEqual({ status: 'failed', failure: 'unknown' });
   });
 });
+
+describe('the audio check (D47)', () => {
+  /**
+   * 83:2–3 as Whisper read an ordinary reader of the voice benchmark (faraj-64): the words alone
+   * name no passage.
+   */
+  const MISHEARD = 'وَلَيُوعَدَ النَّاحِ يَخْتَوْا فُونَ وَإِذَا كَالُوهُمْ أَوَّزَنُهُمْ يُخْفِرُونَ'.split(' ');
+  const HELD_83 = 'النَّاسِ يَسْتَوْفُونَ وَإِذَا كَالُوهُمْ أَوْ وَزَنُوهُمْ يُخْسِرُونَ';
+  const SURAH_83 = [
+    'ويل للمطففين',
+    'الذين إذا اكتالوا على الناس يستوفون',
+    'وإذا كالوهم أو وزنوهم يخسرون',
+    'ألا يظن أولئك أنهم مبعوثون',
+  ];
+  const texts = {
+    text: ({ surah, verse }: { surah: number; verse: number }) =>
+      surah === 83 ? SURAH_83[verse - 1] : 'نص',
+    verseCount: (surah: number) => (surah === 83 ? 4 : 7),
+  };
+
+  /** Stable, as the screen's loader is (a new function each render would restart the hook). */
+  const loadHeldTexts = async () => texts;
+
+  function checkedEngine(endAfterWords: boolean) {
+    const checkHeard = jest.fn(async (held: readonly string[]) => ({
+      freeText: MISHEARD.join(' '),
+      // Held to 83, the audio costs little; held to anything else, a lot.
+      readings: held.map((text) =>
+        /^83 [1-4] /m.test(text)
+          ? { text: HELD_83, cost: 3, letters: 33, freeLetters: 0, abandoned: false }
+          : { text: 'نص', cost: 90, letters: 2, freeLetters: 0, abandoned: false },
+      ),
+    }));
+    const steps = recitationSteps(MISHEARD, { startAt: 200, seed: 3 });
+    const last = steps[steps.length - 1]!.at;
+    const simulated = createSimulatedSpeechEngine({
+      permission: 'granted',
+      steps: endAfterWords ? [...steps, { at: last + 500, end: 'finished' }] : steps,
+    });
+    const engine: SpeechEngine = { ...simulated, checkHeard };
+    return { engine, checkHeard };
+  }
+
+  it('names the passage the audio says when the words alone do not', async () => {
+    expect(index.search(MISHEARD).status).not.toBe('found');
+    const { engine, checkHeard } = checkedEngine(false);
+    const { result } = await renderHook(() =>
+      useListening({
+        engine,
+        loadVerseIndex,
+        autoStart: true,
+        loadHeldTexts,
+      }),
+    );
+    await wait(20000);
+    expect(checkHeard).toHaveBeenCalled();
+    expect(result.current.state).toMatchObject({
+      status: 'found',
+      passage: { start: { surah: 83 } },
+    });
+  });
+
+  it('checks before saying nothing was found when the engine ends', async () => {
+    const { engine, checkHeard } = checkedEngine(true);
+    const { result } = await renderHook(() =>
+      useListening({
+        engine,
+        loadVerseIndex,
+        autoStart: true,
+        loadHeldTexts,
+      }),
+    );
+    await wait(20000);
+    expect(checkHeard).toHaveBeenCalled();
+    expect(result.current.state.status).toBe('found');
+  });
+
+  it('goes by the words alone without the imla’i texts', async () => {
+    const { engine, checkHeard } = checkedEngine(true);
+    const { result } = await renderHook(() =>
+      useListening({ engine, loadVerseIndex, autoStart: true }),
+    );
+    await wait(20000);
+    expect(checkHeard).not.toHaveBeenCalled();
+    expect(result.current.state.status).not.toBe('found');
+  });
+});
