@@ -121,7 +121,7 @@ export function GoalPage(props: PageProps) {
                 reducedMotion={reducedMotion}
               >
                 <AppText variant="title3" color="heading">
-                  {`${plan.pagesPerDay} `}
+                  {plan.pagesPerDay}
                 </AppText>
                 <AppText variant="subheadEmphasized" color="muted">
                   {t('goal.pagesUnit', { count: plan.pagesPerDay })}

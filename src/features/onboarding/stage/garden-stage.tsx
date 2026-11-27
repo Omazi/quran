@@ -216,36 +216,47 @@ export function GardenStage(props: GardenStageProps) {
     };
   });
   return (
-    <Animated.View
-      style={[
-        styles.garden,
-        { left: box.left, top: box.top, width: box.width, height: box.height },
-        look,
-      ]}
+    // A plane for the garden alone. On iOS, a view turned in 3D shares the depth of its siblings:
+    // the half that turns away went behind the sky and the half that comes forward covered the
+    // app's name (iOS photos of 27 November 2026: half a garden, "atuk", "Jann" on pages 1 to 9).
+    // A parent that is really drawn (`collapsable={false}`) flattens its only child into itself.
+    <View
+      style={StyleSheet.absoluteFill}
+      collapsable={false}
       pointerEvents="none"
-      accessible={false}
-      importantForAccessibility="no-hide-descendants"
-      accessibilityElementsHidden
-      testID="onboarding-garden"
+      testID="onboarding-garden-plane"
     >
-      {LAYER_ORDER.filter((key) => near.has(key) || key === 'preview').map((key) => (
-        <GardenLayer
-          key={key}
-          layer={key}
-          box={box}
-          gardens={gardens}
-          position={position}
-          level={engine.level}
-          reducedMotion={reducedMotion}
-          previewStage={previewStage}
-          showPreview={pageIndex >= marks.friends - 1}
-        />
-      ))}
-      {crackPages ? <Cracks position={position} reducedMotion={reducedMotion} /> : null}
-      {near.has('revival') && !reducedMotion ? (
-        <RevivalRings gardens={gardens} position={position} box={box} />
-      ) : null}
-    </Animated.View>
+      <Animated.View
+        style={[
+          styles.garden,
+          { left: box.left, top: box.top, width: box.width, height: box.height },
+          look,
+        ]}
+        pointerEvents="none"
+        accessible={false}
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden
+        testID="onboarding-garden"
+      >
+        {LAYER_ORDER.filter((key) => near.has(key) || key === 'preview').map((key) => (
+          <GardenLayer
+            key={key}
+            layer={key}
+            box={box}
+            gardens={gardens}
+            position={position}
+            level={engine.level}
+            reducedMotion={reducedMotion}
+            previewStage={previewStage}
+            showPreview={pageIndex >= marks.friends - 1}
+          />
+        ))}
+        {crackPages ? <Cracks position={position} reducedMotion={reducedMotion} /> : null}
+        {near.has('revival') && !reducedMotion ? (
+          <RevivalRings gardens={gardens} position={position} box={box} />
+        ) : null}
+      </Animated.View>
+    </View>
   );
 }
 
