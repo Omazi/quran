@@ -53,7 +53,8 @@ export interface FeedbackService {
   play(event: FeedbackEvent): void;
   /**
    * A haptic with no sound, for the places that only had a haptic before the palette existed
-   * (onboarding, bookmarks): the same switch, silences and spacing as `play`.
+   * (onboarding, bookmarks): the same switch and silences as `play`. Never throttled: each call is
+   * a gesture of the person.
    */
   haptic(kind: HapticKind): void;
   /** Applies the person's settings. */
@@ -135,9 +136,9 @@ export function createFeedbackService({
 
     haptic(kind) {
       if (!current.hapticsEnabled || suppression.isSuppressed()) return;
-      const time = now();
-      if (isTooSoon(time, lastHapticAt, MIN_HAPTIC_GAP_MS)) return;
-      lastHapticAt = time;
+      // A direct gesture of the person (a tap, a press) is never dropped: two taps are two touches.
+      // It still counts for the events that follow it.
+      lastHapticAt = now();
       try {
         haptics.play(kind);
       } catch {

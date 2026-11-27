@@ -1,10 +1,15 @@
-import { readdirSync, statSync } from 'fs';
-import { join } from 'path';
-
 import { loadSoundFiles } from '../device-feedback';
 import { SOUND_NAMES } from '../recipes';
 
-const SOUNDS_DIRECTORY = join(__dirname, '../../../../assets/sounds');
+// The project compiles without Node's type definitions: what is needed is typed here
+// (same as src/ui/__tests__/tokens.test.ts).
+const { readdirSync, statSync } = jest.requireActual<{
+  readdirSync: (path: string) => string[];
+  statSync: (path: string) => { size: number };
+}>('node:fs');
+const { join } = jest.requireActual<{ join: (...segments: string[]) => string }>('node:path');
+
+const SOUNDS_DIRECTORY = join(expect.getState().testPath ?? '', '../../../../../assets/sounds');
 
 describe('the files of the palette', () => {
   it('has one m4a file for each sound, and nothing else but the notice', () => {

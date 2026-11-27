@@ -203,7 +203,6 @@ describe('throttling', () => {
     service.play('grow');
     advance(-60_000);
     service.play('grow');
-    service.haptic('light');
     expect(sounds.play).toHaveBeenCalledTimes(2);
     expect(haptics.play).toHaveBeenCalledTimes(2);
   });
@@ -246,15 +245,20 @@ describe('a haptic alone', () => {
     expect(haptics.play).not.toHaveBeenCalled();
   });
 
-  it('does not smear two haptics together, nor repeat the same one too fast', () => {
-    const { service, haptics, advance } = rig();
+  it('gives one haptic per gesture, even two taps in a row', () => {
+    const { service, haptics } = rig();
     service.haptic('light');
-    advance(5);
-    service.haptic('medium');
-    expect(haptics.play).toHaveBeenCalledTimes(1);
-    advance(100);
     service.haptic('light');
     expect(haptics.play).toHaveBeenCalledTimes(2);
+  });
+
+  it('still keeps an event that follows at once from smearing its haptic over it', () => {
+    const { service, haptics, sounds, advance } = rig();
+    service.haptic('medium');
+    advance(5);
+    service.play('grow');
+    expect(haptics.play).toHaveBeenCalledTimes(1);
+    expect(sounds.play).toHaveBeenCalledWith('grow');
   });
 
   it('never throws', () => {
