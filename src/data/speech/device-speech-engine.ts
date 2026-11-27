@@ -109,6 +109,8 @@ export function createDeviceSpeechEngine(
 export interface FileSpeechEngineOptions extends DeviceSpeechEngineOptions {
   /** Told how long each reading by Whisper took, in milliseconds (the clock of the phone). */
   readonly onReading?: (ms: number, text: string) => void;
+  /** Told how long each held reading (the audio check, D47) took, and of how many texts. */
+  readonly onHeldReading?: (ms: number, texts: number) => void;
   readonly now?: () => number;
 }
 
@@ -125,6 +127,7 @@ export function createFileSpeechEngine(
     findNative = findLinkedNative,
     loadWhisper,
     onReading,
+    onHeldReading,
     now = Date.now,
   }: FileSpeechEngineOptions = {},
 ): SpeechEngine | null {
@@ -151,7 +154,7 @@ export function createFileSpeechEngine(
     loadWhisper === undefined
       ? (sharedTranscriber ??= createWhisperTranscriber(loadWhisperRn, { checkModel }))
       : createWhisperTranscriber(loadWhisper, { checkModel });
-  const timed: Transcriber = {
+  const timed: { -readonly [K in keyof Transcriber]: Transcriber[K] } = {
     prepare: () => whisper.prepare(),
     async transcribe(samples) {
       const started = now();
@@ -160,6 +163,15 @@ export function createFileSpeechEngine(
       return text;
     },
   };
+  if (whisper.readHeld !== undefined) {
+    const readHeld = whisper.readHeld.bind(whisper);
+    timed.readHeld = async (samples, texts, minLetters) => {
+      const started = now();
+      const readings = await readHeld(samples, texts, minLetters);
+      onHeldReading?.(now() - started, texts.length);
+      return readings;
+    };
+  }
   return createWhisperSpeechEngine({
     capture: createNativeAudioCapture(fromFile),
     transcriber: timed,
