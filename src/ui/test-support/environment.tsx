@@ -164,6 +164,40 @@ export function styleOf(element: RenderedElement): TextStyle {
   return StyleSheet.flatten(element.props.style as StyleProp<TextStyle>) ?? {};
 }
 
+/**
+ * How far an element starts from the top and from the leading edge of the screen named by
+ * `rootTestID`, by the paddings and margins of everything between the two (safe areas apart: the
+ * test screen has none). What says that two screens put their title at the same place.
+ */
+export function offsetInScreen(
+  element: RenderedElement,
+  rootTestID: string,
+): { top: number; start: number } {
+  let top = 0;
+  let start = 0;
+  const number = (value: unknown): number => (typeof value === 'number' ? value : 0);
+  let isOwn = true;
+  for (let node: RenderedElement | null = element; node !== null; node = node.parent) {
+    const style: Record<string, unknown> = {
+      ...styleOf(node),
+      ...(StyleSheet.flatten(node.props.contentContainerStyle as StyleProp<TextStyle>) ?? {}),
+    };
+    top += number(style.marginTop ?? style.marginVertical ?? style.margin);
+    start += number(
+      style.marginStart ?? style.marginLeft ?? style.marginHorizontal ?? style.margin,
+    );
+    if (!isOwn) {
+      top += number(style.paddingTop ?? style.paddingVertical ?? style.padding);
+      start += number(
+        style.paddingStart ?? style.paddingLeft ?? style.paddingHorizontal ?? style.padding,
+      );
+    }
+    isOwn = false;
+    if (node.props.testID === rootTestID) return { top, start };
+  }
+  throw new Error(`No ancestor has the testID ${rootTestID}.`);
+}
+
 /** The element and everything below it. */
 export function withDescendants(element: RenderedElement): RenderedElement[] {
   return element.queryAll(() => true, { includeSelf: true });

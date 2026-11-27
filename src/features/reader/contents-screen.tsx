@@ -72,7 +72,7 @@ export function ContentsScreen({ model, actions, onRecognize }: ContentsScreenPr
     <Screen background="canvas" scroll testID="contents">
       <SkyBand />
       <View style={styles.content} testID="contents-list">
-        <AppText variant="largeTitle" color="ink">
+        <AppText variant="largeTitle" color="ink" style={styles.title}>
           {t('contents.title')}
         </AppText>
         {onRecognize === undefined ? null : <RecognizeCard onRecognize={onRecognize} />}
@@ -214,9 +214,11 @@ const styles = StyleSheet.create({
   content: {
     gap: spacing.md,
     paddingHorizontal: layout.screenMargin,
-    paddingTop: spacing.sm,
+    paddingTop: layout.tabTitle.top,
     paddingBottom: spacing.xl,
   },
+  // The title of a tab starts at the same place on every tab (`layout.tabTitle`).
+  title: { marginStart: layout.tabTitle.inset - layout.screenMargin },
   juz: { gap: spacing.sm },
   juzHeader: { gap: spacing.xs, paddingTop: spacing.sm },
   empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xl },

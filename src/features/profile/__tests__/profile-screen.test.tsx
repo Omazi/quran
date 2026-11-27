@@ -8,9 +8,11 @@ import {
 } from '@/features/settings/test-support/render-with-store';
 import { useSettings } from '@/features/settings';
 import type { AppLanguage } from '@/i18n';
+import { layout } from '@/ui';
 import {
   APPEARANCES_AND_DIRECTIONS,
   directionDependentStyles,
+  offsetInScreen,
   resetDeviceConditions,
   setDeviceConditions,
   swiftUIViewsWithoutHost,
@@ -135,6 +137,14 @@ describe('ProfileScreen › the question about the gender', () => {
 });
 
 describe('ProfileScreen › statistics', () => {
+  it('puts its title where every tab puts its own', async () => {
+    await renderProfile();
+    expect(offsetInScreen(screen.getByRole('header', { name: 'Profil' }), 'profile')).toEqual({
+      top: layout.tabTitle.top,
+      start: layout.tabTitle.inset,
+    });
+  });
+
   it('opens on the week: the hasanat written large, with its source in the same card', async () => {
     await renderProfile();
     const pagesThisWeek = 7;

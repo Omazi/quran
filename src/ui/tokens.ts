@@ -992,6 +992,12 @@ export const layout = {
   homeHeaderVeil: 240,
   /** Margin between the screen edge and its content. */
   screenMargin: spacing.md,
+  /**
+   * Where the large title of a tab starts (Coran, Proches, Profil), as the validated mockup puts
+   * all three (maquette-wow, `.tp-head`: 20 points from the edge, 12 under the status bar): its
+   * distance to the leading edge, and to the safe area above it.
+   */
+  tabTitle: { inset: spacing.md + spacing.xs, top: 12 },
   /** Space between two controls that have a bezel (accessibility.md › Mobility). */
   controlGap: 12,
   /** Smallest width and height of anything that can be touched. */

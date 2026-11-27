@@ -259,7 +259,13 @@ function AddCard({
 }
 
 const styles = StyleSheet.create({
-  title: { paddingTop: spacing.lg, gap: spacing.xs },
+  // The title of a tab starts at the same place on every tab (`layout.tabTitle`); the page
+  // already keeps `spacing.md` above its content and `layout.screenMargin` beside it.
+  title: {
+    marginTop: layout.tabTitle.top - spacing.md,
+    marginStart: layout.tabTitle.inset - layout.screenMargin,
+    gap: spacing.xs,
+  },
   header: { gap: spacing.xs },
   addWords: { gap: spacing.xs },
   ways: { flexDirection: 'row', gap: spacing.sm },

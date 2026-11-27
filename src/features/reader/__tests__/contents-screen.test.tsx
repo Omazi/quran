@@ -12,9 +12,10 @@ import { deviceLocalDate } from '@/features/home';
 import { SCREEN_CONDITIONS, showLanguage } from '@/features/garden/test-support/screen-conditions';
 import { AppStoreProvider, type AppStore } from '@/store';
 import { createTestAppStore } from '@/store/test-support/test-store';
-import { fontFamily, radius } from '@/ui';
+import { fontFamily, layout, radius } from '@/ui';
 import {
   directionDependentStyles,
+  offsetInScreen,
   touchTargetHeight,
   renderOnIOS,
   resetDeviceConditions,
@@ -121,6 +122,12 @@ describe('the Quran tab', () => {
     await showLanguage('fr');
     await renderContents();
     expect(screen.getByRole('header', { name: 'Coran' })).toBeOnTheScreen();
+    // One place for the title of every tab (iOS photos of 27 November 2026: "Coran" started 16
+    // points from the edge and 8 under the status bar, "Profil" 20 and 12, "Proches" 16 and 40).
+    expect(offsetInScreen(screen.getByRole('header', { name: 'Coran' }), 'contents')).toEqual({
+      top: layout.tabTitle.top,
+      start: layout.tabTitle.inset,
+    });
     // docs/design/accueil.png: the surah, "Reprendre page n" under it, its Arabic name at the end.
     const resume = screen.getByRole('button', { name: 'Reprendre Al-Fatiha, page 1' });
     expect(within(resume).getByText('Al-Fatiha')).toBeOnTheScreen();

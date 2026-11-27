@@ -216,8 +216,8 @@ const styles = StyleSheet.create({
   stage: { paddingBottom: spacing.xxl },
   backdrop: { position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 },
   header: {
-    paddingHorizontal: layout.screenMargin + spacing.xs,
-    paddingTop: layout.controlGap,
+    paddingHorizontal: layout.tabTitle.inset,
+    paddingTop: layout.tabTitle.top,
     paddingBottom: spacing.xl,
     rowGap: spacing.sm,
   },

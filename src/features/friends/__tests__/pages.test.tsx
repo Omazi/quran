@@ -14,6 +14,7 @@ import {
   directionDependentStyles,
   fixedHeightsAroundText,
   LARGEST_FONT_SCALE,
+  offsetInScreen,
   resetDeviceConditions,
   setDeviceConditions,
   touchTargetHeight,
@@ -21,7 +22,7 @@ import {
 
 import { inviteLink, parseInviteLink } from '@/domain/social';
 import { deviceLocalDate } from '@/features/home';
-import { qrCodeModules } from '@/ui';
+import { layout, qrCodeModules } from '@/ui';
 
 import {
   AddFriendPage,
@@ -118,6 +119,11 @@ describe.each(SCREEN_CONDITIONS)('Proches tab ($scheme, $language)', ({ language
     await render(withStore(store, <FriendsHome {...NAVIGATION} />));
 
     expect(await screen.findByTestId('friends-list')).toBeOnTheScreen();
+    // The title sits where every tab puts its own (on the iPhone it was 28 points lower than
+    // "Profil" and 4 points closer to the edge: photos of 27 November 2026).
+    expect(
+      offsetInScreen(screen.getByRole('header', { name: t('title') }), 'friends-list'),
+    ).toEqual({ top: layout.tabTitle.top, start: layout.tabTitle.inset });
     expect(screen.getByTestId('friends-demo-note')).toHaveTextContent(t('demoNote'));
     expect(screen.getByText('Yacine')).toBeOnTheScreen();
     for (const id of [DEMO_USERS.mustapha, DEMO_USERS.sarah, DEMO_USERS.taghread]) {
