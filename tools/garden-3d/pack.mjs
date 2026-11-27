@@ -87,6 +87,11 @@ function levelFiles(level) {
   }
   const index = { level, style: layout.style, size: SIZE, base, water, sprites };
   files.unshift({ path: 'index.json', bytes: Buffer.from(JSON.stringify(index), 'ascii') });
+  // Where the models come from and under which licence (CC0), with the garden itself.
+  files.push({
+    path: 'notice.txt',
+    bytes: readFileSync(join(ROOT, 'assets', 'models', 'garden', 'NOTICE.txt')),
+  });
   return { files, style: layout.style };
 }
 

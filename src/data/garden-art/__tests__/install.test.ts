@@ -1,12 +1,12 @@
+import { GardenArtUnavailableError, installGardenPack, type PackDevice } from '../install';
+import { samplePack } from '../test-support/pack-fixture';
+
 // The project compiles without Node's type definitions (see shipped-model.ts): typed here.
 const { createHash } = jest.requireActual<{
   createHash: (algorithm: string) => {
     update: (bytes: Uint8Array) => { digest: (encoding: 'hex') => string };
   };
 }>('node:crypto');
-
-import { GardenArtUnavailableError, installGardenPack, type PackDevice } from '../install';
-import { samplePack } from '../test-support/pack-fixture';
 
 const sha = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
 

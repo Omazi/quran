@@ -1,6 +1,8 @@
 // Draws pictures of a baked garden with the app's own scene (src/features/garden/garden3d, made
 // browser modules by lib/app-modules.mjs and served under /app/): the picture of a stage is the 3D
 // garden at rest, at the default orbit, in the frame of the level-1 pictures (D35, D40).
+// The /app/ modules exist only in the page, written when render.py starts.
+/* eslint-disable import/no-unresolved */
 import { DEFAULT_ORBIT } from '/app/camera-rig.js';
 import { readGardenModel } from '/app/garden-model.js';
 import { createGardenRenderer } from '/app/garden-renderer.js';

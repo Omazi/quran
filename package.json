@@ -74,7 +74,7 @@
     "data:verify": "node tools/quran-data/verify.mjs",
     "db:test": "node --test \"supabase/tests/*.test.mjs\"",
     "garden:build": "node tools/garden-pictures/build.mjs",
-    "garden:verify": "node tools/garden-pictures/build.mjs --verify"
+    "garden:verify": "node tools/garden-pictures/build.mjs --verify && node tools/garden-3d/pack.mjs --verify"
   },
   "private": true,
   "jest": {

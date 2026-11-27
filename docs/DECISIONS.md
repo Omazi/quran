@@ -934,10 +934,9 @@ Choix de mise en œuvre (développeur, 26 novembre 2026) :
 - La célébration s'ouvre une fois, dès la dernière page comptée (par-dessus le lecteur), ou à
   l'ouverture si la khatma vient d'un autre téléphone ; elle est marquée vue dès qu'elle s'affiche.
   Une khatma de plus de 7 jours (copie restaurée, vieux journal) n'est pas fêtée.
-- **Images des niveaux 2 à 7 : provisoires.** Aucun jardin n'est dessiné en code (D12) : ils
-  reprennent les images du niveau 1 avec une teinte légère propre à chaque style
-  (`src/features/gardens/garden-style-art.ts`, registre des styles, TODO). Personne ne les voit
-  avant une khatma complète. Les rendre avec l'outil de D22, puis remplacer l'entrée du registre.
+- **Jardins des niveaux 2 à 7 : faits (27 novembre 2026).** Six vrais jardins 3D, avec les
+  modèles de D22, téléchargés à la demande et vérifiés (`docs/specs/garden-levels.md`). La teinte
+  provisoire ne sert plus que tant que le paquet d'un niveau n'est pas sur l'appareil.
 - Le thème de `gardenVariant` (`theme-1` à `theme-4`, graine propre à l'utilisateur) n'est lu par
   aucun rendu ; le style vient du niveau. L'aligner sur D23 touche l'accueil (autre chantier).
 

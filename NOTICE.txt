@@ -169,7 +169,8 @@ Its own dependencies, installed for the types only, none of them bundled in the 
   meshoptimizer 1.1.1                MIT         "Copyright (c) 2016-2026 Arseny Kapoulkine"
 
 The garden model itself (Quaternius and Kenney, CC0) has its own notice:
-assets/models/garden/NOTICE.txt.
+assets/models/garden/NOTICE.txt. It also covers the gardens of levels 2 to 7, downloaded by the
+app (same packs, same licence; each downloaded pack carries a copy of that notice).
 
 The MIT licence asks that its copyright and permission notice be included in all copies or
 substantial portions of the software. The app does not show third-party notices yet (an

@@ -54,3 +54,38 @@ The mirrors above were used because the authors' sites could not be reached from
 that made the file.
 
 CC0 asks for no credit; this notice is kept for provenance, not because it is required.
+
+Gardens of levels 2 to 7 (decision D46) - downloaded packs, not in the app
+-------------------------------------------------------------------------
+dist/garden-art/level-N.gardenpack (N = 2 to 7) holds the garden of one level: its baked GLB, its
+pictures and growth sprites, and a copy of this notice. The packs are built by tools/garden-3d
+(levels/make_levels.py, bake.py, render.py, pack.mjs), published on the branch "garden-art" of the
+project's repository, downloaded by the app when a level needs one and checked against the SHA-256
+of src/data/garden-art/garden-art.json. Same two sources and licences as level 1, same mirrors
+(the authors' sites, quaternius.com and kenney.nl, refused the connection from the machine that
+built them on 26 November 2026: to download again from them before a store release).
+
+  Quaternius, "Ultimate Stylized Nature Pack" - CC0 1.0 (as above). Models: BirchTree_1 to _4,
+  Bush, Bush_Flowers, Bush_Large, Bush_Large_Flowers, Bush_Small, Bush_Small_Flowers,
+  Flower_1_Clump to Flower_5_Clump, Grass_Large, Grass_Large_Extruded, Grass_Small, MapleTree_1,
+  _3, _4, NormalTree_1 to _5, PalmTree_1 to _5, Petals_1 to _3, PineTree_1 to _5, Plant_1,
+  Plant_2, Plant_Flowers, Rock_1 to _5, and their textures (Leaves_BW, MapleTree_Leaves_BW and
+  Rocks_Desert among them). The blossom of the cherry trees and the night garden's white
+  blossom are the pack's greyscale leaves tinted by the tool.
+
+  Kenney (www.kenney.nl) - CC0 1.0 (as above). Castle Kit: tower-square-arch, wall-narrow.
+  Fantasy Town Kit: fountain-round, fountain-square, fountain-square-detail, hedge-large,
+  hedge-large-gate, lantern, pillar-stone, pillar-wood, roof-high-point, watermill-wide.
+  Furniture Kit: books, pillow, pillowBlue, pillowLong, rugRectangle, rugRound, rugSquare,
+  sideTable. Graveyard Kit: candle-multiple, lantern-candle, lantern-glass, stone-wall,
+  stone-wall-column. Holiday Kit: lantern, lantern-hanging. Nature Kit: bridge_wood,
+  bridge_woodNarrow, bridge_woodRound, campfire_stones, cliff_steps_stone,
+  cliff_waterfallTop_stone, fence_gate, fence_simple, lily_large, lily_small, log_large,
+  log_stack, mushroom_redGroup, mushroom_tanGroup, path_stone, path_stoneCircle, pot_large,
+  pot_small, stump_roundDetailed, tent_detailedOpen. Pirate Kit: boat-row-small, crate,
+  structure, structure-fence-sides. Survival Kit: bedroll, structure-canvas, structure-roof.
+  Some are recoloured by the tool (one plain colour, or their own colours multiplied).
+
+  Not from a pack: the plots, the ground, paths, terraces, water, waterfalls' water, the glow
+  under the night garden's lanterns and the moon on its pool are the tool's plain shapes; the
+  night garden's light is the tool's. They belong to the project.

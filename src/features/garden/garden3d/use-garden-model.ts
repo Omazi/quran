@@ -37,22 +37,22 @@ export function forgetGardenModel(): void {
 }
 
 export function useGardenModel(art: GardenArt = LEVEL_1_ART): GardenModelStatus {
-  const [status, setStatus] = useState<GardenModelStatus>({ status: 'loading' });
+  // The status of one garden: another garden (a new level) is loading until its own arrives.
+  const [loaded, setLoaded] = useState<{ key: string; status: GardenModelStatus } | null>(null);
   useEffect(() => {
     let isCurrent = true;
-    setStatus({ status: 'loading' });
     loadGardenModel(art).then(
       (model) => {
-        if (isCurrent) setStatus({ status: 'ready', model });
+        if (isCurrent) setLoaded({ key: art.key, status: { status: 'ready', model } });
       },
       (error: unknown) => {
         console.warn('The 3D garden could not be loaded; the picture stays.', error);
-        if (isCurrent) setStatus({ status: 'failed' });
+        if (isCurrent) setLoaded({ key: art.key, status: { status: 'failed' } });
       },
     );
     return () => {
       isCurrent = false;
     };
   }, [art]);
-  return status;
+  return loaded?.key === art.key ? loaded.status : { status: 'loading' };
 }
