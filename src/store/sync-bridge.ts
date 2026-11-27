@@ -56,6 +56,9 @@ export const SYNC_RULES: SyncRules = Object.freeze({
     // whether they were asked: a question answered on one phone is not asked on the others.
     gender: { rule: 'latest', isValid: isStoredGender },
     genderAsked: { rule: 'true-wins', isValid: (value: unknown) => typeof value === 'boolean' },
+    // The sound and vibration switches: the person's last choice, on every phone.
+    soundsEnabled: { rule: 'latest', isValid: (value: unknown) => typeof value === 'boolean' },
+    hapticsEnabled: { rule: 'latest', isValid: (value: unknown) => typeof value === 'boolean' },
     // A khatma celebrated on one phone is not celebrated again on another.
     celebratedKhatm: { rule: 'highest', isValid: isCelebratedKhatm },
   }),
@@ -84,6 +87,8 @@ export function toSyncedValues({ settings, journal, timeSpent }: AppData): Synce
       showLevel: settings.showLevel,
       gender: settings.gender,
       genderAsked: settings.genderAsked,
+      soundsEnabled: settings.soundsEnabled,
+      hapticsEnabled: settings.hapticsEnabled,
       celebratedKhatm: settings.celebratedKhatm,
     },
     bookmarks: settings.bookmarks,
@@ -122,6 +127,8 @@ export function fromSyncedValues(current: AppData, values: SyncedValues): AppDat
       showLevel: keep('showLevel', (value) => typeof value === 'boolean'),
       gender: keep('gender', isStoredGender),
       genderAsked: keep('genderAsked', (value) => typeof value === 'boolean'),
+      soundsEnabled: keep('soundsEnabled', (value) => typeof value === 'boolean'),
+      hapticsEnabled: keep('hapticsEnabled', (value) => typeof value === 'boolean'),
       celebratedKhatm: keep('celebratedKhatm', isCelebratedKhatm),
       bookmarks: isBookmarkList(values.bookmarks) ? values.bookmarks : current.settings.bookmarks,
       pauses: values.pauses,

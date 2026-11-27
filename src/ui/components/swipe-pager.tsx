@@ -187,10 +187,25 @@ export function SwipePager({
   const dragStart = useSharedValue(page);
   /** The page last reported to the parent, so that its answer is not animated a second time. */
   const reported = useRef(page);
+  /**
+   * The pages reported that the parent has not given back yet. Swiped quickly, the pages are
+   * already further than the parent's answer to an earlier report when it arrives: that answer is
+   * an echo, not a page asked from outside, and must not send the pages back.
+   */
+  const pending = useRef<number[]>([]);
 
   // A page asked from outside (the dots, a screen reader, the first render) slides into place.
   useEffect(() => {
-    if (page === reported.current && page === target.get()) return;
+    if (page === reported.current) {
+      pending.current = [];
+      return;
+    }
+    const echo = pending.current.indexOf(page);
+    if (echo >= 0) {
+      pending.current = pending.current.slice(echo + 1);
+      return;
+    }
+    pending.current = [];
     reported.current = page;
     target.set(page);
     position.set(
@@ -209,6 +224,7 @@ export function SwipePager({
 
   const report = (next: number) => {
     reported.current = next;
+    pending.current.push(next);
     onPageChange(next);
   };
 
@@ -304,6 +320,7 @@ export function SwipePager({
         position: position.get(),
         velocity: forwards,
         anchor: target.get(),
+        start: dragStart.get(),
         pageCount,
       });
       forwardsSpeed = cappedReleaseVelocity({

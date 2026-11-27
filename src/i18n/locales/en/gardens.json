@@ -68,6 +68,21 @@
     "close": "Close",
     "badgeLabel": "Khatma {{khatm}} badge, {{garden}}"
   },
+  "share": {
+    "button": "Share",
+    "buttonLabel": "Share the badge of khatma {{khatm}}",
+    "title": "Khatma no. {{khatm}} complete",
+    "dialogTitle": "Share my badge",
+    "chooseTitle": "Add your name to the image?",
+    "withName": "With my name",
+    "withoutName": "Without my name",
+    "preparing": "Preparing the image…",
+    "cardLabel": "Image of the badge of khatma {{khatm}}",
+    "errorTitle": "Couldn’t share the badge",
+    "errorMessage": "Try again in a moment.",
+    "unavailableTitle": "Sharing unavailable",
+    "unavailableMessage": "This device can’t share an image here."
+  },
   "friend": {
     "title": "Their badges"
   }

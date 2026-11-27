@@ -70,6 +70,13 @@ export interface AppSettings {
    */
   readonly genderAsked: boolean;
   /**
+   * Whether the interface sounds play (switch "Sons"; on by default). They never play when the
+   * phone's silent switch is on, nor while the microphone listens, whatever this says.
+   */
+  readonly soundsEnabled: boolean;
+  /** Whether the interface vibrations play (switch "Vibrations"; on by default). */
+  readonly hapticsEnabled: boolean;
+  /**
    * The last khatma whose celebration was shown (0: none yet). It only goes up, on every phone
    * (sync rule `highest`): a khatma is celebrated once, wherever it was completed.
    */
@@ -186,6 +193,10 @@ export interface AppState extends AppData, SyncActions {
    * `TypeError` for anything else.
    */
   setGender: (gender: Gender | null) => void;
+  /** Switches the interface sounds on or off. Throws a `TypeError` for anything but a boolean. */
+  setSoundsEnabled: (enabled: boolean) => void;
+  /** Switches the interface vibrations on or off. Throws a `TypeError` for anything but a boolean. */
+  setHapticsEnabled: (enabled: boolean) => void;
   /**
    * Remembers that the celebration of khatma `khatm` was shown, so it is not shown again. A number
    * lower than the one remembered changes nothing. Throws a `RangeError` for anything but a whole

@@ -5,6 +5,7 @@ import { SpeechEngineError, type SpeechEngine } from '@/domain/listening';
 
 import type { SpeechEngineMode } from './config';
 import { voiceDiagnostics } from './diagnostics';
+import { silenceWhileListening } from './microphone-silence';
 import {
   createNativeAudioCapture,
   VOICE_CAPTURE_MODULE_NAME,
@@ -98,12 +99,14 @@ export function createDeviceSpeechEngine(
     loadWhisper === undefined
       ? (sharedTranscriber ??= createWhisperTranscriber(loadWhisperRn, { checkModel }))
       : createWhisperTranscriber(loadWhisper, { checkModel });
-  return createWhisperSpeechEngine({
-    capture: createNativeAudioCapture(native, AppState),
-    transcriber,
-    mode,
-    record: voiceDiagnostics.record,
-  });
+  return silenceWhileListening(
+    createWhisperSpeechEngine({
+      capture: createNativeAudioCapture(native, AppState),
+      transcriber,
+      mode,
+      record: voiceDiagnostics.record,
+    }),
+  );
 }
 
 export interface FileSpeechEngineOptions extends DeviceSpeechEngineOptions {
@@ -160,10 +163,12 @@ export function createFileSpeechEngine(
       return text;
     },
   };
-  return createWhisperSpeechEngine({
-    capture: createNativeAudioCapture(fromFile),
-    transcriber: timed,
-    mode: 'search',
-    record: voiceDiagnostics.record,
-  });
+  return silenceWhileListening(
+    createWhisperSpeechEngine({
+      capture: createNativeAudioCapture(fromFile),
+      transcriber: timed,
+      mode: 'search',
+      record: voiceDiagnostics.record,
+    }),
+  );
 }
