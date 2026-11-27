@@ -21,3 +21,4 @@ export {
   type MicrophoneRoute,
 } from './in-app-open';
 export { useOpenRecognition } from './use-open-recognition';
+export { usePreloadVoiceModel } from './use-preload-voice-model';

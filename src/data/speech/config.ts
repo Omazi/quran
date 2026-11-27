@@ -55,8 +55,13 @@ export const SPEECH_ENGINE_CONFIG = Object.freeze({
    * - no sound at all this long after the microphone opened: the microphone gives nothing;
    */
   noAudioMs: 3000,
-  /** - loading the model takes longer than this: it is treated as failed; */
-  prepareTimeoutMs: 30000,
+  /**
+   * - loading the model takes longer than this: it is treated as failed. A minute: on a phone it
+   *   takes about a second, but the iOS check's simulator (Mac CPU, first load) took more than
+   *   30 s (D47); the screen says "preparing" meanwhile, and the model is loaded ahead of time
+   *   (`preloadVoiceModel`) so that the person rarely waits for it;
+   */
+  prepareTimeoutMs: 60000,
   /** - one reading by Whisper takes longer than this: it is treated as failed; */
   transcribeTimeoutMs: 20000,
   /** - the listening outlasts its own `maxListenMs` by this much on the clock: it ends. */

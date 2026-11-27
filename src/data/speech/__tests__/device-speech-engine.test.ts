@@ -1,4 +1,4 @@
-import {
+import { preloadVoiceModel ,
   checkModelFile,
   createDeviceSpeechEngine,
   createFileSpeechEngine,
@@ -137,5 +137,11 @@ describe('the model file in the app', () => {
     });
     await expect(engine?.start()).rejects.toMatchObject({ failure: 'model-missing' });
     expect(binding.initWhisper).not.toHaveBeenCalled();
+  });
+});
+
+describe('preloadVoiceModel (D47)', () => {
+  it('does nothing on a build without the native module', async () => {
+    await expect(preloadVoiceModel({ findNative: () => null })).resolves.toBeUndefined();
   });
 });

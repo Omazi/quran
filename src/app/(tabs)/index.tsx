@@ -2,7 +2,7 @@ import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
 
 import { AccountInvitation, HomeScreen, useHomeScreen, type HomeActions } from '@/features/home';
-import { useOpenRecognition } from '@/features/listening';
+import { useOpenRecognition, usePreloadVoiceModel } from '@/features/listening';
 import { useResumePage } from '@/features/reader';
 
 /**
@@ -27,6 +27,7 @@ export default function HomeRoute() {
   const isFocused = useIsFocused();
   const { welcome } = useLocalSearchParams<{ welcome?: string }>();
   const recognize = useOpenRecognition();
+  usePreloadVoiceModel();
   const actions = useMemo<HomeActions>(
     () => ({
       readAndWater: () => router.push(`/reader/${resumePage}`),
