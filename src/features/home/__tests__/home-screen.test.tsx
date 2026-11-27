@@ -8,7 +8,10 @@ import {
   SCREEN_CONDITIONS,
   showLanguage,
 } from '@/features/garden/test-support/screen-conditions';
-import { layout, useColors } from '@/ui';
+import { StyleSheet } from 'react-native';
+
+import { skyStateAt } from '@/features/garden';
+import { colorValuesFor, layout, useColors } from '@/ui';
 import {
   directionDependentStyles,
   fixedHeightsAroundText,
@@ -38,6 +41,7 @@ import {
 } from '../home-model';
 import { HomeScreen, type HomeScreenProps } from '../home-screen';
 import type { NeighbourGardens } from '../neighbours';
+import { chromeOf } from '../use-sky-chrome';
 
 afterEach(resetDeviceConditions);
 
@@ -90,6 +94,8 @@ function propsOf(model: HomeModel, overrides: Partial<HomeScreenProps> = {}): Ho
     neighbours: SIGNED_OUT,
     avatarInitial: null,
     arrival: null,
+    // Noon by default: the tests do not depend on the hour they run at.
+    chrome: chromeOf(skyStateAt(12.5), 'light'),
     ...overrides,
   };
 }
@@ -113,7 +119,9 @@ describe.each(HISTORIES)('HomeScreen, %s', (history) => {
       const t = i18n.getFixedT(language, 'home');
       const tGarden = i18n.getFixedT(language, 'garden');
       const { result: colors } = await renderHook(() => useColors());
-      await render(<HomeScreen {...propsOf(model)} />);
+      const isLiving = model.layout === 'growing' || model.layout === 'thirsty';
+      const chrome = chromeOf(skyStateAt(12.5), device.scheme ?? 'light');
+      await render(<HomeScreen {...propsOf(model, { chrome })} />);
 
       // The garden, described in words for screen readers.
       expect(
@@ -123,7 +131,10 @@ describe.each(HISTORIES)('HomeScreen, %s', (history) => {
       const title = screen.getByRole('header', {
         name: t(model.layout === 'complete' ? 'complete.title' : 'title'),
       });
-      expect(styleOf(title).color).toBe(colors.current.heading);
+      // On the living garden, in the values of the sky's appearance (an appearance scope).
+      expect(styleOf(title).color).toBe(
+        isLiving ? colorValuesFor(chrome.appearance).heading : colors.current.heading,
+      );
 
       // Mirrors in Arabic, cuts no text.
       expect(directionDependentStyles(screen.container)).toEqual([]);
@@ -173,10 +184,10 @@ describe.each(HISTORIES)('HomeScreen, %s', (history) => {
   });
 });
 
-describe('HomeScreen, the validated home (accueil.png) at hizb 24', () => {
+describe('HomeScreen, the living garden (maquette-wow, validated 27 November 2026) at hizb 24', () => {
   const model = MODELS.thriving;
 
-  it('has the date, the title, the streak and the avatar that opens the profile', async () => {
+  it('has the date, the title, the streak on glass and the avatar that opens the profile', async () => {
     await showLanguage('fr');
     const props = propsOf(model, { avatarInitial: 'O' });
     await render(<HomeScreen {...props} />);
@@ -189,17 +200,27 @@ describe('HomeScreen, the validated home (accueil.png) at hizb 24', () => {
     expect(props.actions.openProfile).toHaveBeenCalledTimes(1);
   });
 
-  it('leaves the garden without words: nothing is laid over it (mockup 1A)', async () => {
+  it('lays no word on the garden: its layer holds the 3D garden alone (owner, maquette-wow)', async () => {
     await showLanguage('fr');
     await render(<HomeScreen {...propsOf(model)} />);
-    const stage = screen.getByTestId('home-garden-stage');
-    // The 3D garden is the only thing in its area: no label, no ring, no text (its first-time
-    // turning hint aside, which a test never shows: it waits for the device's storage).
-    expect(stage.queryAll(({ type }) => type === 'Text')).toHaveLength(0);
-    expect(screen.queryByTestId('home-growing-callout')).toBeNull();
+    const layer = screen.getByTestId('home-garden-layer');
+    expect(layer.queryAll(({ type }) => type === 'Text')).toHaveLength(0);
+    // Every word of the screen is in the overlay, on the sky or on glass.
+    const overlay = screen.getByTestId('home-overlay');
+    const texts = screen.container.queryAll(({ type }) => type === 'Text');
+    const overlayTexts = overlay.queryAll(({ type }) => type === 'Text');
+    const outside = texts.filter((text) => !overlayTexts.includes(text));
+    expect(outside.map((text) => [text.props.testID, text.props.children])).toEqual([]);
   });
 
-  it('says under the garden what grows, its hizb and its pages, with a ring of growth', async () => {
+  it('shows the garden full screen, alive, under the sky of the hour', async () => {
+    await showLanguage('fr');
+    await render(<HomeScreen {...propsOf(model)} />);
+    const layer = screen.getByTestId('home-garden-layer');
+    expect(StyleSheet.flatten(layer.props.style)).toMatchObject({ position: 'absolute', top: 0 });
+  });
+
+  it('says on the glass what grows and how far: "Un grenadier pousse · 3 pages sur 10 du hizb 25"', async () => {
     await showLanguage('fr');
     const next = model.garden.nextElement;
     if (next === null) throw new Error('hizb 24 has a next element');
@@ -218,74 +239,34 @@ describe('HomeScreen, the validated home (accueil.png) at hizb 24', () => {
     await render(<HomeScreen {...propsOf(growing)} />);
     const line = screen.getByTestId('home-growing');
     expect(within(line).getByText('Un grenadier pousse')).toBeOnTheScreen();
-    expect(within(line).getByText('Hizb 25 sur 60 · 3 pages sur 10')).toBeOnTheScreen();
-    expect(within(line).getByRole('progressbar')).toHaveAccessibilityValue({
-      text: '30\u00a0% du hizb lu',
-    });
-    // Read as one sentence, the stage of the tree included.
-    expect(line).toHaveProp(
-      'accessibilityLabel',
-      'Un grenadier pousse, Hizb 25 sur 60, 3 pages sur 10, un jeune arbre, 30\u00a0% du hizb lu',
-    );
+    expect(within(line).getByText('3 pages sur 10 du hizb 25')).toBeOnTheScreen();
+    expect(line).toHaveProp('accessibilityLabel', 'Un grenadier pousse, 3 pages sur 10 du hizb 25');
+    expect(line).toHaveProp('accessibilityHint', 'Montre l’endroit dans le jardin');
+    expect(touchTargetHeight(line)).toBeGreaterThanOrEqual(layout.touchTarget);
   });
 
-  it('for what is built, says only the hizb and the pages', async () => {
-    await showLanguage('fr');
-    const next = model.garden.nextElement;
-    if (next === null) throw new Error('hizb 24 has a next element');
-    const building = {
-      ...model,
-      garden: {
-        ...model.garden,
-        nextElement: { ...next, element: { ...next.element, kind: 'wall' as const }, growth: 0.4 },
-      },
-      growingPages: { read: 4, total: 10 },
-    };
-    await render(<HomeScreen {...propsOf(building)} />);
-    expect(screen.getByText('Hizb 25 sur 60 · 4 pages sur 10')).toBeOnTheScreen();
-    expect(screen.getByTestId('home-growing')).toHaveProp(
-      'accessibilityLabel',
-      expect.not.stringMatching(/arbre|pousse sort/),
-    );
-  });
-
-  it('puts the water at the end of the line: the days, then what they count', async () => {
+  it('says the day’s watering in words and in one bar per page of the goal', async () => {
     await showLanguage('fr');
     await render(<HomeScreen {...propsOf(model)} />);
-    const water = screen.getByTestId('home-water');
-    expect(water).toHaveTextContent(`${model.streakDays} jd’arrosage`);
-    expect(water).toHaveProp('accessibilityLabel', `Arrosé depuis ${model.streakDays} jours`);
+    const row = screen.getByTestId('home-today-pages');
+    expect(row).toHaveProp('accessibilityLabel', 'Arrosage du jour, 3 pages sur 5');
+    expect(row).toHaveTextContent(/Arrosage du jour/);
+    expect(row).toHaveTextContent(/3sur 5$/);
   });
 
-  it('counts the hizb in sixty dots; the hizb that grows is a small circle', async () => {
-    await showLanguage('fr');
-    const { result: colors } = await renderHook(() => useColors());
-    await render(<HomeScreen {...propsOf(model)} />);
-    expect(screen.getByRole('progressbar', { name: 'Hizb terminés' })).toHaveAccessibilityValue({
-      min: 0,
-      max: 60,
-      now: 24,
-    });
-    const current = styleOf(screen.getByTestId('home-hizb-dots-dot-24'));
-    expect(current.backgroundColor).toBe('transparent');
-    expect(current.borderColor).toBe(colors.current.growth);
-    expect(current.width).toBeGreaterThan(
-      Number(styleOf(screen.getByTestId('home-hizb-dots-dot-23')).width),
-    );
-  });
-  it('offers "Reconnaître" beside "Lire et arroser", quieter, and it opens the recognition (mockup 3C)', async () => {
+  it('offers "Reconnaître" beside "Lire et arroser", on glass, and it opens the recognition', async () => {
     setDeviceConditions({ fontScale: 1 });
     await showLanguage('fr');
-    const { result: colors } = await renderHook(() => useColors());
     const props = propsOf(model);
     await render(<HomeScreen {...props} />);
+    const colors = colorValuesFor('light');
     const read = screen.getByRole('button', { name: 'Lire et arroser' });
     const recognize = screen.getByRole('button', { name: 'Reconnaître un passage' });
     expect(recognize).toHaveTextContent('Reconnaître');
     expect(touchTargetHeight(recognize)).toBeGreaterThanOrEqual(layout.touchTarget);
-    // Style, not size, tells the main one: green for reading, pale green for recognizing.
-    expect(styleOf(recognize).backgroundColor).toBe(colors.current.actionTonal);
-    expect(styleOf(read).backgroundColor).toBe(colors.current.action);
+    // Style, not size, tells the main one: green for reading, glass for recognizing.
+    expect(styleOf(recognize).backgroundColor).toBe(colors.glassTonal);
+    expect(styleOf(read).backgroundColor).toBe(colors.action);
     let row = read.parent;
     while (row !== null && !row.queryAll(() => true).includes(recognize)) row = row.parent;
     expect(row).toHaveStyle({ flexDirection: 'row' });
@@ -307,41 +288,25 @@ describe('HomeScreen, the validated home (accueil.png) at hizb 24', () => {
     expect(around).not.toHaveStyle({ flexDirection: 'row' });
   });
 
-  it('says the pages of the day and what is left of the hizb, then where to resume', async () => {
+  it('takes the night values over a night sky: the words and the glass follow the sky', async () => {
+    await showLanguage('fr');
+    await render(
+      <HomeScreen {...propsOf(model, { chrome: chromeOf(skyStateAt(22.5), 'light') })} />,
+    );
+    const title = screen.getByRole('header', { name: 'Ton jardin' });
+    expect(styleOf(title).color).toBe(colorValuesFor('dark').heading);
+  });
+
+  it('signed out or without friends, shows no friends chip: the Proches tab is there', async () => {
     await showLanguage('fr');
     await render(<HomeScreen {...propsOf(model)} />);
-    expect(screen.getByTestId('home-today-pages')).toHaveProp(
-      'accessibilityLabel',
-      `Arrosage du jour, 3 pages sur 5, Encore ${model.hizb.pagesLeft} pages pour finir le hizb 25`,
-    );
-    expect(screen.getByTestId('home-resume')).toHaveTextContent(
-      new RegExp(`^Yusuf.*page ${model.reading.nextPage}يوسف$`),
-    );
+    expect(screen.queryByTestId('home-friends-chip')).toBeNull();
+    await render(<HomeScreen {...propsOf(model, { neighbours: { status: 'loading' } })} />);
+    expect(screen.queryByTestId('home-friends-chip')).toBeNull();
   });
 
-  it('names the last element added, without its verse while none is validated', async () => {
+  it("signed in, a chip under the title gives a friend's news and opens their garden", async () => {
     await showLanguage('fr');
-    await render(<HomeScreen {...propsOf(model)} />);
-    expect(screen.getByLabelText('Ajouté au hizb 24, Sources')).toBeOnTheScreen();
-    // No verse text: the associations wait for a teacher (catalog.ts, displayableVerse).
-    expect(screen.queryByText(/verset/)).toBeNull();
-  });
-
-  it('signed out, "Jardins voisins" says how to see friends\' gardens and leads to Proches', async () => {
-    await showLanguage('fr');
-    const props = propsOf(model);
-    await render(<HomeScreen {...props} />);
-    expect(screen.getByRole('header', { name: 'Jardins voisins' })).toBeOnTheScreen();
-    await fireEvent.press(
-      screen.getByRole('button', { name: /^Connecte-toi dans Proches pour voir ici/ }),
-    );
-    await fireEvent.press(screen.getByRole('button', { name: 'Tout voir' }));
-    expect(props.actions.openFriends).toHaveBeenCalledTimes(2);
-  });
-
-  it("signed in, shows each friend's garden as a card that opens the friend", async () => {
-    await showLanguage('fr');
-    const friendGarden = MODELS.thriving.garden;
     const neighbours: NeighbourGardens = {
       status: 'ready',
       gardens: [
@@ -350,7 +315,7 @@ describe('HomeScreen, the validated home (accueil.png) at hizb 24', () => {
           name: 'Imane',
           initial: 'I',
           colorIndex: 0,
-          garden: friendGarden,
+          garden: MODELS.thriving.garden,
           detail: { kind: 'watered', hizb: 38, days: 21 },
         },
         {
@@ -365,62 +330,46 @@ describe('HomeScreen, the validated home (accueil.png) at hizb 24', () => {
     };
     const props = propsOf(model, { neighbours });
     await render(<HomeScreen {...props} />);
-    expect(
-      screen.getByRole('button', { name: 'Imane, 38 hizb, arrosé depuis 21 j' }),
-    ).toBeOnTheScreen();
-    await fireEvent.press(
-      screen.getByRole('button', { name: 'Bilal, 14 hizb, a soif depuis 2 j' }),
-    );
-    expect(props.actions.openFriend).toHaveBeenCalledWith('u2');
-  });
-
-  it('a friend list still loading leaves the section out rather than flashing an empty state', async () => {
-    await showLanguage('fr');
-    await render(<HomeScreen {...propsOf(model, { neighbours: { status: 'loading' } })} />);
-    expect(screen.queryByRole('header', { name: 'Jardins voisins' })).toBeNull();
+    const chip = screen.getByRole('button', {
+      name: 'Proches\u00a0: Imane, Bilal. Imane, 38 hizb, arrosé depuis 21 j',
+    });
+    expect(chip).toHaveProp('accessibilityHint', 'Ouvre le jardin de Imane');
+    await fireEvent.press(chip);
+    expect(props.actions.openFriend).toHaveBeenCalledWith('u1');
   });
 });
 
-describe('HomeScreen, a thirsty garden (soif.png)', () => {
+describe('HomeScreen, a thirsty garden (soif.png, on the living garden)', () => {
   it.each<[ReadingHistoryName, string, string]>([
     [
       'thirsty',
       'Ton jardin a soif',
-      '3 jours sans lecture : l’eau s’est arrêtée et l’herbe jaunit. Dans 3 jours, les arbres perdent leurs feuilles.',
+      '3 jours sans lecture : l’eau s’est arrêtée et l’herbe jaunit.',
     ],
-    [
-      'wilting',
-      'Ton jardin fane',
-      '6 jours sans lecture : les arbres perdent leurs feuilles. Dans 4 jours, des éléments commencent à disparaître.',
-    ],
+    ['wilting', 'Ton jardin fane', '6 jours sans lecture : les arbres perdent leurs feuilles.'],
     [
       'dying',
       'Ton jardin se dessèche',
-      '10 jours sans lecture : des éléments du jardin disparaissent. Dans 4 jours, il ne restera qu’une terre sèche.',
+      '10 jours sans lecture : des éléments du jardin disparaissent.',
     ],
-  ])(
-    '%s: the banner says the days, what they did and what comes next',
-    async (history, title, text) => {
-      await showLanguage('fr');
-      await render(<HomeScreen {...propsOf(MODELS[history])} />);
-      const banner = screen.getByTestId(`home-notice-${history}`);
-      // The matcher reads every kind of space, non-breaking ones included, as one space.
-      expect(banner).toHaveTextContent(`${title}${text}`);
-      expect(screen.getByTestId('home-water')).toHaveTextContent(/^\d+ jà sec$/);
-      expect(screen.getByTestId('home-water')).toHaveProp(
-        'accessibilityLabel',
-        expect.stringMatching(/^À sec depuis \d+ jours?$/),
-      );
-      // Nothing grows while the garden suffers: the line says the hizb count instead.
-      expect(screen.getByTestId('home-hizb-count')).toHaveTextContent(/^\d+ hizb sur 60$/);
-      expect(screen.getByTestId('home-today-pages')).toHaveTextContent(
-        /Une page suffit pour que l’eau revienne/,
-      );
-      // No element to celebrate while the garden suffers.
-      expect(screen.queryByTestId('home-added')).toBeNull();
-      expect(screen.queryByTestId('home-growing')).toBeNull();
-    },
-  );
+  ])('%s: the panel says the days and what they did', async (history, title, text) => {
+    await showLanguage('fr');
+    await render(<HomeScreen {...propsOf(MODELS[history])} />);
+    const row = screen.getByTestId(`home-notice-${history}`);
+    // The matcher reads every kind of space, non-breaking ones included, as one space.
+    expect(row).toHaveTextContent(`${title}${text}`);
+    // Nothing grows while the garden suffers.
+    expect(screen.queryByTestId('home-growing')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Arroser maintenant' })).toBeOnTheScreen();
+  });
+});
+
+describe('HomeScreen, a garden watered again after a drought', () => {
+  it('says that the water came back, on the panel', async () => {
+    await showLanguage('fr');
+    await render(<HomeScreen {...propsOf(MODELS.recovering)} />);
+    expect(screen.getByTestId('home-notice-recovering')).toBeOnTheScreen();
+  });
 });
 
 describe('HomeScreen, a dead garden (mort.png)', () => {

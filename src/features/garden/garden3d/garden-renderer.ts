@@ -52,6 +52,13 @@ export function createGardenRenderer(gl: ExpoWebGLRenderingContext): THREE.WebGL
   return renderer;
 }
 
+/** A scene drawn before or after the garden's, in the same frame. */
+export interface Overlay {
+  readonly scene: THREE.Scene;
+  readonly camera: THREE.Camera;
+  readonly isVisible: () => boolean;
+}
+
 /**
  * Draws one frame at the size of the drawing buffer, which expo-gl keeps at the view's size in
  * pixels, then hands it to the screen. Returns false, having drawn nothing, while the buffer is
@@ -63,14 +70,24 @@ export function drawFrame(
   gl: ExpoWebGLRenderingContext,
   scene: THREE.Scene,
   camera: THREE.Camera,
-  fade?: { scene: THREE.Scene; camera: THREE.Camera; isVisible: () => boolean },
+  fade?: Overlay,
+  backdrop?: Overlay,
 ): boolean {
   if (gl.drawingBufferWidth === 0 || gl.drawingBufferHeight === 0) return false;
   const size = renderer.getSize(new THREE.Vector2());
   if (size.x !== gl.drawingBufferWidth || size.y !== gl.drawingBufferHeight) {
     renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight, false);
   }
-  renderer.render(scene, camera);
+  if (backdrop?.isVisible()) {
+    // The sky's lights first, then the garden over them, without clearing them.
+    renderer.render(backdrop.scene, backdrop.camera);
+    renderer.autoClear = false;
+    renderer.clearDepth();
+    renderer.render(scene, camera);
+    renderer.autoClear = true;
+  } else {
+    renderer.render(scene, camera);
+  }
   if (fade?.isVisible()) {
     // Over the garden, without clearing it: the edges dissolve into the page.
     renderer.autoClear = false;

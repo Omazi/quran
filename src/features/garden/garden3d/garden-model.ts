@@ -213,13 +213,18 @@ const TRUNK = /bark|trunk/i;
 const BLOOM = /flower|petal|colorred/i;
 const FOLIAGE = /lea(f|ves)|leafs|grass|bush/i;
 
-function roleOf(mesh: ModelMesh): PieceRole {
-  const name = mesh.material.name;
-  if (!mesh.material.wilts) return 'built';
+/** The role of a material's pieces: what lives (and wilts, grows, sways) or what is built. */
+export function roleOfMaterial(material: ModelMaterial): PieceRole {
+  const name = material.name;
+  if (!material.wilts) return 'built';
   if (TRUNK.test(name)) return 'trunk';
   if (BLOOM.test(name)) return 'bloom';
   if (FOLIAGE.test(name)) return 'foliage';
   return 'built';
+}
+
+function roleOf(mesh: ModelMesh): PieceRole {
+  return roleOfMaterial(mesh.material);
 }
 
 /**

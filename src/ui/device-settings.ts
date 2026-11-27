@@ -92,9 +92,9 @@ export const useReducedMotion = createSettingHook({
 });
 
 /**
- * True when the person asked iOS to reduce transparency. A glass the app draws itself must then be
- * opaque (liquid-glass.md › Review checklist, 5: "Reduce Transparency gets an opaque fallback");
- * the system's own Liquid Glass adapts by itself. React Native exposes the setting on iOS only.
+ * True when the person asked iOS to reduce transparency: what the app draws as glass by itself
+ * becomes opaque (liquid-glass.md › Review checklist, item 5). The system's own glass already
+ * does. React Native exposes the setting on iOS only; elsewhere it stays off.
  */
 export const useReducedTransparency = createSettingHook({
   isExposed: () => Platform.OS === 'ios',

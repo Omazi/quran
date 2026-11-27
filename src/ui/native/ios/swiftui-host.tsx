@@ -2,9 +2,8 @@ import { Host, RNHostView } from '@expo/ui/swift-ui';
 import { createContext, useContext, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { useAppearanceOverride } from '../../appearance';
 import { getWritingDirection } from '../../direction';
-import { useColors } from '../../use-colors';
+import { useAppearance, useColors } from '../../use-colors';
 
 /** True below a SwiftUI host: a control found there is drawn as it is, without a host of its own. */
 const InsideSwiftUI = createContext(false);
@@ -36,14 +35,14 @@ interface SwiftUIHostProps {
  * of a prominent button (color.md › Liquid Glass color). It is the forest green of the validated
  * mockups (owner's decision, 25 November 2026), lighter at night so that it reads on a dark
  * background; the water's teal keeps the water's meaning only. The system gives the content its
- * appearance, text size and contrast, unless a `ColorAppearance` fixes the appearance; the
+ * appearance, text size and contrast, or the one an `AppearanceScope` fixes; the
  * writing direction is passed on from React Native.
  */
 export function SwiftUIHost({ size, children }: SwiftUIHostProps) {
   const insideSwiftUI = useIsInsideSwiftUI();
   const colors = useColors();
-  // Under a `ColorAppearance` (the reader's night page), SwiftUI takes the same appearance.
-  const appearance = useAppearanceOverride() ?? undefined;
+  // Under an `AppearanceScope` (the reader's night page), SwiftUI takes the same appearance.
+  const appearance = useAppearance();
   if (insideSwiftUI) return <>{children}</>;
   return (
     <Host

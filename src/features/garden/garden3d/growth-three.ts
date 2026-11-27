@@ -114,6 +114,11 @@ interface Shown {
 export interface GrowthView {
   /** Shows the element growing at `growth` (0 to 1). */
   update(growth: number): void;
+  /**
+   * Where the element grows, in the garden's metres, on the ground: the foot of a tree, the middle
+   * of a plant's clumps or of a built thing's pieces. The return glide goes there.
+   */
+  readonly focus: THREE.Vector3;
   dispose(): void;
 }
 
@@ -145,6 +150,24 @@ function footOf(mesh: ModelMesh, piece: GrowingPiece): THREE.Vector3 {
   }
   const centre = box.getCenter(new THREE.Vector3());
   return new THREE.Vector3(centre.x, box.min.y, centre.z).multiplyScalar(mesh.positionScale);
+}
+
+/** A tree's foot, or the middle of the feet of every unit, on the ground. */
+function focusOf(
+  model: GardenModel,
+  units: readonly GrowingPiece[][],
+  form: GrowthForm,
+): THREE.Vector3 {
+  const feet = units.flatMap((unit) => {
+    const piece = form === 'tree' ? (unit.find((p) => p.role === 'trunk') ?? unit[0]) : unit[0];
+    const mesh = piece === undefined ? undefined : model.meshes[piece.mesh];
+    return piece === undefined || mesh === undefined ? [] : [footOf(mesh, piece)];
+  });
+  const middle = new THREE.Vector3();
+  for (const foot of feet) middle.add(foot);
+  if (feet.length > 0) middle.divideScalar(feet.length);
+  middle.y = 0;
+  return middle;
 }
 
 /** Pieces at the same place are one plant (a tree's trunk and its leaves). */
@@ -391,7 +414,9 @@ export function buildGrowthView(resources: GrowthResources, stage: GardenStage):
   }
 
   scene.add(group);
+  const focus = focusOf(model, units, form);
   return {
+    focus,
     update(growth) {
       for (const piece of shown) piece.update(growth);
     },

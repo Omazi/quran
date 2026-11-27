@@ -32,3 +32,25 @@ export {
   type GardenHintPlacement,
   type GardenView3DProps,
 } from './garden3d/garden-view-3d';
+export { type GardenControls, type LivingGarden } from './garden3d/garden-view-3d';
+export {
+  chromeAppearanceOf,
+  hourOfDay,
+  mixHex,
+  relativeLuminance,
+  skyForAppearance,
+  skyPhaseAt,
+  skyStateAt,
+  type Appearance,
+  type SkyPhase,
+  type SkyState,
+  type SkyTheme,
+} from './sky/sky-state';
+export {
+  LIFE,
+  dayLifeOpacity,
+  fireflyOpacity,
+  gardenLifeOf,
+  type GardenLife,
+  type LifeConditions,
+} from './living/life-rules';

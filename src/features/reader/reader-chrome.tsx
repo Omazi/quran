@@ -13,7 +13,6 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useGenderedTranslation } from '@/features/gender';
 import {
   AppText,
-  GlassSurface,
   Icon,
   getWritingDirection,
   layout,
@@ -28,6 +27,7 @@ import {
 import type { ReaderScript } from '@/store';
 
 import { READER_CONFIG } from './config';
+import { ReaderGlass } from './reader-glass';
 import { ReaderSegmented, type ReaderChoiceOption } from './contents-parts';
 import { surahDisplayName } from './surah-name';
 
@@ -104,9 +104,9 @@ function GlassButton({
   );
   if (isGrouped) return content;
   return (
-    <GlassSurface radius={CAPSULE} isInteractive>
+    <ReaderGlass>
       {content}
-    </GlassSurface>
+    </ReaderGlass>
   );
 }
 
@@ -163,7 +163,7 @@ export function ReaderTopBar({
         testID="reader-back"
       />
       <View style={styles.titleRoom} pointerEvents="none">
-        <GlassSurface radius={CAPSULE} style={styles.titlePill}>
+        <ReaderGlass style={styles.titlePill}>
           <View
             accessible
             accessibilityRole="header"
@@ -177,9 +177,9 @@ export function ReaderTopBar({
               {t('bar.page', { page })}
             </AppText>
           </View>
-        </GlassSurface>
+        </ReaderGlass>
       </View>
-      <GlassSurface radius={CAPSULE} isInteractive style={styles.group}>
+      <ReaderGlass style={styles.group}>
         <GlassButton
           symbol={isBookmarked ? BOOKMARK_FILLED_SYMBOL : BOOKMARK_SYMBOL}
           label={t('bar.bookmark')}
@@ -199,7 +199,7 @@ export function ReaderTopBar({
           isGrouped
           testID="reader-text-size"
         />
-      </GlassSurface>
+      </ReaderGlass>
     </View>
   );
 }
@@ -257,7 +257,7 @@ export function TextSizePanel({
       style={[styles.sizePanelRoom, { top }]}
       testID="reader-text-size-panel"
     >
-      <GlassSurface radius={CAPSULE} style={styles.sizePanel}>
+      <ReaderGlass style={styles.sizePanel}>
         <SizeButton
           symbol={TEXT_SMALLER_SYMBOL}
           label={t('textSize.smaller')}
@@ -296,7 +296,7 @@ export function TextSizePanel({
           onPress={onEnlargeText}
           testID="reader-text-larger"
         />
-      </GlassSurface>
+      </ReaderGlass>
     </Animated.View>
   );
 }
@@ -384,7 +384,7 @@ export function ReaderBottomBar({
       onLayout={onLayout}
       style={[styles.bottomRoom, { bottom }, !isVisible && styles.hidden]}
     >
-      <GlassSurface radius={glassBarHeight / 2} style={styles.bottomBar}>
+      <ReaderGlass style={styles.bottomBar}>
         <View
           accessible
           accessibilityLabel={t('today.spoken', { count: todayPages, goal: goalPages })}
@@ -426,7 +426,7 @@ export function ReaderBottomBar({
         >
           <Icon symbol={MICROPHONE_SYMBOL} textStyle="title3" color="onAction" />
         </Pressable>
-      </GlassSurface>
+      </ReaderGlass>
     </View>
   );
 }

@@ -13,9 +13,8 @@ import { useGenderedTranslation } from '@/features/gender';
 import {
   AppText,
   Button,
-  ColorAppearance,
+  AppearanceScope,
   ContentUnavailable,
-  GlassSurface,
   ProgressIndicator,
   Screen,
   layout,
@@ -33,6 +32,7 @@ import { splitVerseWords, type VerseRef } from '@/domain/quran';
 import { FollowBar } from '@/features/listening/follow/follow-bar';
 
 import { READER_CONFIG } from './config';
+import { ReaderGlass } from './reader-glass';
 import type { Point } from './drop-moment';
 import { pillCopy } from './drop-pill-copy';
 import { DropOverlay } from './drop-overlay';
@@ -91,9 +91,9 @@ export function ReaderScreen(props: ReaderScreenProps) {
   // The night page while the phone is light: the reader's own appearance (SKILLS.md, deviation).
   const fixed = pageAppearance === systemScheme ? null : pageAppearance;
   return (
-    <ColorAppearance appearance={fixed}>
+    <AppearanceScope appearance={fixed}>
       <ReaderPage {...props} />
-    </ColorAppearance>
+    </AppearanceScope>
   );
 }
 
@@ -269,7 +269,7 @@ function ReaderPage({
       ) : null}
       {followMessage !== null ? (
         <View style={[styles.messageRoom, { top: geometry.topBarBottom + spacing.sm }]}>
-          <GlassSurface radius={readerShapes.dropPillHeight / 2} style={styles.message}>
+          <ReaderGlass style={styles.message}>
             <AppText
               variant="footnote"
               color="ink"
@@ -279,7 +279,7 @@ function ReaderPage({
             >
               {followMessage}
             </AppText>
-          </GlassSurface>
+          </ReaderGlass>
         </View>
       ) : null}
       {moment.phase !== 'idle' ? (

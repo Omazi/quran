@@ -16,13 +16,14 @@ export { ReaderSearchField, type ReaderSearchFieldProps } from './components/rea
 export { QuranText, type QuranTextProps, type QuranTextRun } from './components/quran-text';
 export { Screen, type ScreenBackground, type ScreenProps } from './components/screen';
 export { useHighContrast, useReducedMotion, useReducedTransparency } from './device-settings';
-export {
-  ColorAppearance,
-  useAppearance,
-  type Appearance,
-  type ColorAppearanceProps,
-} from './appearance';
 export { GlassSurface, type GlassSurfaceProps } from './components/glass-surface';
+export { SegmentProgress, type SegmentProgressProps } from './components/segment-progress';
+export {
+  ScrollEdgeVeil,
+  SkyGradient,
+  type ScrollEdgeVeilProps,
+  type SkyGradientProps,
+} from './components/sky-gradient';
 export { useSafeInsets } from './safe-insets';
 export { listeningOpacity, listeningShape, useUpcomingInk } from './listening-tokens';
 export { getWritingDirection, type WritingDirection } from './direction';
@@ -57,6 +58,7 @@ export {
   voiceStoryDetails,
   voiceStoryShadows,
   droughtLeafColors,
+  glassVeilMinimum,
   type BackdropName,
   type PaletteRole,
   type QuranTextStyleName,
@@ -69,11 +71,14 @@ export {
   type TextStyleName,
 } from './tokens';
 export {
+  AppearanceScope,
+  useAppearance,
   useBackdropGradient,
   useColors,
   useColorValues,
   colorValuesFor,
   useElevation,
+  type AppearanceScopeProps,
   type Colors,
   type ColorValues,
 } from './use-colors';

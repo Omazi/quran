@@ -23,17 +23,28 @@ import type { OrbitController } from './orbit-controller';
  * The callbacks run on the JavaScript thread, where three.js draws: a move draws a frame at once,
  * without a React render (gestures skill: "No React state per move event").
  */
-export function useGardenGestures(controller: OrbitController, isEnabled: boolean, testID: string) {
+export function useGardenGestures(
+  controller: OrbitController,
+  isEnabled: boolean,
+  testID: string,
+  /** Full screen, nothing scrolls under the garden: a vertical drag tilts it at once. */
+  ownsVerticalDrag = false,
+) {
   const pan = usePanGesture({
     testID: `${testID}-pan`,
     runOnJS: true,
     enabled: isEnabled,
     maxPointers: 1,
-    activeOffsetX: [-GARDEN_3D.dragActivation, GARDEN_3D.dragActivation],
-    failOffsetY: [-GARDEN_3D.dragActivation, GARDEN_3D.dragActivation],
+    minDistance: ownsVerticalDrag ? GARDEN_3D.dragActivation : undefined,
+    activeOffsetX: ownsVerticalDrag
+      ? undefined
+      : [-GARDEN_3D.dragActivation, GARDEN_3D.dragActivation],
+    failOffsetY: ownsVerticalDrag
+      ? undefined
+      : [-GARDEN_3D.dragActivation, GARDEN_3D.dragActivation],
     onBegin: () => {
       noteGestureStart('garden-pan');
-      controller.touch();
+      controller.fingerDown();
     },
     onActivate: () => controller.dragStart(),
     onUpdate: (event) => controller.dragMove(event.translationX, event.translationY),
@@ -46,7 +57,7 @@ export function useGardenGestures(controller: OrbitController, isEnabled: boolea
     enabled: isEnabled,
     onBegin: () => {
       noteGestureStart('garden-pinch');
-      controller.touch();
+      controller.fingerDown();
     },
     onActivate: (event) => controller.pinchStart({ x: event.focalX, y: event.focalY }),
     onUpdate: (event) => controller.pinchMove(event.scale, { x: event.focalX, y: event.focalY }),

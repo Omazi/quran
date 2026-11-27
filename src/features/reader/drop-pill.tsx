@@ -11,9 +11,10 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { AppText, GlassSurface, ProgressRing, readerShapes, spacing } from '@/ui';
+import { AppText, ProgressRing, readerShapes, spacing } from '@/ui';
 
 import { READER_CONFIG } from './config';
+import { ReaderGlass } from './reader-glass';
 import type { DropMoment } from './drop-moment';
 import { pillCopy, type PillLine } from './drop-pill-copy';
 
@@ -120,7 +121,7 @@ export function DropPill({ moment, offset, isMotionReduced, onRingLayout }: Drop
         }}
         testID="reader-feedback-motion"
       >
-        <GlassSurface radius={dropPillHeight / 2} style={styles.pill} testID="reader-feedback">
+        <ReaderGlass style={styles.pill} testID="reader-feedback">
           <View
             accessible
             accessibilityLabel={spokenOf(title, detail)}
@@ -152,7 +153,7 @@ export function DropPill({ moment, offset, isMotionReduced, onRingLayout }: Drop
               </AppText>
             </View>
           </View>
-        </GlassSurface>
+        </ReaderGlass>
       </Animated.View>
     </View>
   );

@@ -1,87 +1,56 @@
-import { GlassView, isGlassEffectAPIAvailable, isLiquidGlassAvailable } from 'expo-glass-effect';
 import type { ReactNode } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewProps, type ViewStyle } from 'react-native';
 
-import { useAppearance } from '../appearance';
-import { useReducedTransparency } from '../device-settings';
-import { useColors, useElevation } from '../use-colors';
+import { radius as radii } from '../tokens';
+import { useElevation } from '../use-colors';
+import { GlassBackdrop } from './glass-backdrop';
 
-export interface GlassSurfaceProps {
-  /** The corner radius: half the height for a capsule or a round button. */
-  radius: number;
-  /** Layout only (size, padding, direction). The look is the glass's. */
+export interface GlassSurfaceProps extends Pick<ViewProps, 'accessible' | 'accessibilityLabel'> {
+  /** The appearance of the glass and of what is on it: the night values over a night sky. */
+  appearance: 'light' | 'dark';
+  /** `capsule`: a chip over the sky; `panel`: the panel at the bottom of the home garden. */
+  shape: 'capsule' | 'panel';
+  /**
+   * The opacity of the tint where the app draws the glass itself, chosen for the contrast of the
+   * words on it over the sky of the hour (`glassVeilMinimum`).
+   */
+  veil: number;
+  children: ReactNode;
   style?: StyleProp<ViewStyle>;
-  /** A control the person touches: the system's glass then answers the touch. */
-  isInteractive?: boolean;
-  children?: ReactNode;
   testID?: string;
 }
 
 /**
- * Whether the system's Liquid Glass can be drawn: iOS 26 and later, and its API really there (some
- * iOS 26 betas lack it and crash: expo-glass-effect, "Known issues").
- */
-function systemGlassIsAvailable(): boolean {
-  try {
-    return isLiquidGlassAvailable() && isGlassEffectAPIAvailable();
-  } catch {
-    // No native module (tests, a platform without it): the drawn glass.
-    return false;
-  }
-}
-
-/**
- * The material of a control that floats over content (liquid-glass.md › Where the material
- * belongs: the functional layer only, never the content). On iOS 26 it is the system's Liquid
- * Glass, regular variant, the one for anything over text (› Which variant), in the appearance of
- * the screen. Elsewhere it is drawn as Apple's translation for other stacks says (› Cross-platform
- * translation): a translucent fill, a bright hairline rim and a soft shadow, with no blur, which
- * React Native does not draw, so the fill is more opaque. With Reduce Transparency the drawn glass
- * is opaque (› Review checklist, 5); the system's glass adapts by itself.
+ * A piece that floats over the home garden, on glass (maquette-wow, validated 27 November 2026;
+ * liquid-glass.md › Where the material belongs: the functional layer over content). The glass is
+ * the system's where it exists (`GlassBackdrop`), the app's elsewhere. It never takes the touches
+ * of what is under it, and adds no hit area: its children keep their own 44-point targets.
  */
 export function GlassSurface({
-  radius,
-  style,
-  isInteractive = false,
+  appearance,
+  shape,
+  veil,
   children,
+  style,
   testID,
+  ...accessibility
 }: GlassSurfaceProps) {
-  const colors = useColors();
-  const appearance = useAppearance();
   const shadow = useElevation('glass');
-  const isTransparencyReduced = useReducedTransparency();
-  const hasSystemGlass = systemGlassIsAvailable();
-  const shape = { borderRadius: radius };
+  const cornerRadius = shape === 'panel' ? radii.glassPanel : radii.full;
   return (
-    <View style={[shape, style]} testID={testID}>
-      {hasSystemGlass ? (
-        <GlassView
-          glassEffectStyle="regular"
-          colorScheme={appearance}
-          isInteractive={isInteractive}
-          style={[StyleSheet.absoluteFill, shape]}
-        />
-      ) : (
-        <View
-          pointerEvents="none"
-          testID={testID === undefined ? undefined : `${testID}-glass`}
-          style={[
-            StyleSheet.absoluteFill,
-            shape,
-            styles.drawn,
-            {
-              backgroundColor: isTransparencyReduced ? colors.glassFillOpaque : colors.glassFill,
-              borderColor: colors.glassEdge,
-              boxShadow: shadow,
-            },
-          ]}
-        />
-      )}
+    <View
+      style={[styles.surface, { borderRadius: cornerRadius, boxShadow: shadow }, style]}
+      testID={testID}
+      {...accessibility}
+    >
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <GlassBackdrop appearance={appearance} radius={cornerRadius} veil={veil} />
+      </View>
       {children}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  drawn: { borderWidth: StyleSheet.hairlineWidth },
+  surface: { position: 'relative' },
 });

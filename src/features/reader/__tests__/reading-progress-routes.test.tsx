@@ -171,17 +171,19 @@ async function closeReader(): Promise<void> {
 }
 
 /**
- * The hizb count of the home screen: the sixty dots under the garden, whose value is said in
- * words. (The line above them names the hizb in progress, "Hizb 1 sur 60", maquettes
- * 2026-11-26, 1A.)
+ * The hizb count of the home screen, as the living garden says it to VoiceOver ("Jardin, 1 hizb
+ * sur 60, …"; "Terre nue, aucun hizb terminé" before the first): the home's sixty dots are gone
+ * with the living home (maquette-wow).
  */
 function homeHizbCount(text: string) {
+  const label =
+    text === '0 hizb sur 60'
+      ? /^Terre nue, aucun hizb terminé/
+      : new RegExp(`^Jardin[^,]*, ${text}`);
   return waitFor(() => {
-    const dots = within(screen.getByTestId('home')).getByRole('progressbar', {
-      name: 'Hizb terminés',
-    });
-    expect(dots.props.accessibilityValue?.text).toBe(text);
-    return dots;
+    const garden = within(screen.getByTestId('home')).getAllByLabelText(label)[0]!;
+    expect(garden).toBeOnTheScreen();
+    return garden;
   });
 }
 
@@ -261,12 +263,11 @@ describe('pages read in the reader, seen on the tabs', () => {
     await waitFor(() => expect(app.getPathname()).toBe('/'));
 
     const pageCount = lastPage - firstPage + 1;
-    // The garden: one hizb, the pages of the day, the water.
+    // The garden: one hizb, and the pages of the day.
     expect(await homeHizbCount('1 hizb sur 60')).toBeOnTheScreen();
     expect(accessibilityLabelOf('home-today-pages')).toMatch(
       new RegExp(`${pageCount} pages sur 5`),
     );
-    expect(screen.getByTestId('home-water')).toBeOnTheScreen();
 
     // The profile, mounted before the reading, follows the store.
     await act(() => router.navigate('/profile'));

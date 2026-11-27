@@ -21,7 +21,7 @@ suivi de la voix, réglages mémorisés) ne change pas. Rendu web : `docs/design
   hauteur de l'écran et s'efface sous les commandes.
 - **Papier le jour, page de nuit le soir** : la page suit l'heure (papier de 6 h 11 à 17 h 56,
   heures du ciel de la maquette), et l'apparence sombre du téléphone donne toujours la page de nuit
-  (`reader-paper.ts` ; écart 150).
+  (`reader-paper.ts` ; écart 157).
 - **Commandes en verre** (Liquid Glass sur iOS 26, verre dessiné ailleurs, opaque avec « réduire la
   transparence ») : en haut le retour, la pastille du titre (« Al-Kahf », « page 293 » ; VoiceOver
   entend aussi le juz et le hizb), et un groupe marque-page + « Aa » ; « Aa » ouvre la taille du texte
