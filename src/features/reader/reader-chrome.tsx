@@ -388,17 +388,21 @@ export function ReaderBottomBar({
           testID="reader-today"
         >
           <Icon symbol={WATER_SYMBOL} textStyle="subhead" tint={colors.waterFill} />
-          <Animated.View
-            key={todayPages}
-            entering={isMotionReduced ? undefined : FadeIn.duration(READER_CONFIG.counterMs)}
-          >
-            <AppText variant="headline" color="ink" testID="reader-today-count">
-              {todayPages}
+          {/* The two figures share a baseline; the drop, a picture without one, is centred on
+              their line instead (on the iPhone it hung 14 points lower in a row of baselines). */}
+          <View style={styles.figures} testID="reader-today-figures">
+            <Animated.View
+              key={todayPages}
+              entering={isMotionReduced ? undefined : FadeIn.duration(READER_CONFIG.counterMs)}
+            >
+              <AppText variant="headline" color="ink" testID="reader-today-count">
+                {todayPages}
+              </AppText>
+            </Animated.View>
+            <AppText variant="footnote" color="inkSecondary">
+              {t('today.goal', { goal: goalPages })}
             </AppText>
-          </Animated.View>
-          <AppText variant="footnote" color="inkSecondary">
-            {t('today.goal', { goal: goalPages })}
-          </AppText>
+          </View>
         </View>
         <ReaderSegmented
           label={t('script.label')}
@@ -483,11 +487,12 @@ const styles = StyleSheet.create({
   },
   counter: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     gap: spacing.xs,
     paddingStart: spacing.sm + spacing.xs / 2,
     paddingEnd: spacing.sm,
   },
+  figures: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs },
   microphone: {
     width: glassControl,
     height: glassControl,

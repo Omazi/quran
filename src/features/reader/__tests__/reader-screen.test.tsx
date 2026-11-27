@@ -597,6 +597,24 @@ describe('the bottom bar: today’s water, script, microphone (maquette-wow, sho
     expect(today).toHaveProp('accessibilityLabel', 'Arrosage du jour : 5 pages sur 8');
   });
 
+  it('centres the drop on the figures, which share one baseline (iOS photo of 27 November 2026)', async () => {
+    // On the iPhone photo the drop sat 14 points lower than "3 /5": a picture has no baseline, so
+    // a row aligned on baselines hung it by its bottom edge and pushed the figures up.
+    await openReader(createTestAppStore({ journal: readPages([1, 2, 3]) }), 293);
+    const today = screen.getByTestId('reader-today');
+    expect(styleOf(today).alignItems).toBe('center');
+    const figures = within(today).getByTestId('reader-today-figures', {
+      includeHiddenElements: true,
+    });
+    expect(styleOf(figures).flexDirection).toBe('row');
+    expect(styleOf(figures).alignItems).toBe('baseline');
+    // Both figures are in that row, and nothing else: the drop is beside it, not in it.
+    expect(within(figures).getByText('3', { includeHiddenElements: true })).toBeTruthy();
+    expect(within(figures).getByText('/5', { includeHiddenElements: true })).toBeTruthy();
+    expect(figures.parent).toBe(today);
+    expect(today.children).toHaveLength(2);
+  });
+
   it('starts following the recitation from the big green microphone (owner, 25 November 2026)', async () => {
     setDeviceConditions({ os: 'android' });
     await openReader(createTestAppStore(), 293);
