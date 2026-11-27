@@ -237,6 +237,12 @@
         box: [round(rect.left), round(rect.top), round(rect.right), round(rect.bottom)],
         single,
         arabic: ARABIC.test(text),
+        // One piece of a line written in several pieces ("A" and a smaller "A"): the line is
+        // centred as a whole, which this audit does not read; the piece alone is not judged.
+        inRun: [...element.parentElement.childNodes].some(
+          (node) =>
+            node !== element && node.nodeType === Node.TEXT_NODE && node.nodeValue.trim() !== '',
+        ),
         // A glyph of an icon font (private use area): an icon, measured by its ink.
         glyphIcon: /^[\uE000-\uF8FF\u{F0000}-\u{FFFFD}]+$/u.test(text),
       };

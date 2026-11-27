@@ -102,7 +102,7 @@ def findings(report: dict) -> list[dict]:
             if height <= FRAME_LIMIT and abs(offset) > OFF_CENTRE:
                 found.append({"rule": "pile décentrée", "defect": not any(is_system_font(t) for t in members), "text": " / ".join(t["text"] for t in members), "where": name,
                               "measure": f"le bloc (icône et texte, ou deux lignes) est {abs(offset):.1f} pt trop {'bas' if offset > 0 else 'haut'} dans {height:.0f} pt"})
-        group = [t for t in group if not t.get("column") and not t.get("glyphIcon")]
+        group = [t for t in group if not t.get("column") and not t.get("glyphIcon") and not t.get("inRun")]
         # Texts on several rows of a card are laid out, not centred: only one row is measured.
         one_row = all(overlap((a["box"][1], a["box"][3]), (b["box"][1], b["box"][3])) > 0 for a in group for b in group)
         if not one_row:
