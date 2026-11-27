@@ -136,6 +136,11 @@ export function AppearanceScope({ appearance, children }: AppearanceScopeProps) 
   return createElement(FixedAppearance.Provider, { value: appearance }, children);
 }
 
+/** The appearance an `AppearanceScope` above fixes, or null where the device's applies. */
+export function useFixedAppearance(): Appearance | null {
+  return useContext(FixedAppearance);
+}
+
 /** The appearance in force here: the scope's, or the device's. */
 export function useAppearance(): Appearance {
   const fixed = useContext(FixedAppearance);

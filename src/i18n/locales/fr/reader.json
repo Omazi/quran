@@ -50,7 +50,6 @@
     }
   },
   "page": {
-    "subtitle": "Juz {{juz}}, Hizb {{hizb}} · Page {{page}}",
     "surahTitle": "سورة {{name}}",
     "cartouche": {
       "verses": "آياتها {{count}}",
@@ -60,7 +59,7 @@
     },
     "loading": "Chargement de la page {{page}}",
     "scroll": "Texte du Coran",
-    "footer": "{{page}}",
+    "footer": "page {{page}}",
     "footerSpoken": "Fin de la page {{page}}",
     "error": {
       "title": "Page illisible",
@@ -70,7 +69,9 @@
   "bar": {
     "back": "Retour",
     "bookmark": "Marque-page",
-    "listen": "Réciter, suivi par l’appli"
+    "listen": "Réciter, suivi par l’appli",
+    "page": "page {{page}}",
+    "titleSpoken": "{{surah}}, juz {{juz}}, hizb {{hizb}}, page {{page}}"
   },
   "script": {
     "label": "Écriture",
@@ -82,39 +83,6 @@
     "smaller": "Texte plus petit",
     "larger": "Texte plus grand",
     "value": "Taille {{step}} sur {{count}}"
-  },
-  "feedback": {
-    "pageCounted": "+1 page, ton jardin est arrosé",
-    "pageGrows": "+1 page, {{growth}}",
-    "grows": {
-      "pomegranate": "ton grenadier grandit",
-      "date-palm": "ton palmier-dattier grandit",
-      "olive": "ton olivier grandit",
-      "fig": "ton figuier grandit",
-      "cypress": "ton cyprès grandit",
-      "orange": "ton oranger grandit",
-      "channels": "tes canaux avancent",
-      "paving": "ton dallage avance",
-      "bed": "ton parterre se remplit",
-      "stepping-stones": "ton chemin de pierres avance",
-      "flowers": "tes fleurs poussent",
-      "fountain": "ta fontaine prend forme",
-      "springs": "tes sources approchent",
-      "birds": "tes oiseaux approchent",
-      "wall": "ton mur s’élève",
-      "trellis": "ta treille grimpe",
-      "gate": "ta porte prend forme",
-      "lanterns": "tes lanternes approchent",
-      "butterflies": "tes papillons approchent",
-      "pavilion": "ton pavillon s’élève",
-      "carpets": "tes tapis se tissent",
-      "cushions": "tes coussins approchent",
-      "lectern": "ton pupitre prend forme",
-      "roses": "tes roses poussent",
-      "waterfall": "ta cascade prend forme",
-      "full-bloom": "ton jardin approche de sa pleine floraison"
-    },
-    "hizbCompleted": "Hizb terminé. Nouveau dans ton jardin : {{element}}"
   },
   "notFound": {
     "title": "Page introuvable",
@@ -132,5 +100,77 @@
     "failedModelMissing": "Modèle vocal absent. Réinstalle l’app depuis TestFlight.",
     "failedNoAudio": "Le micro ne donne aucun son. Vérifie qu’aucune autre app ne l’utilise, puis réessaie.",
     "failedMicrophone": "Micro indisponible. Un appel ou une autre app l’utilise peut-être."
+  },
+  "today": {
+    "goal": "/{{goal}}",
+    "spoken_one": "Arrosage du jour : {{count}} page sur {{goal}}",
+    "spoken_other": "Arrosage du jour : {{count}} pages sur {{goal}}"
+  },
+  "drop": {
+    "toward": {
+      "pomegranate": "Une goutte pour le grenadier",
+      "date-palm": "Une goutte pour le palmier-dattier",
+      "olive": "Une goutte pour l’olivier",
+      "fig": "Une goutte pour le figuier",
+      "cypress": "Une goutte pour le cyprès",
+      "orange": "Une goutte pour l’oranger",
+      "channels": "Une goutte pour les canaux",
+      "paving": "Une goutte pour le dallage",
+      "bed": "Une goutte pour le parterre",
+      "stepping-stones": "Une goutte pour le chemin de pierres",
+      "flowers": "Une goutte pour les fleurs",
+      "fountain": "Une goutte pour la fontaine",
+      "springs": "Une goutte pour les sources",
+      "birds": "Une goutte pour les oiseaux",
+      "wall": "Une goutte pour le mur",
+      "trellis": "Une goutte pour la treille",
+      "gate": "Une goutte pour la porte",
+      "lanterns": "Une goutte pour les lanternes",
+      "butterflies": "Une goutte pour les papillons",
+      "pavilion": "Une goutte pour le pavillon",
+      "carpets": "Une goutte pour les tapis",
+      "cushions": "Une goutte pour les coussins",
+      "lectern": "Une goutte pour le pupitre",
+      "roses": "Une goutte pour les roses",
+      "waterfall": "Une goutte pour la cascade",
+      "full-bloom": "Une goutte pour la pleine floraison"
+    },
+    "grew": {
+      "pomegranate": "Le grenadier a grandi",
+      "date-palm": "Le palmier-dattier a grandi",
+      "olive": "L’olivier a grandi",
+      "fig": "Le figuier a grandi",
+      "cypress": "Le cyprès a grandi",
+      "orange": "L’oranger a grandi",
+      "channels": "Les canaux ont avancé",
+      "paving": "Le dallage a avancé",
+      "bed": "Le parterre s’est rempli",
+      "stepping-stones": "Le chemin de pierres a avancé",
+      "flowers": "Les fleurs ont poussé",
+      "fountain": "La fontaine prend forme",
+      "springs": "Les sources approchent",
+      "birds": "Les oiseaux approchent",
+      "wall": "Le mur s’est élevé",
+      "trellis": "La treille a grimpé",
+      "gate": "La porte prend forme",
+      "lanterns": "Les lanternes approchent",
+      "butterflies": "Les papillons approchent",
+      "pavilion": "Le pavillon s’est élevé",
+      "carpets": "Les tapis se tissent",
+      "cushions": "Les coussins approchent",
+      "lectern": "Le pupitre prend forme",
+      "roses": "Les roses ont poussé",
+      "waterfall": "La cascade prend forme",
+      "full-bloom": "Ton jardin approche de sa pleine floraison"
+    },
+    "towardGarden": "Une goutte pour ton jardin",
+    "watered": "Ton jardin est arrosé",
+    "hizbPages_one": "{{count}} page sur {{total}} du hizb {{hizb}}",
+    "hizbPages_other": "{{count}} pages sur {{total}} du hizb {{hizb}}",
+    "today_one": "{{count}} page aujourd’hui",
+    "today_other": "{{count}} pages aujourd’hui",
+    "hizbCompleted": "Hizb {{hizb}} terminé",
+    "newElement": "Nouveau dans ton jardin : {{element}}",
+    "spoken": "{{title}}, {{detail}}"
   }
 }

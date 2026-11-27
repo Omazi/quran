@@ -3,7 +3,7 @@ import { createContext, useContext, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { getWritingDirection } from '../../direction';
-import { useColors } from '../../use-colors';
+import { useColors, useFixedAppearance } from '../../use-colors';
 
 /** True below a SwiftUI host: a control found there is drawn as it is, without a host of its own. */
 const InsideSwiftUI = createContext(false);
@@ -35,14 +35,18 @@ interface SwiftUIHostProps {
  * of a prominent button (color.md › Liquid Glass color). It is the forest green of the validated
  * mockups (owner's decision, 25 November 2026), lighter at night so that it reads on a dark
  * background; the water's teal keeps the water's meaning only. The system gives the content its
- * appearance, text size and contrast; the writing direction is passed on from React Native.
+ * appearance, text size and contrast, or the one an `AppearanceScope` fixes; the
+ * writing direction is passed on from React Native.
  */
 export function SwiftUIHost({ size, children }: SwiftUIHostProps) {
   const insideSwiftUI = useIsInsideSwiftUI();
   const colors = useColors();
+  // Under an `AppearanceScope` (the reader's night page), SwiftUI takes the same appearance.
+  const appearance = useFixedAppearance() ?? undefined;
   if (insideSwiftUI) return <>{children}</>;
   return (
     <Host
+      colorScheme={appearance}
       matchContents={
         size === 'content' ? true : size === 'contentHeight' ? { vertical: true } : false
       }

@@ -142,7 +142,9 @@ export interface ReaderChoiceOption<Value extends string> {
  * A choice between two lists, drawn as the mockup's "Uthmani | Simple" control
  * (docs/design/mushaf.png): a warm track and a white thumb under the chosen label. Each segment
  * is a radio button for screen readers, 44 points tall (segmented-controls.md › Best practices:
- * closely related choices, equal widths, nouns; deviation 83).
+ * closely related choices, equal widths, nouns; deviation 83). On glass (the reader's bottom bar,
+ * maquette-wow `.seg`), the track is ink at 8 %, the thumb white by day and a lighter glass at
+ * night, both labels semibold.
  */
 export function ReaderSegmented<Value extends string>({
   label,
@@ -150,6 +152,7 @@ export function ReaderSegmented<Value extends string>({
   value,
   onChange,
   fitsContent = false,
+  tone = 'page',
   testID,
 }: {
   label: string;
@@ -161,15 +164,22 @@ export function ReaderSegmented<Value extends string>({
    * reader's bottom bar, as the mockup draws it). The segments then follow their labels.
    */
   fitsContent?: boolean;
+  /** `page`: on the warm ground. `glass`: in a glass bar over the reader. */
+  tone?: 'page' | 'glass';
   testID?: string;
 }) {
   const colors = useColors();
+  const isGlass = tone === 'glass';
   return (
     <View
       accessibilityRole="radiogroup"
       accessibilityLabel={label}
       testID={testID}
-      style={[styles.track, { backgroundColor: colors.track }]}
+      style={[
+        styles.track,
+        isGlass && styles.glassTrack,
+        { backgroundColor: isGlass ? colors.glassTrack : colors.track },
+      ]}
     >
       {options.map((option) => {
         const isSelected = option.value === value;
@@ -184,20 +194,28 @@ export function ReaderSegmented<Value extends string>({
             style={({ pressed }) => [
               styles.segment,
               fitsContent && styles.segmentFittingContent,
+              isGlass && styles.glassSegment,
               isSelected && [
                 styles.thumb,
-                { backgroundColor: colors.surface, shadowColor: colors.shadow },
+                {
+                  backgroundColor: isGlass ? colors.glassThumb : colors.surface,
+                  shadowColor: colors.shadow,
+                },
               ],
               pressed && styles.pressed,
             ]}
           >
             <AppText
-              variant="subhead"
+              variant={isGlass ? 'subheadEmphasized' : 'subhead'}
               color={isSelected ? 'ink' : 'inkSecondary'}
               align="center"
               numberOfLines={1}
             >
-              {isSelected ? <Text style={styles.emphasis}>{option.label}</Text> : option.label}
+              {isSelected && !isGlass ? (
+                <Text style={styles.emphasis}>{option.label}</Text>
+              ) : (
+                option.label
+              )}
             </AppText>
           </Pressable>
         );
@@ -368,6 +386,11 @@ const styles = StyleSheet.create({
     borderRadius: layout.touchTarget,
   },
   segmentFittingContent: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
+  glassTrack: { padding: readerShapes.glassSegmentPadding },
+  glassSegment: {
+    minHeight: readerShapes.glassControl - 2 * readerShapes.glassSegmentPadding,
+    paddingHorizontal: spacing.md - spacing.xs / 2,
+  },
   thumb: {
     shadowOpacity,
     shadowRadius: shadowRadius / 2,

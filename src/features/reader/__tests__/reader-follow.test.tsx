@@ -36,6 +36,8 @@ jest.mock('expo-keep-awake', () => ({
   activateKeepAwakeAsync: jest.fn(() => Promise.resolve()),
   deactivateKeepAwake: jest.fn(() => Promise.resolve()),
 }));
+// The system status bar batches its updates on timers that the fake ones of these tests hold.
+jest.mock('expo-status-bar', () => ({ StatusBar: () => null }));
 jest.mock('expo-haptics', () => ({
   ...jest.requireActual('expo-haptics'),
   impactAsync: jest.fn(() => Promise.resolve()),
@@ -130,10 +132,8 @@ describe('the microphone follows the recitation (voix.png)', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Réciter, suivi par l’appli' }));
     await waitFor(() => expect(screen.getByTestId('follow-bar')).toBeOnTheScreen());
     expect(screen.getByText('J’écoute')).toBeOnTheScreen();
-    // The bottom bar keeps its room, hidden: the text does not move.
-    expect(
-      styleOf(screen.getByTestId('reader-bottom-bar', { includeHiddenElements: true })),
-    ).toBeTruthy();
+    // The floating bar takes the place of the bottom bar; both float over the text, which stays.
+    expect(screen.queryByTestId('reader-bottom-bar', { includeHiddenElements: true })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Réciter, suivi par l’appli' })).toBeNull();
     expect(engines).toHaveLength(1);
   });
@@ -348,7 +348,11 @@ describe('a page followed whole by the voice counts as read', () => {
     await play(150);
     await play(10);
     expect(store.getState().journal.map((entry) => entry.page)).toEqual([604]);
-    expect(screen.getByTestId('reader-feedback')).toHaveTextContent(/^\+1 page/);
+    // Page 604 is outside the hizb in progress: its drop waters the garden.
+    expect(screen.getByTestId('reader-feedback-content')).toHaveProp(
+      'accessibilityLabel',
+      'Une goutte pour ton jardin, 0 page sur 11 du hizb 1',
+    );
   });
 
   it('does not count a page the recitation started in the middle of', async () => {
