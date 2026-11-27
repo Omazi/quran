@@ -280,7 +280,12 @@ describe('a continuous vertical scroll, not a book (owner, 25 November 2026)', (
     expect(within(section).getByRole('header', { name: /سورة الكهف/ })).toBeOnTheScreen();
     const basmala = within(section).getByTestId('basmala');
     expect(basmala).toHaveTextContent((await quranRepository.getVerse('1:1')).text);
-    expect(within(section).getByTestId('page-footer-293')).toHaveTextContent('page 293');
+    // The mark between two pages names the page that comes (maquette-wow, `.pg-mark`).
+    expect(within(section).getByTestId('page-footer-293')).toHaveTextContent('page 294');
+    expect(within(section).getByTestId('page-footer-293')).toHaveProp(
+      'accessibilityLabel',
+      'Fin de la page 293',
+    );
   });
 });
 

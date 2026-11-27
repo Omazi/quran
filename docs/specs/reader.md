@@ -10,6 +10,44 @@ composition : `docs/design/mushaf.png` (maquettes « Le jardin, version 2 », va
 parcours et la composition). Couleurs, typographies et espacements : `src/ui/tokens.ts` fait
 foi, pas la capture.
 
+## Révision du 27 novembre 2026 : la maquette « wow »
+
+Référence validée par le propriétaire : `docs/design/maquette-wow/` (images 14 à 16 et 20 à 22) et
+la maquette animée. Elle remplace, pour le lecteur, les barres de `mushaf.png`, la ligne d'eau et la
+pastille sous le titre décrites plus bas ; tout le reste (texte exact, sections, règle du temps,
+suivi de la voix, réglages mémorisés) ne change pas. Rendu web : `docs/design/maquette-wow/rendu-web-2026-11-27/`.
+
+- **Pas de jardin dans le lecteur** (il distrait pendant le défilement). Le texte occupe toute la
+  hauteur de l'écran et s'efface sous les commandes.
+- **Papier le jour, page de nuit le soir** : la page suit l'heure (papier de 6 h 11 à 17 h 56,
+  heures du ciel de la maquette), et l'apparence sombre du téléphone donne toujours la page de nuit
+  (`reader-paper.ts` ; écart 150).
+- **Commandes en verre** (Liquid Glass sur iOS 26, verre dessiné ailleurs, opaque avec « réduire la
+  transparence ») : en haut le retour, la pastille du titre (« Al-Kahf », « page 293 » ; VoiceOver
+  entend aussi le juz et le hizb), et un groupe marque-page + « Aa » ; « Aa » ouvre la taille du texte
+  (piste à 5 crans entre « plus petit » et « plus grand »). En bas : l'arrosage du jour « 5 /8 » avec
+  la goutte, « Uthmani | Simple », le micro vert. Un toucher sur le texte masque ou montre les
+  commandes (ou ferme d'abord le panneau de taille).
+- **Le fil d'eau** remplace la ligne d'eau : un fil dans la marge de gauche de chaque page se remplit
+  à mesure que la page accumule son temps, une perle d'eau au bout ; plein quand le temps est atteint
+  (il reste à voir la dernière ligne) ; plein, pâle et immobile quand la page a compté ou que la
+  khatma la contient déjà. Avec « réduire les animations », trois paliers fixes, sans lumière qui
+  coule. VoiceOver ne l'entend pas.
+- **Le moment où une page compte** : la pastille de verre apparaît en bas, au-dessus des commandes
+  (décision du propriétaire, définitive), avec l'ancien compte (« Une goutte pour le grenadier ·
+  3 pages sur 10 du hizb 25 ») ; une seule goutte se forme au bout du fil et tombe dans son anneau ;
+  la pastille rebondit et dit « Le grenadier a grandi · 4 pages sur 10 du hizb 25 », l'anneau avance,
+  le compteur du jour passe de 5 à 6 ; elle part après 4 s. Une page qui ne fait rien pousser (autre
+  hizb) dit « Une goutte pour ton jardin » puis « Ton jardin est arrosé ». Un hizb terminé : « Hizb 25
+  terminé · Nouveau dans ton jardin : … ». Sons et vibration demandés par nom au service de retour :
+  `drop` quand la goutte tombe, `drop-received` quand elle arrive. Avec « réduire les animations » :
+  pas de goutte, la pastille dit tout de suite ce qui a été reçu, seul `drop-received` joue.
+  VoiceOver entend la pastille une fois, à l'arrivée de la goutte.
+- **En-tête de sourate** : le titre doré dans un cadre de deux capsules fines ; VoiceOver entend
+  toujours le nombre de versets et le lieu de révélation. **Entre deux pages** : « page 294 » (la page
+  qui commence) entre deux petites étoiles dorées et deux filets qui s'effacent ; VoiceOver entend
+  « Fin de la page 293 ».
+
 ## Périmètre
 
 `src/features/reader/**`, `src/app/(tabs)/quran.tsx`, la route du lecteur dans `src/app`,

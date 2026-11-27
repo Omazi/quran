@@ -116,21 +116,21 @@ texte du Coran. Quatre tailles au plus par écran (l’accueil des maquettes en 
 écart 72). Tailles
 d'Apple, qui suivent le réglage de taille de texte de la personne :
 
-| Style              | Taille / interligne          | Usage                                                              |
-| ------------------ | ---------------------------- | ------------------------------------------------------------------ |
-| Large Title        | 34 / 41, demi-gras, Fraunces | Titre d'écran                                                      |
-| Display Title      | 36 / 40, normal, New York    | Le mot d'un écran immersif (écran d’écoute ; écart 33 du registre) |
-| Title 1            | 28 / 34, demi-gras, Fraunces | Message d’un écran ou d’une feuille (maquettes ; écart 72)         |
-| Title 2            | 22 / 28, demi-gras, Fraunces | Titre de page du premier lancement, de carte                       |
-| Figure             | 24 / 30, gras                | Chiffre lu d’abord : bilan d’une khatma (maquettes ; écart 72)     |
-| Title 3            | 20 / 25, gras                | Valeur d’une carte : « 5 pages sur 8 » (maquettes ; écart 72)      |
-| Headline           | 17 / 22, demi-gras           | Libellé important                                                  |
-| Body               | 17 / 22                      | Texte                                                              |
-| Callout            | 16 / 21, demi-gras           | Nom dans une carte (maquettes ; écart 72)                          |
+| Style              | Taille / interligne          | Usage                                                                 |
+| ------------------ | ---------------------------- | --------------------------------------------------------------------- |
+| Large Title        | 34 / 41, demi-gras, Fraunces | Titre d'écran                                                         |
+| Display Title      | 36 / 40, normal, New York    | Le mot d'un écran immersif (écran d’écoute ; écart 33 du registre)    |
+| Title 1            | 28 / 34, demi-gras, Fraunces | Message d’un écran ou d’une feuille (maquettes ; écart 72)            |
+| Title 2            | 22 / 28, demi-gras, Fraunces | Titre de page du premier lancement, de carte                          |
+| Figure             | 24 / 30, gras                | Chiffre lu d’abord : bilan d’une khatma (maquettes ; écart 72)        |
+| Title 3            | 20 / 25, gras                | Valeur d’une carte : « 5 pages sur 8 » (maquettes ; écart 72)         |
+| Headline           | 17 / 22, demi-gras           | Libellé important                                                     |
+| Body               | 17 / 22                      | Texte                                                                 |
+| Callout            | 16 / 21, demi-gras           | Nom dans une carte (maquettes ; écart 72)                             |
 | Pill Title         | 16 / 20, demi-gras, Fraunces | Titre d'une pastille de verre du lecteur (maquette-wow : « Al-Kahf ») |
-| Subhead            | 15 / 20                      | Texte secondaire                                                   |
-| Subhead Emphasized | 15 / 20, demi-gras           | Libellé court qui ouvre une carte (maquettes ; écart 72)           |
-| Footnote           | 13 / 18                      | Notes, légendes                                                    |
+| Subhead            | 15 / 20                      | Texte secondaire                                                      |
+| Subhead Emphasized | 15 / 20, demi-gras           | Libellé court qui ouvre une carte (maquettes ; écart 72)              |
+| Footnote           | 13 / 18                      | Notes, légendes                                                       |
 
 Minimum 11 points, pas de graisse fine (`typography.md › Ensuring legibility`).
 

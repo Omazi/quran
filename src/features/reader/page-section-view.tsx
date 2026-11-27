@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 
 import { quranStructure } from '@/data/quran';
-import { splitVerseWords, WORD_SEPARATOR, type VerseRef } from '@/domain/quran';
+import { PAGE_COUNT, splitVerseWords, WORD_SEPARATOR, type VerseRef } from '@/domain/quran';
 import type { ReaderScript } from '@/store';
 import {
   AppText,
@@ -312,9 +312,11 @@ function ScriptText({
 }
 
 /**
- * Where one page of the mushaf ends: "page n" between two small gold stars, and two rules that
- * fade towards the margins (maquette-wow, `.pg-mark`), in the light gold of the surah's frame. The
- * rules take plain colours: they are gradients.
+ * Where one page of the mushaf ends and the next begins: the number of the page that comes,
+ * "page 294", between two small gold stars, and two rules that fade towards the margins
+ * (maquette-wow, `.pg-mark`: the mark stands before the page it names), in the light gold of the
+ * surah's frame. After the last page, the rules and one star only. VoiceOver hears "Fin de la
+ * page 293". The rules take plain colours: they are gradients.
  */
 function PageFooter({ page }: { page: number }) {
   const { t } = useTranslation('reader');
@@ -334,10 +336,14 @@ function PageFooter({ page }: { page: number }) {
         ]}
       />
       <Icon symbol={STAR_SYMBOL} textStyle="footnote" color="ornament" />
-      <AppText variant="footnote" color="inkSecondary" align="center">
-        {t('page.footer', { page })}
-      </AppText>
-      <Icon symbol={STAR_SYMBOL} textStyle="footnote" color="ornament" />
+      {page < PAGE_COUNT ? (
+        <>
+          <AppText variant="footnote" color="inkSecondary" align="center">
+            {t('page.footer', { page: page + 1 })}
+          </AppText>
+          <Icon symbol={STAR_SYMBOL} textStyle="footnote" color="ornament" />
+        </>
+      ) : null}
       <View
         style={[
           styles.rule,
