@@ -29,6 +29,7 @@ import {
 import type { FriendsModel } from './friends-model';
 import { shownInviteCode } from './invite-code-text';
 import type { ShownRefusal } from './refusal';
+import type { SocialNotice } from './social-store';
 import type { FriendsListActions } from './use-friends';
 
 const SCAN_SYMBOL: IconSymbol = { ios: 'qrcode.viewfinder', android: 'qr_code_scanner' };
@@ -49,6 +50,8 @@ export interface FriendsListScreenProps {
   actions: FriendsListActions;
   /** My invitation, null while it is being made. */
   invite: Invite | null;
+  /** Why the demonstration shows in a build that wanted real friends (one calm line). */
+  notice?: SocialNotice | null;
 }
 
 /**
@@ -66,7 +69,13 @@ export interface FriendsListScreenProps {
  * A request is the person, then the answer on one row: "Accepter" and "Refuser" side by side at
  * the same size, the preferred one in the stronger style (buttons.md › Style).
  */
-export function FriendsListScreen({ model, refusal, actions, invite }: FriendsListScreenProps) {
+export function FriendsListScreen({
+  model,
+  refusal,
+  actions,
+  invite,
+  notice = null,
+}: FriendsListScreenProps) {
   const { t } = useGenderedTranslation('friends');
   const fewRequests = model.requests.length <= MOST_PROMINENT_REQUESTS;
   const acceptKind: ActionButtonVariant = fewRequests ? 'filled' : 'tonal';
@@ -79,7 +88,12 @@ export function FriendsListScreen({ model, refusal, actions, invite }: FriendsLi
         </AppText>
       </View>
 
-      <AddCard isDemonstration={model.isDemonstration} invite={invite} actions={actions} />
+      <AddCard
+        isDemonstration={model.isDemonstration}
+        notice={notice}
+        invite={invite}
+        actions={actions}
+      />
 
       {model.requests.length === 0 ? null : (
         <View style={styles.part}>
@@ -195,10 +209,12 @@ export function FriendsListScreen({ model, refusal, actions, invite }: FriendsLi
  */
 function AddCard({
   isDemonstration,
+  notice,
   invite,
   actions,
 }: {
   isDemonstration: boolean;
+  notice: SocialNotice | null;
   invite: Invite | null;
   actions: FriendsListActions;
 }) {
@@ -215,7 +231,7 @@ function AddCard({
         </AppText>
         {isDemonstration ? (
           <AppText variant="footnote" color="muted" testID="friends-demo-note">
-            {t('demoNote')}
+            {notice === 'not-connected' ? t('notConnected') : t('demoNote')}
           </AppText>
         ) : null}
       </View>

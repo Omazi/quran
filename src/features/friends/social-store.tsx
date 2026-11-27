@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, useSyncExternalStore, type ReactNode } from 'react';
 
+import { createDemoSocial } from '@/data/social';
 import type { LocalDate } from '@/domain/shared/local-date';
 import type { AuthGateway, Invite, SocialRepository, UserId } from '@/domain/social';
 import { deviceLocalDate } from '@/features/home';
 
 import { appSocialClient } from './anonymous-account';
-import { isFriendsSignInEnabled } from './sign-in-flag';
+import { isFriendsSignInEnabled, SIGN_IN_PROVIDERS_READY } from './sign-in-flag';
 
 /**
  * Where the Proches tab gets its accounts and friends: the demonstration (D33), or, with the
@@ -30,6 +31,7 @@ export interface SocialClient {
  * does not give back.
  */
 export interface SocialStore {
+  /** The current client: the demonstration takes the place of a real one that cannot open. */
   readonly client: SocialClient;
   /**
    * Whether the tab shows its sign-in screen to a person signed out (the `friendsSignIn` flag).
@@ -49,23 +51,69 @@ export interface SocialStore {
    * (rule 7) but has no way to ask beforehand: the screen remembers what it sent.
    */
   readonly encouraged: Map<UserId, LocalDate>;
+  /**
+   * Whether Apple, Google and the e-mail really sign in. While they are not set up
+   * (docs/AUTH-SETUP.md), their buttons stay visible and say "Bientôt disponible".
+   */
+  readonly providersReady: boolean;
+  /**
+   * Why the tab shows the demonstration in a build that wanted real friends: the anonymous
+   * account could not be made (switch off in the dashboard, no network, no keychain). One calm
+   * line says it; null otherwise.
+   */
+  notice(): SocialNotice | null;
+  /**
+   * Replaces a real client that could not open by the demonstration, with the notice; false when
+   * there is nothing to fall back to (already the demonstration).
+   */
+  fallBackToDemo(): boolean;
+  /** Whether a demonstration is there to fall back to. */
+  readonly hasFallback: boolean;
 }
+
+export type SocialNotice = 'not-connected';
 
 export interface SocialStoreOptions {
   /** Defaults to this build's `friendsSignIn` flag. */
   readonly showsSignIn?: boolean;
+  /** Defaults to `SIGN_IN_PROVIDERS_READY` (false until docs/AUTH-SETUP.md is done). */
+  readonly providersReady?: boolean;
+  /** The notice to start with (a build that wanted real friends and cannot have them). */
+  readonly notice?: SocialNotice | null;
+  /** The demonstration to fall back to when the real client cannot open. */
+  readonly fallback?: () => SocialClient;
 }
 
 export function createSocialStore(
-  client: SocialClient,
-  { showsSignIn = isFriendsSignInEnabled() }: SocialStoreOptions = {},
+  initialClient: SocialClient,
+  {
+    showsSignIn = isFriendsSignInEnabled(),
+    providersReady = SIGN_IN_PROVIDERS_READY,
+    notice: initialNotice = null,
+    fallback,
+  }: SocialStoreOptions = {},
 ): SocialStore {
   const listeners = new Set<() => void>();
   let version = 0;
   let invite: Invite | null = null;
+  let client = initialClient;
+  let notice = initialNotice;
   return {
-    client,
+    get client() {
+      return client;
+    },
     showsSignIn,
+    providersReady,
+    notice: () => notice,
+    hasFallback: fallback !== undefined,
+    fallBackToDemo() {
+      if (fallback === undefined || client.isDemonstration) return false;
+      client = fallback();
+      notice = 'not-connected';
+      invite = null;
+      this.changed();
+      return true;
+    },
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -91,7 +139,12 @@ let appStore: SocialStore | null = null;
  */
 function appSocialStore(): SocialStore {
   if (appStore === null) {
-    appStore = createSocialStore(appSocialClient(() => deviceLocalDate(new Date())));
+    const today = () => deviceLocalDate(new Date());
+    const { client, notice } = appSocialClient(today);
+    appStore = createSocialStore(client, {
+      notice,
+      fallback: () => createDemoSocial({ today }),
+    });
   }
   return appStore;
 }

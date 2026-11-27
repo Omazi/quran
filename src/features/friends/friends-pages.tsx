@@ -75,11 +75,17 @@ function FriendsListPage({
   share,
   ...navigation
 }: FriendsListNavigation & FriendsListDependencies) {
-  const { state, refusal, invite, actions } = useFriendsList(navigation, { share });
+  const { state, refusal, invite, notice, actions } = useFriendsList(navigation, { share });
   if (state.status === 'loading') return <FriendsLoading testID="friends-loading" />;
   if (state.status === 'failed') return <Failed />;
   return (
-    <FriendsListScreen model={state.value} refusal={refusal} actions={actions} invite={invite} />
+    <FriendsListScreen
+      model={state.value}
+      refusal={refusal}
+      actions={actions}
+      invite={invite}
+      notice={notice}
+    />
   );
 }
 

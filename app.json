@@ -89,9 +89,9 @@
         "publishableKey": "sb_publishable_87Wj0K4pkFvMj9sF_l7dTw_YQqlQYfP"
       },
       "features": {
-        "accountInvitation": false,
-        "friendsSignIn": false,
-        "friendsAnonymous": false
+        "accountInvitation": true,
+        "friendsSignIn": true,
+        "friendsAnonymous": true
       }
     },
     "experiments": {

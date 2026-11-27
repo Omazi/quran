@@ -33,6 +33,11 @@ export type TabSessionState = SessionState | { readonly status: 'failed' };
  */
 function silentOpener(store: SocialStore): (() => Promise<unknown>) | null {
   if (store.showsSignIn) return null;
+  return openerOf(store);
+}
+
+/** How the client opens a session by itself: the anonymous account, or the demonstration's. */
+function openerOf(store: SocialStore): (() => Promise<unknown>) | null {
   const { client } = store;
   if (client.openSilently !== undefined) return client.openSilently;
   return client.auth.isDemonstration ? () => client.auth.signInWithApple() : null;
@@ -47,8 +52,10 @@ function silentOpener(store: SocialStore): (() => Promise<unknown>) | null {
 export function useTabSession(): TabSessionState {
   const store = useSocialStore();
   const session = useSession();
-  // Kept for the store's life: a new function at each render would open the session again.
-  const open = useMemo(() => silentOpener(store), [store]);
+  const client = store.client;
+  // Kept for the client's life: a new function at each render would open the session again.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- the client is what changes
+  const open = useMemo(() => silentOpener(store), [store, client]);
   const opensByItself = open !== null;
   const isSignedOut = session.status === 'signed-out';
   const [hasFailed, setHasFailed] = useState(false);
@@ -58,7 +65,10 @@ export function useTabSession(): TabSessionState {
     open().then(
       () => store.changed(),
       (error: unknown) => {
-        console.warn('The local session of the Proches tab could not open.', error);
+        console.warn('The session of the Proches tab could not open.', error);
+        // A real account that cannot open (switch off in the dashboard, no network): the
+        // demonstration takes its place, with one calm line, never an error screen.
+        if (store.fallBackToDemo()) return;
         if (isCurrent) setHasFailed(true);
       },
     );
@@ -82,9 +92,13 @@ export interface SignInModel {
   readonly code: string;
   readonly isBusy: boolean;
   readonly refusal: ShownRefusal | null;
+  /** Apple, Google and the e-mail are not set up yet: their buttons say "Bientôt disponible". */
+  readonly isComingSoon: boolean;
 }
 
 export interface SignInActions {
+  /** "Continuer sans compte": the anonymous account of the phone, or the demonstration. */
+  continueWithoutAccount(): void;
   signInWithApple(): void;
   signInWithGoogle(): void;
   openEmail(): void;
@@ -114,7 +128,7 @@ export function useSignIn(): { model: SignInModel; actions: SignInActions } {
   const [refusal, setRefusal] = useState<ShownRefusal | null>(null);
 
   const run = useCallback(
-    (work: () => Promise<unknown>, onDone?: () => void) => {
+    (work: () => Promise<unknown>, onDone?: () => void, onFailed?: (error: unknown) => void) => {
       setIsBusy(true);
       setRefusal(null);
       runFromButton(
@@ -126,7 +140,8 @@ export function useSignIn(): { model: SignInModel; actions: SignInActions } {
         },
         (error: unknown) => {
           setIsBusy(false);
-          setRefusal(refusalOf(error));
+          if (onFailed === undefined) setRefusal(refusalOf(error));
+          else onFailed(error);
         },
       );
     },
@@ -135,10 +150,24 @@ export function useSignIn(): { model: SignInModel; actions: SignInActions } {
 
   // The field trims, the rules do not (src/domain/social/auth.ts, `parseEmail`).
   const typedEmail = email.trim();
+  const isComingSoon = !store.providersReady;
+  const comingSoon = () => setRefusal('coming-soon');
   const actions: SignInActions = {
-    signInWithApple: () => run(() => auth.signInWithApple()),
-    signInWithGoogle: () => run(() => auth.signInWithGoogle()),
+    continueWithoutAccount: () => {
+      const open = openerOf(store);
+      if (open === null) return;
+      run(open, undefined, () => {
+        // As when the tab opens by itself: the demonstration rather than an error.
+        if (!store.fallBackToDemo()) setRefusal('unknown');
+      });
+    },
+    signInWithApple: () => (isComingSoon ? comingSoon() : run(() => auth.signInWithApple())),
+    signInWithGoogle: () => (isComingSoon ? comingSoon() : run(() => auth.signInWithGoogle())),
     openEmail: () => {
+      if (isComingSoon) {
+        comingSoon();
+        return;
+      }
       setRefusal(null);
       setEmailStep('address');
     },
@@ -167,6 +196,7 @@ export function useSignIn(): { model: SignInModel; actions: SignInActions } {
       code,
       isBusy,
       refusal,
+      isComingSoon,
     },
     actions,
   };

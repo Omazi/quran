@@ -32,8 +32,8 @@ describe('the friendsSignIn feature flag', () => {
     expect(readFriendsSignInFlag(null)).toBe(false);
   });
 
-  it('is off in this build: no sign-in screen until real accounts exist', () => {
-    expect(appJson.expo.extra.features.friendsSignIn).toBe(false);
+  it('is on in this build: the owner sees every screen while he tests (27 November 2026)', () => {
+    expect(appJson.expo.extra.features.friendsSignIn).toBe(true);
   });
 });
 

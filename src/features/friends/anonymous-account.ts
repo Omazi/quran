@@ -9,12 +9,12 @@ import {
 import type { LocalDate } from '@/domain/shared/local-date';
 
 import { isFriendsAnonymousEnabled } from './anonymous-flag';
-import type { SocialClient } from './social-store';
+import type { SocialClient, SocialNotice } from './social-store';
 
 /**
  * The name the profile of an anonymous account gets the first time: friends see it. There is no
  * screen to choose one yet; the owner decides how the person names themselves (a question in
- * docs/AUTH-SETUP.md). Until then the flag stays off.
+ * docs/AUTH-SETUP.md).
  */
 export const ANONYMOUS_PROFILE_NAME = 'Proche';
 
@@ -61,14 +61,22 @@ function appAnonymousAuth(): AnonymousAuth | null {
   return isFriendsAnonymousEnabled() ? deviceAnonymousAuth() : null;
 }
 
-/** The Proches tab's client for this build. */
-export function appSocialClient(today: () => LocalDate): SocialClient {
-  return chooseSocialClient({
-    isAnonymousEnabled: isFriendsAnonymousEnabled(),
+/**
+ * The Proches tab's client for this build, and the notice to show when the build wanted real
+ * friends (flag on) but the phone cannot have an account (no project, no keychain).
+ */
+export function appSocialClient(today: () => LocalDate): {
+  client: SocialClient;
+  notice: SocialNotice | null;
+} {
+  const isAnonymousEnabled = isFriendsAnonymousEnabled();
+  const client = chooseSocialClient({
+    isAnonymousEnabled,
     auth: appAnonymousAuth(),
     config: readSupabaseConfig(readBuildEnvironment()),
     today,
   });
+  return { client, notice: isAnonymousEnabled && client.isDemonstration ? 'not-connected' : null };
 }
 
 /**

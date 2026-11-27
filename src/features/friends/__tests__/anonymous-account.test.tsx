@@ -19,7 +19,11 @@ import { deviceLocalDate } from '@/features/home';
 
 import { chooseSocialClient, chooseSyncSession } from '../anonymous-account';
 import { readFriendsAnonymousFlag } from '../anonymous-flag';
+import { createDemoSocial } from '@/data/social';
+import { AccountInvitationSheet } from '@/features/home/account-invitation-sheet';
+
 import { AddFriendPage, FriendsHome } from '../friends-pages';
+import { SIGN_IN_PROVIDERS_READY } from '../sign-in-flag';
 import { createSocialStore } from '../social-store';
 import { withStore } from '../test-support/demo';
 
@@ -110,8 +114,8 @@ describe('the friendsAnonymous feature flag', () => {
     expect(readFriendsAnonymousFlag(null)).toBe(false);
   });
 
-  it('is off in this build: on only after docs/AUTH-SETUP.md and a real try', () => {
-    expect(appJson.expo.extra.features.friendsAnonymous).toBe(false);
+  it('is on in this build (owner, 27 November 2026: "ne cache rien"), with the demonstration as fallback', () => {
+    expect(appJson.expo.extra.features.friendsAnonymous).toBe(true);
   });
 });
 
@@ -176,5 +180,110 @@ describe('the tab on the real tables', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Ajouter ce proche' }));
     await waitFor(() => expect(openFriend).toHaveBeenCalledWith(NOUR));
     expect(paths).toContain('POST /rest/v1/rpc/accept_invite');
+  });
+});
+
+/** A real client whose anonymous sign-up is refused (switch off in the dashboard) or offline. */
+function brokenProject(answer: () => Response) {
+  const request = (async (input: RequestInfo | URL) => {
+    if (String(input).endsWith('/auth/v1/signup')) return answer();
+    throw new Error(`unexpected ${String(input)}`);
+  }) as typeof fetch;
+  const auth = createAnonymousAuth({
+    config: CONFIG,
+    storage: createMemorySessionStorage(),
+    fetch: request,
+  });
+  return createSupabaseSocial({
+    config: CONFIG,
+    auth,
+    today,
+    newProfileName: () => 'Proche',
+    fetch: request,
+  });
+}
+
+describe('when the anonymous account cannot be made: the demonstration, one calm line', () => {
+  it.each([
+    [
+      'the switch is off in the dashboard',
+      () => json(422, { error_code: 'anonymous_provider_disabled' }),
+    ],
+    [
+      'there is no network',
+      () => {
+        throw new TypeError('Network request failed');
+      },
+    ],
+  ])('%s', async (_case, answer) => {
+    jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    await showLanguage('fr');
+    const store = createSocialStore(brokenProject(answer), {
+      showsSignIn: false,
+      fallback: () => createDemoSocial({ today }),
+    });
+    await render(withStore(store, <FriendsHome {...NAVIGATION} />));
+    expect(await screen.findByTestId('friends-list')).toBeOnTheScreen();
+    expect(screen.queryByTestId('friends-failed')).toBeNull();
+    expect(screen.getByTestId('friends-demo-note')).toHaveTextContent(
+      'Pas encore relié au serveur : voici des proches de démonstration.',
+    );
+    expect(store.client.isDemonstration).toBe(true);
+  });
+
+  it('a build with the flag on but no keychain starts on the demonstration with the same line', async () => {
+    await showLanguage('fr');
+    const store = createSocialStore(createDemoSocial({ today }), {
+      showsSignIn: false,
+      notice: 'not-connected',
+    });
+    await render(withStore(store, <FriendsHome {...NAVIGATION} />));
+    expect(await screen.findByTestId('friends-demo-note')).toHaveTextContent(/^Pas encore relié/);
+  });
+});
+
+describe('Apple, Google and the e-mail before they are set up: "Bientôt disponible"', () => {
+  it('are not ready in this build', () => {
+    expect(SIGN_IN_PROVIDERS_READY).toBe(false);
+  });
+
+  it('the sign-in screen shows them, says they come soon, and lets the person in without an account', async () => {
+    await showLanguage('fr');
+    const store = createSocialStore(createDemoSocial({ today }), {
+      showsSignIn: true,
+      providersReady: false,
+    });
+    await render(withStore(store, <FriendsHome {...NAVIGATION} />));
+    expect(await screen.findByTestId('friends-sign-in')).toBeOnTheScreen();
+    expect(screen.getByTestId('sign-in-coming-soon')).toHaveTextContent(/^Bientôt disponible/);
+    await fireEvent.press(screen.getByTestId('sign-in-apple'));
+    expect(
+      await screen.findByText('Bientôt disponible. En attendant, continue sans compte.'),
+    ).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('sign-in-email'));
+    // No e-mail field: nothing is offered that cannot work.
+    expect(screen.queryByTestId('sign-in-email-field')).toBeNull();
+    // Still no session: the buttons did not pretend.
+    expect(await store.client.auth.getSession()).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Continuer sans compte' }));
+    expect(await screen.findByTestId('friends-list')).toBeOnTheScreen();
+  });
+
+  it('the invitation over the new garden says it too, and the e-mail does not lead away', async () => {
+    await showLanguage('fr');
+    const store = createSocialStore(createDemoSocial({ today }), { providersReady: false });
+    const onOpenEmail = jest.fn();
+    const onDismiss = jest.fn();
+    await render(
+      withStore(store, <AccountInvitationSheet onDismiss={onDismiss} onOpenEmail={onOpenEmail} />),
+    );
+    await fireEvent.press(screen.getByTestId('sign-in-google'));
+    expect(
+      await screen.findByText('Bientôt disponible. En attendant, continue sans compte.'),
+    ).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('sign-in-email'));
+    expect(onOpenEmail).not.toHaveBeenCalled();
+    expect(onDismiss).not.toHaveBeenCalled();
+    expect(await store.client.auth.getSession()).toBeNull();
   });
 });

@@ -27,10 +27,13 @@ export function AccountInvitationSheet({ onDismiss, onOpenEmail }: AccountInvita
   const press: Record<SignInProvider, () => void> = {
     apple: actions.signInWithApple,
     google: actions.signInWithGoogle,
-    email: () => {
-      onDismiss();
-      onOpenEmail();
-    },
+    // Not set up yet: the button says "Bientôt disponible" here, rather than leading away.
+    email: model.isComingSoon
+      ? actions.openEmail
+      : () => {
+          onDismiss();
+          onOpenEmail();
+        },
   };
   const label: Record<SignInProvider, string> = {
     apple: tFriends('signIn.apple'),

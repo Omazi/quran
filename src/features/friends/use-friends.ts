@@ -25,7 +25,12 @@ import {
 } from './friends-model';
 import { shownInviteCode, typedInviteCode } from './invite-code-text';
 import { isRefusal, refusalOf, type ShownRefusal } from './refusal';
-import { useSocialStore, useSocialVersion, type SocialStore } from './social-store';
+import {
+  useSocialStore,
+  useSocialVersion,
+  type SocialNotice,
+  type SocialStore,
+} from './social-store';
 import { runFromButton, useAsync, type AsyncState } from './use-async';
 
 /** Runs an action of the tab, then tells every screen to read again; a refusal is kept to show. */
@@ -138,6 +143,7 @@ export function useFriendsList(
   state: AsyncState<FriendsModel>;
   refusal: ShownRefusal | null;
   invite: Invite | null;
+  notice: SocialNotice | null;
   actions: FriendsListActions;
 } {
   const store = useSocialStore();
@@ -160,11 +166,17 @@ export function useFriendsList(
     );
     return buildFriendsModel({ isDemonstration, friends, requests, groups: counted, today });
   }, [repository, version, today, isDemonstration]);
+  // The real tables out of reach (no network): the demonstration, with its line, not an error.
+  const fallsBack = state.status === 'failed' && !isDemonstration && store.hasFallback;
+  useEffect(() => {
+    if (fallsBack) store.fallBackToDemo();
+  }, [fallsBack, store]);
   const { run, refusal } = useAction(store);
   return {
-    state,
+    state: fallsBack ? { status: 'loading' } : state,
     refusal,
     invite,
+    notice: store.notice(),
     actions: {
       openFriend: navigation.openFriend,
       openGroup: navigation.openGroup,

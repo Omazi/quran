@@ -19,7 +19,9 @@
     "codePlaceholder": "6 chiffres",
     "codeSent": "Un code de 6 chiffres part vers {{email}}.",
     "signInWithCode": "Se connecter",
-    "demoNote": "Démonstration : chaque bouton ouvre une session d’essai. Aucun compte n’est créé, aucun e-mail n’est envoyé, et rien ne quitte ton téléphone. Un code de 6 chiffres au choix suffit."
+    "demoNote": "Démonstration : chaque bouton ouvre une session d’essai. Aucun compte n’est créé, aucun e-mail n’est envoyé, et rien ne quitte ton téléphone. Un code de 6 chiffres au choix suffit.",
+    "continueWithout": "Continuer sans compte",
+    "comingSoonNote": "Bientôt disponible : la connexion avec Apple, Google ou un e-mail arrive dans une prochaine version. En attendant, continue sans compte."
   },
   "list": {
     "requestsTitle": "Demandes",
@@ -190,6 +192,8 @@
     "group-full": "Ce groupe est complet.",
     "email-malformed": "Une adresse ressemble à nom@exemple.com.",
     "email-code-malformed": "Le code a 6 chiffres.",
-    "unknown": "Ça n’a pas marché. Réessaie dans un instant."
-  }
+    "unknown": "Ça n’a pas marché. Réessaie dans un instant.",
+    "coming-soon": "Bientôt disponible. En attendant, continue sans compte."
+  },
+  "notConnected": "Pas encore relié au serveur : voici des proches de démonstration."
 }

@@ -53,8 +53,10 @@ describe.each(['fr', 'ar'] as const)('on iOS (%s)', (language) => {
           code: '',
           isBusy: false,
           refusal: 'email-code-malformed',
+          isComingSoon: false,
         }}
         actions={{
+          continueWithoutAccount: noop,
           signInWithApple: noop,
           signInWithGoogle: noop,
           openEmail: noop,
