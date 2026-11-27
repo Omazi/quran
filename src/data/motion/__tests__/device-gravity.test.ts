@@ -1,3 +1,5 @@
+import { waitFor } from '@testing-library/react-native';
+
 import { deviceGravity } from '../device-gravity';
 
 type Listener = (measurement: { accelerationIncludingGravity: unknown }) => void;
@@ -26,9 +28,8 @@ describe('gravity from the mockMotion sensors', () => {
   it('asks at most the rate it is given, passes gravity on, and stops', async () => {
     const samples: unknown[] = [];
     const stop = deviceGravity.watch((gravity) => samples.push(gravity), 33);
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(mockMotion.setUpdateInterval).toHaveBeenCalledWith(33);
+    // The sensor answers asynchronously (isAvailableAsync): wait for it instead of counting ticks.
+    await waitFor(() => expect(mockMotion.setUpdateInterval).toHaveBeenCalledWith(33));
     mockMotion.listener?.({ accelerationIncludingGravity: { x: 1, y: -9, z: 0 } });
     mockMotion.listener?.({ accelerationIncludingGravity: null });
     expect(samples).toEqual([{ x: 1, y: -9, z: 0 }]);
@@ -40,8 +41,8 @@ describe('gravity from the mockMotion sensors', () => {
     mockMotion.addListener.mockClear();
     const stop = deviceGravity.watch(() => undefined, 33);
     stop();
-    await Promise.resolve();
-    await Promise.resolve();
+    await waitFor(() => expect(mockMotion.isAvailableAsync).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 20)); // let the sensor's answer arrive, then check it is ignored
     expect(mockMotion.addListener).not.toHaveBeenCalled();
   });
 });
