@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import { useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, useColorScheme, useWindowDimensions, View } from 'react-native';
@@ -14,6 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { playFeedback } from '@/features/feedback';
 import { previewGardenState } from '@/features/garden';
 import {
   ActionButton,
@@ -102,7 +102,7 @@ export function KhatmaCelebrationScreen({
   const days = t('celebration.days', { count: celebration.days });
 
   useEffect(() => {
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
+    playFeedback('celebrate');
   }, []);
 
   return (

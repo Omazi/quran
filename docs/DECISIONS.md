@@ -984,3 +984,33 @@ texte reste neutre : « Lire avec Sarah ».
 
 _Changerait si_ le propriétaire préfère ne pas conserver le genre sur le serveur (alors seul le
 réglage du téléphone resterait, et la page d'un ami redeviendrait neutre).
+
+## D48 — Sons et vibrations : une palette à nous, discrète, qui respecte le silence
+
+Contexte : la maquette « wow » validée par le propriétaire (27 novembre 2026) donne un son et une
+vibration aux gestes et aux moments de l'appli (la goutte, la pousse, l'ouverture, le passage trouvé,
+la khatma, le cœur d'encouragement).
+
+- **Dix sons, fabriqués par nous** : `tools/sounds/generate.py` les synthétise (sinus, bruit filtré,
+  petite pièce simulée ; aucune bibliothèque de sons, aucun enregistrement) et les encode en AAC mono
+  44,1 kHz dans `assets/sounds/` : 2 à 23 Ko chacun, 88 Ko en tout. Œuvre propre, CC0
+  (`assets/sounds/NOTICE.txt`). `tools/sounds/check.py` les contrôle sans les écouter (écrêtage, crête
+  sous -3 dBFS, fondus, niveau de la fenêtre la plus forte de 100 ms à 1,5 dB de sa cible, rien d'aigu,
+  taille). **Ce que ça donne à l'oreille n'est pas vérifié** : à juger sur un iPhone.
+- **Onze événements** (`FeedbackEvent` : `drop`, `drop-received`, `grow`, `open`, `page`, `found`,
+  `splash`, `celebrate`, `encourage`, `select`, `error`) ; l'écran dit ce qui s'est passé,
+  `src/data/feedback/recipes.ts` décide du son et de la vibration. `playFeedback(event)` (depuis
+  `@/features/feedback`) ne jette jamais et n'attend jamais. `playHaptic(kind)` : une vibration sans
+  son, pour les gestes qui n'avaient que ça (introduction, signet du lecteur).
+- **Réglages** « Sons » et « Vibrations » (Réglages › Sons et vibrations), allumés par défaut,
+  synchronisés (le plus récent gagne) ; version 10 du document stocké, un document 9 a les deux allumés.
+- **Silence** : l'interrupteur silencieux de l'iPhone est respecté (session audio « ambiante » avec
+  mélange : la musique de la personne continue) ; rien ne joue, ni son ni vibration, pendant que le micro
+  écoute (écoute, suivi de récitation) ni quand l'appli n'est pas au premier plan ; un événement demandé
+  pendant ce temps est perdu, pas différé. Chaque événement a un délai minimal avant de pouvoir se
+  rejouer, et deux vibrations ne se touchent jamais (40 ms). « Réduire les animations » ne touche pas aux sons.
+- **Licence** : `expo-audio` (MIT, listé par le SDK 58), chargé à la première utilisation ; une
+  version sans lui reste silencieuse, les vibrations marchent encore.
+
+_Changerait si_ les sons gênent à l'oreille (on ajuste le générateur, pas l'architecture), ou si le
+propriétaire préfère que les sons soient éteints par défaut.

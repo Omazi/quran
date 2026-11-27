@@ -11,6 +11,7 @@ import {
   type LeaderboardPeriod,
   type UserId,
 } from '@/domain/social';
+import { playFeedback } from '@/features/feedback';
 import { useToday } from '@/features/home';
 import { confirmAction, type ConfirmAction } from '@/ui';
 
@@ -237,7 +238,10 @@ export function useFriendPage(
       encourage: () =>
         run(
           () => repository.sendNudge(userId, 'encourage'),
-          remember,
+          () => {
+            remember();
+            playFeedback('encourage');
+          },
           (error) => {
             // Sent from another screen or another phone today: the button says so, nothing more.
             if (isRefusal(error, 'already-nudged-today')) {

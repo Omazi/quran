@@ -15,6 +15,7 @@ import {
   startDiagnostics,
   useRouteBreadcrumbs,
 } from '@/features/diagnostics';
+import { useFeedbackSetup } from '@/features/feedback';
 import { CELEBRATION_PATH, useKhatmaCelebration } from '@/features/gardens';
 import { useForegroundTimeRecording } from '@/features/profile';
 import { useNotificationTaps, useReminderSync } from '@/features/reminders';
@@ -82,6 +83,8 @@ export default function RootLayout() {
   const [areFontsLoaded, fontError] = useFonts(appFonts);
   const startedApp = useAppStartup(STARTUP);
   const sync = useAppSync(startedApp?.store ?? null, SYNC);
+  // Sounds and haptics: the person's switches, the sounds loaded in advance, the silences.
+  useFeedbackSetup(startedApp?.store ?? null);
   const isReady = startedApp !== null && (areFontsLoaded || fontError !== null);
 
   const launch = useLaunch({
