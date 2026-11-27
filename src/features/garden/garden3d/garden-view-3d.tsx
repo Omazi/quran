@@ -375,5 +375,6 @@ const styles = StyleSheet.create({
   band: { alignSelf: 'stretch', aspectRatio: GARDEN_PICTURE_ASPECT_RATIO },
   hint: { alignItems: 'center' },
   hintOverlay: { position: 'absolute', start: 0, end: 0, bottom: spacing.sm },
-  hintBelow: { paddingTop: spacing.sm },
+  // The same air under the hint as above it: what follows must not touch it.
+  hintBelow: { paddingVertical: spacing.sm },
 });
