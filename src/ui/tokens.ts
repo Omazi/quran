@@ -1098,9 +1098,14 @@ export const readerShapes = {
   dropPillGap: 14,
   /** The ornament between two pages: its stars, and the gap around the number (`.pg-mark`). */
   pageMarkStar: 14,
-  /** The surah's framed title (`.rd-head .frame`): its height, the inner rule's inset. */
+  /**
+   * The surah's framed title (`.rd-head .frame`): its smallest height, the inner rule's inset, and
+   * the least air between that rule and the ink of any of the 114 titles (the hamza of «الأنعام»,
+   * the final mim of «القلم»): the frame grows until it has it (`framedHeight`).
+   */
   surahFrameHeight: 54,
   surahFrameInset: 5,
+  surahFrameInkGap: 3,
   /** The soft shadow of the mockups: its opacity, blur radius and drop. */
   shadowOpacity: 0.1,
   shadowRadius: 10,
