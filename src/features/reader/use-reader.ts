@@ -5,6 +5,7 @@ import { AppState, type AppStateStatus } from 'react-native';
 import { quranStructure } from '@/data/quran';
 import {
   getCurrentKhatm,
+  getTodayProgress,
   isPageRead,
   recordPageRead as addPageToJournal,
   requiredReadingSeconds,
@@ -16,6 +17,7 @@ import { useReaderPresence } from '@/features/profile';
 import { READER_TEXT_SIZE_RANGE, useAppStore, type ReaderScript } from '@/store';
 
 import { READER_CONFIG } from './config';
+import { threadStateOf, type ThreadState } from './page-thread';
 import { pageWordCounts } from './page-words';
 import { keepReadingProgress, keptReadingProgress } from './reading-memory';
 import { readingFeedback, type ReadingFeedback } from './reading-feedback';
@@ -28,9 +30,15 @@ import {
   type ReadingTracker,
   type SectionExtent,
 } from './scroll-reading';
+import { createThreadStore, type ThreadStore } from './thread-store';
+import type { ReaderPaper } from './reader-paper';
 import { useKeepReaderAwake } from './use-keep-reader-awake';
+import { useReaderPaper } from './use-reader-paper';
 import { useScreenReader } from './use-screen-reader';
 import { useScriptTexts } from './use-script-texts';
+
+/** What one look tells: the last page that counted in it, and where it ends on the screen. */
+type Told = Omit<CountedPageEvent, 'sequence'>;
 
 /** Milliseconds from a clock that never goes back, for the time spent on a page. */
 export type MonotonicClock = () => number;
@@ -53,10 +61,14 @@ export interface ReaderModel {
   readonly barsVisible: boolean;
   /** Whether the page under the reading line has a bookmark. */
   readonly isBookmarked: boolean;
-  /** What to tell the person about the page that just counted, or null. */
-  readonly feedback: ReadingFeedback | null;
-  /** How far the page being read is from counting. */
-  readonly pageProgress: PageCountProgress;
+  /** The last page that counted, for its drop and its pill; null before the first. */
+  readonly counted: CountedPageEvent | null;
+  /** The water threads of the pages, in the margin (`page-thread.ts`). */
+  readonly threads: ThreadStore;
+  /** The new pages of the day and the daily goal: the counter "5 / 8" of the bottom bar. */
+  readonly today: { readonly pagesRead: number; readonly goalPages: number };
+  /** The paper by day, the night page at night or in the dark appearance (`reader-paper.ts`). */
+  readonly paper: ReaderPaper;
   /** The script shown (D41), remembered by the store. */
   readonly script: ReaderScript;
   /** The step of the reader's text size control, and the factor it applies. */
@@ -67,14 +79,16 @@ export interface ReaderModel {
 }
 
 /**
- * How far the page being read is from counting (spec 3), for the water line under the title:
- * hidden for a page already read in the khatma or that just counted; filling while it gathers
- * time; ready (the drop) once its time is reached, before it counts.
+ * A page that just counted (spec 3), told once: what to say about it, and where its page ends on
+ * the screen, where its drop forms (null when its page is not on screen, as for pages followed by
+ * the voice). Each has its own number, so the same words twice are two moments.
  */
-export type PageCountProgress =
-  | { readonly kind: 'hidden' }
-  | { readonly kind: 'filling'; readonly share: number }
-  | { readonly kind: 'ready' };
+export interface CountedPageEvent {
+  readonly sequence: number;
+  readonly feedback: ReadingFeedback;
+  /** The end of the page, in points from the top of the scroll; null when off screen. */
+  readonly pageEndOnScreen: number | null;
+}
 
 /** What the list of pages has measured, in the scroll's content, in points. */
 export interface MeasuredExtents {
@@ -92,6 +106,8 @@ export interface ReaderActions {
   readonly chooseScript: (script: ReaderScript) => void;
   readonly enlargeText: () => void;
   readonly shrinkText: () => void;
+  /** Goes to a step of the text size directly (the track of the text size panel). */
+  readonly chooseTextSize: (step: number) => void;
   /**
    * Pages a recitation followed from their first word to their last (spec 3b): they count, once,
    * without the reading time (the voice is the proof); the khatm module decides as for any page.
@@ -100,9 +116,6 @@ export interface ReaderActions {
 }
 
 const SECOND_MS = 1000;
-/** The water line moves by hundredths: finer would only render more often. */
-const PROGRESS_STEPS = 100;
-const HIDDEN: PageCountProgress = { kind: 'hidden' };
 const NOTHING_MEASURED: MeasuredExtents = { sections: [], segments: [] };
 
 const systemMonotonicClock: MonotonicClock = () => performance.now();
@@ -135,9 +148,9 @@ export function useReader(
     surah: quranStructure.firstVerseOfPage(initialPage).surah,
   }));
   const [areBarsShown, setBarsShown] = useState(true);
-  const [feedback, setFeedback] = useState<ReadingFeedback | null>(null);
-  const [pageProgress, setPageProgress] = useState<PageCountProgress>(HIDDEN);
+  const [counted, setCounted] = useState<CountedPageEvent | null>(null);
   const isScreenReaderRunning = useScreenReader();
+  const paper = useReaderPaper(clock);
   // The time with the reader open is reading time (D37), counted at the root of the app.
   useReaderPresence();
   useKeepReaderAwake();
@@ -214,36 +227,22 @@ export function useReader(
     }
   }, []);
 
-  /** Where the page being read stands, for the water line. */
-  const progressOfPage = useCallback((page: number): PageCountProgress => {
-    const current = tracker.current;
-    if (current === null) return HIDDEN;
-    const { journal: read } = latest.current;
-    const progress = progressOf(current, page);
-    if (progress.counted || isPageRead(read, getCurrentKhatm(read), page)) return HIDDEN;
-    const requiredMs = latest.current.rules.requiredSecondsOf(page) * SECOND_MS;
-    if (!Number.isFinite(requiredMs)) return HIDDEN;
-    if (progress.creditedMs >= requiredMs) return { kind: 'ready' };
-    const share = Math.floor((progress.creditedMs / requiredMs) * PROGRESS_STEPS) / PROGRESS_STEPS;
-    return { kind: 'filling', share };
+  /** Where the thread of a page stands (`page-thread.ts`), from the session and the journal. */
+  const threadOf = useCallback((page: number): ThreadState => {
+    const { journal: read, rules: current } = latest.current;
+    const progress = tracker.current === null ? undefined : progressOf(tracker.current, page);
+    return threadStateOf({
+      isRead: isPageRead(read, getCurrentKhatm(read), page),
+      progress,
+      requiredMs: current.requiredSecondsOf(page) * SECOND_MS,
+    });
   }, []);
-
-  const showProgressOf = useCallback(
-    (page: number) => {
-      const next = progressOfPage(page);
-      setPageProgress((shown) =>
-        shown.kind === next.kind &&
-        (next.kind !== 'filling' || (shown.kind === 'filling' && shown.share === next.share))
-          ? shown
-          : next,
-      );
-    },
-    [progressOfPage],
-  );
+  const [threads] = useState<ThreadStore>(() => createThreadStore());
+  useEffect(() => threads.setSource(threadOf), [threadOf, threads]);
 
   /** One look at the screen: credits the time, and records the pages that just counted. */
   const look = useCallback(
-    (isAppInForeground: boolean): ReadingFeedback | null => {
+    (isAppInForeground: boolean): Told | null => {
       const { viewport, extents } = screen.current;
       const current = tracker.current;
       if (viewport === null || current === null) return null;
@@ -259,15 +258,27 @@ export function useReader(
       );
       tracker.current = result.tracker;
       keepReadingProgress(result.tracker.pages);
-      let told: ReadingFeedback | null = null;
-      for (const page of result.counted) told = recordPage(page) ?? told;
+      let told: Told | null = null;
+      for (const page of result.counted) {
+        const feedback = recordPage(page);
+        if (feedback === null) continue;
+        const section = extents.sections.find((extent) => extent.page === page);
+        told = {
+          feedback,
+          pageEndOnScreen: section === undefined ? null : section.bottom - viewport.top,
+        };
+      }
+      threads.refresh();
       return told;
     },
-    [recordPage],
+    [recordPage, threads],
   );
 
-  const tell = useCallback((told: ReadingFeedback | null) => {
-    if (told !== null) setFeedback(told);
+  const sequence = useRef(0);
+  const tell = useCallback((told: Told | null) => {
+    if (told === null) return;
+    sequence.current += 1;
+    setCounted({ sequence: sequence.current, ...told });
   }, []);
 
   const observe = useCallback(
@@ -280,9 +291,8 @@ export function useReader(
           current.page === next.page && current.surah === next.surah ? current : next,
         );
       }
-      showProgressOf(next?.page ?? latest.current.place.page);
     },
-    [look, showProgressOf, tell],
+    [look, tell],
   );
 
   // The page to resume is the page being read.
@@ -298,15 +308,20 @@ export function useReader(
     const subscription = AppState.addEventListener('change', (state) =>
       tell(look(isForeground(state))),
     );
-    const tick = setInterval(() => {
-      tell(look(isForeground(AppState.currentState)));
-      showProgressOf(latest.current.place.page);
-    }, READER_CONFIG.trackingTickSeconds * SECOND_MS);
+    const tick = setInterval(
+      () => tell(look(isForeground(AppState.currentState))),
+      READER_CONFIG.trackingTickSeconds * SECOND_MS,
+    );
     return () => {
       subscription.remove();
       clearInterval(tick);
     };
-  }, [look, showProgressOf, tell]);
+  }, [look, tell]);
+
+  // The threads follow the journal (a page read elsewhere) and the time each page asks, once known.
+  useEffect(() => {
+    threads.refresh();
+  }, [journal, rules, threads]);
 
   // Leaving the reader: the time until now counts, and the pages it completes are recorded.
   useEffect(
@@ -317,21 +332,14 @@ export function useReader(
     [look],
   );
 
-  // The watered pill is brief (spec 3, deviation 64): the title of the page comes back.
-  useEffect(() => {
-    if (feedback === null) return;
-    const timer = setTimeout(() => setFeedback(null), READER_CONFIG.feedbackSeconds * SECOND_MS);
-    return () => clearTimeout(timer);
-  }, [feedback]);
-
-  const isPlaceRead = useMemo(
-    () => isPageRead(journal, getCurrentKhatm(journal), place.page),
-    [journal, place.page],
-  );
+  const today = useMemo(() => {
+    const progress = getTodayProgress(journal, deviceLocalDate(clock()), dailyGoalPages);
+    return { pagesRead: progress.pagesRead, goalPages: progress.goalPages };
+  }, [clock, dailyGoalPages, journal]);
 
   const countPagesReadAloud = useCallback(
     (pages: readonly number[]) => {
-      let told: ReadingFeedback | null = null;
+      let told: Told | null = null;
       for (const page of pages) {
         const current = tracker.current;
         if (current !== null) {
@@ -341,11 +349,14 @@ export function useReader(
           tracker.current = { ...current, pages: marked };
           keepReadingProgress(marked);
         }
-        told = recordPage(page) ?? told;
+        const feedback = recordPage(page);
+        // Followed by the voice, the page may be off screen: its drop starts in the clear text.
+        if (feedback !== null) told = { feedback, pageEndOnScreen: null };
       }
+      threads.refresh();
       tell(told);
     },
-    [recordPage, tell],
+    [recordPage, tell, threads],
   );
 
   const toggleBars = useCallback(() => setBarsShown((shown) => !shown), []);
@@ -362,6 +373,16 @@ export function useReader(
   const shrinkText = useCallback(() => {
     if (textSizeStep > READER_TEXT_SIZE_RANGE.min) setTextSizeInStore(textSizeStep - 1);
   }, [setTextSizeInStore, textSizeStep]);
+  const chooseTextSize = useCallback(
+    (step: number) => {
+      const bounded = Math.min(
+        READER_TEXT_SIZE_RANGE.max,
+        Math.max(READER_TEXT_SIZE_RANGE.min, step),
+      );
+      if (bounded !== textSizeStep) setTextSizeInStore(bounded);
+    },
+    [setTextSizeInStore, textSizeStep],
+  );
 
   return {
     model: {
@@ -371,9 +392,10 @@ export function useReader(
       hizb: quranStructure.hizbOfPage(place.page),
       barsVisible: areBarsShown || isScreenReaderRunning,
       isBookmarked: bookmarks.includes(place.page),
-      feedback,
-      // A page that counts, or that the journal already holds, hides the water line at once.
-      pageProgress: isPlaceRead ? HIDDEN : pageProgress,
+      counted,
+      threads,
+      today,
+      paper,
       script,
       textSizeStep,
       textScale: textScaleOf(textSizeStep),
@@ -387,6 +409,7 @@ export function useReader(
       chooseScript: setScriptInStore,
       enlargeText,
       shrinkText,
+      chooseTextSize,
       countPagesReadAloud,
     },
   };

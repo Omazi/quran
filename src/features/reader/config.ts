@@ -17,13 +17,16 @@ export const READER_CONFIG = Object.freeze({
    * 22; it replaces the water line under the title): how long its fill takes to follow a new value,
    * and, with Reduce Motion, the number of still steps it moves by (the rule of the water line it
    * replaces, spec 3). How long the light that runs down a filling thread takes to pass (the
-   * mockup's `flow`, 1.6 s), and how pale a thread is once its page counted (the mockup's 45 %).
+   * mockup's `flow`, 1.6 s, its light at 80 %), and how pale a thread is once its page counted
+   * (the mockup's 45 %).
    */
-  /** The water line under the title, until the thread replaces it on screen. */
-  progressLine: { width: 72, thickness: 3, followMs: 900, reducedMotionSteps: 3 },
-  feedbackSeconds: 4,
-
-  thread: { followMs: 900, reducedMotionSteps: 3, flowMs: 1600, doneOpacity: 0.45 },
+  thread: {
+    followMs: 900,
+    reducedMotionSteps: 3,
+    flowMs: 1600,
+    flowOpacity: 0.8,
+    doneOpacity: 0.45,
+  },
 
   /**
    * The paper of the page by day, the night page at night (owner's decision of 27 November 2026):
@@ -65,6 +68,13 @@ export const READER_CONFIG = Object.freeze({
    * mockup waits 2.4 s, short for two lines read with VoiceOver or at a large text size. Its small
    * bounce when the drop lands (the mockup's 420 ms to 106 %, curve (0.34, 1.56, 0.64, 1)).
    */
+  /**
+   * The text size panel fades in and out (the mockup's 220 ms), and the day's counter fades its new
+   * number in when a drop lands (the mockup's 420 ms). Without movement with Reduce Motion.
+   */
+  sizePanelMs: 220,
+  counterMs: 420,
+
   dropPill: {
     position: 'bottom' as 'bottom' | 'top',
     visibleSeconds: 4,
@@ -95,13 +105,13 @@ export const READER_CONFIG = Object.freeze({
   readingLineRatio: 1 / 3,
 
   /**
-   * The entrance of the watered pill: the system's snappy spring (animation-patterns,
+   * The entrance of the glass pill of the drop: the system's snappy spring (animation-patterns,
    * core-animations.md › Spring Presets: `.snappy` is 0.3 s with a bounce of 0.15, so a damping
    * ratio of 0.85), from this scale and transparent to its size and opaque. Brief and tied to the
    * page that counted (motion.md › Aim for brevity and precision in feedback animations). With
    * Reduce Motion it simply appears (spec 3).
    */
-  feedbackEntrance: { durationMs: 300, dampingRatio: 0.85, fromScale: 0.9 },
+  feedbackEntrance: { durationMs: 300, dampingRatio: 0.85, fromScale: 0.96 },
 
   /**
    * The reader's own text size control (D41), on top of the phone's text size, which the Quran
@@ -128,12 +138,12 @@ export const READER_CONFIG = Object.freeze({
   simpleVerseMark: { open: '﴿', close: '﴾' },
 
   /**
-   * The surah header in the scroll: its cartouche is this many times the line height of the text
-   * tall, its name this share of the text size, and the two words at its ends this share, never
-   * under the smallest size of the interface. Measured on the mockup's cartouche
-   * (docs/design/mushaf.png: about 36 points for a 22-point text). Judgment.
+   * The surah header in the scroll, the framed gold title of the validated mockup of 27 November
+   * 2026 (`.rd-head .frame`: a 54-point frame, a 30-point name over a 25-point text): the frame is
+   * at least this many times the line height of the text tall, the name this share of the text size,
+   * and its inner rule at 70 %.
    */
-  surahHeader: { heightInLines: 1.15, nameScale: 1.1, labelScale: 0.62 },
+  surahHeader: { heightInLines: 1.15, nameScale: 1.2, innerRuleOpacity: 0.7 },
 
   /**
    * Following a recitation (spec 3b): how many pages of words the voice is followed on at a time,

@@ -96,8 +96,6 @@ describe('the glass of a floating control', () => {
         <GlassSurface radius={22} testID="glass" />
       </ColorAppearance>,
     );
-    expect(styleOf(screen.getByTestId('glass-glass')).backgroundColor).toBe(
-      palette.glassFill.dark,
-    );
+    expect(styleOf(screen.getByTestId('glass-glass')).backgroundColor).toBe(palette.glassFill.dark);
   });
 });

@@ -5,6 +5,8 @@
  * into the glass pill when a page counts, and what the pill says.
  */
 
+import { readerShapes } from '@/ui';
+
 import { READER_CONFIG } from '../config';
 import {
   advanceDropMoment,
@@ -15,6 +17,7 @@ import {
 } from '../drop-moment';
 import { pillCopy } from '../drop-pill-copy';
 import { drawnThreadShare, isSameThreadState, threadStateOf } from '../page-thread';
+import { dropStartY, readerGeometry } from '../reader-geometry';
 import { minutesOfDayOf, readerPaperOf } from '../reader-paper';
 import type { ReadingFeedback } from '../reading-feedback';
 
@@ -148,12 +151,12 @@ describe('the water thread in the margin: how far the page is from counting (sho
 
   it('tells two equal states apart from two different ones, so a thread draws only on a change', () => {
     expect(isSameThreadState({ kind: 'done' }, { kind: 'done' })).toBe(true);
-    expect(isSameThreadState({ kind: 'filling', share: 0.4 }, { kind: 'filling', share: 0.4 })).toBe(
-      true,
-    );
-    expect(isSameThreadState({ kind: 'filling', share: 0.4 }, { kind: 'filling', share: 0.41 })).toBe(
-      false,
-    );
+    expect(
+      isSameThreadState({ kind: 'filling', share: 0.4 }, { kind: 'filling', share: 0.4 }),
+    ).toBe(true);
+    expect(
+      isSameThreadState({ kind: 'filling', share: 0.4 }, { kind: 'filling', share: 0.41 }),
+    ).toBe(false);
     expect(isSameThreadState({ kind: 'ready' }, { kind: 'done' })).toBe(false);
   });
 
@@ -351,5 +354,41 @@ describe('what the glass pill says (shots 21, 22)', () => {
       detail: { key: 'reader:drop.newElement', element: 'pomegranate' },
       ring: 1,
     });
+  });
+});
+
+describe('where the floating pieces lie (shots 14, 21, 22)', () => {
+  const insets = { top: 47, bottom: 34 };
+  const { glassControl, glassBarHeight, dropPillHeight, dropPillGap } = readerShapes;
+
+  it('puts the pill just above the bottom bar by default, the drop starting well above it', () => {
+    const geometry = readerGeometry({ windowHeight: 852, insets, pillPosition: 'bottom' });
+    const pillBottom = geometry.pillCenterY + dropPillHeight / 2;
+    expect(geometry.bottomBarTop - pillBottom).toBe(dropPillGap);
+    expect(geometry.pillCenterY - geometry.dropMaxY).toBe(READER_CONFIG.drop.minimumFallPoints);
+    expect(geometry.bottomBarTop + glassBarHeight + geometry.bottomBarOffset).toBe(852);
+  });
+
+  it('puts it under the top controls when the owner chooses the top', () => {
+    const geometry = readerGeometry({ windowHeight: 852, insets, pillPosition: 'top' });
+    expect(geometry.pillCenterY - dropPillHeight / 2 - geometry.topBarBottom).toBe(dropPillGap);
+    expect(geometry.topBarBottom - geometry.topBarTop).toBe(glassControl);
+  });
+
+  it('lets the text fade in under the top controls and out above the bottom bar', () => {
+    const geometry = readerGeometry({ windowHeight: 852, insets, pillPosition: 'bottom' });
+    expect(geometry.fadeTopStart).toBeGreaterThan(geometry.topBarTop);
+    expect(geometry.fadeTopEnd).toBeGreaterThan(geometry.topBarBottom);
+    expect(geometry.fadeBottomStart).toBeLessThan(geometry.bottomBarTop);
+    expect(geometry.contentTop).toBeGreaterThan(geometry.fadeTopEnd);
+    expect(852 - geometry.contentBottom).toBeLessThan(geometry.fadeBottomStart);
+  });
+
+  it('starts a drop at the end of its page, kept in the clear text', () => {
+    const geometry = readerGeometry({ windowHeight: 852, insets, pillPosition: 'bottom' });
+    expect(dropStartY(400, geometry)).toBe(400);
+    expect(dropStartY(-200, geometry)).toBe(geometry.dropMinY);
+    expect(dropStartY(5000, geometry)).toBe(geometry.dropMaxY);
+    expect(dropStartY(null, geometry)).toBe(geometry.dropMaxY);
   });
 });

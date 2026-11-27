@@ -148,7 +148,8 @@ export function useColors(): Colors {
   const scheme = useColorScheme();
   const isHighContrast = useHighContrast();
   const override = useAppearanceOverride();
-  if (Platform.OS === 'ios') return override === null ? getIosColors() : getIosFixedColors(override);
+  if (Platform.OS === 'ios')
+    return override === null ? getIosColors() : getIosFixedColors(override);
   const appearance = override ?? (scheme === 'dark' ? 'dark' : 'light');
   return fallbackColors[isHighContrast ? 'high' : 'standard'][appearance];
 }

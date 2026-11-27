@@ -1,18 +1,28 @@
-import { useCallback, useEffect, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Platform, StyleSheet, View, AccessibilityInfo } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  AccessibilityInfo,
+  Platform,
+  StyleSheet,
+  useColorScheme,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
 import { useGenderedTranslation } from '@/features/gender';
 import {
-  Button,
-  ContentUnavailable,
-  ProgressIndicator,
   AppText,
+  Button,
+  ColorAppearance,
+  ContentUnavailable,
+  GlassSurface,
+  ProgressIndicator,
   Screen,
   layout,
   readerShapes,
   spacing,
-  useColors,
+  textStyles,
+  useBackdropGradient,
   useReducedMotion,
   useSafeInsets,
   type IconSymbol,
@@ -23,11 +33,17 @@ import { splitVerseWords, type VerseRef } from '@/domain/quran';
 import { FollowBar } from '@/features/listening/follow/follow-bar';
 
 import { READER_CONFIG } from './config';
+import type { Point } from './drop-moment';
+import { pillCopy } from './drop-pill-copy';
+import { DropOverlay } from './drop-overlay';
+import { DropPill, usePillLine } from './drop-pill';
 import { followStartVerse, verseLook } from './follow-model';
-import { FeedbackPill, PageProgressLine, ReaderBottomBar, ReaderHeader } from './reader-bar';
+import { ReaderBottomBar, ReaderTopBar, TextSizePanel } from './reader-chrome';
+import { dropStartY, readerGeometry, type ReaderGeometry } from './reader-geometry';
 import { ReaderScroll } from './reader-scroll';
-import type { ReadingFeedback } from './reading-feedback';
-import type { ReaderActions, ReaderModel } from './use-reader';
+import { ThreadStoreContext } from './thread-store';
+import { useDropMoment } from './use-drop-moment';
+import type { CountedPageEvent, ReaderActions, ReaderModel } from './use-reader';
 import type { QuranFontStatus } from './use-quran-font';
 import type { RecitationFollow } from './use-recitation-follow';
 import type { ScriptTexts } from './use-script-texts';
@@ -35,8 +51,10 @@ import type { ScriptTexts } from './use-script-texts';
 const NOT_FOUND_SYMBOL: IconSymbol = { ios: 'book.closed', android: 'book_2' };
 const FONT_SYMBOL: IconSymbol = { ios: 'textformat', android: 'text_fields' };
 const ERROR_SYMBOL: IconSymbol = { ios: 'exclamationmark.triangle', android: 'warning' };
-/** The bottom bar runs under the home indicator and keeps it clear itself. */
-const TOP_AND_SIDES = ['top', 'left', 'right'] as const;
+/** The middle of the water thread, across the screen (`page-thread-view.tsx`). */
+const THREAD_X = readerShapes.pageMarginThread - readerShapes.threadFromText;
+/** Between the end of a page's thread and the end of its section: the page number and its air. */
+const PAGE_FOOTER_ROOM = spacing.md * 2 + textStyles.footnote.lineHeight + readerShapes.threadInset;
 
 export { surahDisplayName } from './surah-name';
 
@@ -54,20 +72,32 @@ export interface ReaderScreenProps {
 }
 
 /**
- * The reader (spec 2, D41), on the validated mockup (docs/design/mushaf.png) without its book
- * page: on the warm ground, the bar (a round back button, the surah and place being read, a round
- * bookmark button), the row of the watered pill, then the Quran as one continuous vertical scroll
- * on the paper of the page: verses flowing down, a cartouche and the basmala where a surah
- * begins, a page number where a page of the mushaf ends. At the bottom, the mockup's bar: the
- * script choice, the microphone and the text size. A tap on the text hides the bars and brings
- * them back (going-full-screen.md › Prioritize content by temporarily hiding toolbars); they keep
- * their room, so the text never jumps.
+ * The reader, on the validated mockup of 27 November 2026 (docs/design/maquette-wow, shots 14 to
+ * 16 and 20 to 22): the Quran alone, one continuous scroll the full height of the screen, on the
+ * cream paper by day and the warm night page at night (owner's decision: the reader follows the
+ * hour and the phone's dark appearance). No garden while reading: it would distract (owner). The
+ * controls float over the text in glass, and the text fades under them (liquid-glass.md › Review
+ * checklist, 6: content fades where it meets a bar): at the top the back button, the title pill
+ * and the page's actions (bookmark, text size); at the bottom the water given today, the script
+ * choice and the microphone. A tap on the text hides them and brings them back
+ * (going-full-screen.md › Prioritize content by temporarily hiding toolbars).
  *
- * When a page counts (spec 3), the watered pill shows in its own row under the title for a few
- * seconds: status feedback near what it is about, not an alert (feedback.md › Consider
- * integrating status feedback into your interface).
+ * Each page has its water thread in the margin; when a page counts (spec 3), a single drop forms
+ * at the end of its thread and falls into a small glass pill, which says what grew.
  */
-export function ReaderScreen({
+export function ReaderScreen(props: ReaderScreenProps) {
+  const systemScheme = useColorScheme() === 'dark' ? 'dark' : 'light';
+  const pageAppearance = props.model.paper === 'night' ? 'dark' : 'light';
+  // The night page while the phone is light: the reader's own appearance (SKILLS.md, deviation).
+  const fixed = pageAppearance === systemScheme ? null : pageAppearance;
+  return (
+    <ColorAppearance appearance={fixed}>
+      <ReaderPage {...props} />
+    </ColorAppearance>
+  );
+}
+
+function ReaderPage({
   model,
   actions,
   fontStatus,
@@ -77,10 +107,16 @@ export function ReaderScreen({
   follow,
 }: ReaderScreenProps) {
   const { t } = useGenderedTranslation('reader');
-  const colors = useColors();
   const isMotionReduced = useReducedMotion();
   const insets = useSafeInsets();
-  const feedbackText = useFeedbackText(model.feedback);
+  const { width, height } = useWindowDimensions();
+  const pillPosition = READER_CONFIG.dropPill.position;
+  const geometry = useMemo(
+    () => readerGeometry({ windowHeight: height, insets, pillPosition }),
+    [height, insets, pillPosition],
+  );
+  const [isTextSizeOpen, setTextSizeOpen] = useState(false);
+  const [ringX, setRingX] = useState<number | null>(null);
   const isFollowing = follow.status === 'starting' || follow.status === 'following';
   const followMessage =
     follow.status === 'denied'
@@ -118,10 +154,36 @@ export function ReaderScreen({
     [follow, page, surah],
   );
 
-  // Heard once, wherever the pill shows (feedback.md › Make sure all feedback is accessible).
+  const geometryOfDrop = useCallback(
+    (event: CountedPageEvent) => ({
+      fromY: dropStartY(
+        event.pageEndOnScreen === null ? null : event.pageEndOnScreen - PAGE_FOOTER_ROOM,
+        geometry,
+      ),
+      toY: geometry.pillCenterY,
+    }),
+    [geometry],
+  );
+  const { moment, fall } = useDropMoment(model.counted, isMotionReduced, geometryOfDrop);
+
+  // Heard once, when the drop has landed (feedback.md › Make sure all feedback is accessible).
+  const lineOf = usePillLine();
+  const spoken =
+    moment.phase === 'received'
+      ? (() => {
+          const copy = pillCopy(moment.feedback, 'received');
+          return `${lineOf(copy.title)}, ${lineOf(copy.detail)}`;
+        })()
+      : null;
   useEffect(() => {
-    if (feedbackText !== null) AccessibilityInfo.announceForAccessibility(feedbackText);
-  }, [feedbackText]);
+    if (spoken !== null) AccessibilityInfo.announceForAccessibility(spoken);
+  }, [spoken]);
+
+  const { toggleBars } = actions;
+  const onTapText = useCallback(() => {
+    if (isTextSizeOpen) setTextSizeOpen(false);
+    else toggleBars();
+  }, [isTextSizeOpen, toggleBars]);
 
   if (fontStatus === 'failed') {
     return (
@@ -136,32 +198,16 @@ export function ReaderScreen({
     );
   }
 
+  const to: Point = { x: ringX ?? width / 2, y: geometry.pillCenterY };
+  // The counter shows the count before the page while its drop falls, the new one when it lands.
+  const todayShown =
+    moment.phase === 'falling' ? moment.feedback.todayBefore : model.today.pagesRead;
+
   return (
-    <Screen background="pageGround" edges={TOP_AND_SIDES} testID="reader">
-      <ReaderHeader
-        model={model}
-        isVisible={model.barsVisible}
-        onBack={close}
-        onToggleBookmark={actions.toggleBookmark}
-      />
-      <View style={styles.pillRow} testID="reader-pill-row">
-        {feedbackText !== null ? (
-          <FeedbackPill key={feedbackText} text={feedbackText} />
-        ) : followMessage !== null ? (
-          <AppText
-            variant="footnote"
-            color="inkSecondary"
-            align="center"
-            accessibilityLiveRegion="polite"
-            testID="reader-follow-message"
-          >
-            {followMessage}
-          </AppText>
-        ) : (
-          <PageProgressLine progress={model.pageProgress} />
-        )}
-      </View>
-      <View style={[styles.text, { backgroundColor: colors.paper }]} testID="reader-text">
+    <View style={styles.root} testID="reader">
+      <StatusBar style={model.paper === 'night' ? 'light' : 'dark'} />
+      <PageBackground />
+      <View style={styles.text} testID="reader-text">
         {texts.status === 'error' ? (
           <View style={styles.centred} testID="reader-text-error">
             <ContentUnavailable
@@ -176,40 +222,91 @@ export function ReaderScreen({
             <ProgressIndicator accessibilityLabel={t('page.loading', { page: model.page })} />
           </View>
         ) : (
-          <ReaderScroll
-            // The page being read: the page opened at first, and after a change of script (whose
-            // text is loaded, then drawn in a new scroll) the place reached, not the page opened.
-            initialPage={model.page}
-            script={texts.script}
-            textScale={model.textScale}
-            textOf={texts.textOf}
-            onObserve={actions.observe}
-            onTap={actions.toggleBars}
-            accessibilityLabel={t('page.scroll')}
-            lookOfVerse={lookOfVerse}
-            followTarget={follow.target}
-            isMotionReduced={isMotionReduced}
-          />
+          <ThreadStoreContext.Provider value={model.threads}>
+            <ReaderScroll
+              // The page being read: the page opened at first, and after a change of script
+              // (whose text is loaded, then drawn in a new scroll) the place reached.
+              initialPage={model.page}
+              script={texts.script}
+              textScale={model.textScale}
+              textOf={texts.textOf}
+              onObserve={actions.observe}
+              onTap={onTapText}
+              accessibilityLabel={t('page.scroll')}
+              lookOfVerse={lookOfVerse}
+              followTarget={follow.target}
+              isMotionReduced={isMotionReduced}
+              contentInset={{ top: geometry.contentTop, bottom: geometry.contentBottom }}
+            />
+          </ThreadStoreContext.Provider>
         )}
       </View>
-      <ReaderBottomBar
-        // While a voice is followed, the floating bar of voix.png takes its place; its room stays.
-        isVisible={model.barsVisible && !isFollowing}
-        onListen={startFollowing}
-        script={model.script}
-        onChooseScript={actions.chooseScript}
-        canShrinkText={model.canShrinkText}
-        canEnlargeText={model.canEnlargeText}
-        onShrinkText={actions.shrinkText}
-        onEnlargeText={actions.enlargeText}
-        textSizeValue={t('textSize.value', {
-          step: model.textSizeStep + 1,
-          count: READER_CONFIG.textSizeScales.length,
-        })}
+      <EdgeFades geometry={geometry} />
+      <ReaderTopBar
+        surah={model.surah}
+        page={model.page}
+        juz={model.juz}
+        hizb={model.hizb}
+        isBookmarked={model.isBookmarked}
+        isTextSizeOpen={isTextSizeOpen}
+        isVisible={model.barsVisible}
+        top={geometry.topBarTop}
+        onBack={close}
+        onToggleBookmark={actions.toggleBookmark}
+        onToggleTextSize={() => setTextSizeOpen((open) => !open)}
       />
+      {isTextSizeOpen && model.barsVisible ? (
+        <TextSizePanel
+          step={model.textSizeStep}
+          stepCount={READER_CONFIG.textSizeScales.length}
+          canShrinkText={model.canShrinkText}
+          canEnlargeText={model.canEnlargeText}
+          onShrinkText={actions.shrinkText}
+          onEnlargeText={actions.enlargeText}
+          onChooseStep={actions.chooseTextSize}
+          value={t('textSize.value', {
+            step: model.textSizeStep + 1,
+            count: READER_CONFIG.textSizeScales.length,
+          })}
+          top={geometry.topBarBottom + spacing.sm}
+          isMotionReduced={isMotionReduced}
+        />
+      ) : null}
+      {followMessage !== null ? (
+        <View style={[styles.messageRoom, { top: geometry.topBarBottom + spacing.sm }]}>
+          <GlassSurface radius={readerShapes.dropPillHeight / 2} style={styles.message}>
+            <AppText
+              variant="footnote"
+              color="ink"
+              align="center"
+              accessibilityLiveRegion="polite"
+              testID="reader-follow-message"
+            >
+              {followMessage}
+            </AppText>
+          </GlassSurface>
+        </View>
+      ) : null}
+      {moment.phase !== 'idle' ? (
+        <DropPill
+          moment={moment}
+          position={pillPosition}
+          offset={geometry.pillOffset}
+          isMotionReduced={isMotionReduced}
+          onRingLayout={setRingX}
+        />
+      ) : null}
+      {moment.phase === 'falling' && fall !== null && !isMotionReduced ? (
+        <DropOverlay
+          dropId={moment.id}
+          from={{ x: THREAD_X, y: fall.fromY }}
+          to={to}
+          timings={fall.timings}
+        />
+      ) : null}
       {isFollowing ? (
         <View
-          style={[styles.followBar, { bottom: insets.bottom + spacing.sm }]}
+          style={[styles.followBar, { bottom: geometry.bottomBarOffset }]}
           testID="reader-follow"
         >
           <FollowBar
@@ -221,8 +318,77 @@ export function ReaderScreen({
             onStop={follow.stop}
           />
         </View>
-      ) : null}
-    </Screen>
+      ) : (
+        <ReaderBottomBar
+          isVisible={model.barsVisible}
+          bottom={geometry.bottomBarOffset}
+          todayPages={todayShown}
+          goalPages={model.today.goalPages}
+          script={model.script}
+          onChooseScript={actions.chooseScript}
+          onListen={startFollowing}
+          isMotionReduced={isMotionReduced}
+        />
+      )}
+    </View>
+  );
+}
+
+/** The page under the text: the cream paper by day, the warm night page at night. */
+function PageBackground() {
+  const stops = useBackdropGradient('readerPage');
+  const top = stops[0]?.[1];
+  const bottom = stops[stops.length - 1]?.[1];
+  return (
+    <View
+      pointerEvents="none"
+      testID="reader-page"
+      style={[
+        StyleSheet.absoluteFill,
+        { backgroundColor: bottom, backgroundImage: `linear-gradient(180deg, ${top}, ${bottom})` },
+      ]}
+    />
+  );
+}
+
+/**
+ * The text fades under the glass controls (maquette-wow, the mask of `.rd-scroll`): hidden behind
+ * the top controls and fading in below them, fading out above the bottom bar. In the colour of
+ * the page at each end, so nothing else changes.
+ */
+function EdgeFades({ geometry }: { geometry: ReaderGeometry }) {
+  const stops = useBackdropGradient('readerPage');
+  const top = stops[0]?.[1] ?? '';
+  const bottom = stops[stops.length - 1]?.[1] ?? '';
+  const { height } = useWindowDimensions();
+  const topSolid = (geometry.fadeTopStart / geometry.fadeTopEnd) * 100;
+  const bottomHeight = height - geometry.fadeBottomStart;
+  const bottomClear = ((geometry.fadeBottomEnd - geometry.fadeBottomStart) / bottomHeight) * 100;
+  return (
+    <>
+      <View
+        pointerEvents="none"
+        testID="reader-fade-top"
+        style={[
+          styles.fadeTop,
+          {
+            height: geometry.fadeTopEnd,
+            backgroundImage: `linear-gradient(180deg, ${top} ${topSolid}%, ${top}00 100%)`,
+          },
+        ]}
+      />
+      <View
+        pointerEvents="none"
+        testID="reader-fade-bottom"
+        style={[
+          styles.fadeBottom,
+          {
+            height: bottomHeight,
+            backgroundImage: `linear-gradient(180deg, ${bottom}00 0%, ${bottom} ${bottomClear}%)`,
+          },
+        ]}
+      />
+    </>
   );
 }
 
@@ -238,23 +404,6 @@ function followFailureKey(failure: RecitationFollow['failure']): string {
     default:
       return 'follow.failed';
   }
-}
-
-/** What the page just left gave, in words, or null when there is nothing to say. */
-function useFeedbackText(feedback: ReadingFeedback | null): string | null {
-  const { t } = useTranslation(['reader', 'garden']);
-  if (feedback === null) return null;
-  if (feedback.kind === 'hizb-completed') {
-    return t('reader:feedback.hizbCompleted', {
-      element: t(`garden:kinds.${feedback.elementKind}`),
-    });
-  }
-  // What the page grows, by name ("+1 page, ton grenadier grandit"); the garden when nothing does.
-  return feedback.growingKind === null
-    ? t('reader:feedback.pageCounted')
-    : t('reader:feedback.pageGrows', {
-        growth: t(`reader:feedback.grows.${feedback.growingKind}`),
-      });
 }
 
 interface ReaderUnavailableProps {
@@ -305,17 +454,20 @@ export function ReaderNotFound({ openContents }: { openContents: () => void }) {
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
   // The room of the system navigation bar, which floats over a reader that has nothing to show.
   barRoom: { height: Platform.select(READER_CONFIG.navigationBarHeight) },
-  // The row of the watered pill, kept when it is empty, so the page does not move.
-  pillRow: {
-    minHeight: readerShapes.pillRowHeight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: layout.screenMargin,
-  },
   text: { flex: 1 },
-  // Floating over the bottom of the page, as in voix.png, where the bottom bar keeps its room.
+  fadeTop: { position: 'absolute', top: 0, start: 0, end: 0 },
+  fadeBottom: { position: 'absolute', bottom: 0, start: 0, end: 0 },
+  messageRoom: {
+    position: 'absolute',
+    start: layout.screenMargin,
+    end: layout.screenMargin,
+    alignItems: 'center',
+  },
+  message: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  // Floating over the bottom of the page, as in voix.png, where the bottom bar stands.
   followBar: {
     position: 'absolute',
     start: layout.screenMargin,

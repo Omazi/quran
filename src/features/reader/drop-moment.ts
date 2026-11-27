@@ -116,8 +116,7 @@ function overshoot(t: number): number {
   let u = t;
   for (let step = 0; step < 6; step += 1) {
     const x = 3 * (1 - u) * (1 - u) * u * x1 + 3 * (1 - u) * u * u * x2 + u * u * u - t;
-    const dx =
-      3 * (1 - u) * (1 - u) * x1 + 6 * (1 - u) * u * (x2 - x1) + 3 * u * u * (1 - x2);
+    const dx = 3 * (1 - u) * (1 - u) * x1 + 6 * (1 - u) * u * (x2 - x1) + 3 * u * u * (1 - x2);
     if (Math.abs(dx) < 1e-6) break;
     u = Math.min(1, Math.max(0, u - x / dx));
   }

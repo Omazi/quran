@@ -86,9 +86,7 @@ export function setDeviceConditions({
 }
 
 type DeviceSettingEvent =
-  | 'highTextContrastChanged'
-  | 'reduceMotionChanged'
-  | 'reduceTransparencyChanged';
+  'highTextContrastChanged' | 'reduceMotionChanged' | 'reduceTransparencyChanged';
 
 /** Tells the app that a device setting changed, as the device would while the app is open. */
 async function changeDeviceSetting(event: DeviceSettingEvent, enabled: boolean): Promise<void> {

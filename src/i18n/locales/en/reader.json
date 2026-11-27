@@ -50,7 +50,6 @@
     }
   },
   "page": {
-    "subtitle": "Juz {{juz}}, Hizb {{hizb}} · Page {{page}}",
     "surahTitle": "سورة {{name}}",
     "cartouche": {
       "verses": "آياتها {{count}}",
@@ -60,7 +59,7 @@
     },
     "loading": "Loading page {{page}}",
     "scroll": "Quran Text",
-    "footer": "{{page}}",
+    "footer": "page {{page}}",
     "footerSpoken": "End of page {{page}}",
     "error": {
       "title": "Page Unreadable",
@@ -70,7 +69,9 @@
   "bar": {
     "back": "Back",
     "bookmark": "Bookmark",
-    "listen": "Recite, Followed by the App"
+    "listen": "Recite, Followed by the App",
+    "page": "page {{page}}",
+    "titleSpoken": "{{surah}}, Juz {{juz}}, Hizb {{hizb}}, page {{page}}"
   },
   "script": {
     "label": "Script",
@@ -82,39 +83,6 @@
     "smaller": "Smaller Text",
     "larger": "Larger Text",
     "value": "Size {{step}} of {{count}}"
-  },
-  "feedback": {
-    "pageCounted": "+1 page, your garden is watered",
-    "pageGrows": "+1 page, {{growth}}",
-    "grows": {
-      "pomegranate": "your pomegranate tree is growing",
-      "date-palm": "your date palm is growing",
-      "olive": "your olive tree is growing",
-      "fig": "your fig tree is growing",
-      "cypress": "your cypress is growing",
-      "orange": "your orange tree is growing",
-      "channels": "your channels are flowing further",
-      "paving": "your paving is spreading",
-      "bed": "your flower bed is filling",
-      "stepping-stones": "your stepping stones are spreading",
-      "flowers": "your flowers are growing",
-      "fountain": "your fountain is taking shape",
-      "springs": "your springs are coming",
-      "birds": "your birds are coming",
-      "wall": "your wall is rising",
-      "trellis": "your trellis is climbing",
-      "gate": "your gate is taking shape",
-      "lanterns": "your lanterns are coming",
-      "butterflies": "your butterflies are coming",
-      "pavilion": "your pavilion is rising",
-      "carpets": "your carpets are being woven",
-      "cushions": "your cushions are coming",
-      "lectern": "your lectern is taking shape",
-      "roses": "your roses are growing",
-      "waterfall": "your waterfall is taking shape",
-      "full-bloom": "your garden is nearing full bloom"
-    },
-    "hizbCompleted": "Hizb complete. New in your garden: {{element}}"
   },
   "notFound": {
     "title": "Page Not Found",
@@ -132,5 +100,76 @@
     "failedModelMissing": "Voice model missing. Reinstall the app from TestFlight.",
     "failedNoAudio": "No sound from the microphone. Make sure no other app is using it, then try again.",
     "failedMicrophone": "Microphone unavailable. A call or another app may be using it."
+  },
+  "today": {
+    "goal": "/{{goal}}",
+    "spoken_one": "Today’s watering: {{count}} page of {{goal}}",
+    "spoken_other": "Today’s watering: {{count}} pages of {{goal}}"
+  },
+  "drop": {
+    "toward": {
+      "pomegranate": "A drop for the pomegranate tree",
+      "date-palm": "A drop for the date palm",
+      "olive": "A drop for the olive tree",
+      "fig": "A drop for the fig tree",
+      "cypress": "A drop for the cypress",
+      "orange": "A drop for the orange tree",
+      "channels": "A drop for the channels",
+      "paving": "A drop for the paving",
+      "bed": "A drop for the flower bed",
+      "stepping-stones": "A drop for the stepping stones",
+      "flowers": "A drop for the flowers",
+      "fountain": "A drop for the fountain",
+      "springs": "A drop for the springs",
+      "birds": "A drop for the birds",
+      "wall": "A drop for the wall",
+      "trellis": "A drop for the trellis",
+      "gate": "A drop for the gate",
+      "lanterns": "A drop for the lanterns",
+      "butterflies": "A drop for the butterflies",
+      "pavilion": "A drop for the pavilion",
+      "carpets": "A drop for the carpets",
+      "cushions": "A drop for the cushions",
+      "lectern": "A drop for the lectern",
+      "roses": "A drop for the roses",
+      "waterfall": "A drop for the waterfall",
+      "full-bloom": "A drop for the full bloom"
+    },
+    "grew": {
+      "pomegranate": "The pomegranate tree grew",
+      "date-palm": "The date palm grew",
+      "olive": "The olive tree grew",
+      "fig": "The fig tree grew",
+      "cypress": "The cypress grew",
+      "orange": "The orange tree grew",
+      "channels": "The channels flowed further",
+      "paving": "The paving spread",
+      "bed": "The flower bed filled up",
+      "stepping-stones": "The stepping stones spread",
+      "flowers": "The flowers grew",
+      "fountain": "The fountain is taking shape",
+      "springs": "The springs are coming",
+      "birds": "The birds are coming",
+      "wall": "The wall rose",
+      "trellis": "The trellis climbed",
+      "gate": "The gate is taking shape",
+      "lanterns": "The lanterns are coming",
+      "butterflies": "The butterflies are coming",
+      "pavilion": "The pavilion rose",
+      "carpets": "The carpets are being woven",
+      "cushions": "The cushions are coming",
+      "lectern": "The lectern is taking shape",
+      "roses": "The roses grew",
+      "waterfall": "The waterfall is taking shape",
+      "full-bloom": "Your garden is nearing full bloom"
+    },
+    "towardGarden": "A drop for your garden",
+    "watered": "Your garden is watered",
+    "hizbPages_one": "{{count}} page of {{total}} in hizb {{hizb}}",
+    "hizbPages_other": "{{count}} pages of {{total}} in hizb {{hizb}}",
+    "today_one": "{{count}} page today",
+    "today_other": "{{count}} pages today",
+    "hizbCompleted": "Hizb {{hizb}} complete",
+    "newElement": "New in your garden: {{element}}"
   }
 }

@@ -503,6 +503,8 @@ export const elevation = {
     light: '0px 8px 24px rgba(40, 32, 16, 0.14)',
     dark: '0px 8px 24px rgba(0, 0, 0, 0.4)',
   },
+  /** The thumb of a track, a small white disc (maquette-wow, `.rd-size-track i`). */
+  thumb: { light: '0px 2px 8px rgba(0, 0, 0, 0.25)', dark: '0px 2px 8px rgba(0, 0, 0, 0.25)' },
   /** A glass control floating over the reader's page (maquette-wow, `.glass`). */
   glass: {
     light: '0px 10px 34px rgba(60, 46, 24, 0.16), 0px 1px 2px rgba(60, 46, 24, 0.16)',
