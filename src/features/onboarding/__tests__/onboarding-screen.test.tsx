@@ -211,4 +211,51 @@ describe('the first launch, "voix" direction', () => {
     expect(plane).toHaveProp('pointerEvents', 'none');
     expect(plane).toHaveStyle({ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 });
   });
+
+  // The same rule for every view of the first launch, on pages turned both ways (-5°, +1°, +4°):
+  // the CI screen check of 6f46ea0 showed the stage's views (garden, name, caption, verse, dots)
+  // losing the side the garden turns away from on every turned page, whole on the straight ones.
+  // Any view turned in 3D must be alone in a flat native view; none may sit among the others.
+  it.each([0, 3, 6])('turns nothing in 3D among other views (page %i)', async (page) => {
+    await open({ page });
+    const turned = hostNodes(screen.getByTestId('onboarding')).filter(isTurnedIn3D);
+    expect(turned.map((node) => node.props.testID)).toContain('onboarding-garden');
+    for (const node of turned) {
+      const { parent } = node;
+      expect(parent?.props.collapsable).toBe(false);
+      expect(parent === null ? [] : hostChildren(parent)).toEqual([node]);
+      expect(parent === null ? false : isTurnedIn3D(parent)).toBe(false);
+    }
+  });
 });
+
+type Node = ReturnType<typeof screen.getByTestId>;
+
+/** Every element under `root` (the test renderer holds host elements only: native views). */
+function hostNodes(root: Node): Node[] {
+  const found: Node[] = [];
+  const visit = (node: Node) => {
+    found.push(node);
+    hostChildren(node).forEach(visit);
+  };
+  visit(root);
+  return found;
+}
+
+function hostChildren(node: Node): Node[] {
+  return node.children.filter((child): child is Node => typeof child !== 'string');
+}
+
+/** A transform with depth: a perspective or a turn around a horizontal or vertical axis. */
+function isTurnedIn3D(node: Node): boolean {
+  const flat = [node.props.style].flat(Infinity) as ({ transform?: object[] } | null | false)[];
+  return flat.some(
+    (style) =>
+      style !== null &&
+      style !== false &&
+      style !== undefined &&
+      (style.transform ?? []).some(
+        (step) => 'perspective' in step || 'rotateX' in step || 'rotateY' in step,
+      ),
+  );
+}

@@ -217,8 +217,9 @@ export function GardenStage(props: GardenStageProps) {
   });
   return (
     // A plane for the garden alone. On iOS, a view turned in 3D shares the depth of its siblings:
-    // the half that turns away went behind the sky and the half that comes forward covered the
-    // app's name (iOS photos of 27 November 2026: half a garden, "atuk", "Jann" on pages 1 to 9).
+    // on the side the garden turns away from, the sky was drawn over the garden and over its
+    // siblings, even those far from it (iOS photos of 27 November 2026, pages 1 to 9: half a
+    // garden, "atuk" or "Jann", the caption and the verse cut at the garden's axis).
     // A parent that is really drawn (`collapsable={false}`) flattens its only child into itself.
     <View
       style={StyleSheet.absoluteFill}
