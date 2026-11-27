@@ -89,6 +89,7 @@ describe('the feedback after a page (spec 3)', () => {
     const before = readPages([1]);
     const after = readPages([2], before);
     const feedback = readingFeedback({
+      page: 2,
       before,
       after,
       settings,
@@ -99,7 +100,49 @@ describe('the feedback after a page (spec 3)', () => {
     const growing = buildHomeModel({ journal: after, settings, today: DAY, hizbPageRanges: RANGES })
       .garden.nextElement?.element.kind;
     expect(growing).toBeDefined();
-    expect(feedback).toEqual({ kind: 'page-counted', growingKind: growing });
+    expect(feedback).toEqual({
+      kind: 'page-counted',
+      page: 2,
+      growingKind: growing,
+      // Hizb 1: one page of it before, two after (the pill's "2 pages sur n du hizb 1").
+      growth: { hizb: 1, pagesBefore: 1, pagesAfter: 2, pageCount: RANGES[0]!.lastPage },
+      // The counter of the day goes from one page to two.
+      todayBefore: 1,
+      todayAfter: 2,
+    });
+  });
+
+  it('counts the pages of the hizb in progress only, when the page belongs to another one', () => {
+    const before = readPages([1]);
+    const after = readPages([300], before);
+    const feedback = readingFeedback({
+      page: 300,
+      before,
+      after,
+      settings,
+      today: DAY,
+      hizbPageRanges: RANGES,
+    });
+    expect(feedback?.growth).toEqual({
+      hizb: 1,
+      pagesBefore: 1,
+      pagesAfter: 1,
+      pageCount: RANGES[0]!.lastPage,
+    });
+  });
+
+  it('says nothing for a page the khatma already holds', () => {
+    const journal = readPages([1]);
+    expect(
+      readingFeedback({
+        page: 1,
+        before: journal,
+        after: journal,
+        settings,
+        today: DAY,
+        hizbPageRanges: RANGES,
+      }),
+    ).toBeNull();
   });
 
   it('names the new element of the garden when the page completes a hizb', () => {
@@ -107,6 +150,7 @@ describe('the feedback after a page (spec 3)', () => {
     const before = readPages(pagesFromTo(1, lastPage - 1));
     const after = readPages([lastPage], before);
     const feedback = readingFeedback({
+      page: lastPage,
       before,
       after,
       settings,
@@ -115,6 +159,13 @@ describe('the feedback after a page (spec 3)', () => {
     });
     expect(feedback?.kind).toBe('hizb-completed');
     expect(feedback?.kind === 'hizb-completed' && typeof feedback.elementKind).toBe('string');
+    // The hizb is full: its last page takes it to all its pages.
+    expect(feedback?.growth).toEqual({
+      hizb: 1,
+      pagesBefore: lastPage - 1,
+      pagesAfter: lastPage,
+      pageCount: lastPage,
+    });
   });
 });
 

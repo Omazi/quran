@@ -200,6 +200,7 @@ export function useReader(
       latest.current.recordInStore(pageRead);
       latest.current.journal = after;
       return readingFeedback({
+        page,
         before,
         after,
         settings: latest.current.settings,

@@ -13,12 +13,64 @@ export const READER_CONFIG = Object.freeze({
   readingTime: { secondsPerWord: 0.2, minimumSeconds: 8 },
 
   /**
-   * The water line that shows a page being counted, under the title (spec 3): its width, its
-   * thickness, how long it takes to follow a new value, and, with Reduce Motion, the number of
-   * still steps it moves by. A thin line, the width of the pill's drop and a few words: discreet,
-   * never over the text. Judgment.
+   * The water thread in the margin of each page (validated mockup of 27 November 2026, shots 20 to
+   * 22; it replaces the water line under the title): how long its fill takes to follow a new value,
+   * and, with Reduce Motion, the number of still steps it moves by (the rule of the water line it
+   * replaces, spec 3). How long the light that runs down a filling thread takes to pass (the
+   * mockup's `flow`, 1.6 s), and how pale a thread is once its page counted (the mockup's 45 %).
    */
+  /** The water line under the title, until the thread replaces it on screen. */
   progressLine: { width: 72, thickness: 3, followMs: 900, reducedMotionSteps: 3 },
+  feedbackSeconds: 4,
+
+  thread: { followMs: 900, reducedMotionSteps: 3, flowMs: 1600, doneOpacity: 0.45 },
+
+  /**
+   * The paper of the page by day, the night page at night (owner's decision of 27 November 2026):
+   * the minute of the local day at which the paper comes, and the one at which the night page
+   * comes. They are where the validated mockup's sky turns (docs/design/maquette-wow, `js/sky.js`:
+   * the theme turns "night" when the top of the sky falls under 16 % luminance, at 17:56, and
+   * "day" again at 06:11). Fixed hours, not the sun's: the app does not ask where the person is.
+   * The phone's dark appearance always gives the night page. How often the reader looks at the
+   * clock while it is open, in seconds.
+   */
+  paper: { dayStartsAtMinute: 6 * 60 + 11, nightStartsAtMinute: 17 * 60 + 56, recheckSeconds: 60 },
+
+  /**
+   * The drop that falls from the end of a page's thread into the glass pill when the page counts,
+   * as the validated mockup times it (`js/fx.js`, `drop()`): it forms at the end of the thread with
+   * an overshoot (380 ms, the curve (0.34, 1.56, 0.64, 1)), waits a moment, then falls with gravity
+   * for 620 ms plus 0.45 ms per point of height, at most 400 ms more. It stretches with its speed,
+   * up to 55 % longer. Then a few droplets splash where it lands.
+   */
+  drop: {
+    formMs: 380,
+    holdMs: 90,
+    fallBaseMs: 620,
+    fallMsPerPoint: 0.45,
+    fallExtraMaxMs: 400,
+    maxStretch: 0.55,
+    stretchPerPointPerFrame: 0.04,
+    /** The drop starts at least this far above the pill, as in the mockup (`H - 240`). */
+    minimumFallPoints: 96,
+    splashMs: 520,
+    splashDroplets: 6,
+  },
+
+  /**
+   * The glass pill the drop falls into (shots 21, 22). Where it shows: at the bottom, above the
+   * controls, or at the top under the title. The owner has not chosen yet (README of the mockup,
+   * question 4; its author advises the bottom): this one constant moves it. How long it stays
+   * once the drop has landed: 4 s, the time of the pill it replaces (deviation 64), where the
+   * mockup waits 2.4 s, short for two lines read with VoiceOver or at a large text size. Its small
+   * bounce when the drop lands (the mockup's 420 ms to 106 %, curve (0.34, 1.56, 0.64, 1)).
+   */
+  dropPill: {
+    position: 'bottom' as 'bottom' | 'top',
+    visibleSeconds: 4,
+    bounceMs: 420,
+    bounceScale: 1.06,
+  },
 
   /**
    * Past this speed, in screens per second, the text is flung, not read: no time counts and no
@@ -41,14 +93,6 @@ export const READER_CONFIG = Object.freeze({
    * screen (docs/specs/reader.md, comparison). Judgment.
    */
   readingLineRatio: 1 / 3,
-
-  /**
-   * How long the watered pill stays in the bar after a page counted, before the title of the page
-   * comes back (spec 3). Brief, because it takes the place of the title; VoiceOver hears it when it
-   * comes, and the garden keeps the water. A time-boxed element is a deviation to
-   * accessibility.md › Cognitive (deviation 64 of the register). Judgment.
-   */
-  feedbackSeconds: 4,
 
   /**
    * The entrance of the watered pill: the system's snappy spring (animation-patterns,
