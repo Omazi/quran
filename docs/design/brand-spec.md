@@ -127,6 +127,7 @@ d'Apple, qui suivent le réglage de taille de texte de la personne :
 | Headline           | 17 / 22, demi-gras           | Libellé important                                                  |
 | Body               | 17 / 22                      | Texte                                                              |
 | Callout            | 16 / 21, demi-gras           | Nom dans une carte (maquettes ; écart 72)                          |
+| Pill Title         | 16 / 20, demi-gras, Fraunces | Titre d'une pastille de verre du lecteur (maquette-wow : « Al-Kahf ») |
 | Subhead            | 15 / 20                      | Texte secondaire                                                   |
 | Subhead Emphasized | 15 / 20, demi-gras           | Libellé court qui ouvre une carte (maquettes ; écart 72)           |
 | Footnote           | 13 / 18                      | Notes, légendes                                                    |

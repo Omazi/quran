@@ -21,6 +21,7 @@ import {
   withDescendants,
 } from '../test-support/environment';
 import {
+  appColors,
   backdropGradients,
   contrastThresholds,
   palette,
@@ -75,6 +76,9 @@ describe('the palette of the validated mockups', () => {
     dusk: ['onAction', 'onActionSecondary'],
     // The tail of the night curtain carries no words: it only passes over the sky.
     duskTail: [],
+    // The reader's page carries the Quran in `ink` and its marks in `ornament` (charter colours,
+    // not the palette's): their contrast is checked on both ends of the page below.
+    readerPage: [],
   };
   /** The completed khatma writes its words under the garden: the lower half of its gradient. */
   const FIRST_STOP_UNDER_TEXT: Readonly<Record<keyof typeof backdropGradients, number>> = {
@@ -87,6 +91,7 @@ describe('the palette of the validated mockups', () => {
     together: 0,
     dusk: 0,
     duskTail: 0,
+    readerPage: 0,
   };
 
   it.each(['light', 'dark'] as const)(
@@ -102,6 +107,20 @@ describe('the palette of the validated mockups', () => {
               )
               .map((text) => `${text} on ${name} at ${offset}`),
           ),
+      );
+      expect(failures).toEqual([]);
+    },
+  );
+
+  it.each(['light', 'dark'] as const)(
+    'keeps the Quran, its marks and the page numbers readable on the reader’s page (%s)',
+    (appearance) => {
+      const failures = backdropGradients.readerPage[appearance].flatMap(([offset, color]) =>
+        (['ink', 'ornament', 'inkSecondary'] as const)
+          .filter(
+            (text) => contrastRatio(appColors[text][appearance], color) < contrastThresholds.text,
+          )
+          .map((text) => `${text} at ${offset}`),
       );
       expect(failures).toEqual([]);
     },

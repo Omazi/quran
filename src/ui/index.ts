@@ -15,7 +15,14 @@ export { QrCode, qrCodeModules, type QrCodeProps } from './components/qr-code';
 export { ReaderSearchField, type ReaderSearchFieldProps } from './components/reader-search-field';
 export { QuranText, type QuranTextProps, type QuranTextRun } from './components/quran-text';
 export { Screen, type ScreenBackground, type ScreenProps } from './components/screen';
-export { useHighContrast, useReducedMotion } from './device-settings';
+export { useHighContrast, useReducedMotion, useReducedTransparency } from './device-settings';
+export {
+  ColorAppearance,
+  useAppearance,
+  type Appearance,
+  type ColorAppearanceProps,
+} from './appearance';
+export { GlassSurface, type GlassSurfaceProps } from './components/glass-surface';
 export { useSafeInsets } from './safe-insets';
 export { listeningOpacity, listeningShape, useUpcomingInk } from './listening-tokens';
 export { getWritingDirection, type WritingDirection } from './direction';

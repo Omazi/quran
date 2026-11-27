@@ -419,6 +419,7 @@ describe('text styles', () => {
     headline: 'Headline',
     body: 'Body',
     callout: 'Callout',
+    pillTitle: 'Pill Title',
     subhead: 'Subhead',
     subheadEmphasized: 'Subhead Emphasized',
     footnote: 'Footnote',
@@ -444,6 +445,7 @@ describe('text styles', () => {
       ['headline', '600'],
       ['body', '400'],
       ['callout', '600'],
+      ['pillTitle', '600'],
       ['subhead', '400'],
       ['subheadEmphasized', '600'],
       ['footnote', '400'],
@@ -454,6 +456,7 @@ describe('text styles', () => {
     expect(textStyles.largeTitle.fontFamily).toBe(fontFamily.display);
     expect(textStyles.title1.fontFamily).toBe(fontFamily.display);
     expect(textStyles.title2.fontFamily).toBe(fontFamily.display);
+    expect(textStyles.pillTitle.fontFamily).toBe(fontFamily.display);
     expect(textStyles.displayTitle.fontFamily).toBe(fontFamily.serif);
     for (const name of [
       'figure',

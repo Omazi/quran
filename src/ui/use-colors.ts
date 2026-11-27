@@ -6,6 +6,7 @@ import {
   type ColorValue,
 } from 'react-native';
 
+import { useAppearanceOverride } from './appearance';
 import { useHighContrast } from './device-settings';
 import {
   appColors,
@@ -86,6 +87,29 @@ function getIosColors(): Colors {
   return iosColors;
 }
 
+/**
+ * iOS, under a `ColorAppearance` that fixes the appearance: each app colour is still dynamic, so
+ * that Increase Contrast keeps working, but both of its appearances take the fixed one's value.
+ * The system's own roles take their fallback values, since a system colour follows the device.
+ */
+const iosFixedColors: Partial<Record<Appearance, Colors>> = {};
+
+function getIosFixedColors(appearance: Appearance): Colors {
+  const fixed = (pair: ColorPair, highContrast: ColorPair | undefined) =>
+    DynamicColorIOS({
+      light: pair[appearance],
+      dark: pair[appearance],
+      highContrastLight: highContrast?.[appearance],
+      highContrastDark: highContrast?.[appearance],
+    });
+  iosFixedColors[appearance] ??= {
+    ...mapRoles(fallbackSystemColors, (pair: ColorPair) => pair[appearance]),
+    ...mapRoles(appColors, (pair: ColorPair, role) => fixed(pair, highContrastOf(role))),
+    ...mapRoles(palette, (pair: ColorPair, role) => fixed(pair, highContrastOfPalette(role))),
+  };
+  return iosFixedColors[appearance];
+}
+
 function buildFallbackColors(appearance: Appearance, contrast: Contrast): Colors {
   return {
     ...mapRoles(fallbackSystemColors, (pair: ColorPair) => pair[appearance]),
@@ -123,8 +147,10 @@ const fallbackColors: Readonly<Record<Contrast, Record<Appearance, Colors>>> = {
 export function useColors(): Colors {
   const scheme = useColorScheme();
   const isHighContrast = useHighContrast();
-  if (Platform.OS === 'ios') return getIosColors();
-  return fallbackColors[isHighContrast ? 'high' : 'standard'][scheme === 'dark' ? 'dark' : 'light'];
+  const override = useAppearanceOverride();
+  if (Platform.OS === 'ios') return override === null ? getIosColors() : getIosFixedColors(override);
+  const appearance = override ?? (scheme === 'dark' ? 'dark' : 'light');
+  return fallbackColors[isHighContrast ? 'high' : 'standard'][appearance];
 }
 
 /**
@@ -133,13 +159,15 @@ export function useColors(): Colors {
  */
 export function useBackdropGradient(name: BackdropName): readonly GradientStop[] {
   const scheme = useColorScheme();
-  return backdropGradients[name][scheme === 'dark' ? 'dark' : 'light'];
+  const override = useAppearanceOverride();
+  return backdropGradients[name][override ?? (scheme === 'dark' ? 'dark' : 'light')];
 }
 
 /** A soft shadow of the mockups for the current appearance (`elevation`), as a box shadow. */
 export function useElevation(level: keyof typeof elevation): string {
   const scheme = useColorScheme();
-  return elevation[level][scheme === 'dark' ? 'dark' : 'light'];
+  const override = useAppearanceOverride();
+  return elevation[level][override ?? (scheme === 'dark' ? 'dark' : 'light')];
 }
 
 /** Every app colour as a plain value, for the current appearance and contrast. */
@@ -180,7 +208,8 @@ const colorValues: Readonly<Record<Contrast, Record<Appearance, ColorValues>>> =
 export function useColorValues(appearance?: Appearance): ColorValues {
   const scheme = useColorScheme();
   const isHighContrast = useHighContrast();
-  const resolved = appearance ?? (scheme === 'dark' ? 'dark' : 'light');
+  const override = useAppearanceOverride();
+  const resolved = appearance ?? override ?? (scheme === 'dark' ? 'dark' : 'light');
   return colorValues[isHighContrast ? 'high' : 'standard'][resolved];
 }
 

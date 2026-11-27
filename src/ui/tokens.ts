@@ -194,6 +194,29 @@ export const palette = {
   onFollowBarSecondary: { light: '#E4EFEB', dark: '#D6E6E1' },
   followBarControl: { light: '#FFFFFF2E', dark: '#FFFFFF29' },
 
+  // --- The reader's glass and water thread (maquette-wow, 27 November 2026, shots 14-16, 20-22) ---
+  /**
+   * The fill of a floating glass control drawn by the app where the system's Liquid Glass is not
+   * available (before iOS 26, Android, the web): the mockup's thick glass (`--glass-bg-thick`,
+   * #FFFDF8 by day, #181920 at night), made more opaque because nothing blurs the text under it
+   * here (liquid-glass.md › Cross-platform translation: a regular glass fill of 60 to 80 %).
+   */
+  glassFill: { light: 'rgba(255, 253, 248, 0.82)', dark: 'rgba(24, 25, 32, 0.8)' },
+  /** The same control with Reduce Transparency: opaque (liquid-glass.md › Review checklist, 5). */
+  glassFillOpaque: { light: '#FFFDF8', dark: '#22232A' },
+  /** The bright rim of the glass (`--glass-edge`). */
+  glassEdge: { light: 'rgba(255, 255, 255, 0.7)', dark: 'rgba(255, 255, 255, 0.22)' },
+  /** The track of a segmented choice on the glass: ink at 8 % (`.seg`). */
+  glassTrack: { light: 'rgba(28, 28, 30, 0.08)', dark: 'rgba(239, 232, 216, 0.08)' },
+  /** The chosen segment on that track: white by day, a lighter glass at night (`.seg-thumb`). */
+  glassThumb: { light: '#FFFFFF', dark: 'rgba(255, 255, 255, 0.14)' },
+  /** The water thread of a page in the margin, before it fills: ink at 7 % (`.thread`). */
+  threadTrack: { light: 'rgba(28, 28, 30, 0.07)', dark: 'rgba(239, 232, 216, 0.07)' },
+  /** The light that runs down a filling thread (`.thread .fill::before`, #8BE3EE). */
+  waterHighlight: { light: '#8BE3EE', dark: '#8BE3EE' },
+  /** The glow around the bead of water and the falling drop (`.bead`, rgba(79, 184, 198, .7)). */
+  waterGlow: { light: 'rgba(79, 184, 198, 0.7)', dark: 'rgba(79, 184, 198, 0.7)' },
+
   // --- The launch (the app icon's layers; app.json's expo-splash-screen colours) --------------
   /** The deep water behind the mark, a step deeper at night: `app.json` has the same two values. */
   launchWater: { light: '#0B3C44', dark: '#072C33' },
@@ -345,6 +368,20 @@ export const backdropGradients = {
       [1, '#151A19'],
     ],
   },
+  /**
+   * The reader's page (maquette-wow, `.reader`): the cream paper by day, the warm dark page of the
+   * dusk at night. Its ends are `paper`'s two values' neighbours, so the text keeps its contrast.
+   */
+  readerPage: {
+    light: [
+      [0, '#FBF7EC'],
+      [1, '#F6F0E1'],
+    ],
+    dark: [
+      [0, '#221E19'],
+      [1, '#1B1915'],
+    ],
+  },
   /** soif.png: the warmth drained to grey. */
   thirsty: {
     light: [
@@ -465,6 +502,11 @@ export const elevation = {
   floating: {
     light: '0px 8px 24px rgba(40, 32, 16, 0.14)',
     dark: '0px 8px 24px rgba(0, 0, 0, 0.4)',
+  },
+  /** A glass control floating over the reader's page (maquette-wow, `.glass`). */
+  glass: {
+    light: '0px 10px 34px rgba(60, 46, 24, 0.16), 0px 1px 2px rgba(60, 46, 24, 0.16)',
+    dark: '0px 10px 34px rgba(0, 0, 0, 0.35), 0px 1px 2px rgba(0, 0, 0, 0.35)',
   },
 } as const;
 
@@ -608,6 +650,14 @@ export type IconColorRole = Exclude<
   | 'orbDeep'
   | 'notificationSurface'
   | 'notificationEdge'
+  | 'glassFill'
+  | 'glassFillOpaque'
+  | 'glassEdge'
+  | 'glassTrack'
+  | 'glassThumb'
+  | 'threadTrack'
+  | 'waterHighlight'
+  | 'waterGlow'
 >;
 
 /**
@@ -733,6 +783,11 @@ export const textStyles = {
   body: { fontSize: 17, lineHeight: 22, fontWeight: '400' },
   /** A name in a card ("Al-Kahf", a friend's name): Callout, emphasized. */
   callout: { fontSize: 16, lineHeight: 21, fontWeight: '600' },
+  /**
+   * The title in a glass pill over the reader ("Al-Kahf", maquette-wow `.rd-title .t-s`): the
+   * titles' serif at the size of Callout, so that it fits the 44-point pill.
+   */
+  pillTitle: { fontFamily: fontFamily.display, fontSize: 16, lineHeight: 20, fontWeight: '600' },
   /** Secondary text. */
   subhead: { fontSize: 15, lineHeight: 20, fontWeight: '400' },
   /** A short label that leads ("Arrosage du jour", "24 hizb sur 60"): Subheadline, emphasized. */
@@ -760,6 +815,7 @@ export const appleTextStyles = {
   headline: 'headline',
   body: 'body',
   callout: 'callout',
+  pillTitle: 'callout',
   subhead: 'subheadline',
   subheadEmphasized: 'subheadline',
   footnote: 'footnote',
@@ -973,6 +1029,51 @@ export const readerShapes = {
     large: { fontSize: 28, lineHeight: 40 },
     row: { fontSize: 20, lineHeight: 30 },
   },
+  /**
+   * The glass controls of the reader (maquette-wow, `.rd-top`, `.rd-bar`): a round button and the
+   * title pill, 44 points; the bottom bar, 56 points with 6 inside, its segmented choice 44 with 3
+   * inside, its microphone 44; their distance to the screen's sides and the gap between them.
+   */
+  glassControl: 44,
+  glassBarHeight: 56,
+  glassBarPadding: 6,
+  glassSegmentPadding: 3,
+  glassSideInset: 14,
+  /** Below the status bar, the top controls start this far down (the mockup's 56 - 47). */
+  glassTopGap: 9,
+  /** Above the home indicator, the bottom bar ends this far up (the mockup's 30 - 21). */
+  glassBottomGap: 9,
+  /** The text size panel under the top controls (`.rd-sizes`): its track's width. */
+  sizeTrackWidth: 110,
+  sizeThumb: 20,
+  /**
+   * The text fades under the glass controls (the mockup's mask: transparent to opaque over 48
+   * points at the top, 52 at the bottom).
+   */
+  fadeTop: 48,
+  fadeBottom: 52,
+  /** The page's margins: the thread's side (34) and the other (26), as in `.rd-scroll`. */
+  pageMarginThread: 34,
+  pageMarginOther: 26,
+  /** The water thread: its width, its distance from the text, its ends' inset; its bead. */
+  threadWidth: 3,
+  threadFromText: 20,
+  threadInset: 10,
+  threadBead: 9,
+  /** The light that runs down a filling thread: its length. */
+  threadHighlight: 26,
+  /** The falling drop: the symbol's text style is Title 3 (`.drop`, 18 by 24 points). */
+  dropSplash: 4,
+  /** The glass pill the drop falls into (`.rd-toast`): height, start inset, gap above the bar. */
+  dropPillHeight: 52,
+  dropPillLeading: 8,
+  dropPillTrailing: 18,
+  dropPillGap: 14,
+  /** The ornament between two pages: its stars, and the gap around the number (`.pg-mark`). */
+  pageMarkStar: 14,
+  /** The surah's framed title (`.rd-head .frame`): its height, the inner rule's inset. */
+  surahFrameHeight: 54,
+  surahFrameInset: 5,
   /** The soft shadow of the mockups: its opacity, blur radius and drop. */
   shadowOpacity: 0.1,
   shadowRadius: 10,

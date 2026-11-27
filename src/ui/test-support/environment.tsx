@@ -85,7 +85,10 @@ export function setDeviceConditions({
   jest.spyOn(Dimensions, 'get').mockReturnValue({ ...WINDOW, fontScale });
 }
 
-type DeviceSettingEvent = 'highTextContrastChanged' | 'reduceMotionChanged';
+type DeviceSettingEvent =
+  | 'highTextContrastChanged'
+  | 'reduceMotionChanged'
+  | 'reduceTransparencyChanged';
 
 /** Tells the app that a device setting changed, as the device would while the app is open. */
 async function changeDeviceSetting(event: DeviceSettingEvent, enabled: boolean): Promise<void> {
@@ -109,6 +112,11 @@ export function changeReducedMotion(enabled: boolean): Promise<void> {
   return changeDeviceSetting('reduceMotionChanged', enabled);
 }
 
+/** Simulates the person switching iOS's Reduce Transparency while the app is open. */
+export function changeReducedTransparency(enabled: boolean): Promise<void> {
+  return changeDeviceSetting('reduceTransparencyChanged', enabled);
+}
+
 /**
  * Puts back the conditions of the Jest preset: iOS, light, standard contrast, motion allowed,
  * left to right. The app remembers the last device settings it was told, so it is told they are
@@ -117,6 +125,7 @@ export function changeReducedMotion(enabled: boolean): Promise<void> {
 export async function resetDeviceConditions(): Promise<void> {
   await changeDeviceSetting('highTextContrastChanged', false);
   await changeDeviceSetting('reduceMotionChanged', false);
+  await changeDeviceSetting('reduceTransparencyChanged', false);
   jest.restoreAllMocks();
   jest.mocked(useColorScheme).mockReturnValue('light');
   jest.mocked(AccessibilityInfo.isHighTextContrastEnabled).mockClear().mockResolvedValue(false);
