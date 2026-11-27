@@ -1,4 +1,3 @@
-import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 
 import type { NotificationPermissions } from '@/data/notifications';
@@ -12,6 +11,7 @@ import {
   type ReadingMoment,
 } from '@/domain/goal-plan';
 import type { LocalDate } from '@/domain/shared/local-date';
+import { playHaptic } from '@/features/feedback';
 import { useToday } from '@/features/home/use-today';
 import { useAppStore } from '@/store';
 
@@ -109,7 +109,8 @@ export function useOnboarding({
     if (isFinishing) return;
     setFinishing(true);
     // On the same frame as the press: a medium impact (motion spec §13, playing-haptics.md › Impact).
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
+    // It goes through the feedback service: the "Vibrations" switch and the silences apply.
+    playHaptic('medium');
     setReadingGoal(chosen);
     setReadingMoment(moment);
     const reminders = remindersForReadingMoment(moment, { fridayKahf, thirstyGarden });
@@ -132,7 +133,7 @@ export function useOnboarding({
   };
 
   const tick = () => {
-    void Haptics.selectionAsync().catch(() => undefined);
+    playHaptic('selection');
   };
 
   return {

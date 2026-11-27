@@ -1,6 +1,7 @@
-import * as Haptics from 'expo-haptics';
 import { useFrameCallback, useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+
+import { playHaptic } from '@/features/feedback';
 
 import { STORY_MOTION } from './config';
 import { turnsRed, type Recitation } from './recitation';
@@ -18,16 +19,15 @@ import {
 export type StageHaptic = 'wrong-word' | 'found' | 'heart';
 
 export function playStageHaptic(kind: StageHaptic): void {
-  const done = () => undefined;
   switch (kind) {
     case 'wrong-word':
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(done);
+      playHaptic('warning');
       return;
     case 'found':
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(done);
+      playHaptic('success');
       return;
     case 'heart':
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(done);
+      playHaptic('light');
   }
 }
 
