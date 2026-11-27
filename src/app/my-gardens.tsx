@@ -1,3 +1,4 @@
+import { useSelfDisplayName } from '@/features/friends';
 import { MyGardensScreen, useProgression } from '@/features/gardens';
 import { useProfileGarden } from '@/features/profile';
 
@@ -5,5 +6,6 @@ import { useProfileGarden } from '@/features/profile';
 export default function MyGardensRoute() {
   const progression = useProgression();
   const garden = useProfileGarden();
-  return <MyGardensScreen progression={progression} garden={garden} />;
+  const displayName = useSelfDisplayName();
+  return <MyGardensScreen progression={progression} garden={garden} displayName={displayName} />;
 }

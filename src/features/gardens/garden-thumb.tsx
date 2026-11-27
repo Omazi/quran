@@ -16,12 +16,15 @@ export function GardenThumb({
   styleId,
   state,
   style,
+  appearance,
 }: {
   styleId: GardenStyleId;
   state: GardenState;
   style?: StyleProp<ViewStyle>;
+  /** Fixes the appearance whatever the device's: for a picture that is always light. */
+  appearance?: 'light' | 'dark';
 }) {
-  const tint = useGardenTint(styleId);
+  const tint = useGardenTint(styleId, appearance);
   return (
     <View
       style={style}

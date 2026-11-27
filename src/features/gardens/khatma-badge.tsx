@@ -32,6 +32,8 @@ export interface KhatmaBadgeProps {
   view: BadgeView;
   /** Width and height, in points. */
   size: number;
+  /** Fixes the appearance whatever the device's: for the card of a shared badge, always light. */
+  appearance?: 'light' | 'dark';
 }
 
 /**
@@ -40,8 +42,8 @@ export interface KhatmaBadgeProps {
  * progress is a fine outline with its growth as an arc; a level to come is a dashed outline round a
  * blank plot, with a lock. A picture only: the shelf or the screen around it says it in words.
  */
-export function KhatmaBadge({ view, size }: KhatmaBadgeProps) {
-  const colors = useColorValues();
+export function KhatmaBadge({ view, size, appearance }: KhatmaBadgeProps) {
+  const colors = useColorValues(appearance);
   const hizbShown = view.kind === 'in-progress' ? (view.hizbCompleted ?? 0) : HIZB_COUNT;
   const gardenState = useMemo(
     () =>
@@ -179,7 +181,12 @@ export function KhatmaBadge({ view, size }: KhatmaBadgeProps) {
         {view.kind === 'locked' ? (
           <GardenSilhouette style={styles.picture} />
         ) : (
-          <GardenThumb styleId={view.styleId} state={gardenState} style={styles.picture} />
+          <GardenThumb
+            styleId={view.styleId}
+            state={gardenState}
+            style={styles.picture}
+            appearance={appearance}
+          />
         )}
       </View>
       {view.kind === 'locked' ? (

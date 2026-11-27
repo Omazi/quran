@@ -941,6 +941,16 @@ Choix de mise en œuvre (développeur, 26 novembre 2026) :
 - Le thème de `gardenVariant` (`theme-1` à `theme-4`, graine propre à l'utilisateur) n'est lu par
   aucun rendu ; le style vient du niveau. L'aligner sur D23 touche l'accueil (autre chantier).
 
+- **Partager un badge en image** (propriétaire, 26 novembre 2026) : « Partager » sur la célébration
+  « Khatma terminée », sous chaque badge gagné du profil et sur chaque niveau achevé de « Mes
+  jardins ». L'image (1080 × 1350, claire, papier chaud) est dessinée sur le téléphone, hors écran,
+  écrite en PNG dans le cache, ouverte dans la feuille de partage du système, puis supprimée : aucun
+  réseau (`src/features/gardens/share`). Le nom de la personne n'y figure que si elle a un nom de
+  compte et répond « Avec mon nom » (feuille d'action ; sans réponse, ou « Sans mon nom » : rien).
+  Deux dépendances MIT, listées par Expo SDK 58 : `react-native-view-shot` 6.1.1 et `expo-sharing`
+  ~58.0.23 (`NOTICE.txt`). Écart 149 de `design/SKILLS.md`. À vérifier sur un iPhone : la prise de
+  l'image hors écran et la feuille de partage (voir le rapport de la tâche).
+
 _Changerait si_ le propriétaire voit les images provisoires et préfère une autre solution, ou
 change l'ordre des jardins avant que des badges existent.
 

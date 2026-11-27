@@ -88,6 +88,21 @@
     "close": "إغلاق",
     "badgeLabel": "وسام الختمة {{khatm}}، {{garden}}"
   },
+  "share": {
+    "button": "مشاركة",
+    "buttonLabel": "مشاركة وسام الختمة {{khatm}}",
+    "title": "تمّت الختمة رقم {{khatm}}",
+    "dialogTitle": "مشاركة وسامي",
+    "chooseTitle": "هل تريد إضافة اسمك إلى الصورة؟",
+    "withName": "مع اسمي",
+    "withoutName": "بدون اسمي",
+    "preparing": "جارٍ تحضير الصورة…",
+    "cardLabel": "صورة وسام الختمة {{khatm}}",
+    "errorTitle": "تعذّرت مشاركة الوسام",
+    "errorMessage": "حاول مرة أخرى بعد قليل.",
+    "unavailableTitle": "المشاركة غير متاحة",
+    "unavailableMessage": "لا يستطيع هذا الجهاز مشاركة صورة هنا."
+  },
   "friend": {
     "title": "الأوسمة"
   }
