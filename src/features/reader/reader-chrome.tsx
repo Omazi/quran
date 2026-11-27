@@ -103,11 +103,7 @@ function GlassButton({
     </Pressable>
   );
   if (isGrouped) return content;
-  return (
-    <ReaderGlass>
-      {content}
-    </ReaderGlass>
-  );
+  return <ReaderGlass>{content}</ReaderGlass>;
 }
 
 export interface ReaderTopBarProps {
