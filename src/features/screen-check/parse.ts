@@ -66,6 +66,7 @@ export const CHECK_ARGUMENTS = {
   seed: 'screenCheckSeed',
   autoSwipe: 'screenCheckAutoSwipe',
   voiceProof: 'screenCheckVoiceProof',
+  hour: 'screenCheckHour',
 } as const;
 
 function firstText(raw: unknown): string | null {
@@ -151,4 +152,27 @@ export function isPushedOverTabs({ screen }: CheckLaunch): boolean {
     screen === 'gardens' ||
     screen === 'khatma'
   );
+}
+
+/**
+ * The hour the check pins the app's sky and the reader's paper to (`-screenCheckHour 10` or
+ * `10:30`): minutes since local midnight, or null when unasked, malformed or the check is off.
+ * Without it the photographs follow the hour of the machine that took them, which at night on
+ * the CI makes every picture a night picture.
+ */
+export function parseCheckHour(raw: unknown, enabled: boolean): number | null {
+  if (!enabled) return null;
+  const text = firstText(raw);
+  const match = text === null ? null : /^([01]?[0-9]|2[0-3])(?::([0-5][0-9]))?$/.exec(text);
+  if (match === null) return null;
+  return Number(match[1]) * 60 + Number(match[2] ?? 0);
+}
+
+/** A clock that tells today's date at a fixed time of day: the day runs, the hour stands still. */
+export function pinnedClock(minutesOfDay: number, now: () => Date = () => new Date()) {
+  return (): Date => {
+    const moment = new Date(now());
+    moment.setHours(Math.floor(minutesOfDay / 60), minutesOfDay % 60, 0, 0);
+    return moment;
+  };
 }

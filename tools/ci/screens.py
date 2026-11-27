@@ -50,15 +50,32 @@ GARDEN_SCREENS = [
     ("khatma-terminee", "Khatma terminée (célébration)", "khatma", None, None, 3),
 ]
 
+# The hour the sky of the home and the paper of the reader are pinned to (-screenCheckHour). Without
+# it the photographs follow the clock of the CI machine, which runs at night. The dark appearance
+# always gives the night sky and the night page, whatever the hour: the "nuit" shots below are the
+# light appearance at night.
+DAY_HOUR = "10"
+NIGHT_HOUR = "22"
+
+# Screens photographed at night, in the light appearance only: (slug, label, screen, page, script, wait).
+NIGHT_SCREENS = [
+    ("jardin-nuit", "Jardin (accueil) de nuit, 22 h", "garden", None, None, 5),
+    ("lecteur-uthmani-nuit", "Lecteur, écriture uthmani, page 3, de nuit, 22 h", "reader", 3, "uthmani", 4),
+]
+
 DEFAULT_WAIT = 9  # seconds between the launch and the picture; "wait" adds to it
 
 
 class Shot:
     # seed: the made-up history to fill the app with ("demo", "gardens"), or None for a first launch.
-    def __init__(self, name, label, group, look, language, screen, page=None, script=None, seed=None, wait=0):
+    # hour: the hour to pin the sky and the paper to ("10", "22:30"), or None for the real clock.
+    def __init__(
+        self, name, label, group, look, language, screen, page=None, script=None, seed=None, wait=0, hour=None
+    ):
         self.name, self.label, self.group = name, label, group
         self.look, self.language = look, language
         self.screen, self.page, self.script, self.seed, self.wait = screen, page, script, seed, wait
+        self.hour = hour
 
 
 def _suffix(language, look):
@@ -107,6 +124,26 @@ def build() -> list[Shot]:
                     script=script,
                     seed=seed,
                     wait=wait,
+                    hour=DAY_HOUR,
+                )
+            )
+
+    def at_night(language, look):
+        group = f"Écrans de l'appli de nuit ({_how(language, look)})"
+        for slug, label, screen, page, script, wait in NIGHT_SCREENS:
+            shots.append(
+                Shot(
+                    f"ecran-{slug}-{_suffix(language, look)}.png",
+                    label,
+                    group,
+                    look,
+                    language,
+                    screen,
+                    page=page,
+                    script=script,
+                    seed="demo",
+                    wait=wait,
+                    hour=NIGHT_HOUR,
                 )
             )
 
@@ -121,6 +158,7 @@ def build() -> list[Shot]:
     filled("fr", "dark")
     filled("en", "light", only={"jardin"})
     filled("ar", "light", only={"jardin", "profil-badges"})
+    at_night("fr", "light")
     return shots
 
 
@@ -142,6 +180,7 @@ def plan() -> str:
             shot.script or "",
             shot.seed or "",
             str(DEFAULT_WAIT + shot.wait),
+            shot.hour or "",
         ]
         # An empty field would be swallowed by `read` with a tab separator: "-" says "none".
         lines.append("\t".join(field or "-" for field in fields))

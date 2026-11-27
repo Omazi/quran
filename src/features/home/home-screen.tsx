@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { LocalDate } from '@/domain/shared/local-date';
 import { useGenderedTranslation } from '@/features/gender';
@@ -19,12 +19,12 @@ import type { Arrival } from './arrival';
 import { ArrivalSheet } from './arrival-sheet';
 import { DeadGarden } from './dead-garden';
 import { GardenStage } from './garden-stage';
-import { HomeHeader } from './home-header';
+import { HomeHeader, type HomeHeaderProps } from './home-header';
 import type { HomeActions, HomeLayout, HomeModel, HomeReadyModel } from './home-model';
 import { KhatmaComplete } from './khatma-complete';
 import { LivingHome, type HomeGardenArt } from './living-home';
 import type { NeighbourGardens } from './neighbours';
-import { StatePreviewSection } from './state-preview';
+import { isStatePreviewAvailable, useStatePreviewSheet } from './state-preview';
 import type { SkyChrome } from './use-sky-chrome';
 
 const UNAVAILABLE_SYMBOL: IconSymbol = { ios: 'leaf', android: 'eco' };
@@ -67,6 +67,21 @@ export interface HomeScreenProps {
  * It only shows what it receives.
  */
 export function HomeScreen(props: HomeScreenProps) {
+  const preview = useStatePreviewSheet();
+  const datePreview = isStatePreviewAvailable
+    ? { onOpen: preview.open, hint: preview.hint }
+    : undefined;
+  return (
+    <>
+      <HomeScreenBody {...props} datePreview={datePreview} />
+      {preview.sheet}
+    </>
+  );
+}
+
+type BodyProps = HomeScreenProps & { datePreview: HomeHeaderProps['datePreview'] };
+
+function HomeScreenBody(props: BodyProps) {
   const { model, actions } = props;
   if (model.status !== 'ready') return <UnavailableHome {...props} />;
   if (model.layout === 'growing' || model.layout === 'thirsty') {
@@ -81,6 +96,7 @@ export function HomeScreen(props: HomeScreenProps) {
           isFocused={props.isFocused ?? true}
           chrome={props.chrome}
           gardenArt={props.gardenArt}
+          datePreview={props.datePreview}
         />
         {model.layout === 'growing' && props.arrival !== null ? (
           <ArrivalSheet
@@ -93,7 +109,7 @@ export function HomeScreen(props: HomeScreenProps) {
     );
   }
   return (
-    <HomeFrame layout={model.layout}>
+    <HomeFrame layout={model.layout} datePreview={props.datePreview}>
       {model.layout === 'complete' && model.completedKhatma !== null ? (
         <KhatmaComplete
           garden={model.garden}
@@ -111,7 +127,15 @@ export function HomeScreen(props: HomeScreenProps) {
 }
 
 /** The canvas, the scroll view and, behind the top of it, the gradient of the layout. */
-function HomeFrame({ layout: homeLayout, children }: { layout: HomeLayout; children: ReactNode }) {
+function HomeFrame({
+  layout: homeLayout,
+  datePreview,
+  children,
+}: {
+  layout: HomeLayout;
+  datePreview: HomeHeaderProps['datePreview'];
+  children: ReactNode;
+}) {
   const colors = useColors();
   const insets = useSafeInsets();
   // iOS insets a scroll view for the status bar and the tab bar by itself; elsewhere the safe
@@ -139,8 +163,20 @@ function HomeFrame({ layout: homeLayout, children }: { layout: HomeLayout; child
           ) : null
         }
         {children}
-        {StatePreviewSection === null ? null : <StatePreviewSection />}
       </ScrollView>
+      {
+        // The completed khatma has no date to press: in a test build, the long-press goes on the
+        // status bar's strip instead, which holds nothing and draws nothing.
+        homeLayout === 'complete' && datePreview !== undefined ? (
+          <Pressable
+            onLongPress={datePreview.onOpen}
+            accessibilityRole="text"
+            accessibilityLabel={datePreview.hint}
+            style={[styles.previewStrip, { height: Math.max(insets.top, layout.touchTarget) }]}
+            testID="home-date"
+          />
+        ) : null
+      }
     </View>
   );
 }
@@ -153,7 +189,8 @@ function DeadHome({
   avatarInitial,
   isFocused = true,
   gardenArt,
-}: HomeScreenProps & { model: HomeReadyModel }) {
+  datePreview,
+}: BodyProps & { model: HomeReadyModel }) {
   return (
     <>
       <View style={styles.deadStage}>
@@ -162,6 +199,7 @@ function DeadHome({
           streakDays={model.streakDays}
           avatarInitial={avatarInitial}
           onOpenProfile={actions.openProfile}
+          datePreview={datePreview}
         />
         <View style={styles.deadEarth}>
           <GardenStage garden={model.garden} isActive={isFocused} gardenArt={gardenArt} />
@@ -179,15 +217,16 @@ function DeadHome({
  * without blame and without "we", and a button lets the person try again (writing.md › Best
  * practices: clear next steps, and a button to take them).
  */
-function UnavailableHome({ actions, today, avatarInitial }: HomeScreenProps) {
+function UnavailableHome({ actions, today, avatarInitial, datePreview }: BodyProps) {
   const { t } = useGenderedTranslation('home');
   return (
-    <HomeFrame layout="growing">
+    <HomeFrame layout="growing" datePreview={datePreview}>
       <HomeHeader
         today={today}
         streakDays={0}
         avatarInitial={avatarInitial}
         onOpenProfile={actions.openProfile}
+        datePreview={datePreview}
       />
       <ContentUnavailable
         title={t('unavailable.title')}
@@ -210,6 +249,7 @@ function UnavailableHome({ actions, today, avatarInitial }: HomeScreenProps) {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { flexGrow: 1, paddingBottom: spacing.xl },
+  previewStrip: { position: 'absolute', top: 0, start: 0, end: 0 },
   backdrop: { position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 },
   deadStage: { flexGrow: 1 },
   deadFoot: { paddingBottom: spacing.md },

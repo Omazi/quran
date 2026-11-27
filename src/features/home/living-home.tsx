@@ -25,10 +25,9 @@ import {
 
 import { HOME_MOTION } from './config';
 import { playFeedback } from './feedback-events';
-import { StatePreviewSection } from './state-preview';
 import { FriendsChip } from './friends-chip';
 import { GardenPanel } from './garden-panel';
-import { HomeHeader } from './home-header';
+import { HomeHeader, type HomeHeaderProps } from './home-header';
 import type { HomeActions, HomeReadyModel } from './home-model';
 import type { NeighbourGardens } from './neighbours';
 import { useSkyChrome, type SkyChrome } from './use-sky-chrome';
@@ -51,6 +50,8 @@ export interface LivingHomeProps {
   chrome?: SkyChrome;
   /** The art of the person's level garden (D46), and its placeholder cast; none: level 1. */
   gardenArt?: HomeGardenArt;
+  /** Test builds: the long-press on the date that opens the preview of the states. */
+  datePreview?: HomeHeaderProps['datePreview'];
 }
 
 /**
@@ -74,6 +75,7 @@ export function LivingHome({
   isFocused,
   chrome: givenChrome,
   gardenArt,
+  datePreview,
 }: LivingHomeProps) {
   const skyChrome = useSkyChrome();
   const chrome = givenChrome ?? skyChrome;
@@ -147,6 +149,7 @@ export function LivingHome({
               avatarInitial={avatarInitial}
               onOpenProfile={actions.openProfile}
               glass={{ appearance, veil: chrome.chipVeil }}
+              datePreview={datePreview}
             />
             <View style={styles.friends} pointerEvents="box-none">
               <FriendsChip
@@ -173,8 +176,6 @@ export function LivingHome({
               onRecognize={actions.recognize}
               onLookAtGrowth={() => controls.current?.lookAtGrowth()}
             />
-            {/* Development and test builds only: the preview of the garden's states. */}
-            {StatePreviewSection === null ? null : <StatePreviewSection />}
           </ScrollView>
         </SafeAreaView>
       </AppearanceScope>

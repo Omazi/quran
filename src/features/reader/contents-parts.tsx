@@ -193,7 +193,7 @@ export function ReaderSegmented<Value extends string>({
             testID={testID === undefined ? undefined : `${testID}-${option.value}`}
             style={({ pressed }) => [
               styles.segment,
-              fitsContent && styles.segmentFittingContent,
+              fitsContent ? styles.segmentFittingContent : styles.segmentEqual,
               isGlass && styles.glassSegment,
               isSelected && [
                 styles.thumb,
@@ -378,13 +378,16 @@ const styles = StyleSheet.create({
     borderRadius: layout.touchTarget,
   },
   segment: {
-    flex: 1,
     minHeight: layout.touchTarget - 2 * spacing.xs,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.md,
     borderRadius: layout.touchTarget,
   },
+  // Equal shares on a page. In a bar the segment carries no `flex` at all: Yoga turns a defined
+  // `flex` above 0 into a basis of 0, even beside `flexBasis: 'auto'`, which left the labels no
+  // room on iOS.
+  segmentEqual: { flex: 1 },
   segmentFittingContent: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
   glassTrack: { padding: readerShapes.glassSegmentPadding },
   glassSegment: {

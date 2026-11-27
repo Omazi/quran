@@ -66,10 +66,25 @@ class ListTest(unittest.TestCase):
         self.assertIn("gardens", {fields[7] for fields in lines})
         self.assertIn("demo", {fields[7] for fields in lines})
 
-    def test_plan_has_nine_fields_without_empty_ones(self):
+    def test_the_home_and_the_reader_are_photographed_by_day_and_by_night(self):
+        by_name = {shot.name: shot for shot in screens.SHOTS}
+        for name in ("ecran-jardin-fr-clair.png", "ecran-lecteur-uthmani-fr-clair.png", "ecran-lecteur-simple-fr-clair.png"):
+            self.assertEqual(by_name[name].hour, "10", name)
+        for name in ("ecran-jardin-nuit-fr-clair.png", "ecran-lecteur-uthmani-nuit-fr-clair.png"):
+            self.assertEqual(by_name[name].hour, "22", name)
+            self.assertEqual(by_name[name].look, "light")
+        # Nothing is left to the clock of the machine once the app is filled.
+        self.assertTrue(all(shot.hour for shot in screens.SHOTS if shot.seed))
+
+    def test_the_hour_travels_as_the_tenth_field_and_reads_like_the_app_parses_it(self):
+        for line in screens.plan().splitlines():
+            hour = line.split("\t")[9]
+            self.assertRegex(hour, r"^(-|([01]?[0-9]|2[0-3])(:[0-5][0-9])?)$")
+
+    def test_plan_has_ten_fields_without_empty_ones(self):
         for line in screens.plan().splitlines():
             fields = line.split("\t")
-            self.assertEqual(len(fields), 9)
+            self.assertEqual(len(fields), 10)
             self.assertTrue(all(fields))
             self.assertRegex(fields[0], r"^[a-z0-9-]+$")
 

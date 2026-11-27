@@ -12,13 +12,14 @@
  * and the developers, and the locale files are part of the production bundle.
  */
 
-import { useMemo, useSyncExternalStore } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useCallback, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { quranStructure } from '@/data/quran';
 import type { LocalDate } from '@/domain/shared/local-date';
-import { AppText, Card, layout, radius, spacing, stateOpacity, useColors } from '@/ui';
+import { AppText, layout, radius, spacing, stateOpacity, useColors } from '@/ui';
 
+import { DismissibleSheet } from '../dismissible-sheet';
 import type { HomeSource } from '../home-model';
 import { buildReadingHistory, type ReadingHistoryName } from './reading-histories';
 
@@ -39,6 +40,8 @@ const OPTIONS: readonly { value: DevPreviewChoice; label: string }[] = [
 
 const WORDS = {
   title: 'Aperçu des états',
+  hint: 'Appui long : aperçu des états du jardin (versions de test)',
+  close: 'Fermer l’aperçu des états',
   footer:
     'Visible dans les versions de test seulement. Rien n’est enregistré : tes données ne changent pas.',
 } as const;
@@ -81,13 +84,43 @@ export function usePreviewedSource(source: HomeSource, today: LocalDate): HomeSo
   return history ?? source;
 }
 
-/** The last part of the home screen where the preview exists: the choice of what it shows. */
-export function DevPreviewSection() {
+/** What the home screen needs to offer the preview: the trigger, and the sheet it opens. */
+export interface StatePreviewHandle {
+  /** Opens the sheet: given to the long-press on the date. */
+  readonly open: () => void;
+  /** What VoiceOver says of the long-press (developer words, so French and not i18n). */
+  readonly hint: string;
+  /** The sheet while it is open, null otherwise: nothing of the preview is on the garden. */
+  readonly sheet: ReactNode;
+}
+
+/**
+ * The preview as a sheet, opened by a long-press on the home screen's date: it never sits over
+ * the garden, so a photograph of the screen shows the home as a person sees it.
+ */
+export function useStatePreviewSheet(): StatePreviewHandle {
+  const [isOpen, setIsOpen] = useState(false);
+  const open = useCallback(() => setIsOpen(true), []);
+  const close = useCallback(() => setIsOpen(false), []);
+  return {
+    open,
+    hint: WORDS.hint,
+    sheet: isOpen ? <DevPreviewSheet onDismiss={close} /> : null,
+  };
+}
+
+function DevPreviewSheet({ onDismiss }: { onDismiss: () => void }) {
   const chosen = useDevPreviewChoice();
   const colors = useColors();
+  const { height } = useWindowDimensions();
   return (
-    <View style={styles.section} testID="home-dev-preview-section">
-      <Card tone="quiet">
+    <DismissibleSheet
+      onDismiss={onDismiss}
+      closeLabel={WORDS.close}
+      testID="home-dev-preview-section"
+      closeTestID="home-dev-preview-close"
+    >
+      <ScrollView style={{ maxHeight: height / 2 }}>
         <AppText variant="headline" accessibilityRole="header">
           {WORDS.title}
         </AppText>
@@ -117,13 +150,12 @@ export function DevPreviewSection() {
         <AppText variant="footnote" color="muted">
           {WORDS.footer}
         </AppText>
-      </Card>
-    </View>
+      </ScrollView>
+    </DismissibleSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { paddingHorizontal: layout.screenMargin, paddingTop: spacing.lg },
   options: {
     flexDirection: 'row',
     flexWrap: 'wrap',

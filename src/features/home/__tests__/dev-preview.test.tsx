@@ -28,10 +28,27 @@ async function renderHome(store: AppStore) {
   );
 }
 
+/** The preview opens on a long-press on the date: nothing of it is on the screen before. */
+async function openPreview() {
+  await fireEvent(screen.getByTestId('home-date'), 'longPress');
+}
+
 describe('the developer preview of the home screen (development only)', () => {
-  it('is the last part of the screen and starts on the real data', async () => {
+  it('is hidden until a long-press on the date, and never sits over the garden', async () => {
     expect(__DEV__).toBe(true);
     await renderHome(createTestAppStore());
+    expect(screen.queryByTestId('home-dev-preview-section')).toBeNull();
+    expect(screen.queryByText('Aperçu des états')).toBeNull();
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+    await openPreview();
+    expect(screen.getByTestId('home-dev-preview-section')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('home-dev-preview-close'));
+    expect(screen.queryByTestId('home-dev-preview-section')).toBeNull();
+  });
+
+  it('opens as a sheet and starts on the real data', async () => {
+    await renderHome(createTestAppStore());
+    await openPreview();
     expect(screen.getByRole('header', { name: 'Aperçu des états' })).toBeOnTheScreen();
     expect(screen.getByRole('radio', { name: 'Mes vraies données' })).toBeChecked();
     // A new person: the real data is a bare earth.
@@ -57,6 +74,7 @@ describe('the developer preview of the home screen (development only)', () => {
     const changed = jest.fn();
     store.subscribe(changed);
     await renderHome(store);
+    await openPreview();
 
     await fireEvent.press(screen.getByRole('radio', { name: choice }));
     expect(screen.getByRole('radio', { name: choice })).toBeChecked();
@@ -71,6 +89,7 @@ describe('the developer preview of the home screen (development only)', () => {
 
   it('comes back to the real data when asked', async () => {
     await renderHome(createTestAppStore());
+    await openPreview();
     await fireEvent.press(screen.getByRole('radio', { name: 'Assoiffé (3 jours)' }));
     expect(getDevPreviewChoice()).toBe('thirsty');
     await fireEvent.press(screen.getByRole('radio', { name: 'Mes vraies données' }));

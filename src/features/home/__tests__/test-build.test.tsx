@@ -48,6 +48,9 @@ describe('the home screen in a test build made with EXPO_PUBLIC_STATE_PREVIEW=1'
         <HomeRoute />
       </AppStoreProvider>,
     );
+    // Not drawn over the garden: only the long-press on the date brings it.
+    expect(screen.queryByText('Aperçu des états')).toBeNull();
+    await fireEvent(screen.getByTestId('home-date'), 'longPress');
     expect(screen.getByRole('header', { name: 'Aperçu des états' })).toBeOnTheScreen();
     expect(screen.getByRole('radio', { name: 'Mes vraies données' })).toBeChecked();
 
@@ -68,7 +71,7 @@ describe.each(['0', '', 'true', 'yes'])('with EXPO_PUBLIC_STATE_PREVIEW=%p', (va
     process.env.EXPO_PUBLIC_STATE_PREVIEW = value;
     jest.isolateModules(() => {
       const gate = jest.requireActual<typeof import('../state-preview')>('../state-preview');
-      expect(gate.StatePreviewSection).toBeNull();
+      expect(gate.isStatePreviewAvailable).toBe(false);
     });
     process.env.EXPO_PUBLIC_STATE_PREVIEW = '1';
   });

@@ -2,8 +2,10 @@ import {
   CHECK_FRIEND_ID,
   checkAddress,
   isPushedOverTabs,
+  parseCheckHour,
   parseCheckLaunch,
   parseCheckPage,
+  pinnedClock,
   type CheckLaunch,
 } from '../parse';
 
@@ -148,5 +150,42 @@ describe('checkAddress and isPushedOverTabs', () => {
     expect(isPushedOverTabs(launch('khatma'))).toBe(true);
     expect(isPushedOverTabs(launch('garden'))).toBe(false);
     expect(isPushedOverTabs(launch('onboarding'))).toBe(false);
+  });
+});
+
+describe('parseCheckHour', () => {
+  it('reads an hour, or an hour and minutes, as minutes since midnight', () => {
+    expect(parseCheckHour('10', true)).toBe(600);
+    expect(parseCheckHour('0', true)).toBe(0);
+    expect(parseCheckHour('07', true)).toBe(420);
+    expect(parseCheckHour('22:30', true)).toBe(1350);
+    expect(parseCheckHour(['10'], true)).toBe(600);
+    expect(parseCheckHour(10, true)).toBe(600);
+  });
+
+  it('asks nothing when the check is off, whatever is given', () => {
+    expect(parseCheckHour('10', false)).toBeNull();
+  });
+
+  it.each(['24', '-1', '10:60', '10:5', '1e1', ' 10', '', 'noon', undefined, null, {}, 10.5])(
+    'refuses %p',
+    (raw) => {
+      expect(parseCheckHour(raw, true)).toBeNull();
+    },
+  );
+});
+
+describe('pinnedClock', () => {
+  it('keeps the real day and pins the time of day', () => {
+    const now = () => new Date(2026, 10, 27, 20, 36, 51, 123);
+    const moment = pinnedClock(600, now)();
+    expect([moment.getFullYear(), moment.getMonth(), moment.getDate()]).toEqual([2026, 10, 27]);
+    expect([moment.getHours(), moment.getMinutes(), moment.getSeconds()]).toEqual([10, 0, 0]);
+  });
+
+  it('does not touch the instant it was given', () => {
+    const instant = new Date(2026, 10, 27, 20, 36);
+    pinnedClock(600, () => instant)();
+    expect(instant.getHours()).toBe(20);
   });
 });

@@ -28,6 +28,11 @@ export interface HomeHeaderProps {
    * (`dateLabel` was made for the peach gradient). Absent: the gradient layouts (dead, complete).
    */
   glass?: { readonly appearance: 'light' | 'dark'; readonly veil: number };
+  /**
+   * Test builds only: a long-press on the date opens the preview of the garden's states. Absent
+   * in a published build, where the date is plain text.
+   */
+  datePreview?: { readonly onOpen: () => void; readonly hint: string };
 }
 
 /**
@@ -41,16 +46,32 @@ export function HomeHeader({
   avatarInitial,
   onOpenProfile,
   glass,
+  datePreview,
 }: HomeHeaderProps) {
   const { t, i18n } = useTranslation('home');
   const streakSymbol = streakDays > 0 ? HOME_SYMBOLS.flame : HOME_SYMBOLS.flameOff;
   const streakLabel = t('streak', { count: streakDays });
+  const dateText = (
+    <AppText variant="subhead" color={glass === undefined ? 'dateLabel' : 'heading'}>
+      {formatHeaderDate(today, i18n.language)}
+    </AppText>
+  );
   return (
     <View style={styles.row}>
       <View style={styles.titles}>
-        <AppText variant="subhead" color={glass === undefined ? 'dateLabel' : 'heading'}>
-          {formatHeaderDate(today, i18n.language)}
-        </AppText>
+        {datePreview === undefined ? (
+          dateText
+        ) : (
+          <Pressable
+            onLongPress={datePreview.onOpen}
+            accessibilityRole="text"
+            accessibilityHint={datePreview.hint}
+            hitSlop={spacing.sm}
+            testID="home-date"
+          >
+            {dateText}
+          </Pressable>
+        )}
         <AppText variant="largeTitle" color="heading">
           {t('title')}
         </AppText>

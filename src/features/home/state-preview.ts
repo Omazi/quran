@@ -12,8 +12,6 @@
  * Behind a closed door the home screen shows the person's data as it is, and nothing else.
  */
 
-import type { ComponentType } from 'react';
-
 import type { LocalDate } from '@/domain/shared/local-date';
 
 import type { HomeSource } from './home-model';
@@ -27,8 +25,19 @@ const preview: Preview | null =
       (require('./dev-preview/dev-preview') as Preview)
     : null;
 
-/** The last section of the home screen where the preview exists; null everywhere else. */
-export const StatePreviewSection: ComponentType | null = preview?.DevPreviewSection ?? null;
+/** True where the preview exists (development, test builds); false in a published build. */
+export const isStatePreviewAvailable = preview !== null;
+
+type Handle = import('./dev-preview/dev-preview').StatePreviewHandle;
+const NO_PREVIEW: Handle = { open: () => undefined, hint: '', sheet: null };
+
+/**
+ * The preview as a sheet opened by a long-press on the home screen's date. Where the door is
+ * closed it offers nothing: no trigger (`isStatePreviewAvailable`), no sheet. Where it is open,
+ * nothing of it is drawn over the garden until the long-press (screen-check photos stay clean).
+ */
+export const useStatePreviewSheet: () => Handle =
+  preview?.useStatePreviewSheet ?? (() => NO_PREVIEW);
 
 /**
  * What the home screen shows: the person's data, unless the preview exists and a made-up

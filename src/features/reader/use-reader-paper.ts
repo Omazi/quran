@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 
 import type { Clock } from '@/features/home';
+import { screenCheckClock } from '@/features/screen-check/pinned-clock';
 
 import { READER_CONFIG } from './config';
 import { minutesOfDayOf, readerPaperOf, type ReaderPaper } from './reader-paper';
 
 const SECOND_MS = 1000;
-const systemClock: Clock = () => new Date();
+// The check's photographs pin the hour (`-screenCheckHour`); every other build, the real one.
+const systemClock: Clock = screenCheckClock ?? (() => new Date());
 
 /**
  * The paper of the reader now (`reader-paper.ts`): it follows the phone's appearance at once, and

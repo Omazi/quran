@@ -9,6 +9,7 @@ import {
   type Appearance,
   type SkyState,
 } from '@/features/garden';
+import { screenCheckClock } from '@/features/screen-check/pinned-clock';
 import { colorValuesFor, glassVeilMinimum } from '@/ui';
 
 import { LARGE_TEXT_CONTRAST, skyBehind, TEXT_CONTRAST, veilOpacityFor } from './sky-contrast';
@@ -18,7 +19,8 @@ import type { Clock } from './use-today';
 const SKY_STEP_MS = 60_000;
 const MINUTES_PER_HOUR = 60;
 
-const systemClock: Clock = () => new Date();
+// The check's photographs pin the hour (`-screenCheckHour`); every other build, the real one.
+const systemClock: Clock = screenCheckClock ?? (() => new Date());
 
 /** What floats over the home garden takes from the sky of the hour. */
 export interface SkyChrome {

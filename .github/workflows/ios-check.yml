@@ -155,8 +155,8 @@ jobs:
           # a picture is taken whether or not the screen came up, and a failure never stops the loop.
           CURRENT_LANG=en
           CURRENT_LOOK=""
-          shot() {  # name appearance language locale screen page script seed seconds-to-wait
-            local name=$1 look=$2 lang=$3 locale=$4 screen=$5 page=$6 script=$7 seed=$8 wait=$9
+          shot() {  # name appearance language locale screen page script seed seconds-to-wait hour
+            local name=$1 look=$2 lang=$3 locale=$4 screen=$5 page=$6 script=$7 seed=$8 wait=$9 hour=${10}
             if [ "$look" != "$CURRENT_LOOK" ]; then
               xcrun simctl ui "$SIM_UDID" appearance "$look" || true
               CURRENT_LOOK=$look
@@ -175,6 +175,8 @@ jobs:
             [ "$page" = "-" ] || args+=(-screenCheckPage "$page")
             [ "$script" = "-" ] || args+=(-screenCheckScript "$script")
             [ "$seed" = "-" ] || args+=(-screenCheckSeed "$seed")
+            # Pins the sky of the home and the paper of the reader (else the CI's own clock, at night).
+            [ "$hour" = "-" ] || args+=(-screenCheckHour "$hour")
             xcrun simctl launch "$SIM_UDID" com.omazi.quran "${args[@]}" || true
             sleep "$wait"   # idle: the screen is drawn and its texts and fonts are loaded
             xcrun simctl io "$SIM_UDID" screenshot "build/screens/$name.png" || true
@@ -182,9 +184,9 @@ jobs:
           }
           python3 tools/ci/screens.py plan > build/screens-plan.tsv
           wc -l build/screens-plan.tsv
-          while IFS=$'\t' read -r name look lang locale screen page script seed wait; do
+          while IFS=$'\t' read -r name look lang locale screen page script seed wait hour; do
             echo "== $name"
-            shot "$name" "$look" "$lang" "$locale" "$screen" "$page" "$script" "$seed" "$wait"
+            shot "$name" "$look" "$lang" "$locale" "$screen" "$page" "$script" "$seed" "$wait" "$hour"
           done < build/screens-plan.tsv
           ls -la build/screens | tail -n +2 | wc -l
       - name: Voice proof (real recitations played to the real speech engine)

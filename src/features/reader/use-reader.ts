@@ -140,9 +140,10 @@ function textScaleOf(step: number): number {
  */
 export function useReader(
   initialPage: number,
-  { monotonicClock = systemMonotonicClock, clock = systemClock }: ReaderDependencies = {},
+  { monotonicClock = systemMonotonicClock, clock: givenClock }: ReaderDependencies = {},
 ): { model: ReaderModel; actions: ReaderActions } {
   assertPageNumber(initialPage);
+  const clock = givenClock ?? systemClock;
   const [place, setPlace] = useState(() => ({
     page: initialPage,
     surah: quranStructure.firstVerseOfPage(initialPage).surah,
@@ -150,7 +151,8 @@ export function useReader(
   const [areBarsShown, setBarsShown] = useState(true);
   const [counted, setCounted] = useState<CountedPageEvent | null>(null);
   const isScreenReaderRunning = useScreenReader();
-  const paper = useReaderPaper(clock);
+  // The paper alone follows the check's pinned hour; the day a page is recorded on stays real.
+  const paper = useReaderPaper(givenClock);
   // The time with the reader open is reading time (D37), counted at the root of the app.
   useReaderPresence();
   useKeepReaderAwake();
