@@ -1,6 +1,5 @@
 import { mixHex, skyForAppearance, skyStateAt } from '@/features/garden';
-import { glassVeilMinimum } from '@/ui';
-import { colorValuesFor } from '@/ui';
+import { colorValuesFor, glassVeilMinimum } from '@/ui';
 
 import { contrastRatio, skyBehind, veilOpacityFor, type Ink } from '../sky-contrast';
 import { chromeOf } from '../use-sky-chrome';

@@ -81,9 +81,11 @@ export function LivingHome({
   const away = useSharedValue(0);
   const onGlideChange = useCallback(
     (isGliding: boolean) => {
-      away.value = withTiming(isGliding ? 1 : 0, {
-        duration: isGliding ? HOME_MOTION.topOutMs : HOME_MOTION.topInMs,
-      });
+      away.set(
+        withTiming(isGliding ? 1 : 0, {
+          duration: isGliding ? HOME_MOTION.topOutMs : HOME_MOTION.topInMs,
+        }),
+      );
     },
     [away],
   );
@@ -93,8 +95,8 @@ export function LivingHome({
     [sky, life, onGrow, onGlideChange, onControlsReady],
   );
   const topStyle = useAnimatedStyle(() => ({
-    opacity: 1 - away.value,
-    transform: [{ translateY: -HOME_MOTION.topShift * away.value }],
+    opacity: 1 - away.get(),
+    transform: [{ translateY: -HOME_MOTION.topShift * away.get() }],
   }));
 
   return (

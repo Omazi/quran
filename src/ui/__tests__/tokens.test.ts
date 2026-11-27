@@ -504,8 +504,8 @@ describe('spacing, shapes and targets', () => {
     expect(spacing).toEqual({ none: 0, xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 });
   });
 
-  it('has the three radii of the charter, the card of the mockups and the capsule', () => {
-    expect(radius).toEqual({ sm: 8, md: 12, lg: 16, xl: 24, full: 999 });
+  it('has the three radii of the charter, the card and the glass panel of the mockups, and the capsule', () => {
+    expect(radius).toEqual({ sm: 8, md: 12, lg: 16, xl: 24, glassPanel: 30, full: 999 });
   });
 
   it('keeps 16 points at the screen edge and 12 between controls', () => {

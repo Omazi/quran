@@ -120,7 +120,7 @@ describe.each(HISTORIES)('HomeScreen, %s', (history) => {
       const tGarden = i18n.getFixedT(language, 'garden');
       const { result: colors } = await renderHook(() => useColors());
       const isLiving = model.layout === 'growing' || model.layout === 'thirsty';
-      const chrome = chromeOf(skyStateAt(12.5), device.scheme);
+      const chrome = chromeOf(skyStateAt(12.5), device.scheme ?? 'light');
       await render(<HomeScreen {...propsOf(model, { chrome })} />);
 
       // The garden, described in words for screen readers.
