@@ -11,7 +11,11 @@
 #include <unordered_map>
 #include <sstream>
 
+// whisper.rn's JSI code, which includes this file, has already included its own copy
+// (<rnwhisper/whisper.h> with the prebuilt framework); the bench driver has not.
+#ifndef WHISPER_H
 #include "whisper.h"
+#endif
 
 namespace quran_decoding {
 
@@ -234,6 +238,9 @@ std::shared_ptr<const Index> build_index(const std::string &content) {
                     if (!letters.empty()) words.push_back(letters);
                 }
             }
+            Letters whole;
+            for (const Letters &word : words) whole.insert(whole.end(), word.begin(), word.end());
+            index->whole_formulas.push_back(whole);
             for (size_t first = 0; first < words.size(); ++first) {
                 Letters ending;
                 for (size_t w = first; w < words.size(); ++w) {
@@ -323,19 +330,29 @@ Range narrow(const Index &index, Range range, size_t prefix_length, const Letter
             static_cast<int32_t>(upper - index.starts.begin())};
 }
 
+namespace {
+bool is_whole_formula(const Index &index, const Letters &formula) {
+    return std::find(index.whole_formulas.begin(), index.whole_formulas.end(), formula) !=
+           index.whole_formulas.end();
+}
+}  // namespace
+
 Letters passage_part(const Index &index, const Letters &all) {
+    // At most two formulas (isti'adha, then basmala); only the first may have lost its start
+    // (the formulas are listed with each of their endings at a word, longest first).
     size_t from = 0;
-    bool stripped = true;
-    while (stripped) {
-        stripped = false;
+    for (int stripped = 0; stripped < 2; ++stripped) {
+        bool found = false;
         for (const Letters &formula : index.formulas) {
             if (formula.empty() || all.size() - from <= formula.size()) continue;
+            if (stripped > 0 && !is_whole_formula(index, formula)) continue;
             if (std::equal(formula.begin(), formula.end(), all.begin() + static_cast<long>(from))) {
                 from += formula.size();
-                stripped = true;
+                found = true;
                 break;
             }
         }
+        if (!found) break;
     }
     return Letters(all.begin() + static_cast<long>(from), all.end());
 }
@@ -432,8 +449,14 @@ bool allowed_tokens(const Index &index, const std::vector<std::string> &pieces,
     std::partial_sort(order.begin(), order.begin() + k, order.end(),
                       [logits](int a, int b) { return logits[a] > logits[b]; });
     bool any = false;
-    for (int j = 0; j < n_text && (j < k || !any); ++j) {
-        // Past the likeliest `k`, only when none of them goes on with the text.
+    // Past the likeliest `k`, only when none of them goes on with the text, and not beyond the
+    // likeliest 1024 (further down, the model does not hear that token at all).
+    const int limit = std::min(n_text, std::max(k, 1024));
+    if (limit > k) {
+        std::partial_sort(order.begin() + k, order.begin() + limit, order.end(),
+                          [logits](int a, int b) { return logits[a] > logits[b]; });
+    }
+    for (int j = 0; j < limit && (j < k || !any); ++j) {
         const int id = order[static_cast<size_t>(j)];
         if (std::isfinite(logits[id]) && check(id)) {
             allowed[static_cast<size_t>(id)] = 1;
@@ -632,5 +655,6 @@ std::string readings_json(const std::vector<Reading> &readings) {
     }
     return out + "]";
 }
+
 
 }  // namespace quran_decoding

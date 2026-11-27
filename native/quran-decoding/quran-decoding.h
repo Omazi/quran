@@ -45,6 +45,8 @@ struct Index {
      * that a formula whose first word was lost still counts.
      */
     std::vector<Letters> formulas;
+    /** The whole formulas only. */
+    std::vector<Letters> whole_formulas;
 };
 
 /**
@@ -129,7 +131,11 @@ struct ReadOptions {
      * missing to `min_letters` when the text runs out.
      */
     float free_letter_cost = 2.0f;
-    /** Likeliest first tokens tried, each read greedily from there (the cheapest is kept). */
+    /**
+     * Likeliest first tokens tried, each read greedily from there (the cheapest is kept): the
+     * first word decides much of a greedy reading. (A real beam search re-decodes too much here:
+     * whisper.h decodes one sequence at a time.)
+     */
     int first_choices = 3;
     /** A text is not read to the end once it costs this much more than the best one (0: never). */
     double margin = 0.0;

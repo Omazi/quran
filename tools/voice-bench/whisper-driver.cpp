@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
         long samples = 0, prompt_len = 0;
         int threads = 2, beam = 0, bestof = 5, maxctx = 0, minletters = 0;
         float freecost = 2.0f;
-        int firsts = 3;
+        int held_beam = 3;
         double margin = 0.0;
         long texts_len = 0;
         const bool held = line.rfind("held ", 0) == 0;
@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
             else if (k == "prompt") prompt_len = atol(v.c_str());
             else if (k == "minletters") minletters = atoi(v.c_str());
             else if (k == "freecost") freecost = static_cast<float>(atof(v.c_str()));
-            else if (k == "firsts") firsts = atoi(v.c_str());
+            else if (k == "firsts" && held) held_beam = atoi(v.c_str());
             else if (k == "margin") margin = atof(v.c_str());
             else if (k == "texts") texts_len = atol(v.c_str());
         }
@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
             options.threads = threads;
             options.min_letters = minletters;
             options.free_letter_cost = freecost;
-            options.first_choices = firsts;
+            options.first_choices = held_beam;
             options.margin = margin;
             auto t0 = std::chrono::steady_clock::now();
             auto readings = quran_decoding::read_held_to(ctx, audio.data(), static_cast<int>(audio.size()),

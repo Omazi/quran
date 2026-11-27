@@ -794,24 +794,49 @@ describeBench('voice benchmark', () => {
 
   (phase.includes('held-score') ? it : it.skip)('scores the held readings', () => {
     const records = readJsonl<HeldRecord>(heldFile);
-    const groups = new Map<string, { right: number; wrong: number; wrongIfLeftOut: number; n: number }>();
+    /** What the app's search said of the free reading alone (offline-score's per-clip dump). */
+    const appAnswers = new Map(
+      readJsonl<{ clip: string; answer: string }>(
+        `${work}/clips-offline-${configName}${tag}.jsonl`,
+      ).map((r) => [r.clip, r.answer]),
+    );
+    const groups = new Map<
+      string,
+      { right: number; wrong: number; wrongIfLeftOut: number; n: number; app: number; both: number; bothWrong: number }
+    >();
     const byClip = new Map(clips.map((clip) => [clip.id, clip]));
     for (const record of records) {
       const clip = byClip.get(record.clip);
       if (clip === undefined) continue;
       const truthOf = (candidate: AudioCheckCandidate) => isRight(candidate.passage, clip.truth);
-      const decision = decideByAudio(record.candidates, record.readings, record.free);
+      const decision = decideByAudio(index, record.candidates, record.readings, record.free);
       // The same, with the right passage taken out: anything announced then is wrong.
       const kept = record.candidates.map((c, i) => [c, record.readings[i]!] as const).filter(([c]) => !truthOf(c));
       const leftOut = decideByAudio(
+        index,
         kept.map(([c]) => c),
         kept.map(([, r]) => r),
         record.free,
       );
       const reader = clip.stream.professional ? 'pro' : 'ordinary';
       for (const key of [`${clip.condition} ${clip.wanted}s`, `${reader} all`, 'all']) {
-        const g = groups.get(key) ?? { right: 0, wrong: 0, wrongIfLeftOut: 0, n: 0 };
+        const g = groups.get(key) ?? {
+          right: 0,
+          wrong: 0,
+          wrongIfLeftOut: 0,
+          n: 0,
+          app: 0,
+          both: 0,
+          bothWrong: 0,
+        };
         g.n += 1;
+        const app = appAnswers.get(record.clip) ?? 'none';
+        const held =
+          decision.status === 'found' ? (truthOf(decision.candidate) ? 'right' : 'wrong') : 'none';
+        const both = app !== 'none' ? app : held;
+        if (app === 'right') g.app += 1;
+        if (both === 'right') g.both += 1;
+        if (both === 'wrong') g.bothWrong += 1;
         if (decision.status === 'found') {
           if (truthOf(decision.candidate)) g.right += 1;
           else g.wrong += 1;
@@ -820,9 +845,14 @@ describeBench('voice benchmark', () => {
         groups.set(key, g);
       }
     }
-    const lines = ['group | clips | held top-1 | wrong | wrong with the right passage left out'];
+    const lines = [
+      'group | clips | app search | held check | wrong | wrong with the right passage left out | app then held | wrong',
+    ];
     for (const [key, g] of [...groups].sort(([a], [b]) => a.localeCompare(b))) {
-      lines.push(`${key} | ${g.n} | ${percent(g.right, g.n)} | ${g.wrong} | ${g.wrongIfLeftOut}`);
+      lines.push(
+        `${key} | ${g.n} | ${percent(g.app, g.n)} | ${percent(g.right, g.n)} | ${g.wrong} | ` +
+          `${g.wrongIfLeftOut} | ${percent(g.both, g.n)} | ${g.bothWrong}`,
+      );
     }
     fs.writeFileSync(`${work}/score-held-${configName}${tag}${heldTag}.txt`, lines.join('\n'));
     expect(records.length).toBeGreaterThan(0);
