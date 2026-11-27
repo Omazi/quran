@@ -1131,3 +1131,75 @@ _Changerait si_ un iPhone montre `base` trop lent (revenir à `tiny`, le contrô
 gardé : +7 points sur le même banc, D49) ou un contrôle trop long (moins de candidats, sans la
 deuxième chance) ; ou si un Whisper `small` affiné sur le Coran, à licence permissive, peut être
 mesuré (encodeur Core ML sur le moteur neuronal).
+
+## D50 — Le contrôle par le son : les lettres du Coran, et le coût permis par lettre du passage
+
+Décidé le 27 novembre 2026 (développeur, branche `work/voice-90`), à la demande du propriétaire :
+approcher 90 % de reconnaissance juste sans jamais annoncer un autre passage. Complète D49.
+
+**Ce qui change dans l'appli** (`domain/listening/audio-check.ts`, `quran-letters.ts`,
+`features/listening/held-check.ts` ; rien de natif, aucune dépendance) :
+
+1. **Les lettres du Coran** (`quran-letters.ts`) : le texte imla'i réduit aux lettres que compare
+   `native/quran-decoding` (voyelles, espaces et sièges de la hamza ôtés). Une relecture tenue à
+   un passage est un morceau de ce passage ; quand ses lettres (au moins **10**, formules
+   d'ouverture ôtées) ne sont dites **qu'à un seul endroit** du Coran, elle nomme cet endroit,
+   même si elle a moins de trois mots (la recherche par mots en veut trois). Exemples du banc :
+   « ويل للمطففين », « والقرآن الحكيم ». Les autres conditions de D49 (coût, écart de 15) restent.
+   L'index n'est construit que si une relecture doit être placée ainsi (0,3 s sur l'ordinateur
+   du banc, une fois par session ; une recherche : moins d'une milliseconde).
+2. **Le coût permis** : `10 + max(0,5 par lettre de la lecture libre, 1 par lettre du passage de
+la relecture, comptées jusqu'au nombre de lettres de la lecture libre)`. Un lecteur ordinaire
+   mal écrit par Whisper, dont la relecture tient tout le passage, n'est plus refusé pour un coût
+   que justifie la longueur de ce qu'elle explique ; une relecture courte n'y gagne rien.
+
+**Mesuré** (banc `tools/voice-bench`, mêmes 208 extraits et mêmes lectures que D49 ; relectures
+refaites en entier avec ce code, identiques octet pour octet à celles de D49 ; « faux si absent » :
+ce qui serait annoncé si le bon passage n'était pas parmi les candidats) :
+
+| 208 extraits (top-1)                 | D49 (reproduit) | **D50**    |
+| ------------------------------------ | --------------- | ---------- |
+| tous                                 | 82,7 %          | **84,1 %** |
+| 10 s propres                         | 86,5 %          | **88,5 %** |
+| 10 s bruit 10 dB                     | 86,5 %          | 86,5 %     |
+| 10 s bande téléphonique              | 88,5 %          | 88,5 %     |
+| 6 s propres                          | 69,2 %          | **73,1 %** |
+| lecteurs ordinaires                  | 73,4 %          | **76,6 %** |
+| récitants professionnels             | 86,8 %          | **87,5 %** |
+| faux / faux si le bon était absent   | 0 / 0           | **0 / 0**  |
+| sans réponse, le bon parmi les égaux | 8               | 8          |
+| juste ou parmi les égaux             | 86,5 %          | **88,0 %** |
+
+(Avec la deuxième chance ; sans elle : 82,2 % puis 83,2 %.) « Parmi les égaux » : rien n'est
+annoncé et les mots finissent à égalité entre plusieurs endroits, le bon compris (2:255 et 3:2,
+3:190 et 2:164, 15:11 et 36:30…) : l'écran les liste, c'est juste.
+
+**Temps** : les mêmes relectures qu'avec D49 (1,75 passage relu par contrôle en moyenne, 4 au
+plus) ; la deuxième chance sert un peu moins souvent (55 extraits au lieu de 59). Sur l'ordinateur
+du banc (un fil, machine partagée) : 5,5 s par contrôle en médiane, 10,5 s au 9e décile ;
+l'estimation de D49 pour un iPhone 12 avec Metal (1 à 3 s par contrôle) ne change pas. Pas mesuré
+sur un iPhone.
+
+**Essayé, pas retenu**
+
+- **Passages proches lettre à lettre** (vote de trigrammes de lettres puis alignement, ajoutés aux
+  candidats jusqu'à 4) : le bon passage est bien proposé pour 3 extraits de plus, mais sa
+  relecture coûte trop (ou un autre passage coûte moins) : **0 extrait gagné**, des relectures en
+  plus. Retiré.
+- **Monter le son d'une voix faible** avant Whisper (les lecteurs les moins bien lus sont les plus
+  faibles, -30 à -40 dB) : lecture libre des lecteurs ordinaires **65,6 % → 62,5 %**. Retiré.
+- **Faire payer les lettres non lues ou les mots libres** dans la décision, **se fier à la
+  relecture du Coran entier** pour permettre un coût plus haut : au mieux +1 extrait, et cette
+  dernière annonce un autre passage (lecteur 15). Pas retenus.
+- **Plus permissif** (1,2 par lettre du passage) : un « faux si absent » (2:255 / 3:2). Gardé à 1.
+
+**Ce qui reste** (33 extraits) : 12 sont des versets dits à l'identique ailleurs dans ce qu'on
+entend (rester sans réponse est juste) ; 10 n'ont jamais le bon passage parmi ceux que proposent
+les mots (lecteur 15 : rien de reconnaissable ; lecteurs 230 et 313 ; 108 coupé à « ...الكوثر ») ;
+11 l'ont, mais sa relecture coûte trop ou un autre coûte presque autant (lecteurs 2, 230, 239,
+313 ; 59:22 « ...الشهادة هو الرحمن الرحيم » ; 78:1 et 108 en 6 et 10 s). Le reste se gagnerait
+par une meilleure lecture libre (un modèle plus grand, D49) plutôt que par la décision.
+
+_Changerait si_ un « faux » apparaissait sur de nouveaux enregistrements (revenir aux règles de
+D49 : `maxCostPerPassageLetter: 0`, `uniqueMinLetters: 0`) ; ou si un modèle plus juste change
+les coûts (refaire la grille du banc).

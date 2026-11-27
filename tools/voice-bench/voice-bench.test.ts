@@ -14,15 +14,20 @@ import { whisperWords } from '@/data/speech/transcript';
 import type { AudioCapture, EngineTimers, Transcriber } from '@/data/speech/whisper-speech-engine';
 import { searchHeardWords, type SpeechEngine } from '@/domain/listening';
 import {
+  AUDIO_CHECK,
   audioCheckCandidates,
   decideByAudio,
   followUpCandidates,
   heldText,
+  letterCount,
   minLettersFor,
+  passageWords,
   wholeQuranText,
   type AudioCheckCandidate,
+  type AudioCheckThresholds,
   type HeldReading,
 } from '@/domain/listening/audio-check';
+import { createQuranLetters, lettersOf, type QuranLetters } from '@/domain/listening/quran-letters';
 import {
   createVerseIndex,
   normalizeArabic,
@@ -123,6 +128,7 @@ const CONFIGS: Readonly<Record<string, BenchConfig>> = {
   'base-q5_1': { model: 'ggml-quran-base-q5_1.bin', decoding: APP_DECODING, engine: {} },
 };
 const configName = env.VOICE_BENCH_CONFIG ?? 'app';
+
 /** Extra engine settings for a run, as JSON (`{"phraseEndSilenceMs":500}`). */
 const engineOverrides = JSON.parse(env.VOICE_BENCH_ENGINE ?? '{}') as Record<string, number>;
 /** Extra decoding settings for a run, as JSON (`{"beam":2}`), and another model file. */
@@ -724,6 +730,40 @@ describeBench('voice benchmark', () => {
     threads: Number(env.VOICE_BENCH_HELD_THREADS ?? 1),
   });
 
+  /**
+   * The rules of the check: those of the app (audio-check.ts), or VOICE_BENCH_D49=1 for D49's
+   * (no letters of the Quran, no allowance per letter of the passage).
+   */
+  /** VOICE_BENCH_CLIPS: a file of clip ids, one per line: only those are read held. */
+  const onlyClips =
+    env.VOICE_BENCH_CLIPS === undefined
+      ? null
+      : new Set(
+          fs
+            .readFileSync(env.VOICE_BENCH_CLIPS, 'utf8')
+            .split('\n')
+            .filter((line) => line !== ''),
+        );
+  const d49 = env.VOICE_BENCH_D49 === '1';
+  const rules: AudioCheckThresholds = d49
+    ? { ...AUDIO_CHECK, maxCostPerPassageLetter: 0, uniqueMinLetters: 0 }
+    : AUDIO_CHECK;
+  let lettersCache: QuranLetters | undefined;
+  function appLetters(): QuranLetters | undefined {
+    if (d49) return undefined;
+    if (lettersCache === undefined) {
+      const verses = imlaei();
+      lettersCache = createQuranLetters(verses.text, verses.count);
+    }
+    return lettersCache;
+  }
+  const decide = (
+    candidates: readonly AudioCheckCandidate[],
+    readings: readonly HeldReading[],
+    free: string,
+    thresholds: AudioCheckThresholds = rules,
+  ) => decideByAudio(index, candidates, readings, free, thresholds, appLetters());
+
   /** Imla'i verse texts (the spelling the model writes), from the app's generated data. */
   function imlaei(): {
     text: (ref: { surah: number; verse: number }) => string | undefined;
@@ -756,6 +796,7 @@ describeBench('voice benchmark', () => {
         for (const clip of clips) {
           const text = free.get(clip.id);
           if (done.has(clip.id) || text === undefined) continue;
+          if (onlyClips !== null && !onlyClips.has(clip.id)) continue;
           const candidates = audioCheckCandidates(index, whisperWords(text), verses.count);
           let readings: HeldReading[] = [];
           let ms = 0;
@@ -821,7 +862,7 @@ describeBench('voice benchmark', () => {
           const clip = byClip.get(record.clip);
           if (clip === undefined || done.has(record.clip)) continue;
           let out: HeldRecord = record;
-          const first = decideByAudio(index, record.candidates, record.readings, record.free);
+          const first = decide(record.candidates, record.readings, record.free);
           if (first.status !== 'found' && whisperWords(record.free).length >= 1) {
             const path = `${streamDir}/${clip.condition}/${clip.stream.id}.wav`;
             if (!audioOf.has(path)) {
@@ -870,6 +911,167 @@ describeBench('voice benchmark', () => {
     24 * 3600 * 1000,
   );
 
+  /**
+   * Other decision rules on the same held readings (VOICE_BENCH_EXPLORE, JSON list of
+   * variants): a quick look before a rule is written into audio-check.ts.
+   */
+  (phase.includes('held-explore') ? it : it.skip)('explores decision rules', () => {
+    const records = readJsonl<HeldRecord & { wholeText?: string }>(
+      env.VOICE_BENCH_HELD_SECOND === '1' ? held2File : heldFile,
+    );
+    const appAnswers = new Map(
+      readJsonl<{ clip: string; answer: string }>(
+        `${work}/clips-offline-${configName}${tag}.jsonl`,
+      ).map((r) => [r.clip, r.answer]),
+    );
+    const verses = imlaei();
+    const quranLetters = createQuranLetters(verses.text, verses.count);
+    const formulaLetters = AUDIO_CHECK.formulas.map((f) => lettersOf(f));
+    interface Variant {
+      name: string;
+      base: number;
+      perLetter: number;
+      lead: number;
+      uncovered: number;
+      freeExtra: number;
+      /** Allowed cost per letter of the best reading's own passage (0: per letter heard). */
+      perPassage: number;
+      unique: number;
+      wholeRelax: number;
+    }
+    const variants = JSON.parse(env.VOICE_BENCH_EXPLORE ?? '[]') as Partial<Variant>[];
+    const byClip = new Map(clips.map((clip) => [clip.id, clip]));
+    const ord = (r: { surah: number; verse: number }) => r.surah * 1000 + r.verse;
+    const inside = (
+      place: { first: { surah: number; verse: number }; last: { surah: number; verse: number } },
+      c: AudioCheckCandidate,
+    ) => !(ord(place.last) < ord(c.first) || ord(place.first) > ord(c.last));
+    function uniquePlace(words: readonly string[], min: number) {
+      let letters = lettersOf(words.join(''));
+      for (const formula of formulaLetters) {
+        if (letters.startsWith(formula) && letters.length > formula.length) {
+          letters = letters.slice(formula.length);
+        }
+      }
+      if (letters.length < min) return null;
+      const places = quranLetters.placesOf(letters, 2);
+      return places.length === 1 ? places[0]! : null;
+    }
+    function decideVariant(
+      v: Variant,
+      cands: readonly AudioCheckCandidate[],
+      readings: readonly HeldReading[],
+      free: string,
+      wholeText: string | undefined,
+    ): AudioCheckCandidate | null {
+      if (cands.length === 0) return null;
+      const letters = letterCount(free);
+      const cost = readings.map((r) =>
+        r.abandoned
+          ? r.cost
+          : r.cost + v.uncovered * Math.max(0, letters - r.letters) + v.freeExtra * r.freeLetters,
+      );
+      let best = -1;
+      readings.forEach((r, i) => {
+        if (!r.abandoned && (best < 0 || cost[i]! < cost[best]!)) best = i;
+      });
+      if (best < 0) return null;
+      let lead = Infinity;
+      readings.forEach((_, i) => {
+        if (i !== best) lead = Math.min(lead, cost[i]! - cost[best]!);
+      });
+      if (lead < v.lead) return null;
+      const candidate = cands[best]!;
+      const words = passageWords(readings[best]!);
+      const named = searchHeardWords(index, words);
+      let ok = false;
+      if (named.status === 'found') {
+        const p = named.candidates[0]!;
+        ok = inside({ first: p.start, last: p.end }, candidate);
+      } else if (v.unique > 0) {
+        const place = uniquePlace(words, v.unique);
+        ok = place !== null && inside(place, candidate);
+      }
+      if (!ok) return null;
+      const own = lettersOf(words.join('')).length;
+      const allowed =
+        v.perPassage > 0
+          ? v.base + Math.max(v.perLetter * letters, v.perPassage * Math.min(own, letters))
+          : v.base + v.perLetter * letters;
+      if (cost[best]! <= allowed) return candidate;
+      if (v.wholeRelax > 0 && wholeText !== undefined) {
+        if (cost[best]! > v.base + v.wholeRelax * letters) return null;
+        const whole = searchHeardWords(index, whisperWords(wholeText));
+        if (whole.status === 'found') {
+          const p = whole.candidates[0]!;
+          if (inside({ first: p.start, last: p.end }, candidate)) return candidate;
+        }
+      }
+      return null;
+    }
+    const lines = ['variant | right | wrong | wrong left out | misses'];
+    for (const partial of [{}, ...variants]) {
+      const v: Variant = {
+        name: 'app',
+        base: AUDIO_CHECK.maxCostBase,
+        perLetter: AUDIO_CHECK.maxCostPerLetter,
+        lead: AUDIO_CHECK.minLead,
+        uncovered: 0,
+        freeExtra: 0,
+        perPassage: 0,
+        unique: 0,
+        wholeRelax: 0,
+        ...partial,
+      };
+      let right = 0;
+      let wrong = 0;
+      let leftOutWrong = 0;
+      const misses: string[] = [];
+      const wrongs: string[] = [];
+      for (const record of records) {
+        const clip = byClip.get(record.clip);
+        if (clip === undefined) continue;
+        const truthOf = (c: AudioCheckCandidate) => isRight(c.passage, clip.truth);
+        const app = appAnswers.get(record.clip) ?? 'none';
+        const d = decideVariant(
+          v,
+          record.candidates,
+          record.readings,
+          record.free,
+          record.wholeText,
+        );
+        const held = d === null ? 'none' : truthOf(d) ? 'right' : 'wrong';
+        const both = app !== 'none' ? app : held;
+        if (both === 'right') right += 1;
+        else if (both === 'wrong') {
+          wrong += 1;
+          wrongs.push(record.clip);
+        } else misses.push(record.clip);
+        const kept = record.candidates
+          .map((c, i) => [c, record.readings[i]!] as const)
+          .filter(([c]) => !truthOf(c));
+        const lo = decideVariant(
+          v,
+          kept.map(([c]) => c),
+          kept.map(([, r]) => r),
+          record.free,
+          undefined,
+        );
+        if (lo !== null) {
+          leftOutWrong += 1;
+          wrongs.push(`left out: ${record.clip}`);
+        }
+      }
+      lines.push(
+        `${JSON.stringify(partial)} | ${right} | ${wrong} | ${leftOutWrong} | ${misses.length}`,
+      );
+      if (wrongs.length > 0) lines.push(`  wrong: ${wrongs.join(', ')}`);
+      if (env.VOICE_BENCH_EXPLORE_MISSES === '1') lines.push(`  misses: ${misses.join(', ')}`);
+    }
+    fs.writeFileSync(`${work}/explore-${configName}${tag}${heldTag}.txt`, lines.join('\n'));
+    expect(records.length).toBeGreaterThan(0);
+  });
+
   (phase.includes('held-score') ? it : it.skip)('scores the held readings', () => {
     const records = readJsonl<HeldRecord>(
       env.VOICE_BENCH_HELD_SECOND === '1' ? held2File : heldFile,
@@ -890,25 +1092,56 @@ describeBench('voice benchmark', () => {
         app: number;
         both: number;
         bothWrong: number;
+        /** No passage announced, but the words end tied between places, the right one among them. */
+        tied: number;
       }
     >();
     const byClip = new Map(clips.map((clip) => [clip.id, clip]));
+    /** Each clip's outcome, for a look at the misses. */
+    const perClip: string[] = [];
     for (const record of records) {
       const clip = byClip.get(record.clip);
       if (clip === undefined) continue;
       const truthOf = (candidate: AudioCheckCandidate) => isRight(candidate.passage, clip.truth);
-      const decision = decideByAudio(index, record.candidates, record.readings, record.free);
+      const decision = decide(record.candidates, record.readings, record.free);
+      perClip.push(
+        JSON.stringify({
+          clip: record.clip,
+          app: appAnswers.get(record.clip) ?? 'none',
+          held:
+            decision.status === 'found'
+              ? truthOf(decision.candidate)
+                ? 'right'
+                : 'wrong'
+              : 'none',
+          rightProposed: record.candidates.some(truthOf),
+          free: record.free,
+          truth: clip.truth,
+          candidates: record.candidates.map((c, i) => ({
+            at: `${c.first.surah}:${c.first.verse}-${c.last.surah}:${c.last.verse}`,
+            right: truthOf(c),
+            cost: record.readings[i]?.cost,
+            abandoned: record.readings[i]?.abandoned,
+            text: record.readings[i]?.text,
+          })),
+          wholeText: (record as { wholeText?: string }).wholeText,
+        }),
+      );
       // The same, with the right passage taken out: anything announced then is wrong.
       const kept = record.candidates
         .map((c, i) => [c, record.readings[i]!] as const)
         .filter(([c]) => !truthOf(c));
-      const leftOut = decideByAudio(
-        index,
+      const leftOut = decide(
         kept.map(([c]) => c),
         kept.map(([, r]) => r),
         record.free,
       );
       const reader = clip.stream.professional ? 'pro' : 'ordinary';
+      // What the screen lists when nothing is announced: the places tied for the words heard.
+      const lastWords = searchHeardWords(index, whisperWords(record.free));
+      const rightAmongTied =
+        lastWords.status === 'ambiguous' &&
+        lastWords.candidates.some((candidate) => isRight(candidate, clip.truth));
       for (const key of [`${clip.condition} ${clip.wanted}s`, `${reader} all`, 'all']) {
         const g = groups.get(key) ?? {
           right: 0,
@@ -918,6 +1151,7 @@ describeBench('voice benchmark', () => {
           app: 0,
           both: 0,
           bothWrong: 0,
+          tied: 0,
         };
         g.n += 1;
         const app = appAnswers.get(record.clip) ?? 'none';
@@ -927,6 +1161,7 @@ describeBench('voice benchmark', () => {
         if (app === 'right') g.app += 1;
         if (both === 'right') g.both += 1;
         if (both === 'wrong') g.bothWrong += 1;
+        if (both === 'none' && rightAmongTied) g.tied += 1;
         if (decision.status === 'found') {
           if (truthOf(decision.candidate)) g.right += 1;
           else g.wrong += 1;
@@ -936,12 +1171,13 @@ describeBench('voice benchmark', () => {
       }
     }
     const lines = [
-      'group | clips | app search | held check | wrong | wrong with the right passage left out | app then held | wrong',
+      'group | clips | app search | held check | wrong | wrong with the right passage left out | app then held | wrong | right among tied places | right or among tied',
     ];
     for (const [key, g] of [...groups].sort(([a], [b]) => a.localeCompare(b))) {
       lines.push(
         `${key} | ${g.n} | ${percent(g.app, g.n)} | ${percent(g.right, g.n)} | ${g.wrong} | ` +
-          `${g.wrongIfLeftOut} | ${percent(g.both, g.n)} | ${g.bothWrong}`,
+          `${g.wrongIfLeftOut} | ${percent(g.both, g.n)} | ${g.bothWrong} | ${g.tied} | ` +
+          `${percent(g.both + g.tied, g.n)}`,
       );
     }
     // Other thresholds, on the same readings: how much is left on the table, at what risk.
@@ -958,7 +1194,7 @@ describeBench('voice benchmark', () => {
             if (clip === undefined) continue;
             const truthOf = (c: AudioCheckCandidate) => isRight(c.passage, clip.truth);
             const app = appAnswers.get(record.clip) ?? 'none';
-            const d = decideByAudio(index, record.candidates, record.readings, record.free, t);
+            const d = decide(record.candidates, record.readings, record.free, { ...rules, ...t });
             const held = d.status === 'found' ? (truthOf(d.candidate) ? 'right' : 'wrong') : 'none';
             const both = app !== 'none' ? app : held;
             if (both === 'right') right += 1;
@@ -966,12 +1202,11 @@ describeBench('voice benchmark', () => {
             const kept = record.candidates
               .map((c, i) => [c, record.readings[i]!] as const)
               .filter(([c]) => !truthOf(c));
-            const lo = decideByAudio(
-              index,
+            const lo = decide(
               kept.map(([c]) => c),
               kept.map(([, r]) => r),
               record.free,
-              t,
+              { ...rules, ...t },
             );
             if (lo.status === 'found') leftOutWrong += 1;
           }
@@ -983,6 +1218,10 @@ describeBench('voice benchmark', () => {
     }
     lines.push('', ...grid);
     const second = env.VOICE_BENCH_HELD_SECOND === '1' ? '-second' : '';
+    fs.writeFileSync(
+      `${work}/held-clips-${configName}${tag}${heldTag}${second}.jsonl`,
+      `${perClip.join('\n')}\n`,
+    );
     fs.writeFileSync(
       `${work}/score-held-${configName}${tag}${heldTag}${second}.txt`,
       lines.join('\n'),

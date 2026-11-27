@@ -13,6 +13,8 @@ export type {
 } from './listening-machine';
 export { HEARD_SEARCH, searchHeardWords, searchWithPartialWords } from './heard-search';
 export { locatePassage } from './passage-location';
+export { createQuranLetters, lettersOf } from './quran-letters';
+export type { QuranLetters } from './quran-letters';
 export { followRecitation, startFollowing } from './recitation-follow';
 export type { FollowState } from './recitation-follow';
 export type { PassageLocation } from './passage-location';

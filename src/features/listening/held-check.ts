@@ -7,6 +7,7 @@
 import {
   AUDIO_CHECK,
   audioCheckCandidates,
+  createQuranLetters,
   decideByAudio,
   followUpCandidates,
   heldText,
@@ -14,6 +15,7 @@ import {
   type AudioCheckCandidate,
   type HeldCheck,
   type HeldReading,
+  type QuranLetters,
   type SpeechEngine,
 } from '@/domain/listening';
 import type { VerseRef } from '@/domain/quran';
@@ -38,6 +40,20 @@ function wholeQuranOf(texts: HeldTexts): string {
   return whole;
 }
 
+const lettersOfTexts = new WeakMap<HeldTexts, QuranLetters>();
+/** The Quran as letters (D50), built once per set of texts (0.3 s on the bench computer). */
+function quranLettersOf(texts: HeldTexts): QuranLetters {
+  let letters = lettersOfTexts.get(texts);
+  if (letters === undefined) {
+    letters = createQuranLetters(
+      (ref) => texts.text(ref),
+      (surah) => texts.verseCount(surah),
+    );
+    lettersOfTexts.set(texts, letters);
+  }
+  return letters;
+}
+
 /**
  * Checks `words` against the audio of the engine's latest reading. Resolves with a `found`
  * search result naming the passage, or null (unsure, nothing to check, or a build that cannot).
@@ -56,6 +72,10 @@ export async function checkHeardWords(
   if (engine.checkHeard === undefined || words.length < AUDIO_CHECK.minWords) return null;
   const verseCount = (surah: number) => texts.verseCount(surah);
   const textOf = (candidate: AudioCheckCandidate) => heldText(candidate, (ref) => texts.text(ref));
+  // Built only when a reading too short for the word search must be placed by its letters.
+  const letters: QuranLetters = {
+    placesOf: (wanted, max) => quranLettersOf(texts).placesOf(wanted, max),
+  };
   const candidates = audioCheckCandidates(index, words, verseCount);
   let readings: readonly HeldReading[] = [];
   let first: HeldCheck | null = null;
@@ -63,7 +83,14 @@ export async function checkHeardWords(
     first = await engine.checkHeard(candidates.map(textOf));
     if (first === null) return null;
     readings = first.readings;
-    const decision = decideByAudio(index, candidates, readings, first.freeText);
+    const decision = decideByAudio(
+      index,
+      candidates,
+      readings,
+      first.freeText,
+      AUDIO_CHECK,
+      letters,
+    );
     if (decision.status === 'found') return decision.result;
   }
   if (!secondChance) return null;
@@ -79,6 +106,8 @@ export async function checkHeardWords(
     [...candidates, ...more],
     [...readings, ...extra.readings],
     extra.freeText,
+    AUDIO_CHECK,
+    letters,
   );
   return decision.status === 'found' ? decision.result : null;
 }

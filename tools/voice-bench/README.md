@@ -67,6 +67,17 @@ Variables : `VOICE_BENCH_HELD_TAG`, `VOICE_BENCH_HELD_FREE_COST`, `VOICE_BENCH_H
 `VOICE_BENCH_HELD_MARGIN`, `VOICE_BENCH_HELD_THREADS` (1 par défaut : sur une machine chargée,
 deux fils qui s'attendent ralentissent chaque pas du décodeur de 10 à 50 fois).
 
+**Les règles de D50** : par défaut, `held-score` juge avec les règles de l'appli
+(`audio-check.ts` : lettres du Coran, coût permis par lettre du passage) ; `VOICE_BENCH_D49=1`
+reprend celles de D49. `held-score` écrit aussi `held-clips-<...>.jsonl` (chaque extrait : ce que
+dit la recherche, le contrôle, les candidats et leurs coûts) et compte les extraits **sans
+réponse dont les mots finissent à égalité entre plusieurs endroits, le bon parmi eux** (ce que
+l'écran liste alors : versets dits à l'identique). `VOICE_BENCH_CLIPS=<fichier>` (un extrait par
+ligne) limite la phase `held` à ces extraits ; la phase `held-explore` essaie d'autres règles sur
+les mêmes relectures (`VOICE_BENCH_EXPLORE`, liste JSON de variantes). Sur une machine chargée,
+`VOICE_BENCH_DECODING='{"threads":1}'` donne les mêmes lectures (vérifié sur 8 extraits), bien
+plus vite que deux fils qui s'attendent.
+
 Les temps du repli de température (D45) : `python3 -I tools/voice-bench/retime.py <données>
 <travail> <travail>/offline-before.jsonl`.
 
