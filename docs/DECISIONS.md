@@ -971,10 +971,15 @@ texte reste neutre : « Lire avec Sarah ».
   (« متى شئتَ / شئتِ ») prennent le genre du réglage ; « حديقتك » ne change pas.
 - **Arabe par défaut** : quand le genre n'est pas précisé, l'impératif arabe garde la forme
   conventionnelle au masculin ; seules les formes féminines (`_female`) sont écrites.
+- **Deuxième passe faite** (26 novembre 2026) : les impératifs et accords arabes des écrans Accueil,
+  Écoute, Lecteur, Réglages et Jardin (« اقرئي واسقي », « رتّلي ويتابعك التطبيق », « اسحبي للتدوير »…)
+  ont leur forme `_female` ; le français « Je ne t’ai pas entendu » devient « entendue » et « Prêt quand tu l’es »
+  « Prête… » pour une femme (sans genre précisé, le texte actuel reste). Les composants
+  passent par `useGenderedTranslation`. Les textes à pluriel ont leur forme (`description_female_one`…).
+  Le test `gendered-plurals.test.ts` vérifie que chaque `_female` a sa clé de base et les mêmes variables.
 - **À faire plus tard** : la vraie couche serveur ne publie pas encore le profil (ni le jardin) ; elle
-  devra envoyer `settings.gender` par `updateMyProfile({ gender })`. Les impératifs arabes des
-  écrans Accueil, Écoute, Lecteur et Réglages, et « Je ne t'ai pas entendu » (Écoute, français),
-  n'ont pas encore de forme féminine ; l'introduction et « Mes jardins » (autre chantier) non plus.
+  devra envoyer `settings.gender` par `updateMyProfile({ gender })`. L’introduction et « Mes jardins »
+  (autre chantier) n’ont pas encore de forme féminine.
   La migration n'est appliquée à aucun projet distant.
 
 _Changerait si_ le propriétaire préfère ne pas conserver le genre sur le serveur (alors seul le

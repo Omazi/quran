@@ -29,6 +29,7 @@
   },
   "nothingHeard": {
     "title": "Je ne t’ai pas entendu",
+    "title_female": "Je ne t’ai pas entendue",
     "description": "Récite à voix haute, près du téléphone."
   },
   "tooFewWords": {
@@ -71,6 +72,7 @@
   },
   "ready": {
     "title": "Prêt quand tu l’es",
+    "title_female": "Prête quand tu l’es",
     "description": "Appuie sur le bouton pour commencer l’écoute. Le micro reste éteint d’ici là."
   },
   "actions": {

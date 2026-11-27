@@ -1,6 +1,5 @@
 import { GLView, type ExpoWebGLRenderingContext } from 'expo-gl';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   Animated,
   Platform,
@@ -12,6 +11,7 @@ import {
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import type { GardenState } from '@/domain/garden';
+import { useGenderedTranslation } from '@/features/gender';
 import { publishHandle } from '@/features/screen-check/handles';
 import { Pill, spacing, useReducedMotion, type IconSymbol } from '@/ui';
 
@@ -86,7 +86,7 @@ export function GardenView3D({
   isActive = true,
   testID = 'garden-3d',
 }: GardenView3DProps) {
-  const { t } = useTranslation('garden');
+  const { t } = useGenderedTranslation('garden');
   const isMotionReduced = useReducedMotion();
   const modelStatus = useGardenModel();
   const hint = useGardenHint();

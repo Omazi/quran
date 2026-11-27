@@ -515,7 +515,8 @@ describe('the home locale files', () => {
   /** Plural forms differ by language: "streak_one" and "streak_few" are both the key "streak". */
   function keysOf(value: unknown, prefix = ''): string[] {
     if (typeof value !== 'object' || value === null) {
-      return [prefix.replace(/_(zero|one|two|few|many|other)$/, '')];
+      // A gendered form ("text_female", "description_female_one") is a wording, not a key.
+      return [prefix.replace(/_(zero|one|two|few|many|other)$/, '').replace(/_(male|female)$/, '')];
     }
     return Object.entries(value).flatMap(([key, child]) =>
       keysOf(child, prefix === '' ? key : `${prefix}.${key}`),

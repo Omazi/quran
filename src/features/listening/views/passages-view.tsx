@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { splitVerseWords, WORD_SEPARATOR } from '@/domain/quran';
+import { useGenderedTranslation } from '@/features/gender';
 import { useQuranFont } from '@/features/reader';
 import {
   AppText,
@@ -54,7 +55,7 @@ export function PassagesView({
   onListenAgain,
   onClose,
 }: PassagesViewProps) {
-  const { t } = useTranslation('listening');
+  const { t } = useGenderedTranslation('listening');
   const colors = useColors();
   const verses = useMemo(() => passages.map((passage) => passage.firstVerse), [passages]);
   const texts = useVerseTexts(verses, loadVerseText);

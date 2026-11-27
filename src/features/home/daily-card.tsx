@@ -1,5 +1,6 @@
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
+
+import { useGenderedTranslation } from '@/features/gender';
 
 // The mark alone, not the whole listening module (which reaches the reader, then the home screen).
 import { RosetteMark } from '@/features/listening/rosette/rosette-mark';
@@ -40,7 +41,7 @@ export interface DailyCardProps {
  * (typography.md › Supporting Dynamic Type).
  */
 export function DailyCard({ model, onRead, onRecognize }: DailyCardProps) {
-  const { t, i18n } = useTranslation('home');
+  const { t, i18n } = useGenderedTranslation('home');
   const { fontScale } = useWindowDimensions();
   const isSideBySide = fontScale <= layout.sideBySideMaxFontScale;
   const { today, reading, hizb, layout: homeLayout } = model;

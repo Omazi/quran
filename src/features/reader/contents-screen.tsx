@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { PAGE_COUNT } from '@/domain/quran';
+import { useGenderedTranslation } from '@/features/gender';
 import {
   AppText,
   Card,
@@ -152,7 +153,7 @@ export function ContentsScreen({ model, actions, onRecognize }: ContentsScreenPr
 
 /** The results of a search: the page it names first, then the surahs it matches, or a next step. */
 function SearchResults({ model, actions }: ContentsScreenProps) {
-  const { t } = useTranslation('reader');
+  const { t } = useGenderedTranslation('reader');
   const { goTo } = model;
   if (goTo === null && model.surahs.length === 0) {
     // Never a dead end: what to type instead, with an example (writing.md › Provide clear next

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { useGenderedTranslation } from '@/features/gender';
 import { ActionButton, AppText, IconTile, layout, spacing } from '@/ui';
 
 import type { Arrival } from './arrival';
@@ -24,7 +25,7 @@ export interface ArrivalSheetProps {
  * (`displayableVerse`), so none is shown.
  */
 export function ArrivalSheet({ arrival, onDismiss, onShare }: ArrivalSheetProps) {
-  const { t } = useTranslation('home');
+  const { t } = useGenderedTranslation('home');
   const { t: tGarden } = useTranslation('garden');
   const next = arrival.next;
   return (

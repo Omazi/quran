@@ -1,5 +1,6 @@
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
+
+import { useGenderedTranslation } from '@/features/gender';
 
 // The mark alone, not the listening module: that module reaches the reader, and the reader it.
 import { RosetteMark, StarHalo } from '@/features/listening/rosette/rosette-mark';
@@ -33,7 +34,7 @@ export interface RecognizeCardProps {
  * trade places in Arabic (right-to-left.md › Controls); the drawing itself is symmetric.
  */
 export function RecognizeCard({ onRecognize }: RecognizeCardProps) {
-  const { t } = useTranslation('reader');
+  const { t } = useGenderedTranslation('reader');
   const shadow = useElevation('floating');
   return (
     <View style={[styles.card, { boxShadow: shadow }]} testID="contents-recognize-card">

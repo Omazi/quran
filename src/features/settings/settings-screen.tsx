@@ -1,4 +1,10 @@
 import { useTranslation } from 'react-i18next';
+import {
+  useGenderedTranslation,
+  choiceOfGender,
+  GENDER_CHOICES,
+  genderOfChoice,
+} from '@/features/gender';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -16,7 +22,6 @@ import {
 } from '@/ui';
 
 import { DiagnosticsSection } from '@/features/diagnostics';
-import { choiceOfGender, GENDER_CHOICES, genderOfChoice } from '@/features/gender';
 import { SyncStatusSection } from '@/features/sync';
 
 import { DailyGoalSection } from './daily-goal-section';
@@ -118,7 +123,7 @@ export interface SettingsSectionsProps extends SettingsScreenProps {
 
 /** The sections of the settings, to place in a `GroupedList`. */
 export function SettingsSections({ model, actions, title }: SettingsSectionsProps) {
-  const { t } = useTranslation('settings');
+  const { t } = useGenderedTranslation('settings');
   const languageOptions = model.language.options.map((choice) => ({
     value: choice,
     label: t(`language.options.${choice}`),

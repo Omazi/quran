@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, StyleSheet, View, AccessibilityInfo } from 'react-native';
 
+import { useGenderedTranslation } from '@/features/gender';
 import {
   Button,
   ContentUnavailable,
@@ -75,7 +76,7 @@ export function ReaderScreen({
   close,
   follow,
 }: ReaderScreenProps) {
-  const { t } = useTranslation('reader');
+  const { t } = useGenderedTranslation('reader');
   const colors = useColors();
   const isMotionReduced = useReducedMotion();
   const insets = useSafeInsets();
@@ -290,7 +291,7 @@ export function ReaderUnavailable({
 
 /** The page asked for does not exist: only 1 to 604 do. */
 export function ReaderNotFound({ openContents }: { openContents: () => void }) {
-  const { t } = useTranslation('reader');
+  const { t } = useGenderedTranslation('reader');
   return (
     <ReaderUnavailable
       title={t('notFound.title')}

@@ -9,6 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { useGenderedTranslation } from '@/features/gender';
 import {
   AppText,
   Icon,
@@ -199,7 +200,7 @@ export function ReaderBottomBar({
   textSizeValue,
 }: ReaderBottomBarProps) {
   const colors = useColors();
-  const { t } = useTranslation('reader');
+  const { t } = useGenderedTranslation('reader');
   const scripts = useMemo<readonly ReaderChoiceOption<ReaderScript>[]>(
     () => [
       { value: 'uthmani', label: t('script.uthmani') },

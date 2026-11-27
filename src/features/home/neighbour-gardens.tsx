@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { GARDEN_PICTURE_ASPECT_RATIO, GardenScene } from '@/features/garden';
 import type { UserId } from '@/domain/social';
+import { useGenderedTranslation } from '@/features/gender';
 import {
   AppText,
   Avatar,
@@ -49,7 +50,7 @@ export function NeighbourGardensSection({
   onSeeAll,
   onOpenFriend,
 }: NeighbourGardensSectionProps) {
-  const { t } = useTranslation('home');
+  const { t } = useGenderedTranslation('home');
   if (neighbours.status === 'loading') return null;
   const gardens = neighbours.status === 'ready' ? neighbours.gardens : [];
   return (

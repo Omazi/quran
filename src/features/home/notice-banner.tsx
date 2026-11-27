@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import type { GardenPhase } from '@/domain/garden';
+import { useGenderedTranslation } from '@/features/gender';
 import { AppText, Card, IconTile, spacing } from '@/ui';
 
 import { HOME_SYMBOLS } from './config';
@@ -48,7 +49,7 @@ export function ThirstBanner({ phase, drought }: ThirstBannerProps) {
 
 /** A garden watered again today after a drought: good news, told in water's colours. */
 export function RecoveringBanner() {
-  const { t } = useTranslation('home');
+  const { t } = useGenderedTranslation('home');
   const title = t('notice.recovering.title');
   const text = t('notice.recovering.text');
   return (

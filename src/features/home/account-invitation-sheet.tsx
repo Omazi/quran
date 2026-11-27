@@ -1,9 +1,8 @@
-import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
-import { useGenderedTranslation } from '@/features/gender';
 import type { SignInProvider } from '@/domain/social';
 import { APPLE_LOGO, SIGN_IN_BUTTON_KINDS, useSignIn } from '@/features/friends';
+import { useGenderedTranslation } from '@/features/gender';
 import { ActionButton, AppText, layout, spacing } from '@/ui';
 
 import { DismissibleSheet } from './dismissible-sheet';
@@ -22,7 +21,7 @@ export interface AccountInvitationSheetProps {
  * Signing in closes it from outside (the session changes); a refusal is said under the buttons.
  */
 export function AccountInvitationSheet({ onDismiss, onOpenEmail }: AccountInvitationSheetProps) {
-  const { t } = useTranslation('home');
+  const { t } = useGenderedTranslation('home');
   const { t: tFriends } = useGenderedTranslation('friends');
   const { model, actions } = useSignIn();
   const press: Record<SignInProvider, () => void> = {

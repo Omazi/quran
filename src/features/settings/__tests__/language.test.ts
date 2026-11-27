@@ -31,9 +31,14 @@ function flatten(value: unknown, prefix = ''): Map<string, string> {
   return keys;
 }
 
+/** A gendered form ("title_female") is a wording of a key, not a key: a language may need none. */
+const GENDER_SUFFIX = /_(male|female)(?=$)/;
+
 function keysWithoutPlural(namespace: (typeof NAMESPACES)[number], language: 'fr' | 'en' | 'ar') {
   const keys = [...flatten(resources[language][namespace]).keys()];
-  return [...new Set(keys.map((key) => key.replace(PLURAL_SUFFIX, '')))].sort();
+  return [
+    ...new Set(keys.map((key) => key.replace(PLURAL_SUFFIX, '').replace(GENDER_SUFFIX, ''))),
+  ].sort();
 }
 
 describe('language of the app', () => {

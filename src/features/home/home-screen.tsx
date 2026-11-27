@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 import type { LocalDate } from '@/domain/shared/local-date';
+import { useGenderedTranslation } from '@/features/gender';
 import {
   Button,
   ContentUnavailable,
@@ -220,7 +220,7 @@ function growingOf(model: HomeReadyModel): GardenGrowing | null {
  * practices: clear next steps, and a button to take them).
  */
 function UnavailableHome({ actions, today, avatarInitial }: HomeScreenProps) {
-  const { t } = useTranslation('home');
+  const { t } = useGenderedTranslation('home');
   return (
     <HomeFrame layout="growing">
       <HomeHeader

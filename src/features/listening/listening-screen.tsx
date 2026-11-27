@@ -11,6 +11,7 @@ import {
 } from '@/domain/listening';
 import type { QuranStructure } from '@/domain/quran';
 import type { VerseIndex } from '@/domain/recognition';
+import { useGenderedTranslation } from '@/features/gender';
 import { useReducedMotion } from '@/ui';
 
 import { describePassage } from './passage-words';
@@ -75,7 +76,7 @@ export function ListeningScreen({
   onOpenPage,
   onOpenSettings,
 }: ListeningScreenProps) {
-  const { t, i18n } = useTranslation('listening');
+  const { t, i18n } = useGenderedTranslation('listening');
   const { state, heardWords, listenAgain, stop } = useListening({
     engine,
     loadVerseIndex,
