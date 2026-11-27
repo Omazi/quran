@@ -135,7 +135,7 @@
     "retry": "Réessayer"
   },
   "friendsChip": {
-    "label": "Proches : {{names}}",
+    "label": "Proches : {{names}}",
     "hint": "Ouvre le jardin de {{name}}"
   }
 }

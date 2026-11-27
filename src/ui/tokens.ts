@@ -946,6 +946,11 @@ export const chart = {
 } as const;
 
 export const layout = {
+  /**
+   * The scroll edge veil at the top of the home garden: the status bar, the date, the title and
+   * the friends chip (maquette-wow: down to 180 points), and its fade.
+   */
+  homeHeaderVeil: 240,
   /** Margin between the screen edge and its content. */
   screenMargin: spacing.md,
   /** Space between two controls that have a bezel (accessibility.md › Mobility). */
