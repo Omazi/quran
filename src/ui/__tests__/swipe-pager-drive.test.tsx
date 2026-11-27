@@ -255,7 +255,9 @@ describe('a pager that something else can drive (the iOS check)', () => {
       async function renderOwner(commitMs: number) {
         const driven: { drive?: PagerDrive } = {};
         const seen: number[] = [];
-        await render(<Owner driven={driven} onPage={(page) => seen.push(page)} commitMs={commitMs} />);
+        await render(
+          <Owner driven={driven} onPage={(page) => seen.push(page)} commitMs={commitMs} />,
+        );
         await fireEvent(screen.getByTestId('pager-pages'), 'layout', {
           nativeEvent: { layout: { x: 0, y: 0, width: 390, height: SCREEN } },
         });

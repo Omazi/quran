@@ -84,9 +84,9 @@ describe('the projected pager: where a release goes', () => {
     // 70 pt at 1000 pt/s on an 844 pt screen: from page 3 at rest, page 4.
     const drag = 70 / 844;
     const speed = 1000 / 844;
-    expect(
-      projectedTarget({ position: 3 + drag, velocity: speed, anchor: 3, pageCount: 16 }),
-    ).toBe(4);
+    expect(projectedTarget({ position: 3 + drag, velocity: speed, anchor: 3, pageCount: 16 })).toBe(
+      4,
+    );
     // The same flick 0.2 s after the last one: the pages, on their way to 4, caught at 3.81.
     expect(
       projectedTarget({

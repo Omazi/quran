@@ -17,7 +17,7 @@
 import { File, Paths } from 'expo-file-system';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useAnimatedReaction, useSharedValue, withTiming, Easing } from 'react-native-reanimated';
-import { scheduleOnUI } from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import type { PagerDrive } from '@/ui';
 
@@ -100,23 +100,45 @@ function AutoSwipe({ drive }: { drive: PagerDrive }) {
         progress.line(
           `pager: swipe ${index + 1}/${plan.length} from page ${latest.current.page + 1}`,
         );
+        // The pager's handlers as it is now (they hold its owner's latest answer), not as it was
+        // when the run started.
+        const { begin, move: moveTo, end } = latest.current;
+        // One finger: the next swipe waits for this one to lift (the plan's pause counts from the
+        // end of the last swipe). A slow simulator otherwise overlapped two drags, the end of the
+        // first one ending the second.
+        let lifted = () => {};
+        const hasLifted = new Promise<void>((resolve) => {
+          lifted = resolve;
+        });
         scheduleOnUI(
-          (begin: () => void, end: (v: number, c: boolean) => void) => {
+          (
+            beginDrag: () => void,
+            moveDrag: (translation: number) => void,
+            endDrag: (v: number, c: boolean) => void,
+          ) => {
             'worklet';
-            begin();
+            beginDrag();
             fake.set(0);
             isDragging.set(true);
             fake.set(
               withTiming(reach, { duration: swipe.dragMs, easing: Easing.linear }, (): void => {
                 'worklet';
                 isDragging.set(false);
-                end(velocity, false);
+                // On the device, the reaction above runs after this callback and never sees the
+                // last value: a finger's last move always reaches the pages before it lifts, so
+                // this one does too. Without it, a simulator drawing slow frames (the friends and
+                // recognition pages) delivered little or no travel and a "rest", and no page turned.
+                moveDrag(reach);
+                endDrag(velocity, false);
+                scheduleOnRN(lifted);
               }),
             );
           },
-          drive.begin,
-          drive.end,
+          begin,
+          moveTo,
+          end,
         );
+        await hasLifted;
       }
       await sleep(2500); // the last spring settles
       progress.line(`pager: done, page ${latest.current.page + 1} of ${drive.pageCount} shown`);
