@@ -294,6 +294,22 @@ std::shared_ptr<const Index> load_index(const std::string &path) {
     return build_index(content.str());
 }
 
+std::shared_ptr<const Index> index_for(const std::string &content) {
+    // A text the size of the whole Quran takes a moment to index: the last one is kept.
+    if (content.size() < 100000) return build_index(content);
+    static std::mutex mutex;
+    static std::string kept_content;
+    static std::shared_ptr<const Index> kept;
+    std::lock_guard<std::mutex> lock(mutex);
+    if (kept != nullptr && kept_content == content) return kept;
+    auto index = build_index(content);
+    if (index != nullptr) {
+        kept_content = content;
+        kept = index;
+    }
+    return index;
+}
+
 std::shared_ptr<const Index> shared_index(const std::string &path) {
     static std::mutex mutex;
     static std::unordered_map<std::string, std::shared_ptr<const Index>> built;

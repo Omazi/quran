@@ -866,6 +866,42 @@ describeBench('voice benchmark', () => {
           `${g.wrongIfLeftOut} | ${percent(g.both, g.n)} | ${g.bothWrong}`,
       );
     }
+    // Other thresholds, on the same readings: how much is left on the table, at what risk.
+    const grid: string[] = ['base | per letter | lead | right | wrong | wrong left out'];
+    for (const maxCostBase of [5, 10, 20, 30]) {
+      for (const maxCostPerLetter of [0.3, 0.5, 0.7, 1, 1.5]) {
+        for (const minLead of [5, 10, 15, 25]) {
+          const t = { maxCostBase, maxCostPerLetter, minLead };
+          let right = 0;
+          let wrong = 0;
+          let leftOutWrong = 0;
+          for (const record of records) {
+            const clip = byClip.get(record.clip);
+            if (clip === undefined) continue;
+            const truthOf = (c: AudioCheckCandidate) => isRight(c.passage, clip.truth);
+            const app = appAnswers.get(record.clip) ?? 'none';
+            const d = decideByAudio(index, record.candidates, record.readings, record.free, t);
+            const held = d.status === 'found' ? (truthOf(d.candidate) ? 'right' : 'wrong') : 'none';
+            const both = app !== 'none' ? app : held;
+            if (both === 'right') right += 1;
+            if (both === 'wrong') wrong += 1;
+            const kept = record.candidates
+              .map((c, i) => [c, record.readings[i]!] as const)
+              .filter(([c]) => !truthOf(c));
+            const lo = decideByAudio(
+              index,
+              kept.map(([c]) => c),
+              kept.map(([, r]) => r),
+              record.free,
+              t,
+            );
+            if (lo.status === 'found') leftOutWrong += 1;
+          }
+          grid.push(`${maxCostBase} | ${maxCostPerLetter} | ${minLead} | ${right} | ${wrong} | ${leftOutWrong}`);
+        }
+      }
+    }
+    lines.push('', ...grid);
     fs.writeFileSync(`${work}/score-held-${configName}${tag}${heldTag}.txt`, lines.join('\n'));
     expect(records.length).toBeGreaterThan(0);
   });

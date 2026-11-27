@@ -117,6 +117,46 @@ export function audioCheckCandidates(
 }
 
 /**
+ * More passages to read, after a first check that stayed unsure: those the search ranks for the
+ * words of a reading held to the whole Quran (`wholeQuranText`), which follows the audio where
+ * Whisper's free reading was too misspelt to place. None overlapping those already read.
+ */
+export function followUpCandidates(
+  index: VerseIndex,
+  wholeQuranReading: HeldReading,
+  already: readonly AudioCheckCandidate[],
+  verseCount: (surah: number) => number,
+): AudioCheckCandidate[] {
+  return audioCheckCandidates(index, passageWords(wholeQuranReading), verseCount).filter(
+    (candidate) => !already.some((other) => overlaps(other, candidate)),
+  );
+}
+
+/** The text of a reading held to the whole Quran: the formulas, then every verse. */
+export function wholeQuranText(
+  verseText: (ref: VerseRef) => string | undefined,
+  verseCount: (surah: number) => number,
+): string {
+  return heldText(
+    {
+      passage: WHOLE_PASSAGE,
+      first: { surah: 1, verse: 1 },
+      last: { surah: 114, verse: verseCount(114) },
+    },
+    verseText,
+  );
+}
+
+const WHOLE_PASSAGE: PassageCandidate = Object.freeze({
+  start: { surah: 1, verse: 1, word: 1 },
+  end: { surah: 114, verse: 6, word: 1 },
+  score: 0,
+  confidence: 0,
+});
+
+const MAX_VERSES = 286;
+
+/**
  * The text a reading is held to, in the format of `quran-decoding.h`: the opening formulas, then
  * one line per verse ("<surah> <verse> <text>"), in imla'i spelling (the model writes imla'i).
  * `verseText` gives a verse's text, or undefined past the end of a surah.
@@ -128,7 +168,8 @@ export function heldText(
   const lines = AUDIO_CHECK.formulas.map((formula) => `formula ${formula}`);
   for (let surah = candidate.first.surah; surah <= candidate.last.surah; surah += 1) {
     const from = surah === candidate.first.surah ? candidate.first.verse : 1;
-    for (let verse = from; ; verse += 1) {
+    // 286 verses at most in a surah (al-Baqara): a text source that never says "no more" stops.
+    for (let verse = from; verse <= MAX_VERSES; verse += 1) {
       if (surah === candidate.last.surah && verse > candidate.last.verse) break;
       const text = verseText({ surah, verse });
       if (text === undefined) break;
@@ -166,11 +207,18 @@ export function passageWords(reading: HeldReading): string[] {
  * stopped once it was, so it counts as far enough), and the reading's own words must name that
  * passage alone when searched as heard words.
  */
+export interface AudioCheckThresholds {
+  readonly maxCostBase: number;
+  readonly maxCostPerLetter: number;
+  readonly minLead: number;
+}
+
 export function decideByAudio(
   index: VerseIndex,
   candidates: readonly AudioCheckCandidate[],
   readings: readonly HeldReading[],
   freeText: string,
+  thresholds: AudioCheckThresholds = AUDIO_CHECK,
 ): AudioCheckDecision {
   if (candidates.length === 0 || readings.length !== candidates.length) return { status: 'unsure' };
   let best = -1;
@@ -180,14 +228,14 @@ export function decideByAudio(
   });
   if (best < 0) return { status: 'unsure' };
   const cost = readings[best]!.cost;
-  const allowed = AUDIO_CHECK.maxCostBase + AUDIO_CHECK.maxCostPerLetter * letterCount(freeText);
+  const allowed = thresholds.maxCostBase + thresholds.maxCostPerLetter * letterCount(freeText);
   if (cost > allowed) return { status: 'unsure' };
   let lead = Number.POSITIVE_INFINITY;
   readings.forEach((reading, i) => {
     if (i === best || reading.abandoned) return;
     lead = Math.min(lead, reading.cost - cost);
   });
-  if (lead < AUDIO_CHECK.minLead) return { status: 'unsure' };
+  if (lead < thresholds.minLead) return { status: 'unsure' };
   const candidate = candidates[best]!;
   const named = searchHeardWords(index, passageWords(readings[best]!));
   if (named.status !== 'found') return { status: 'unsure' };

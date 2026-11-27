@@ -57,6 +57,8 @@ struct Index {
 std::shared_ptr<const Index> load_index(const std::string &path);
 /** The same from the file's content (tests). */
 std::shared_ptr<const Index> build_index(const std::string &content);
+/** The index of `content`; the last large one (the whole Quran) is kept and reused. */
+std::shared_ptr<const Index> index_for(const std::string &content);
 /** The index of `path`, built once per path and kept (the phone opens it once). */
 std::shared_ptr<const Index> shared_index(const std::string &path);
 

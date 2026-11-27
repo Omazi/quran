@@ -500,8 +500,11 @@ export function createWhisperSpeechEngine({
     onWords: (listener) => listen(wordListeners, listener),
     onEnd: (listener) => listen(endListeners, listener),
     onActivity: (listener) => listen(activityListeners, listener),
-    async checkHeard(texts) {
-      const read = lastRead;
+    async checkHeard(texts, sameAudioAs) {
+      const read =
+        sameAudioAs?.audio instanceof Int16Array
+          ? { audio: sameAudioAs.audio, text: sameAudioAs.freeText }
+          : lastRead;
       if (read === null || transcriber.readHeld === undefined || texts.length === 0) return null;
       const readings = await withinTime(
         transcriber.readHeld(read.audio, texts, minLettersFor(read.text)),
@@ -510,7 +513,7 @@ export function createWhisperSpeechEngine({
         'Reading the voice again',
         timers,
       );
-      return readings === null ? null : { readings, freeText: read.text };
+      return readings === null ? null : { readings, freeText: read.text, audio: read.audio };
     },
   };
 }

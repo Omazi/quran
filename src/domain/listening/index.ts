@@ -21,8 +21,10 @@ export {
   AUDIO_CHECK,
   audioCheckCandidates,
   decideByAudio,
+  followUpCandidates,
   heldText,
   minLettersFor,
+  wholeQuranText,
 } from './audio-check';
 export type { AudioCheckCandidate, AudioCheckDecision } from './audio-check';
 export type {

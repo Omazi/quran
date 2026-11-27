@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
             while (from <= texts.size()) {
                 size_t to = texts.find('\f', from);
                 if (to == std::string::npos) to = texts.size();
-                indexes.push_back(quran_decoding::build_index(texts.substr(from, to - from)));
+                indexes.push_back(quran_decoding::index_for(texts.substr(from, to - from)));
                 from = to + 1;
             }
             quran_decoding::ReadOptions options;

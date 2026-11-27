@@ -5,10 +5,12 @@ import {
   AUDIO_CHECK,
   audioCheckCandidates,
   decideByAudio,
+  followUpCandidates,
   heldText,
   letterCount,
   minLettersFor,
   passageWords,
+  wholeQuranText,
   type AudioCheckCandidate,
 } from '../audio-check';
 import type { HeldReading } from '../types';
@@ -150,5 +152,23 @@ describe('decideByAudio', () => {
       'unsure',
     );
     expect(decideByAudio(index, [], [], SURAH_112).status).toBe('unsure');
+  });
+});
+
+describe('the second chance', () => {
+  it('holds a reading to the whole Quran: the formulas, then every verse', () => {
+    const lines = wholeQuranText(imlaei, verseCount).split('\n');
+    expect(lines[0]).toBe(`formula ${AUDIO_CHECK.formulas[0]}`);
+    expect(lines).toContain(`112 4 ${imlaei({ surah: 112, verse: 4 })}`);
+    expect(lines.filter((line) => line.startsWith('112 '))).toHaveLength(4);
+  });
+
+  it('proposes the passages of the whole-Quran reading not read already', () => {
+    const fromWhole = reading(SURAH_112, 20);
+    expect(followUpCandidates(index, fromWhole, [], verseCount)[0]?.first).toEqual({
+      surah: 112,
+      verse: 1,
+    });
+    expect(followUpCandidates(index, fromWhole, [candidate(112, 1, 4)], verseCount)).toEqual([]);
   });
 });

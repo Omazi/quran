@@ -346,6 +346,7 @@ describe('the audio check (D47)', () => {
   function checkedEngine(endAfterWords: boolean) {
     const checkHeard = jest.fn(async (held: readonly string[]) => ({
       freeText: MISHEARD.join(' '),
+      audio: null,
       // Held to 83, the audio costs little; held to anything else, a lot.
       readings: held.map((text) =>
         /^83 [1-4] /m.test(text)

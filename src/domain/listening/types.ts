@@ -130,15 +130,18 @@ export interface SpeechEngine {
    * Reads the audio of the latest reading again, once per text, held to that text (the audio
    * check, D47, `audio-check.ts`). Gives the readings and the text of that latest reading; null
    * when nothing was read yet or when this build cannot (the screen then goes by the words alone).
-   * Optional: an engine without it is never checked.
+   * With `sameAudioAs`, reads the audio of that earlier check instead (its readings and these
+   * can then be compared). Optional: an engine without it is never checked.
    */
-  checkHeard?(texts: readonly string[]): Promise<HeldCheck | null>;
+  checkHeard?(texts: readonly string[], sameAudioAs?: HeldCheck): Promise<HeldCheck | null>;
 }
 
 /** What `checkHeard` gives: one reading per text, and Whisper's free reading of the same audio. */
 export interface HeldCheck {
   readonly readings: readonly HeldReading[];
   readonly freeText: string;
+  /** The audio read, kept by the engine for a check of the same audio (`sameAudioAs`). */
+  readonly audio: unknown;
 }
 
 /** One reading of the audio held to a text (native `quran-decoding`, `Reading`). */

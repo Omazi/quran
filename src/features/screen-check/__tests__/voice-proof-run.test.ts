@@ -117,6 +117,7 @@ describe('runVoiceProof', () => {
       onHeld(900);
       return {
         freeText: 'قالوا هو الله',
+        audio: null,
         readings: held.map((text) =>
           /^112 1 /m.test(text)
             ? {
