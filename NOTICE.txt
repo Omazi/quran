@@ -47,6 +47,23 @@ File:     node_modules/expo-camera/LICENSE
   File:     node_modules/@types/emscripten/LICENSE
 
 
+expo-audio 58.0.12 (dependency; version listed by Expo SDK 58 in bundledNativeModules.json)
+------------------
+Use:      plays the short sounds of the interface (src/data/feedback, assets/sounds), with the
+          audio session set to "ambient" so that the silent switch is respected. No dependency
+          of its own beyond the Expo modules the app already has.
+Licence:  MIT. "Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"
+File:     node_modules/expo-audio/LICENSE (read from the 58.0.12 package of the npm registry; the
+          package is installed by `npm install`, which this branch's package-lock.json asks for)
+
+
+Sound palette (assets/sounds/*.m4a): own work, not a package
+------------------------------------------------------------
+Use:      the ten sounds of the interface, synthesised by tools/sounds/generate.py.
+Licence:  CC0 1.0, by the owner of the project; nothing third-party in them.
+File:     assets/sounds/NOTICE.txt
+
+
 uqr 0.1.3 (dependency; no dependencies of its own)
 ---------
 Use:      computes the QR code of my invitation (src/ui/components/qr-code.tsx), drawn by
