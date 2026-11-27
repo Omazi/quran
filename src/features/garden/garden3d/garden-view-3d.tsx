@@ -21,7 +21,10 @@ import { SHIPPED_GARDEN_IMAGES } from '../garden-images';
 import { gardenStage } from '../garden-picture';
 import { GardenScene } from '../garden-scene';
 import { gardenSceneLabel } from '../garden-words';
+import { deviceGravity } from '@/data/motion';
+
 import type { GardenLife } from '../living/life-rules';
+import { gravityTilt, TILT } from '../living/tilt';
 import type { SkyState } from '../sky/sky-state';
 import { useGardenPictureSequence } from '../use-garden-picture';
 import { GARDEN_3D } from './config';
@@ -182,6 +185,20 @@ export function GardenView3D({
   });
   useEffect(() => surface.setMotionReduced(isMotionReduced), [isMotionReduced, surface]);
   useEffect(() => surface.setActive(isShown), [isShown, surface]);
+  // The light follows the phone (owner, 27 November 2026): the sensor runs only while the living
+  // garden is seen and motion is not reduced, at most 30 samples a second, outside React.
+  const followsTilt = isLiving && isShown && !isMotionReduced;
+  useEffect(() => {
+    if (!followsTilt) return undefined;
+    const stop = deviceGravity.watch(
+      (gravity) => surface.setTiltSample(gravityTilt(gravity)),
+      TILT.sampleMs,
+    );
+    return () => {
+      stop();
+      surface.setTiltSample(null);
+    };
+  }, [followsTilt, surface]);
   const sky = living?.sky;
   useEffect(() => {
     if (sky !== undefined) surface.setSky(sky);

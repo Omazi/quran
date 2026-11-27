@@ -10,6 +10,7 @@ import type * as THREE from 'three';
 import type { GardenStage } from '../garden-picture';
 import type { GrowthSegment } from '../growth-motion';
 import type { GardenLife } from '../living/life-rules';
+import { nextTilt, RESTING_TILT, type Tilt, type TiltState } from '../living/tilt';
 import type { SkyState } from '../sky/sky-state';
 import type { FrameAnchor, Orbit } from './camera-rig';
 import { GARDEN_3D } from './config';
@@ -57,6 +58,11 @@ export interface GardenSurfaceOptions {
 /** The longest frame the living garden moves by: back from the background, it does not jump. */
 const MAX_LIFE_STEP_S = 0.064;
 const MS_PER_SECOND = 1000;
+/**
+ * The shadows follow the tilted sun, but are drawn again only when it moved enough to show
+ * (metres) and at most this often (ms): a shadow map is the costly part of a frame.
+ */
+const TILT_SHADOW = { minMove: 0.25, minIntervalMs: 66 } as const;
 
 interface Glide {
   /** Where the camera was: it comes back there. */
@@ -111,6 +117,10 @@ export class GardenSurface {
   private sky: SkyState | null = null;
   private life: GardenLife | null = null;
   private glide: Glide | null = null;
+  /** The latest tilt measured by the phone, or null without a sensor; and the filtered tilt. */
+  private tiltSample: Tilt | null = null;
+  private tilt: TiltState = RESTING_TILT;
+  private lastTiltShadow = 0;
   /** Where the camera was before it went to look at the growing plant, while it looks. */
   private lookingFrom: Orbit | null = null;
   private onGrow: (() => void) | undefined;
@@ -190,6 +200,19 @@ export class GardenSurface {
     } catch (error) {
       this.fail(error);
     }
+  }
+
+  /**
+   * The phone's tilt from gravity (`gravityTilt`), or null when the sensor stops: the light
+   * follows it in the render loop, smoothed (tilt.ts).
+   */
+  setTiltSample(sample: Tilt | null): void {
+    this.tiltSample = sample;
+  }
+
+  /** The filtered tilt the light follows: for the tests and the screen check. */
+  get shownTilt(): Tilt {
+    return this.tilt.tilt;
   }
 
   /** What lives in the garden. */
@@ -432,6 +455,7 @@ export class GardenSurface {
     } else if (!shouldRun && this.loopFrame !== null) {
       this.frames.cancel(this.loopFrame);
       this.loopFrame = null;
+      this.restTilt();
       // The still garden where the life stopped.
       this.drawNow();
     }
@@ -448,6 +472,7 @@ export class GardenSurface {
     this.lifeTime += dt;
     try {
       engine.three.tick(this.lifeTime, dt);
+      this.followTilt(engine, time, dt * MS_PER_SECOND);
     } catch (error) {
       this.fail(error);
       return;
@@ -485,6 +510,32 @@ export class GardenSurface {
         // The growing element casts its shadow too: drawn again with it.
         engine.renderer.shadowMap.needsUpdate = true;
         this.draw();
+      }
+    } catch (error) {
+      this.fail(error);
+    }
+  }
+
+  /** One frame of the light following the phone; the shadows follow when it shows. */
+  private followTilt(engine: Engine, time: number, dtMs: number): void {
+    this.tilt = nextTilt(this.tilt, this.tiltSample, dtMs);
+    const moved = engine.three.setTilt(this.tilt.tilt);
+    if (moved >= TILT_SHADOW.minMove && time - this.lastTiltShadow >= TILT_SHADOW.minIntervalMs) {
+      this.lastTiltShadow = time;
+      engine.renderer.shadowMap.needsUpdate = true;
+      engine.three.markShadowsDrawn();
+    }
+  }
+
+  /** The light back at its place of the hour, at once (the loop stopped). */
+  private restTilt(): void {
+    this.tilt = RESTING_TILT;
+    const engine = this.engine;
+    if (engine === null) return;
+    try {
+      if (engine.three.setTilt(this.tilt.tilt) > 0) {
+        engine.renderer.shadowMap.needsUpdate = true;
+        engine.three.markShadowsDrawn();
       }
     } catch (error) {
       this.fail(error);

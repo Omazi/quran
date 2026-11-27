@@ -89,6 +89,17 @@ Use:      keeps the screen awake while the reader is open (src/features/reader/u
 Licence:  MIT. "Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"
 File:     node_modules/expo-keep-awake/LICENSE
 
+expo-sensors 58.0.5 (dependency; version listed by Expo SDK 58 in bundledNativeModules.json)
+------------
+Use:      the light of the home garden follows the phone's tilt (src/data/motion/device-gravity.ts):
+          gravity from DeviceMotion, at most 30 samples a second, only while the home garden is
+          seen and Reduce Motion is off. No motion permission is requested (app.json sets
+          `motionPermission: false`).
+Licence:  MIT. "Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)"
+Its one dependency, invariant 2.2.4, is MIT ("Copyright (c) 2013-present, Facebook, Inc.").
+File:     node_modules/expo-sensors/LICENSE (read from the 58.0.5 package of the npm registry; the
+          package is installed in main by the coordinator)
+
 whisper.rn 0.7.4 (dependency; the speech engine, D42)
 ----------------
 Use:      runs Whisper on the phone (src/data/speech/whisper-transcriber.ts).
