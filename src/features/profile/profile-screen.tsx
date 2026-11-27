@@ -10,6 +10,7 @@ import {
   LevelChip,
   ownShelf,
   ShowLevelCard,
+  useBadgeShare,
 } from '@/features/gardens';
 import { DataResetNoticeCard, type SettingsActions, type SettingsModel } from '@/features/settings';
 import {
@@ -55,6 +56,8 @@ export interface ProfileScreenProps {
   progression: Progression | null;
   /** Whether friends see the level and badges. */
   showLevel: boolean;
+  /** The name of the person's account, if any: offered for a shared badge, never put there unasked. */
+  displayName?: string | null;
   actions: ProfileActions;
 }
 
@@ -87,6 +90,7 @@ export function ProfileScreen({
   garden,
   progression,
   showLevel,
+  displayName = null,
   actions,
 }: ProfileScreenProps) {
   const { t } = useTranslation('profile');
@@ -97,6 +101,7 @@ export function ProfileScreen({
   // area is added here (as on the home screen).
   const ownsInsets = Platform.OS !== 'ios';
   const backdrop = garden === null ? 'growing' : BACKDROP_OF_PHASE[garden.phase];
+  const sharing = useBadgeShare({ displayName });
   return (
     <View style={[styles.screen, { backgroundColor: colors.canvas }]} testID="profile">
       <ScrollView
@@ -150,7 +155,21 @@ export function ProfileScreen({
                   testID="profile-open-gardens"
                 />
               </View>
-              <BadgeShelf items={ownShelf(progression)} testID="profile-badges" />
+              <BadgeShelf
+                items={ownShelf(progression)}
+                onShare={(khatm) => {
+                  const badge = progression.completed.find((khatma) => khatma.khatm === khatm);
+                  if (badge === undefined) return;
+                  sharing.share({
+                    khatm: badge.khatm,
+                    styleId: badge.styleId,
+                    completedOn: badge.completedOn,
+                    days: badge.daysTaken,
+                  });
+                }}
+                isShareDisabled={sharing.isBusy}
+                testID="profile-badges"
+              />
               <ShowLevelCard
                 value={showLevel}
                 onChange={actions.setShowLevel}
@@ -163,6 +182,8 @@ export function ProfileScreen({
           {StatsPreviewSection === null ? null : <StatsPreviewSection />}
         </View>
       </ScrollView>
+      {/* The card of a shared badge, off screen while a share runs: nothing otherwise. */}
+      {sharing.host}
     </View>
   );
 }

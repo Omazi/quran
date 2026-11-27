@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 
+import { useSelfDisplayName } from '@/features/friends';
 import { celebrationOf, KhatmaCelebrationScreen, useProgression } from '@/features/gardens';
 import { useAppStore } from '@/store';
 
@@ -13,6 +14,7 @@ import { useAppStore } from '@/store';
 export default function KhatmaCompleteRoute() {
   const { khatm } = useLocalSearchParams<{ khatm?: string }>();
   const progression = useProgression();
+  const displayName = useSelfDisplayName();
   const markKhatmaCelebrated = useAppStore((state) => state.markKhatmaCelebrated);
   const number = Number(khatm);
   const completed = useMemo(
@@ -38,6 +40,7 @@ export default function KhatmaCompleteRoute() {
   return (
     <KhatmaCelebrationScreen
       celebration={celebration}
+      displayName={displayName}
       onSeeGarden={() => router.replace('/my-gardens')}
       onClose={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}
     />

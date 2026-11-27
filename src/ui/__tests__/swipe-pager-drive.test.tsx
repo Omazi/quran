@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { useState } from 'react';
 import { Text } from 'react-native';
 
 import { SwipePager, type PagerDrive } from '../components/swipe-pager';
@@ -205,6 +206,108 @@ describe('a pager that something else can drive (the iOS check)', () => {
       });
       expect(onPageChange).toHaveBeenCalledTimes(1);
       expect(onPageChange).toHaveBeenCalledWith(4);
+    });
+
+    describe('swiped quickly, again and again', () => {
+      const SCREEN = 844;
+      const PAGES = 16;
+      beforeEach(() => jest.useFakeTimers());
+      afterEach(() => jest.useRealTimers());
+
+      /**
+       * The first launch's owner: it keeps the page in its state and answers a report only when
+       * the page changes, after `commitMs` (a JavaScript thread busy drawing the next scene).
+       */
+      function Owner({
+        driven,
+        onPage,
+        commitMs,
+      }: {
+        driven: { drive?: PagerDrive };
+        onPage: (page: number) => void;
+        commitMs: number;
+      }) {
+        const [page, setPage] = useState(0);
+        return (
+          <SwipePager
+            pageCount={PAGES}
+            page={page}
+            axis="vertical"
+            pageMotion="still"
+            release="projected"
+            settleSpring={{ mass: 1, stiffness: 195, damping: 27.9 }}
+            onPageChange={(next) => {
+              if (next === page) return;
+              onPage(next);
+              if (commitMs === 0) setPage(next);
+              else setTimeout(() => setPage(next), commitMs);
+            }}
+            renderPage={(index) => <Text>{`page ${index}`}</Text>}
+            renderDriver={(drive) => {
+              driven.drive = drive;
+              return null;
+            }}
+            testID="pager"
+          />
+        );
+      }
+
+      async function renderOwner(commitMs: number) {
+        const driven: { drive?: PagerDrive } = {};
+        const seen: number[] = [];
+        await render(
+          <Owner driven={driven} onPage={(page) => seen.push(page)} commitMs={commitMs} />,
+        );
+        await fireEvent(screen.getByTestId('pager-pages'), 'layout', {
+          nativeEvent: { layout: { x: 0, y: 0, width: 390, height: SCREEN } },
+        });
+        return { driven, seen };
+      }
+
+      const wait = async (ms: number) => {
+        await act(async () => {
+          jest.advanceTimersByTime(ms);
+        });
+      };
+
+      /** A finger's swipe up: `points` in `durationMs`, a move per frame, lifted at `speed`. */
+      async function swipeUp(
+        driven: { drive?: PagerDrive },
+        points: number,
+        durationMs: number,
+        speed: number,
+      ) {
+        const frames = Math.round(durationMs / 16);
+        await act(async () => driven.drive?.begin());
+        for (let frame = 1; frame <= frames; frame += 1) {
+          await wait(16);
+          await act(async () => driven.drive?.move((-points * frame) / frames));
+        }
+        await act(async () => driven.drive?.end(-speed, false));
+      }
+
+      it('turns one page per light flick, 0.3 s apart, from the first page to the last', async () => {
+        const { driven, seen } = await renderOwner(0);
+        // From pages at rest, a flick of 70 pt at 1000 pt/s turns the page.
+        for (let swipe = 1; swipe < PAGES; swipe += 1) {
+          await swipeUp(driven, 70, 96, 1000);
+          await wait(300 - 96);
+        }
+        await wait(2000);
+        expect(seen).toEqual(Array.from({ length: PAGES - 1 }, (_, index) => index + 1));
+        expect(driven.drive?.page).toBe(PAGES - 1);
+      });
+
+      it('turns one page per swipe when its owner takes longer than a swipe to follow', async () => {
+        const { driven, seen } = await renderOwner(450);
+        for (let swipe = 1; swipe < PAGES; swipe += 1) {
+          await swipeUp(driven, 0.55 * SCREEN, 240, (0.55 * SCREEN) / 0.24);
+          await wait(300 - 240);
+        }
+        await wait(2000);
+        expect(seen).toEqual(Array.from({ length: PAGES - 1 }, (_, index) => index + 1));
+        expect(driven.drive?.page).toBe(PAGES - 1);
+      });
     });
 
     it('goes back a page with a flick down, and not before the first page', async () => {

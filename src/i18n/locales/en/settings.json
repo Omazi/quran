@@ -65,6 +65,12 @@
       "none-enabled": "With no reminder on, the app sends you no notifications."
     }
   },
+  "feedback": {
+    "title": "Sounds and Vibrations",
+    "sounds": "Sounds",
+    "haptics": "Vibrations",
+    "note": "Sounds stay quiet when your phone is on silent, and while the app listens to your recitation."
+  },
   "introduction": {
     "replay": "See the Introduction Again"
   },

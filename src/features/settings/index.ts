@@ -22,6 +22,7 @@ export {
   type UseRemindersOptions,
   type UseRemindersResult,
 } from './reminders';
+export { FeedbackSection, type FeedbackSectionProps } from './feedback-section';
 export { RemindersSection, type RemindersSectionProps } from './reminders-section';
 export {
   DataResetNoticeCard,
@@ -44,6 +45,7 @@ export {
   LANGUAGE_CHOICES,
   useSettings,
   type LanguageChoice,
+  type FeedbackSettingsModel,
   type LanguageModel,
   type SettingsActions,
   type SettingsDependencies,

@@ -27,6 +27,8 @@ const SETTINGS: AppSettings = {
   celebratedKhatm: 0,
   gender: null,
   genderAsked: false,
+  soundsEnabled: true,
+  hapticsEnabled: true,
   pauses: [{ from: parseLocalDate('2026-03-01'), to: parseLocalDate('2026-03-04') }],
   reminders: {
     dailyEnabled: false,
@@ -687,6 +689,8 @@ describe('the gender the person says they have, and whether they were asked (ver
       celebratedKhatm: 0,
       gender: null,
       genderAsked: false,
+      soundsEnabled: true,
+      hapticsEnabled: true,
     });
     expect(reading.journal).toEqual(JOURNAL);
   });
@@ -718,6 +722,86 @@ describe('the gender the person says they have, and whether they were asked (ver
     ['no gender at all (undefined is not "not said")', { gender: undefined }],
     ['a "question asked" written as text', { genderAsked: 'yes' }],
     ['no "question asked"', { genderAsked: null }],
+  ])('discards the settings, and keeps the journal, for %s', (_name, change) => {
+    expect(readStoredData(settingsWith(change))).toMatchObject({
+      settings: null,
+      journal: JOURNAL,
+      discarded: ['settings'],
+    });
+  });
+});
+
+describe('the sound and vibration switches (version 10)', () => {
+  it('are written and read back, for each combination', () => {
+    for (const soundsEnabled of [true, false]) {
+      for (const hapticsEnabled of [true, false]) {
+        const settings = { ...SETTINGS, soundsEnabled, hapticsEnabled };
+        const reading = readStoredData(writeStoredData({ settings, journal: JOURNAL }));
+        expect(reading.settings).toEqual(settings);
+        expect(reading.discarded).toEqual([]);
+      }
+    }
+  });
+
+  it('upgrade a version 9 document: both on, nothing else changes', () => {
+    const { soundsEnabled: _sounds, hapticsEnabled: _haptics, ...settingsOfVersion9 } = SETTINGS;
+    const reading = readStoredData(
+      JSON.stringify({ version: 9, settings: settingsOfVersion9, journal: JOURNAL, timeSpent: {} }),
+    );
+    expect(reading).toEqual({
+      settings: { ...SETTINGS, soundsEnabled: true, hapticsEnabled: true },
+      journal: JOURNAL,
+      timeSpent: {},
+      discarded: [],
+      wasUpgraded: true,
+    });
+  });
+
+  it('upgrade a version 8 document through version 9 as well', () => {
+    const {
+      gender: _said,
+      genderAsked: _asked,
+      soundsEnabled: _sounds,
+      hapticsEnabled: _haptics,
+      ...settingsOfVersion8
+    } = SETTINGS;
+    const reading = readStoredData(
+      JSON.stringify({ version: 8, settings: settingsOfVersion8, journal: JOURNAL }),
+    );
+    expect(reading.settings).toEqual({
+      ...SETTINGS,
+      gender: null,
+      genderAsked: false,
+      soundsEnabled: true,
+      hapticsEnabled: true,
+    });
+  });
+
+  it('an upgrade keeps a choice that is already there, and the checks decide about a wrong one', () => {
+    const { soundsEnabled: _sounds, hapticsEnabled: _haptics, ...settingsOfVersion9 } = SETTINGS;
+    const kept = readStoredData(
+      JSON.stringify({
+        version: 9,
+        settings: { ...settingsOfVersion9, soundsEnabled: false, hapticsEnabled: true },
+        journal: JOURNAL,
+      }),
+    );
+    expect(kept.settings).toMatchObject({ soundsEnabled: false, hapticsEnabled: true });
+    const damaged = readStoredData(
+      JSON.stringify({
+        version: 9,
+        settings: { ...settingsOfVersion9, soundsEnabled: 'yes' },
+        journal: JOURNAL,
+      }),
+    );
+    expect(damaged).toMatchObject({ settings: null, discarded: ['settings'] });
+  });
+
+  it.each([
+    ['sounds written as text', { soundsEnabled: 'on' }],
+    ['no sounds choice', { soundsEnabled: undefined }],
+    ['vibrations written as a number', { hapticsEnabled: 1 }],
+    ['no vibrations choice', { hapticsEnabled: null }],
   ])('discards the settings, and keeps the journal, for %s', (_name, change) => {
     expect(readStoredData(settingsWith(change))).toMatchObject({
       settings: null,

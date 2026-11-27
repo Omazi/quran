@@ -8,6 +8,7 @@ import { levelPath, type LevelStep, type Progression } from '@/domain/levels';
 import { HIZB_COUNT } from '@/domain/quran';
 import { previewGardenState } from '@/features/garden';
 import {
+  ActionButton,
   AppText,
   getWritingDirection,
   Icon,
@@ -21,6 +22,7 @@ import {
 
 import { formatBadgeDate } from './format';
 import { GardenSilhouette, GardenThumb } from './garden-thumb';
+import { SHARE_SYMBOL, useBadgeShare, type BadgeShare } from './share';
 
 const CHECK: IconSymbol = { ios: 'checkmark', android: 'check' };
 const LOCK: IconSymbol = { ios: 'lock.fill', android: 'lock' };
@@ -37,6 +39,8 @@ export interface MyGardensScreenProps {
   progression: Progression | null;
   /** The garden on display, as the home screen computes it: the current step shows it live. */
   garden: GardenState | null;
+  /** The name of the person's account, if any: offered for a shared picture, never put there unasked. */
+  displayName?: string | null;
 }
 
 /**
@@ -46,8 +50,9 @@ export interface MyGardensScreenProps {
  * and a lock, nothing of their name or look (D46: a surprise). One scroll view; each step is one
  * element for VoiceOver.
  */
-export function MyGardensScreen({ progression, garden }: MyGardensScreenProps) {
+export function MyGardensScreen({ progression, garden, displayName = null }: MyGardensScreenProps) {
   const { t } = useTranslation('gardens');
+  const sharing = useBadgeShare({ displayName });
   const colors = useColors();
   const insets = useSafeInsets();
   const steps = useMemo(() => (progression === null ? [] : levelPath(progression)), [progression]);
@@ -80,6 +85,7 @@ export function MyGardensScreen({ progression, garden }: MyGardensScreenProps) {
             pictureAtStart={index % 2 === 0}
             progression={progression}
             garden={garden}
+            sharing={sharing}
           />
         </View>
       ))}
@@ -88,6 +94,9 @@ export function MyGardensScreen({ progression, garden }: MyGardensScreenProps) {
           {t('path.lastLevel')}
         </AppText>
       ) : null}
+      {/* Off screen while a share runs, nothing otherwise; inside the scroll view so that the
+          screen's own structure (the system's insets under the bars) stays as it is. */}
+      {sharing.host}
     </ScrollView>
   );
 }
@@ -97,11 +106,13 @@ function PathStep({
   pictureAtStart,
   progression,
   garden,
+  sharing,
 }: {
   step: LevelStep;
   pictureAtStart: boolean;
   progression: Progression | null;
   garden: GardenState | null;
+  sharing: BadgeShare;
 }) {
   const { t, i18n } = useTranslation('gardens');
   const colors = useColors();
@@ -132,49 +143,78 @@ function PathStep({
       ? garden
       : BARE_EARTH;
 
+  const earned =
+    step.status === 'completed' && step.khatm !== null
+      ? progression?.completed.find((khatma) => khatma.khatm === step.khatm)
+      : undefined;
+  const direction = pictureAtStart ? styles.pictureFirst : styles.pictureLast;
+
   return (
-    <View
-      accessible
-      accessibilityLabel={label}
-      style={[styles.step, pictureAtStart ? styles.pictureFirst : styles.pictureLast]}
-      testID={`my-gardens-level-${step.level}`}
-    >
-      <View style={styles.picture}>
-        {step.status === 'current' ? (
-          <View style={[styles.halo, { backgroundColor: colors.actionTonal }]} />
-        ) : null}
-        {step.styleId === null ? (
-          <View style={styles.locked}>
-            <GardenSilhouette />
-            <View style={styles.lock}>
-              <Icon symbol={LOCK} textStyle="title3" tint={values.muted} />
+    <View testID={`my-gardens-level-${step.level}`}>
+      <View accessible accessibilityLabel={label} style={[styles.step, direction]}>
+        <View style={styles.picture}>
+          {step.status === 'current' ? (
+            <View style={[styles.halo, { backgroundColor: colors.actionTonal }]} />
+          ) : null}
+          {step.styleId === null ? (
+            <View style={styles.locked}>
+              <GardenSilhouette />
+              <View style={styles.lock}>
+                <Icon symbol={LOCK} textStyle="title3" tint={values.muted} />
+              </View>
             </View>
-          </View>
-        ) : (
-          <GardenThumb
-            styleId={step.styleId}
-            state={step.status === 'completed' ? COMPLETE_GARDEN : currentState}
-          />
-        )}
-        {step.status === 'completed' ? (
-          <View style={[styles.seal, { backgroundColor: colors.gold }]}>
-            <Icon symbol={CHECK} textStyle="subheadEmphasized" tint={values.onAction} />
-          </View>
-        ) : null}
-      </View>
-      <View style={styles.words}>
-        <AppText variant="subheadEmphasized" color={isLocked ? 'muted' : 'actionTint'}>
-          {level}
-        </AppText>
-        <AppText variant="title3" color={isLocked ? 'muted' : 'heading'}>
-          {name}
-        </AppText>
-        {detail === '' ? null : (
-          <AppText variant="subhead" color="muted">
-            {detail}
+          ) : (
+            <GardenThumb
+              styleId={step.styleId}
+              state={step.status === 'completed' ? COMPLETE_GARDEN : currentState}
+            />
+          )}
+          {step.status === 'completed' ? (
+            <View style={[styles.seal, { backgroundColor: colors.gold }]}>
+              <Icon symbol={CHECK} textStyle="subheadEmphasized" tint={values.onAction} />
+            </View>
+          ) : null}
+        </View>
+        <View style={styles.words}>
+          <AppText variant="subheadEmphasized" color={isLocked ? 'muted' : 'actionTint'}>
+            {level}
           </AppText>
-        )}
+          <AppText variant="title3" color={isLocked ? 'muted' : 'heading'}>
+            {name}
+          </AppText>
+          {detail === '' ? null : (
+            <AppText variant="subhead" color="muted">
+              {detail}
+            </AppText>
+          )}
+        </View>
       </View>
+      {earned === undefined ? null : (
+        // Beside the step, not inside it: the step is one element for VoiceOver, a button in it
+        // would be swallowed. Under the words, the side the picture is not on.
+        <View style={[styles.step, direction]}>
+          <View style={styles.picture} />
+          <View style={styles.words}>
+            <ActionButton
+              variant="tonal"
+              symbol={SHARE_SYMBOL}
+              label={t('share.button')}
+              accessibilityLabel={t('share.buttonLabel', { khatm: earned.khatm })}
+              onPress={() =>
+                sharing.share({
+                  khatm: earned.khatm,
+                  styleId: earned.styleId,
+                  completedOn: earned.completedOn,
+                  days: earned.daysTaken,
+                })
+              }
+              disabled={sharing.isBusy}
+              fullWidth={false}
+              testID={`my-gardens-share-${earned.khatm}`}
+            />
+          </View>
+        </View>
+      )}
     </View>
   );
 }

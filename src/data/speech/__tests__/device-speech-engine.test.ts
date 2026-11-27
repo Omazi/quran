@@ -1,3 +1,5 @@
+import { appSuppression } from '@/data/feedback';
+
 import {
   checkModelFile,
   createDeviceSpeechEngine,
@@ -50,6 +52,18 @@ describe('createDeviceSpeechEngine', () => {
     expect(native.start).toHaveBeenCalledTimes(1);
     await engine?.stop();
     expect(native.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the interface sounds and haptics silent while the microphone is open', async () => {
+    const engine = createDeviceSpeechEngine('search', {
+      findNative: () => native,
+      loadWhisper: () => whisper() as unknown as WhisperBinding,
+    });
+    expect(appSuppression.isSuppressed()).toBe(false);
+    await engine?.start();
+    expect(appSuppression.isSuppressed()).toBe(true);
+    await engine?.stop();
+    expect(appSuppression.isSuppressed()).toBe(false);
   });
 });
 

@@ -38,6 +38,8 @@ const SETTINGS: AppSettings = {
   celebratedKhatm: 0,
   gender: null,
   genderAsked: false,
+  soundsEnabled: true,
+  hapticsEnabled: true,
   pauses: [],
   reminders: DEFAULT_REMINDERS,
 };
