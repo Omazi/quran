@@ -36,6 +36,7 @@ src/domain     règles métier en TypeScript pur : aucun import React, Expo, sto
 | `domain/sync`        | Événements de synchronisation, fusion déterministe, horloge, métadonnées du téléphone | [sync.md](specs/sync.md)                 |
 | `domain/levels`      | Niveaux, style du jardin de chaque niveau, badges, célébration d'une khatma           | [README](../src/domain/levels/README.md) |
 | `domain/goal-plan`   | Objectif du premier lancement (pages par jour, date de fin), moment de lecture        | [goal-plan.md](specs/goal-plan.md)       |
+| `domain/sun`         | Lever, coucher et crépuscule civil du vrai soleil, place estimée depuis le fuseau     | [sun.md](specs/sun.md)                   |
 
 Les modules communiquent par des valeurs simples passées en paramètre. Exemple : le jardin
 ne lit pas le journal de lecture, il reçoit « nombre de hizb terminés » et « jours arrosés ».
