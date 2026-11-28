@@ -1,0 +1,199 @@
+VERDICT: OK
+Process alive at the end of the run: yes
+Run finished: yes
+Last step reached: 2026-11-28T01:47:20.997Z auto-run: DONE (handles: kept)
+
+Voice proof (recitations played to the real speech engine in the simulator):
+  voice-proof: start, 5 clips
+  voice-proof: faraj-15__83-1-3.wav expected 83:1-3 | nothing found (0 words heard) | 3 readings, median 5115 ms, max 5875 ms | finished | MISS
+  voice-proof: faraj-2__83-1-3.wav expected 83:1-3 | found 83:1-83:2 at 20.3 s after 11 words | 3 readings, median 5879 ms, max 7214 ms | stopped at the answer | OK
+  voice-proof: faraj-27__83-1-3.wav expected 83:1-3 | nothing found (1 words heard) | 3 readings, median 5452 ms, max 5625 ms | finished | MISS
+  voice-proof: faraj-39__83-1-3.wav expected 83:1-3 | nothing found (13 words heard) | 3 readings, median 6287 ms, max 6984 ms | 3 audio checks, max 6101 ms | finished | MISS
+  voice-proof: faraj-51__83-1-3.wav expected 83:1-3 | found 83:1-83:2 at 13.8 s after 8 words | 3 readings, median 3673 ms, max 5308 ms | stopped at the answer | OK
+  voice-proof: DONE right 2/5, wrong 0
+
+JavaScript record (the app's own error recorder): none. With no JavaScript record, a process that died was ended by something native.
+
+Crash reports (.ips): 0
+
+Progress (last 60 lines):
+  2026-11-28T01:44:58.830Z auto-run: start
+  2026-11-28T01:45:01.777Z pager: 15 swipes planned over 16 pages
+  2026-11-28T01:45:07.096Z pager: swipe 1/15 from page 1
+  2026-11-28T01:45:08.695Z pager: swipe 2/15 from page 2
+  2026-11-28T01:45:10.261Z pager: swipe 3/15 from page 3
+  2026-11-28T01:45:11.851Z pager: swipe 4/15 from page 4
+  2026-11-28T01:45:13.428Z pager: swipe 5/15 from page 5
+  2026-11-28T01:45:14.994Z pager: swipe 6/15 from page 6
+  2026-11-28T01:45:16.544Z pager: swipe 7/15 from page 7
+  2026-11-28T01:45:18.094Z pager: swipe 8/15 from page 8
+  2026-11-28T01:45:18.711Z pager: swipe 9/15 from page 9
+  2026-11-28T01:45:19.361Z pager: swipe 10/15 from page 10
+  2026-11-28T01:45:20.013Z pager: swipe 11/15 from page 11
+  2026-11-28T01:45:21.774Z pager: swipe 12/15 from page 12
+  2026-11-28T01:45:27.062Z pager: swipe 13/15 from page 13
+  2026-11-28T01:45:27.729Z pager: swipe 14/15 from page 14
+  2026-11-28T01:45:28.394Z pager: swipe 15/15 from page 15
+  2026-11-28T01:45:31.161Z pager: done, page 16 of 16 shown
+  2026-11-28T01:45:31.661Z auto-run: opening the demonstration friend page
+  2026-11-28T01:46:00.298Z friend: pinch in
+  2026-11-28T01:46:33.411Z friend: drag to turn
+  2026-11-28T01:46:35.880Z friend: double tap
+  2026-11-28T01:46:37.698Z friend: pinch out
+  2026-11-28T01:47:10.344Z friend: press Encourager
+  2026-11-28T01:47:12.361Z friend: scroll down and up
+  2026-11-28T01:47:16.945Z friend: pinch again after the scroll
+  2026-11-28T01:47:20.994Z friend: done
+  2026-11-28T01:47:20.997Z auto-run: DONE (handles: kept)
+
+Simulator log of the app (last 150 lines):
+      streaming
+  ), keysForCollectionKeys: (null), handler: non-nil)
+  2026-11-28 01:34:22.139 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> handleFigAssetLoadingNotification: Received kFigAssetNotification_BatchPropertyLoadComplete (payload: {
+      "assetPayload_BatchID" = 1;
+  })
+  2026-11-28 01:34:22.139 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader loadValuesAsynchronouslyForKeys:keysForCollectionKeys:completionHandler:]: Calling FigAssetLoadValuesAsyncForProperties for properties (
+      "assetProperty_AssetType"
+  )
+  2026-11-28 01:34:22.139 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> handleFigAssetLoadingNotification_block_invoke: Batch 0x10da174c0: Marking asset batch ID 1 as complete
+  2026-11-28 01:34:22.139 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader loadValuesAsynchronouslyForKeys:keysForCollectionKeys:completionHandler:]: Batch 0x10da17720: asset batch ID = 1 (err=0, alreadyLoaded=0)
+  2026-11-28 01:34:22.139 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader _invokeCompletionHandlerForLoadingBatches:]: Batch 0x10da174c0: dispatching completion handler
+  2026-11-28 01:34:22.139 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader loadValuesAsynchronouslyForKeys:keysForCollectionKeys:completionHandler:]: called (self: 0x10f6397a0, keys: (
+      streaming
+  ), keysForCollectionKeys: (null), handler: non-nil)
+  2026-11-28 01:34:22.139 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> handleFigAssetLoadingNotification: Received kFigAssetNotification_BatchPropertyLoadComplete (payload: {
+      "assetPayload_BatchID" = 1;
+  })
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader loadValuesAsynchronouslyForKeys:keysForCollectionKeys:completionHandler:]: Calling FigAssetLoadValuesAsyncForProperties for properties (
+      "assetProperty_AssetType"
+  )
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> handleFigAssetLoadingNotification_block_invoke: Batch 0x10da17720: Marking asset batch ID 1 as complete
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader loadValuesAsynchronouslyForKeys:keysForCollectionKeys:completionHandler:]: Batch 0x10da17840: asset batch ID = 1 (err=0, alreadyLoaded=0)
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader _invokeCompletionHandlerForLoadingBatches:]: Batch 0x10da17720: dispatching completion handler
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader loadValuesAsynchronouslyForKeys:keysForCollectionKeys:completionHandler:]: called (self: 0x10f6398f0, keys: (
+      streaming
+  ), keysForCollectionKeys: (null), handler: non-nil)
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> handleFigAssetLoadingNotification: Received kFigAssetNotification_BatchPropertyLoadComplete (payload: {
+      "assetPayload_BatchID" = 1;
+  })
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader loadValuesAsynchronouslyForKeys:keysForCollectionKeys:completionHandler:]: Calling FigAssetLoadValuesAsyncForProperties for properties (
+      "assetProperty_AssetType"
+  )
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> handleFigAssetLoadingNotification_block_invoke: Batch 0x10da17840: Marking asset batch ID 1 as complete
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader loadValuesAsynchronouslyForKeys:keysForCollectionKeys:completionHandler:]: Batch 0x10da17ae0: asset batch ID = 1 (err=0, alreadyLoaded=0)
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader _invokeCompletionHandlerForLoadingBatches:]: Batch 0x10da17840: dispatching completion handler
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader loadValuesAsynchronouslyForKeys:keysForCollectionKeys:completionHandler:]: called (self: 0x10f639a40, keys: (
+      streaming
+  ), keysForCollectionKeys: (null), handler: non-nil)
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> handleFigAssetLoadingNotification: Received kFigAssetNotification_BatchPropertyLoadComplete (payload: {
+      "assetPayload_BatchID" = 1;
+  })
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader loadValuesAsynchronouslyForKeys:keysForCollectionKeys:completionHandler:]: Calling FigAssetLoadValuesAsyncForProperties for properties (
+      "assetProperty_AssetType"
+  )
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> handleFigAssetLoadingNotification_block_invoke: Batch 0x10da17ae0: Marking asset batch ID 1 as complete
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader loadValuesAsynchronouslyForKeys:keysForCollectionKeys:completionHandler:]: Batch 0x10da17d40: asset batch ID = 1 (err=0, alreadyLoaded=0)
+  2026-11-28 01:34:22.140 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader _invokeCompletionHandlerForLoadingBatches:]: Batch 0x10da17ae0: dispatching completion handler
+  2026-11-28 01:34:22.141 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> handleFigAssetLoadingNotification: Received kFigAssetNotification_BatchPropertyLoadComplete (payload: {
+      "assetPayload_BatchID" = 1;
+  })
+  2026-11-28 01:34:22.141 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> handleFigAssetLoadingNotification_block_invoke: Batch 0x10da17d40: Marking asset batch ID 1 as complete
+  2026-11-28 01:34:22.141 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:] <<<< AVAssetInspectorLoader >>>> -[AVFigAssetInspectorLoader _invokeCompletionHandlerForLoadingBatches:]: Batch 0x10da17d40: dispatching completion handler
+  2026-11-28 01:34:22.162 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> FigPlayerSurrogateCreateWithOptions: new player 0x1199d7c00 P/MV
+  2026-11-28 01:34:22.163 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> FigPlayerSurrogateCreateWithOptions: new player 0x1199d79c0 P/RU
+  2026-11-28 01:34:22.163 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> FigPlayerSurrogateCreateWithOptions: new player 0x1199d73c0 P/GF
+  2026-11-28 01:34:22.163 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> FigPlayerSurrogateCreateWithOptions: new player 0x1199d5680 P/FZ
+  2026-11-28 01:34:22.163 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> FigPlayerSurrogateCreateWithOptions: new player 0x1199d7540 P/GA
+  2026-11-28 01:34:22.163 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> FigPlayerSurrogateCreateWithOptions: new player 0x1199d6f40 P/DJ
+  2026-11-28 01:34:22.163 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> FigPlayerSurrogateCreateWithOptions: new player 0x1199d7480 P/TL
+  2026-11-28 01:34:22.163 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> FigPlayerSurrogateCreateWithOptions: new player 0x11a91a340 P/UL
+  2026-11-28 01:34:22.163 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> FigPlayerSurrogateCreateWithOptions: new player 0x11a91a400 P/RE
+  2026-11-28 01:34:22.172 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> FigPlayerSurrogateCreateWithOptions: new player 0x11a918a80 P/JU
+  2026-11-28 01:34:22.342 Df Jannatuk[19742:4a15d] [com.apple.xpc:connection] [0x10f521180] activating connection: mach=true listener=false peer=false name=com.apple.IOSurface.Remote
+  2026-11-28 01:34:22.397 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_setActionAtEndOnRealPlayerOnQ: [0x1199d79c0|P/RU] actionAtEnd Advance
+  2026-11-28 01:34:22.398 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_CreatePlaybackItemFromAsset: [0x1199d79c0] P/RU Created new item 0x11b164600 I/CKH.01
+  2026-11-28 01:34:22.400 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVPlayerItem >>>> -[AVPlayerItem _updateItemIdentifierForCoordinatedPlayback]_block_invoke: <I/CKH.01|0x119ae1fb0> setting coordination identifier to (null)
+  2026-11-28 01:34:22.401 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_AddToPlayQueue: [0x1199d79c0] P/RU add 0x11b164600 I/CKH.01 after 0x0
+  2026-11-28 01:34:22.401 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d79c0] P/RU adding item 0x11b164600(0x0) I/CKH.01 to play queue after item 0x0(0x0)
+  2026-11-28 01:34:22.401 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d79c0] P/RU play queue now: [item 0x11b164600 I/CKH.01]
+  2026-11-28 01:34:22.401 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d79c0] P/RU preparing item 0x11b164600(0x0) I/CKH.01 for loading
+  2026-11-28 01:34:22.401 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_setActionAtEndOnRealPlayerOnQ: [0x1199d73c0|P/GF] actionAtEnd Advance
+  2026-11-28 01:34:22.401 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d79c0] P/RU load ok 0x11b164600(0x0) I/CKH.01 already loaded
+  2026-11-28 01:34:22.402 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_CreatePlaybackItemFromAsset: [0x1199d73c0] P/GF Created new item 0x11b165900 I/IYP.01
+  2026-11-28 01:34:22.402 Df Jannatuk[19742:4a1bc] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_respondToLoadingOfItemAssetTypeOnQ: [0x1199d79c0|P/RU] for item <0x11b164600|I/CKH.01> enqueueing = 0
+  2026-11-28 01:34:22.403 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVPlayerItem >>>> -[AVPlayerItem _updateItemIdentifierForCoordinatedPlayback]_block_invoke: <I/IYP.01|0x11aabc6f0> setting coordination identifier to (null)
+  2026-11-28 01:34:22.404 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_AddToPlayQueue: [0x1199d73c0] P/GF add 0x11b165900 I/IYP.01 after 0x0
+  2026-11-28 01:34:22.404 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d73c0] P/GF adding item 0x11b165900(0x0) I/IYP.01 to play queue after item 0x0(0x0)
+  2026-11-28 01:34:22.405 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_setActionAtEndOnRealPlayerOnQ: [0x1199d5680|P/FZ] actionAtEnd Advance
+  2026-11-28 01:34:22.406 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d73c0] P/GF play queue now: [item 0x11b165900 I/IYP.01]
+  2026-11-28 01:34:22.406 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_CreatePlaybackItemFromAsset: [0x1199d5680] P/FZ Created new item 0x11b165a00 I/SJA.01
+  2026-11-28 01:34:22.406 Df Jannatuk[19742:4a1be] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d73c0] P/GF preparing item 0x11b165900(0x0) I/IYP.01 for loading
+  2026-11-28 01:34:22.407 Df Jannatuk[19742:4a1be] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d73c0] P/GF load ok 0x11b165900(0x0) I/IYP.01 already loaded
+  2026-11-28 01:34:22.407 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVPlayerItem >>>> -[AVPlayerItem _updateItemIdentifierForCoordinatedPlayback]_block_invoke: <I/SJA.01|0x11aabc040> setting coordination identifier to (null)
+  2026-11-28 01:34:22.408 Df Jannatuk[19742:4a1be] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_respondToLoadingOfItemAssetTypeOnQ: [0x1199d73c0|P/GF] for item <0x11b165900|I/IYP.01> enqueueing = 0
+  2026-11-28 01:34:22.409 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_AddToPlayQueue: [0x1199d5680] P/FZ add 0x11b165a00 I/SJA.01 after 0x0
+  2026-11-28 01:34:22.409 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d5680] P/FZ adding item 0x11b165a00(0x0) I/SJA.01 to play queue after item 0x0(0x0)
+  2026-11-28 01:34:22.409 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_setActionAtEndOnRealPlayerOnQ: [0x1199d7540|P/GA] actionAtEnd Advance
+  2026-11-28 01:34:22.409 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d5680] P/FZ play queue now: [item 0x11b165a00 I/SJA.01]
+  2026-11-28 01:34:22.410 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_CreatePlaybackItemFromAsset: [0x1199d7540] P/GA Created new item 0x11b165e00 I/KSH.01
+  2026-11-28 01:34:22.411 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVPlayerItem >>>> -[AVPlayerItem _updateItemIdentifierForCoordinatedPlayback]_block_invoke: <I/KSH.01|0x119ae3d40> setting coordination identifier to (null)
+  2026-11-28 01:34:22.413 Df Jannatuk[19742:4a1c8] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d5680] P/FZ preparing item 0x11b165a00(0x0) I/SJA.01 for loading
+  2026-11-28 01:34:22.413 Df Jannatuk[19742:4a1c8] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d5680] P/FZ load ok 0x11b165a00(0x0) I/SJA.01 already loaded
+  2026-11-28 01:34:22.413 Df Jannatuk[19742:4a1c8] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_respondToLoadingOfItemAssetTypeOnQ: [0x1199d5680|P/FZ] for item <0x11b165a00|I/SJA.01> enqueueing = 0
+  2026-11-28 01:34:22.413 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_AddToPlayQueue: [0x1199d7540] P/GA add 0x11b165e00 I/KSH.01 after 0x0
+  2026-11-28 01:34:22.414 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d7540] P/GA adding item 0x11b165e00(0x0) I/KSH.01 to play queue after item 0x0(0x0)
+  2026-11-28 01:34:22.414 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_setActionAtEndOnRealPlayerOnQ: [0x1199d6f40|P/DJ] actionAtEnd Advance
+  2026-11-28 01:34:22.414 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d7540] P/GA play queue now: [item 0x11b165e00 I/KSH.01]
+  2026-11-28 01:34:22.414 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_CreatePlaybackItemFromAsset: [0x1199d6f40] P/DJ Created new item 0x11b165c00 I/GEQ.01
+  2026-11-28 01:34:22.414 Df Jannatuk[19742:4a1c9] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d7540] P/GA preparing item 0x11b165e00(0x0) I/KSH.01 for loading
+  2026-11-28 01:34:22.414 Df Jannatuk[19742:4a1c9] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d7540] P/GA load ok 0x11b165e00(0x0) I/KSH.01 already loaded
+  2026-11-28 01:34:22.414 Df Jannatuk[19742:4a1c9] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_respondToLoadingOfItemAssetTypeOnQ: [0x1199d7540|P/GA] for item <0x11b165e00|I/KSH.01> enqueueing = 0
+  2026-11-28 01:34:22.415 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVPlayerItem >>>> -[AVPlayerItem _updateItemIdentifierForCoordinatedPlayback]_block_invoke: <I/GEQ.01|0x119ae38e0> setting coordination identifier to (null)
+  2026-11-28 01:34:22.416 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_AddToPlayQueue: [0x1199d6f40] P/DJ add 0x11b165c00 I/GEQ.01 after 0x0
+  2026-11-28 01:34:22.416 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_setActionAtEndOnRealPlayerOnQ: [0x1199d7480|P/TL] actionAtEnd Advance
+  2026-11-28 01:34:22.416 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d6f40] P/DJ adding item 0x11b165c00(0x0) I/GEQ.01 to play queue after item 0x0(0x0)
+  2026-11-28 01:34:22.416 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_CreatePlaybackItemFromAsset: [0x1199d7480] P/TL Created new item 0x11b165f00 I/TDY.01
+  2026-11-28 01:34:22.416 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d6f40] P/DJ play queue now: [item 0x11b165c00 I/GEQ.01]
+  2026-11-28 01:34:22.417 Df Jannatuk[19742:4a1cb] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d6f40] P/DJ preparing item 0x11b165c00(0x0) I/GEQ.01 for loading
+  2026-11-28 01:34:22.417 Df Jannatuk[19742:4a1cb] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d6f40] P/DJ load ok 0x11b165c00(0x0) I/GEQ.01 already loaded
+  2026-11-28 01:34:22.417 Df Jannatuk[19742:4a1cb] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_respondToLoadingOfItemAssetTypeOnQ: [0x1199d6f40|P/DJ] for item <0x11b165c00|I/GEQ.01> enqueueing = 0
+  2026-11-28 01:34:22.418 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVPlayerItem >>>> -[AVPlayerItem _updateItemIdentifierForCoordinatedPlayback]_block_invoke: <I/TDY.01|0x106a83ce0> setting coordination identifier to (null)
+  2026-11-28 01:34:22.418 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_AddToPlayQueue: [0x1199d7480] P/TL add 0x11b165f00 I/TDY.01 after 0x0
+  2026-11-28 01:34:22.418 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d7480] P/TL adding item 0x11b165f00(0x0) I/TDY.01 to play queue after item 0x0(0x0)
+  2026-11-28 01:34:22.418 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_setActionAtEndOnRealPlayerOnQ: [0x11a91a340|P/UL] actionAtEnd Advance
+  2026-11-28 01:34:22.419 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d7480] P/TL play queue now: [item 0x11b165f00 I/TDY.01]
+  2026-11-28 01:34:22.419 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_CreatePlaybackItemFromAsset: [0x11a91a340] P/UL Created new item 0x11b166000 I/UEE.01
+  2026-11-28 01:34:22.419 Df Jannatuk[19742:4a1cc] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d7480] P/TL preparing item 0x11b165f00(0x0) I/TDY.01 for loading
+  2026-11-28 01:34:22.420 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVPlayerItem >>>> -[AVPlayerItem _updateItemIdentifierForCoordinatedPlayback]_block_invoke: <I/UEE.01|0x119ae3150> setting coordination identifier to (null)
+  2026-11-28 01:34:22.420 Df Jannatuk[19742:4a1cc] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d7480] P/TL load ok 0x11b165f00(0x0) I/TDY.01 already loaded
+  2026-11-28 01:34:22.420 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_AddToPlayQueue: [0x11a91a340] P/UL add 0x11b166000 I/UEE.01 after 0x0
+  2026-11-28 01:34:22.420 Df Jannatuk[19742:4a1cc] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_respondToLoadingOfItemAssetTypeOnQ: [0x1199d7480|P/TL] for item <0x11b165f00|I/TDY.01> enqueueing = 0
+  2026-11-28 01:34:22.420 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x11a91a340] P/UL adding item 0x11b166000(0x0) I/UEE.01 to play queue after item 0x0(0x0)
+  2026-11-28 01:34:22.420 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_setActionAtEndOnRealPlayerOnQ: [0x11a91a400|P/RE] actionAtEnd Advance
+  2026-11-28 01:34:22.421 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x11a91a340] P/UL play queue now: [item 0x11b166000 I/UEE.01]
+  2026-11-28 01:34:22.421 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_CreatePlaybackItemFromAsset: [0x11a91a400] P/RE Created new item 0x11b166100 I/OSV.01
+  2026-11-28 01:34:22.421 Df Jannatuk[19742:4a1cd] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x11a91a340] P/UL preparing item 0x11b166000(0x0) I/UEE.01 for loading
+  2026-11-28 01:34:22.421 Df Jannatuk[19742:4a1cd] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x11a91a340] P/UL load ok 0x11b166000(0x0) I/UEE.01 already loaded
+  2026-11-28 01:34:22.421 Df Jannatuk[19742:4a1cd] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_respondToLoadingOfItemAssetTypeOnQ: [0x11a91a340|P/UL] for item <0x11b166000|I/UEE.01> enqueueing = 0
+  2026-11-28 01:34:22.421 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVPlayerItem >>>> -[AVPlayerItem _updateItemIdentifierForCoordinatedPlayback]_block_invoke: <I/OSV.01|0x106a83500> setting coordination identifier to (null)
+  2026-11-28 01:34:22.422 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_AddToPlayQueue: [0x11a91a400] P/RE add 0x11b166100 I/OSV.01 after 0x0
+  2026-11-28 01:34:22.422 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x11a91a400] P/RE adding item 0x11b166100(0x0) I/OSV.01 to play queue after item 0x0(0x0)
+  2026-11-28 01:34:22.423 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x11a91a400] P/RE play queue now: [item 0x11b166100 I/OSV.01]
+  2026-11-28 01:34:22.423 Df Jannatuk[19742:4a1cf] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x11a91a400] P/RE preparing item 0x11b166100(0x0) I/OSV.01 for loading
+  2026-11-28 01:34:22.423 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_setActionAtEndOnRealPlayerOnQ: [0x1199d7c00|P/MV] actionAtEnd Advance
+  2026-11-28 01:34:22.423 Df Jannatuk[19742:4a1cf] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x11a91a400] P/RE load ok 0x11b166100(0x0) I/OSV.01 already loaded
+  2026-11-28 01:34:22.423 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_CreatePlaybackItemFromAsset: [0x1199d7c00] P/MV Created new item 0x11b166200 I/VBV.01
+  2026-11-28 01:34:22.423 Df Jannatuk[19742:4a1cf] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_respondToLoadingOfItemAssetTypeOnQ: [0x11a91a400|P/RE] for item <0x11b166100|I/OSV.01> enqueueing = 0
+  2026-11-28 01:34:22.423 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVPlayerItem >>>> -[AVPlayerItem _updateItemIdentifierForCoordinatedPlayback]_block_invoke: <I/VBV.01|0x119ae3480> setting coordination identifier to (null)
+  2026-11-28 01:34:22.423 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_AddToPlayQueue: [0x1199d7c00] P/MV add 0x11b166200 I/VBV.01 after 0x0
+  2026-11-28 01:34:22.424 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d7c00] P/MV adding item 0x11b166200(0x0) I/VBV.01 to play queue after item 0x0(0x0)
+  2026-11-28 01:34:22.424 Df Jannatuk[19742:4a1c0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x1199d7c00] P/MV play queue now: [item 0x11b166200 I/VBV.01]
+  2026-11-28 01:34:22.424 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_setActionAtEndOnRealPlayerOnQ: [0x11a918a80|P/JU] actionAtEnd Advance
+  2026-11-28 01:34:22.424 Df Jannatuk[19742:4a1d0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d7c00] P/MV preparing item 0x11b166200(0x0) I/VBV.01 for loading
+  2026-11-28 01:34:22.424 Df Jannatuk[19742:4a1d0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_initiateLoadingOfItemAssetTypeOnQ: [0x1199d7c00] P/MV load ok 0x11b166200(0x0) I/VBV.01 already loaded
+  2026-11-28 01:34:22.424 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_CreatePlaybackItemFromAsset: [0x11a918a80] P/JU Created new item 0x11b166400 I/HJO.01
+  2026-11-28 01:34:22.424 Df Jannatuk[19742:4a15d] [com.apple.coremedia:] <<<< AVPlayerItem >>>> -[AVPlayerItem _updateItemIdentifierForCoordinatedPlayback]_block_invoke: <I/HJO.01|0x119ae2880> setting coordination identifier to (null)
+  2026-11-28 01:34:22.424 Df Jannatuk[19742:4a1d0] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_respondToLoadingOfItemAssetTypeOnQ: [0x1199d7c00|P/MV] for item <0x11b166200|I/VBV.01> enqueueing = 0
+  2026-11-28 01:34:22.424 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlayer_AddToPlayQueue: [0x11a918a80] P/JU add 0x11b166400 I/HJO.01 after 0x0
+  2026-11-28 01:34:22.424 Df Jannatuk[19742:4a1c7] [com.apple.coremedia:player] <<<< FigPlayerSurrogate >>>> surrogatePlaybackItem_addToPlayQueueInternal: [0x11a918a80] P/JU adding item 0x11b166400(0x0) I/HJO.01 to play queue after item 0x0(0x0)
+  2026-11-28 01:34:22.424 Df Jannat
