@@ -2,11 +2,10 @@ import Constants from 'expo-constants';
 
 /**
  * The feature flag `friendsSignIn` of app.json (`expo.extra.features`): true only when it is a
- * real `true`. It stays false while real accounts are not set up (Supabase's sign-in providers,
- * docs/AUTH-SETUP.md): the owner does not ship a sign-in that cannot work, so the Proches tab
- * opens straight on the friends of the demonstration, which says it is one, and the sign-in screen
- * exists and is tested but is not shown to anyone. Turn it on together with `accountInvitation`,
- * whose sheet leads to this sign-in.
+ * real `true`. On since 27 November 2026 (owner: "ne cache aucun onglet, ne cache rien du tout"):
+ * a person signed out sees the sign-in screen, whose Apple, Google and e-mail buttons say
+ * "Bientôt disponible" while `SIGN_IN_PROVIDERS_READY` is false, and whose "Continuer sans
+ * compte" opens the tab (the anonymous account, or the demonstration).
  */
 export function readFriendsSignInFlag(extra: unknown): boolean {
   if (typeof extra !== 'object' || extra === null) return false;
@@ -19,3 +18,11 @@ export function readFriendsSignInFlag(extra: unknown): boolean {
 export function isFriendsSignInEnabled(): boolean {
   return readFriendsSignInFlag(Constants.expoConfig?.extra);
 }
+
+/**
+ * Whether Apple, Google and the e-mail can really sign in: false until the owner has set them up
+ * (docs/AUTH-SETUP.md, sections 1 to 3) and the real sign-in is written. Until then their buttons
+ * are shown (the owner wants to see everything while he tests) and answer "Bientôt disponible",
+ * never a broken sign-in.
+ */
+export const SIGN_IN_PROVIDERS_READY = false;

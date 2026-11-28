@@ -142,7 +142,10 @@ function EnabledAccountInvitation({
   const { isOpen, dismiss } = useAccountInvitation({
     requested,
     gardenShown,
-    isSignedOut: session.status === 'signed-out',
+    // The anonymous account of the phone is no account the person chose: they are still invited.
+    isSignedOut:
+      session.status === 'signed-out' ||
+      (session.status === 'signed-in' && session.session.provider === 'anonymous'),
     storage: deviceStorage,
     delayMs,
   });

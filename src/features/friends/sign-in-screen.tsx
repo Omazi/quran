@@ -88,6 +88,16 @@ export function SignInScreen({ model, actions }: SignInScreenProps) {
             testID={`sign-in-${provider}`}
           />
         ))}
+        {/* While the providers are not set up, the tab still opens: the account of the phone. */}
+        {model.isComingSoon ? (
+          <ActionButton
+            variant="tonal"
+            label={t('signIn.continueWithout')}
+            onPress={actions.continueWithoutAccount}
+            disabled={model.isBusy}
+            testID="sign-in-continue-without"
+          />
+        ) : null}
       </View>
 
       {model.emailStep === 'closed' ? null : (
@@ -150,7 +160,11 @@ export function SignInScreen({ model, actions }: SignInScreenProps) {
           {refusal}
         </AppText>
       )}
-      {model.isDemonstration ? (
+      {model.isComingSoon ? (
+        <AppText variant="footnote" color="muted" testID="sign-in-coming-soon">
+          {t('signIn.comingSoonNote')}
+        </AppText>
+      ) : model.isDemonstration ? (
         <AppText variant="footnote" color="muted">
           {t('signIn.demoNote')}
         </AppText>

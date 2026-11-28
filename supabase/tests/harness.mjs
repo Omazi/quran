@@ -21,6 +21,11 @@ export const SYNC_DEVICE_MIGRATION =
   process.env.SYNC_DEVICE_MIGRATION ??
   join(here, '..', 'migrations', '20261126000000_sync_device_id.sql');
 
+// The anonymous accounts (search refused to them, cleanup of abandoned ones).
+export const ANONYMOUS_MIGRATION =
+  process.env.ANONYMOUS_MIGRATION ??
+  join(here, '..', 'migrations', '20261127120000_anonymous_accounts.sql');
+
 // The profile gender (list_friends() answers one column more).
 export const GENDER_MIGRATION =
   process.env.GENDER_MIGRATION ??
@@ -86,13 +91,15 @@ export async function startDb({ migrations = [MIGRATION] } = {}) {
 
   // Runs one statement as an actor (a Postgres role plus the token claims of a person).
   // Each statement has its own savepoint, so a refused statement does not end the test.
-  async function run(actor, sql, params = []) {
+  // `extraClaims` adds claims to the token (is_anonymous: true for an anonymous account).
+  async function run(actor, sql, params = [], extraClaims = {}) {
     const sp = `sp${savepoints++}`;
     await client.query(`savepoint ${sp}`);
     try {
       if (actor !== 'su') {
         const role = actor === 'anon' ? 'anon' : 'authenticated';
-        const claims = actor === 'anon' ? '' : JSON.stringify({ sub: U[actor] ?? actor, role });
+        const claims =
+          actor === 'anon' ? '' : JSON.stringify({ sub: U[actor] ?? actor, role, ...extraClaims });
         await client.query(`select set_config('request.jwt.claims', $1, true)`, [claims]);
         await client.query(`set local role ${role}`);
       }
@@ -106,16 +113,17 @@ export async function startDb({ migrations = [MIGRATION] } = {}) {
     }
   }
 
-  function who(actor) {
+  function who(actor, extraClaims = {}) {
+    const call = (sql, params) => run(actor, sql, params, extraClaims);
     return {
-      q: (sql, params) => run(actor, sql, params),
-      rows: async (sql, params) => (await run(actor, sql, params)).rows,
-      one: async (sql, params) => (await run(actor, sql, params)).rows[0],
+      q: call,
+      rows: async (sql, params) => (await call(sql, params)).rows,
+      one: async (sql, params) => (await call(sql, params)).rows[0],
       /** the statement must fail with this SQLSTATE (42501 = refused by privilege or policy) */
       async fails(sql, params, expected) {
         const { code, message } = typeof expected === 'string' ? { code: expected } : expected;
         await assert.rejects(
-          () => run(actor, sql, params),
+          () => call(sql, params),
           (e) => {
             if (code) assert.equal(e.code, code, `${actor}: ${sql} -> ${e.code} ${e.message}`);
             if (message) assert.match(e.message, message);
@@ -125,10 +133,13 @@ export async function startDb({ migrations = [MIGRATION] } = {}) {
         );
       },
       /** refused outright (privilege missing, or a policy refuses the row) */
-      denied: (sql, params) => who(actor).fails(sql, params, '42501'),
+      denied: (sql, params) => who(actor, extraClaims).fails(sql, params, '42501'),
       /** a function raised this machine code */
       raises: (sql, params, message) =>
-        who(actor).fails(sql, params, { code: 'P0001', message: new RegExp(`^${message}$`) }),
+        who(actor, extraClaims).fails(sql, params, {
+          code: 'P0001',
+          message: new RegExp(`^${message}$`),
+        }),
     };
   }
 
@@ -166,6 +177,8 @@ export async function startDb({ migrations = [MIGRATION] } = {}) {
         su: (sql, params) => run('su', sql, params),
         suRows: async (sql, params) => (await run('su', sql, params)).rows,
         as: who,
+        /** an anonymous account (its token says is_anonymous: true) */
+        asAnonymous: (actor) => who(actor, { is_anonymous: true }),
         omar: who('omar'),
         sarah: who('sarah'),
         mustapha: who('mustapha'),

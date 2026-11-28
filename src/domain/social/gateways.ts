@@ -32,11 +32,16 @@ import type {
 
 export type SignInProvider = 'apple' | 'google' | 'email';
 export type SignInPlatform = 'ios' | 'android';
+/**
+ * How a session was opened: a way to sign in, or `anonymous`, the account the phone makes by
+ * itself, without a screen (owner's decision, 27 November 2026; docs/AUTH-SETUP.md).
+ */
+export type SessionProvider = SignInProvider | 'anonymous';
 
 /** Who is signed in. */
 export interface Session {
   readonly userId: UserId;
-  readonly provider: SignInProvider;
+  readonly provider: SessionProvider;
   /**
    * True when nothing here is real: a screen shows it (docs/specs/social.md, section 4) and
    * never presents the data as someone's real friends.

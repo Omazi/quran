@@ -41,6 +41,7 @@ export { viewOf } from './visibility';
 export type {
   AuthGateway,
   Session,
+  SessionProvider,
   SignInPlatform,
   SignInProvider,
   SocialRepository,

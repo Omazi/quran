@@ -40,10 +40,10 @@ describe('the accountInvitation feature flag', () => {
     expect(readAccountInvitationFlag('on')).toBe(false);
   });
 
-  // The owner forbids shipping unfinished features: sign-in cannot succeed until the providers
-  // are set up (docs/AUTH-SETUP.md). Whoever turns the flag on changes this line on purpose.
-  it('is off in app.json until the Apple, Google and e-mail providers work', () => {
-    expect(appJson.expo.extra.features.accountInvitation).toBe(false);
+  // On since 27 November 2026 (owner: "ne cache rien du tout"): its buttons say "Bientôt
+  // disponible" until the providers are set up (docs/AUTH-SETUP.md).
+  it('is on in app.json: the owner sees every screen while he tests', () => {
+    expect(appJson.expo.extra.features.accountInvitation).toBe(true);
   });
 });
 

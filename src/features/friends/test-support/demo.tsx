@@ -20,7 +20,9 @@ export function demoForTest(options?: SocialStoreOptions): {
   store: SocialStore;
 } {
   const demo = createDemoSocial({ today: () => deviceLocalDate(new Date()) });
-  return { demo, store: createSocialStore(demo, options) };
+  // The sign-in of the demonstration itself is what most tests try: its providers answer. The
+  // "Bientôt disponible" of this build is tested on its own (providersReady: false).
+  return { demo, store: createSocialStore(demo, { providersReady: true, ...options }) };
 }
 
 export async function signedInDemoForTest(

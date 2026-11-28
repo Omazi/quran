@@ -24,7 +24,8 @@ const SHOWN_REFUSALS = [
   'email-code-malformed',
 ] as const satisfies readonly SocialRefusal[];
 
-export type ShownRefusal = (typeof SHOWN_REFUSALS)[number] | 'unknown';
+/** `coming-soon`: a way to sign in that is not set up yet (`SIGN_IN_PROVIDERS_READY`). */
+export type ShownRefusal = (typeof SHOWN_REFUSALS)[number] | 'unknown' | 'coming-soon';
 
 /**
  * The sentence to show for an error, as a key of `friends:refusals`. A rule that said no gives

@@ -16,6 +16,7 @@ import {
   useRouteBreadcrumbs,
 } from '@/features/diagnostics';
 import { useFeedbackSetup } from '@/features/feedback';
+import { appSyncSession } from '@/features/friends';
 import { CELEBRATION_PATH, useKhatmaCelebration } from '@/features/gardens';
 import { useForegroundTimeRecording } from '@/features/profile';
 import { useNotificationTaps, useReminderSync } from '@/features/reminders';
@@ -61,11 +62,12 @@ const STARTUP: StartupDependencies = {
 };
 
 /**
- * The sync with the person's account (docs/specs/sync.md). `session` stays null until the
- * sign-in with Supabase exists: the sign-in of the demonstration is not an account. Until then the
- * progress is saved on the phone (and in its iCloud or Google backup), and the settings say so.
+ * The sync with the person's account (docs/specs/sync.md). With the `friendsAnonymous` flag, the
+ * anonymous account of the phone, made silently on the first sync (docs/AUTH-SETUP.md); without
+ * it, null: the sign-in of the demonstration is not an account. With no account the progress is
+ * saved on the phone (and in its iCloud or Google backup), and the settings say so.
  */
-const SYNC: AppSyncDependencies = { clock: SYNC_CLOCK, session: null };
+const SYNC: AppSyncDependencies = { clock: SYNC_CLOCK, session: appSyncSession() };
 
 /** The celebration of a completed khatma, over whatever screen the person is on (D46). */
 const openKhatmaCelebration = (khatm: number) =>
