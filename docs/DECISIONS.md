@@ -1203,3 +1203,51 @@ par une meilleure lecture libre (un modèle plus grand, D49) plutôt que par la 
 _Changerait si_ un « faux » apparaissait sur de nouveaux enregistrements (revenir aux règles de
 D49 : `maxCostPerPassageLetter: 0`, `uniqueMinLetters: 0`) ; ou si un modèle plus juste change
 les coûts (refaire la grille du banc).
+
+## D51 — Le jour et la nuit suivent le vrai soleil, sans demander la position
+
+Décision du propriétaire (27 novembre 2026) : le passage du jour à la nuit suit le **vrai** lever
+et coucher du soleil, pas des heures fixes, et l'appli **ne demande pas** l'autorisation de
+localisation. Remplace les heures fixes de la maquette (papier du lecteur de 6 h 11 à 17 h 56,
+phases du ciel de l'accueil aux heures de `js/sky.js`). Spécification : `docs/specs/sun.md`.
+
+- **Le lieu vient du fuseau horaire** du téléphone (`Intl`, ex. `America/Toronto`), placé aux
+  coordonnées que lui donne la base IANA (`zone.tab`, `zone1970.tab`, liens de `tzdata.zi` ;
+  domaine public), table générée par `tools/sun-zones/build.mjs` (`--verify` la contrôle), 542
+  noms, 20 Ko. **Repli** : fuseau inconnu ou sans lieu (`Etc/UTC`) → longitude = décalage UTC ×
+  15° par heure, latitude 30° N.
+- **Le soleil** : lever, coucher (−0°50′), aube et crépuscule civils (−6°), midi solaire, avec les
+  équations du calculateur solaire de la NOAA (d'après Meeus), écrites dans `src/domain/sun`, sans
+  dépendance (pas de `suncalc`). Les « équations générales » plus courtes de la NOAA ont été
+  essayées d'abord : 0,28° d'erreur de déclinaison, 14 minutes sur un crépuscule polaire ; écartées.
+  Écart à l'éphéméride PyEphem : 15 secondes au plus sur les cas testés (Toronto, Paris, La Mecque,
+  Jakarta, Reykjavik, juin et décembre, Longyearbyen). Les heures sont des instants : le passage à
+  l'heure d'été ne les déplace pas.
+- **Le lecteur** : papier du lever (compris) au coucher (exclu), page de nuit du coucher au lever ;
+  l'apparence sombre donne toujours la nuit. Jour polaire : papier ; nuit polaire : nuit.
+- **Le ciel de l'accueil** garde l'apparence de la maquette, seules ses heures bougent : la journée
+  de la maquette (soleil levé à 6 h, couché à 19 h, midi à 12 h 30 ; crépuscule civil ajouté d'une
+  demi-heure de chaque côté, jugement) est recalée morceau par morceau : aube civile → lever →
+  coucher → crépuscule civil → aube suivante, les heures de la maquette avançant régulièrement
+  entre deux repères réels. Les phases (aube, jour, heure dorée, coucher, nuit), le soleil, la lune
+  et la lumière du jardin suivent. Quand le soleil saute un repère (nuit blanche, jour ou nuit
+  polaire), le tronçon est sauté : le ciel ne montre jamais plus de lumière ni plus de nuit que le
+  vrai soleil (un saut de couleur au minuit ou au midi solaire, au-delà de 60° de latitude
+  seulement).
+- **Rafraîchi** chaque minute et au retour au premier plan (`useSunMoment`) : date, fuseau et
+  décalage sont relus à chaque fois.
+- **Contrôle des écrans** : l'heure épinglée (`-screenCheckHour`) est une heure d'horloge lue contre
+  le soleil calculé. La machine de CI est en UTC (lieu de repli 30° N, 0°) : 10 h y est le jour et
+  22 h la nuit tous les jours de l'année (testé), les photos gardent leur aspect.
+
+**Conséquence voulue** : le verre de l'accueil passe en apparence sombre quand le haut du ciel
+s'assombrit (règle de contraste inchangée), soit avant le coucher, alors que le lecteur attend le
+coucher réel : à Toronto le 27 novembre, vers 15 h 58 pour l'accueil, 16 h 43 pour le lecteur.
+
+**Vérifié** : tests du domaine (villes, solstices, heure d'été, nuit blanche, jour, nuit et
+crépuscule polaires, pôles, repli, continuité minute par minute sur trois jours), du lecteur et du
+ciel. **Pas vérifié** : sur un iPhone (D24), en particulier que Hermes donne bien le fuseau par
+`Intl` et suit un changement de fuseau sans redémarrage (sinon le repli par décalage s'applique).
+
+_Changerait si_ le propriétaire accepte de demander la position (le domaine prend déjà une
+latitude et une longitude), ou veut un crépuscule de la maquette d'une autre durée.

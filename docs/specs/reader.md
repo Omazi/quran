@@ -19,9 +19,10 @@ suivi de la voix, réglages mémorisés) ne change pas. Rendu web : `docs/design
 
 - **Pas de jardin dans le lecteur** (il distrait pendant le défilement). Le texte occupe toute la
   hauteur de l'écran et s'efface sous les commandes.
-- **Papier le jour, page de nuit le soir** : la page suit l'heure (papier de 6 h 11 à 17 h 56,
-  heures du ciel de la maquette), et l'apparence sombre du téléphone donne toujours la page de nuit
-  (`reader-paper.ts` ; écart 158).
+- **Papier le jour, page de nuit le soir** : la page suit le vrai soleil (papier du lever au
+  coucher, page de nuit du coucher au lever, au lieu estimé depuis le fuseau horaire du téléphone, sans demander
+  la position : `docs/specs/sun.md`, D51), et l'apparence sombre du téléphone donne toujours la page
+  de nuit (`reader-paper.ts` ; écart 158). Revu chaque minute et au retour dans l'appli.
 - **Commandes en verre** (Liquid Glass sur iOS 26, verre dessiné ailleurs, opaque avec « réduire la
   transparence ») : en haut le retour, la pastille du titre (« Al-Kahf », « page 293 » ; VoiceOver
   entend aussi le juz et le hizb), et un groupe marque-page + « Aa » ; « Aa » ouvre la taille du texte

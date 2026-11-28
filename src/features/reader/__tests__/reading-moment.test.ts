@@ -18,56 +18,100 @@ import {
 import { pillCopy } from '../drop-pill-copy';
 import { drawnThreadShare, isSameThreadState, threadStateOf } from '../page-thread';
 import { dropStartY, readerGeometry } from '../reader-geometry';
-import { minutesOfDayOf, readerPaperOf } from '../reader-paper';
+import { readerPaperOf } from '../reader-paper';
 import type { ReadingFeedback } from '../reading-feedback';
 
-const { dayStartsAtMinute, nightStartsAtMinute } = READER_CONFIG.paper;
+const TORONTO = { latitude: 43.65, longitude: -79.38 };
+const PARIS = { latitude: 48.87, longitude: 2.33 };
+const LONGYEARBYEN = { latitude: 78, longitude: 16 };
+const HOUR_MS = 3_600_000;
 
-describe('the paper by day, the night page at night (owner, 27 November 2026)', () => {
-  it('is the paper by day when the phone is in its light appearance', () => {
-    expect(readerPaperOf({ minutesOfDay: 12 * 60, systemScheme: 'light' })).toBe('day');
-    expect(readerPaperOf({ minutesOfDay: dayStartsAtMinute, systemScheme: 'light' })).toBe('day');
-    expect(readerPaperOf({ minutesOfDay: nightStartsAtMinute - 1, systemScheme: 'light' })).toBe(
+/** A local clock reading at a UTC offset in hours, as an instant. */
+function clock(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  offset: number,
+) {
+  return Date.UTC(year, month - 1, day, hour, minute) - offset * HOUR_MS;
+}
+
+/** Toronto in November (EST): sunrise 07:27, sunset 16:43 on the 27th (PyEphem). */
+const toronto = (hour: number, minute: number, day = 27) => clock(2026, 11, day, hour, minute, -5);
+
+describe('the paper from sunrise to sunset, the night page from sunset to sunrise (owner, D51)', () => {
+  it('is the paper while the sun is up, in the light appearance', () => {
+    for (const instant of [toronto(7, 32), toronto(12, 0), toronto(16, 40)]) {
+      expect(readerPaperOf({ instant, place: TORONTO, systemScheme: 'light' })).toBe('day');
+    }
+  });
+
+  it('is the night page from sunset until sunrise', () => {
+    for (const instant of [
+      toronto(16, 48),
+      toronto(17, 56),
+      toronto(23, 59),
+      toronto(0, 0),
+      toronto(7, 20),
+    ]) {
+      expect(readerPaperOf({ instant, place: TORONTO, systemScheme: 'light' })).toBe('night');
+    }
+  });
+
+  it('follows the real sun, not fixed hours: 20:00 is night in Toronto in November, day in Paris in June', () => {
+    expect(readerPaperOf({ instant: toronto(20, 0), place: TORONTO, systemScheme: 'light' })).toBe(
+      'night',
+    );
+    const parisJune = clock(2026, 6, 21, 21, 0, 2);
+    expect(readerPaperOf({ instant: parisJune, place: PARIS, systemScheme: 'light' })).toBe('day');
+    // 06:30 in Paris in June: the sun rose at 05:47; the old fixed hours said night until 06:11.
+    const parisMorning = clock(2026, 6, 21, 6, 0, 2);
+    expect(readerPaperOf({ instant: parisMorning, place: PARIS, systemScheme: 'light' })).toBe(
       'day',
     );
   });
 
-  it('is the night page once the sky turns to dusk, and until the morning', () => {
-    expect(readerPaperOf({ minutesOfDay: nightStartsAtMinute, systemScheme: 'light' })).toBe(
-      'night',
-    );
-    expect(readerPaperOf({ minutesOfDay: 23 * 60 + 59, systemScheme: 'light' })).toBe('night');
-    expect(readerPaperOf({ minutesOfDay: 0, systemScheme: 'light' })).toBe('night');
-    expect(readerPaperOf({ minutesOfDay: dayStartsAtMinute - 1, systemScheme: 'light' })).toBe(
-      'night',
-    );
-  });
-
   it('is always the night page when the phone is in its dark appearance', () => {
-    for (const minutesOfDay of [0, dayStartsAtMinute, 12 * 60, nightStartsAtMinute, 1439]) {
-      expect(readerPaperOf({ minutesOfDay, systemScheme: 'dark' })).toBe('night');
+    for (const instant of [toronto(0, 0), toronto(7, 32), toronto(12, 0), toronto(16, 40)]) {
+      expect(readerPaperOf({ instant, place: TORONTO, systemScheme: 'dark' })).toBe('night');
     }
   });
 
-  it('follows the hour when the appearance is not known (the light appearance)', () => {
-    expect(readerPaperOf({ minutesOfDay: 12 * 60, systemScheme: null })).toBe('day');
-    expect(readerPaperOf({ minutesOfDay: 22 * 60, systemScheme: undefined })).toBe('night');
+  it('follows the sun when the appearance is not known (the light appearance)', () => {
+    expect(readerPaperOf({ instant: toronto(12, 0), place: TORONTO, systemScheme: null })).toBe(
+      'day',
+    );
+    expect(
+      readerPaperOf({ instant: toronto(22, 0), place: TORONTO, systemScheme: undefined }),
+    ).toBe('night');
   });
 
-  it('takes the switch hours from the validated mockup’s sky (06:11 and 17:56)', () => {
-    expect(dayStartsAtMinute).toBe(6 * 60 + 11);
-    expect(nightStartsAtMinute).toBe(17 * 60 + 56);
+  it('polar day keeps the paper all day; polar night keeps the night page', () => {
+    const june = clock(2026, 6, 21, 0, 30, 2);
+    const december = clock(2026, 12, 21, 12, 0, 1);
+    expect(readerPaperOf({ instant: june, place: LONGYEARBYEN, systemScheme: 'light' })).toBe(
+      'day',
+    );
+    expect(readerPaperOf({ instant: december, place: LONGYEARBYEN, systemScheme: 'light' })).toBe(
+      'night',
+    );
   });
 
-  it('reads the minutes of the day of the local clock', () => {
-    expect(minutesOfDayOf(new Date(2026, 10, 27, 18, 36))).toBe(18 * 60 + 36);
-    expect(minutesOfDayOf(new Date(2026, 10, 27, 0, 0))).toBe(0);
-  });
-
-  it('refuses a minute that is not in a day', () => {
-    expect(() => readerPaperOf({ minutesOfDay: -1, systemScheme: 'light' })).toThrow(RangeError);
-    expect(() => readerPaperOf({ minutesOfDay: 1440, systemScheme: 'light' })).toThrow(RangeError);
-    expect(() => readerPaperOf({ minutesOfDay: 12.5, systemScheme: 'light' })).toThrow(RangeError);
+  it('refuses a moment or a place that is not one, whatever the appearance', () => {
+    for (const systemScheme of ['light', 'dark'] as const) {
+      expect(() => readerPaperOf({ instant: Number.NaN, place: TORONTO, systemScheme })).toThrow(
+        RangeError,
+      );
+      expect(() =>
+        readerPaperOf({
+          instant: toronto(12, 0),
+          place: { latitude: 95, longitude: 0 },
+          systemScheme,
+        }),
+      ).toThrow(RangeError);
+    }
   });
 });
 

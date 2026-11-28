@@ -1,10 +1,13 @@
 /**
- * The sky that follows the real local hour, as the validated mockup computes it
- * (docs/design/maquette-wow, `js/sky.js`): the colours of the gradient, the stars, how much night
- * it is, where the sun and the moon are, and the light the garden receives. Pure: an hour in, a
- * state out. The values live in `src/ui/sky-tokens.ts`.
+ * The sky as the validated mockup computes it (docs/design/maquette-wow, `js/sky.js`): the colours
+ * of the gradient, the stars, how much night it is, where the sun and the moon are, and the light
+ * the garden receives. Pure: an hour of the mockup's day in, a state out. The values live in
+ * `src/ui/sky-tokens.ts`. The mockup's day has fixed hours (its sun rises at 6:00, sets at 19:00);
+ * `skyHourAt` re-times it on the real sun of the place (owner's decision, D51), so the look stays
+ * the mockup's and only its hours move.
  */
 
+import { referenceHourAt, type GeoPosition, type ReferenceDay } from '@/domain/sun';
 import { SKY_NIGHT_LUMINANCE, skyKeyframes, skyLights, type SkyKeyframe } from '@/ui/sky-tokens';
 
 export type SkyPhase = 'dawn' | 'day' | 'sunset' | 'night';
@@ -48,11 +51,26 @@ export interface SkyState {
   readonly cloud: number;
 }
 
-/** Phase boundaries, in hours: dawn from the first light, sunset from the golden hour. */
+/**
+ * Phase boundaries, in hours of the mockup's day (`skyHourAt` re-times them on the real sun): dawn
+ * from the first light, sunset from the golden hour.
+ */
 const PHASES = { dawnFrom: 4.8, dayFrom: 7, sunsetFrom: 17.3, nightFrom: 19.8 } as const;
 
-/** The sun crosses the sky from 6:00 to 19:00; the moon from 19:30 to 6:00. */
+/** In the mockup's day the sun crosses the sky from 6:00 to 19:00; the moon from 19:30 to 6:00. */
 const SUN = { rise: 6, span: 13, left: 0.08, width: 0.84, low: 0.8, arc: 0.72 } as const;
+/**
+ * The mockup's day, as the real sun re-times it: its sun rises at 6:00 and sets at 19:00 (`SUN`),
+ * its noon at 12:30 is the keyframe of noon. The mockup has no civil twilight of its own: half an
+ * hour each side, about what it lasts between Mecca (24 min) and Paris (37 min). Judgment.
+ */
+const CIVIL_TWILIGHT_HOURS = 0.5;
+export const MOCKUP_DAY: ReferenceDay = Object.freeze({
+  civilDawn: SUN.rise - CIVIL_TWILIGHT_HOURS,
+  sunrise: SUN.rise,
+  sunset: SUN.rise + SUN.span,
+  civilDusk: SUN.rise + SUN.span + CIVIL_TWILIGHT_HOURS,
+});
 const MOON = { rise: 19.5, span: 10.5, right: 0.92, drift: 0.3, high: 0.36, arc: 0.12 } as const;
 /**
  * The light on the garden: turned around the garden by the light's place in the sky, raised by its
@@ -232,6 +250,16 @@ export function skyForAppearance(sky: SkyState, device: Appearance): SkyState {
     water: mixHex(skyLights.water, low, 0.45),
     cloud: sky.cloud * (1 - DARK_MODE_DIM),
   };
+}
+
+/**
+ * The hour of the mockup's day at a moment, at a place (D51): the mockup's sunrise at the real
+ * sunrise, its sunset at the real sunset, its civil twilight on the real one; between them its
+ * hours run evenly (`referenceHourAt`, docs/specs/sun.md rule 7). Polar days and nights never show
+ * more light, nor more night, than the real sun gives.
+ */
+export function skyHourAt(instant: number, place: GeoPosition): number {
+  return referenceHourAt(instant, place, MOCKUP_DAY);
 }
 
 /** The local hour of a date, with its minutes as a fraction (18:24 is 18.4). */
