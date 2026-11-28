@@ -66,7 +66,7 @@ appelle ; un test de l'appli le vérifie). Cette version comprend des arguments 
 connectés) ; avec `gardens`, l'historique est une khatma terminée et la suivante en cours, pour le
 niveau, les badges, « Mes jardins » (`-screenCheckGo gardens`) et la célébration
 (`-screenCheckGo khatma`) (D46). `-screenCheckHour 10` (ou `22:30`) fixe l'heure du ciel de l'accueil et du papier
-du lecteur (`src/features/screen-check/pinned-clock.ts`) : sans lui les photos suivraient l'horloge de la machine
+du lecteur (`src/features/screen-check/pinned-clock.ts`), lue contre le soleil calculé (D51 ; la machine de CI est en UTC, lieu de repli 30° N 0°, où 10 h est le jour et 22 h la nuit toute l'année) : sans lui les photos suivraient l'horloge de la machine
 de CI, donc la nuit ; `tools/ci/screens.py` photographie à 10 h, plus deux vues de nuit (22 h, mode clair). Le mode
 sombre donne toujours le ciel et la page de nuit. L'adresse `/onboarding?page=N` (de 1 à 16) n'est lue que dans cette version. Sans la
 variable, rien de cela n'existe dans le paquet (`src/features/screen-check/door.ts`) : les

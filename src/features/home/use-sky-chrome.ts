@@ -1,25 +1,23 @@
-import { useEffect, useMemo, useState } from 'react';
-import { AppState, useColorScheme } from 'react-native';
+import { useMemo } from 'react';
+import { useColorScheme } from 'react-native';
 
 import {
   chromeAppearanceOf,
-  hourOfDay,
   skyForAppearance,
+  skyHourAt,
   skyStateAt,
   type Appearance,
   type SkyState,
 } from '@/features/garden';
 import { screenCheckClock } from '@/features/screen-check/pinned-clock';
+import { useSunMoment } from '@/features/sky-clock';
 import { colorValuesFor, glassVeilMinimum } from '@/ui';
 
 import { LARGE_TEXT_CONTRAST, skyBehind, TEXT_CONTRAST, veilOpacityFor } from './sky-contrast';
 import type { Clock } from './use-today';
 
-/** How often the sky follows the clock: once a minute is smooth for a sky (sky-state test). */
-const SKY_STEP_MS = 60_000;
-const MINUTES_PER_HOUR = 60;
-
-// The check's photographs pin the hour (`-screenCheckHour`); every other build, the real one.
+// The check's photographs pin the hour (`-screenCheckHour`), read against the computed sun like
+// any clock reading; every other build, the real one.
 const systemClock: Clock = screenCheckClock ?? (() => new Date());
 
 /** What floats over the home garden takes from the sky of the hour. */
@@ -69,25 +67,16 @@ export function chromeOf(hourSky: SkyState, device: Appearance): SkyChrome {
   };
 }
 
-/** The local hour, to the minute, kept up to date while the screen is open and on return. */
+/**
+ * The hour of the mockup's day now, re-timed on the real sun of the phone's time zone (D51), to
+ * the minute; kept up to date while the screen is open and on return (`useSunMoment`).
+ */
 export function useSkyHour(clock: Clock = systemClock): number {
-  const minuteOf = () => Math.floor(hourOfDay(clock()) * MINUTES_PER_HOUR);
-  const [minute, setMinute] = useState(minuteOf);
-  useEffect(() => {
-    const refresh = () => setMinute(Math.floor(hourOfDay(clock()) * MINUTES_PER_HOUR));
-    const timer = setInterval(refresh, SKY_STEP_MS);
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') refresh();
-    });
-    return () => {
-      clearInterval(timer);
-      subscription.remove();
-    };
-  }, [clock]);
-  return minute / MINUTES_PER_HOUR;
+  const { instant, place } = useSunMoment(clock);
+  return useMemo(() => skyHourAt(instant, place), [instant, place]);
 }
 
-/** The sky of the real local hour and what floats over it (maquette-wow, js/sky.js). */
+/** The sky of the real sun's hour and what floats over it (maquette-wow, js/sky.js; D51). */
 export function useSkyChrome(clock?: Clock): SkyChrome {
   const hour = useSkyHour(clock);
   const device: Appearance = useColorScheme() === 'dark' ? 'dark' : 'light';

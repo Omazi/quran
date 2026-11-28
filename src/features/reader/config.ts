@@ -29,17 +29,6 @@ export const READER_CONFIG = Object.freeze({
   },
 
   /**
-   * The paper of the page by day, the night page at night (owner's decision of 27 November 2026):
-   * the minute of the local day at which the paper comes, and the one at which the night page
-   * comes. They are where the validated mockup's sky turns (docs/design/maquette-wow, `js/sky.js`:
-   * the theme turns "night" when the top of the sky falls under 16 % luminance, at 17:56, and
-   * "day" again at 06:11). Fixed hours, not the sun's: the app does not ask where the person is.
-   * The phone's dark appearance always gives the night page. How often the reader looks at the
-   * clock while it is open, in seconds.
-   */
-  paper: { dayStartsAtMinute: 6 * 60 + 11, nightStartsAtMinute: 17 * 60 + 56, recheckSeconds: 60 },
-
-  /**
    * The drop that falls from the end of a page's thread into the glass pill when the page counts,
    * as the validated mockup times it (`js/fx.js`, `drop()`): it forms at the end of the thread with
    * an overshoot (380 ms, the curve (0.34, 1.56, 0.64, 1)), waits a moment, then falls with gravity

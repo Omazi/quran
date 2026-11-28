@@ -1,0 +1,22 @@
+Time zone coordinates: provenance and licence
+============================================
+
+What it is
+----------
+src/domain/sun/zone-coordinates.ts gives, for each time zone name of the IANA time zone
+database, the latitude and longitude of the place the database names it after (America/Toronto:
+Toronto). The app uses it to place the sun from the phone's time zone alone, without asking for
+the location (docs/DECISIONS.md D51). It is written by tools/sun-zones/build.mjs.
+
+Source
+------
+IANA time zone database (tz, "tzdata"), version written in the generated file's header (2026e
+when this file was written), files zone.tab, zone1970.tab and tzdata.zi, as installed by
+Ubuntu's tzdata package in /usr/share/zoneinfo. https://www.iana.org/time-zones
+
+Licence
+-------
+Public domain. zone.tab says: "This file is in the public domain, so clarified as of
+2009-05-17 by Arthur David Olson."; zone1970.tab: "This file is in the public domain.";
+tzdata.zi: "This zic input file is in the public domain." Read in the files themselves on 27 November 2026. No attribution is required; it is
+recorded here so the origin of the numbers stays known.
