@@ -71,4 +71,13 @@ describe('the feedback is silent while the microphone is open', () => {
     wrapped.onWords(() => undefined);
     expect(engine.onWords).toHaveBeenCalledTimes(1);
   });
+  it('keeps the audio check of the engine, so the second chance still runs (D49)', async () => {
+    const suppression = createSuppression();
+    const { engine } = fakeEngine();
+    const checkHeard = jest.fn(async () => null);
+    const wrapped = silenceWhileListening({ ...engine, checkHeard }, suppression);
+    expect(wrapped.checkHeard).toBeDefined();
+    await wrapped.checkHeard?.(['a']);
+    expect(checkHeard).toHaveBeenCalledWith(['a']);
+  });
 });

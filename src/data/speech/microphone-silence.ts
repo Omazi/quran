@@ -38,5 +38,7 @@ export function silenceWhileListening(
     onWords: (listener) => engine.onWords(listener),
     onEnd: (listener) => engine.onEnd(listener),
     onActivity: engine.onActivity?.bind(engine),
+    // The audio check (D49) must survive the wrapper, or the second chance never runs.
+    checkHeard: engine.checkHeard?.bind(engine),
   };
 }
